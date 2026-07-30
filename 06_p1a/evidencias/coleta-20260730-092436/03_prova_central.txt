@@ -1,0 +1,1 @@
+OK prova_central: 18 assercoes, 20 eventos -> E:\LucasIA\Projetos\SSC-Plus\05_p0\saidas\prova_central.json

@@ -1,0 +1,21 @@
+/c/Users/<USUARIO>/AppData/Roaming/npm/grok
+1.1.7
+
+Available Grok Models:
+
+  grok-4.3 — Grok 4.3 (reasoning)
+    Recommended flagship reasoning model | 1M context | $1.25/$2.5 per 1M tokens
+    aliases: grok-4-1-fast-reasoning, grok-4-1-fast, grok-4-fast-reasoning, grok-4-fast, grok-4-0709, grok-code-fast-1, grok-code-fast
+  grok-4.20-multi-agent-0309 — Grok 4.20 Multi-Agent (reasoning, multi-agent, responses-only)
+    Realtime multi-agent research model | 2M context | $2/$6 per 1M tokens
+    aliases: grok-4.20-multi-agent, grok-4.20-multi-agent-beta
+  grok-4.20-0309-reasoning — Grok 4.20 Reasoning (reasoning)
+    Grok 4.20 reasoning release | 2M context | $2/$6 per 1M tokens
+    aliases: grok-4.20-beta-0309, grok-4.20-beta, grok-beta
+  grok-4.20-non-reasoning — Grok 4.20 Non-Reasoning (non-reasoning)
+    Recommended non-reasoning model | 2M context | $2/$6 per 1M tokens
+    aliases: grok-4.20-0309-non-reasoning, grok-4-1-fast-non-reasoning, grok-4-fast-non-reasoning, grok-3
+  grok-3-mini — Grok 3 Mini (non-reasoning)
+    Budget-friendly compact model | 131.072K context | $0.3/$0.5 per 1M tokens
+    aliases: grok-3-mini-fast
+

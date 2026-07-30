@@ -34,6 +34,10 @@ htmlcov/
 # Os relatorios agregados sem segredo (05_p0/saidas/*.json) PERMANECEM versionados.
 05_p0/saidas/labs/
 
+# Estado do escritor unico (P1-A.1): locks, leases e fencing tokens —
+# runtime puro, nunca versionado.
+locks/
+
 # EventLogs brutos (JSONL) onde quer que aparecam como runtime
 *.jsonl
 

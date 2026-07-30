@@ -1,0 +1,186 @@
+{
+  "descricao": "Originais preservados SOMENTE na copia externa datada SSC-Plus_copia-20260730-100839; os arquivos versionados sao derivados redigidos. Nenhum valor exposto: somente hashes e contagens.",
+  "copia_externa": "E:/LucasIA/Projetos/SSC-Plus_copia-20260730-100839",
+  "arquivos": {
+    "06_p1a/01_inventario-real.md": {
+      "sha256_original": "75147b2335f4691aa9bcd078739a25c0e6c91ffff06460ce9034ba8feddce73b",
+      "sha256_redigido": "19559e84b3ba87eaa6e4bffd5a2dccb23527b50d168f8c63df3e8541b78ad991",
+      "redacoes": {
+        "email": 0,
+        "caminho_usuario": 5,
+        "caminho_usuario_curto": 0
+      }
+    },
+    "06_p1a/evidencias/coleta-20260730-090127/10_codex.txt": {
+      "sha256_original": "1801d6c760bf874512b470c22be4662c7bad38175e6cd0a128889f6aa2084cbd",
+      "sha256_redigido": "175c2821d88d3e22c8698e3942e2d72bcd0b334b3ae380d32c67c225b1f37aac",
+      "redacoes": {
+        "email": 0,
+        "caminho_usuario": 1,
+        "caminho_usuario_curto": 0
+      }
+    },
+    "06_p1a/evidencias/coleta-20260730-090127/12_claude.txt": {
+      "sha256_original": "5d87c16cd5a10e766dd23632fed5533a579fb2c6d3a7926e7c8ffd96e0611d1f",
+      "sha256_redigido": "301451373d3a71064ccf77e50baf902661cd15dd5b9429b33c63aa04b5b01f19",
+      "redacoes": {
+        "email": 2,
+        "caminho_usuario": 1,
+        "caminho_usuario_curto": 0
+      }
+    },
+    "06_p1a/evidencias/coleta-20260730-090127/13_kimi.txt": {
+      "sha256_original": "065a623a4ea35b7f5120a1805483f1875cc0e9a64a19d2d407d19a8808305ccc",
+      "sha256_redigido": "9713c86ff09b36b99b01e41b0a57a72a34bc0202a77e10e31940bd5928855a17",
+      "redacoes": {
+        "email": 0,
+        "caminho_usuario": 3,
+        "caminho_usuario_curto": 0
+      }
+    },
+    "06_p1a/evidencias/coleta-20260730-090127/14_google.txt": {
+      "sha256_original": "133d491b1c3fbbda1c5cd0b58d75bcb2a8ff4b6f810dd147a1f2b5de65fc7dc3",
+      "sha256_redigido": "63daef615f306ac2e7e4ce915cd9c20bd8749acd41d2a6662a3bf790a9d1a252",
+      "redacoes": {
+        "email": 0,
+        "caminho_usuario": 1,
+        "caminho_usuario_curto": 0
+      }
+    },
+    "06_p1a/evidencias/coleta-20260730-090127/15_grok.txt": {
+      "sha256_original": "0fc71a529e8d2e3511374910688af6e8e4a92afcd4ab1f4073d762e6c2f5daaf",
+      "sha256_redigido": "ae67acb6fa17ce3223c5b4e48b40c306d692f6dc7c304c065114e9b650281085",
+      "redacoes": {
+        "email": 0,
+        "caminho_usuario": 1,
+        "caminho_usuario_curto": 0
+      }
+    },
+    "06_p1a/evidencias/coleta-20260730-090127/15_grok_limpo.txt": {
+      "sha256_original": "5691651d12534f06f6e00931bddeea36a7c38c6b05576701197a18f657ca5844",
+      "sha256_redigido": "386d77b167d0095118dd7156e54b076b9800fc046598df52b7a09d52ac643e03",
+      "redacoes": {
+        "email": 0,
+        "caminho_usuario": 1,
+        "caminho_usuario_curto": 0
+      }
+    },
+    "06_p1a/evidencias/coleta-20260730-092436/10_codex.txt": {
+      "sha256_original": "1801d6c760bf874512b470c22be4662c7bad38175e6cd0a128889f6aa2084cbd",
+      "sha256_redigido": "175c2821d88d3e22c8698e3942e2d72bcd0b334b3ae380d32c67c225b1f37aac",
+      "redacoes": {
+        "email": 0,
+        "caminho_usuario": 1,
+        "caminho_usuario_curto": 0
+      }
+    },
+    "06_p1a/evidencias/coleta-20260730-092436/12_claude.txt": {
+      "sha256_original": "5d87c16cd5a10e766dd23632fed5533a579fb2c6d3a7926e7c8ffd96e0611d1f",
+      "sha256_redigido": "301451373d3a71064ccf77e50baf902661cd15dd5b9429b33c63aa04b5b01f19",
+      "redacoes": {
+        "email": 2,
+        "caminho_usuario": 1,
+        "caminho_usuario_curto": 0
+      }
+    },
+    "06_p1a/evidencias/coleta-20260730-092436/13_kimi.txt": {
+      "sha256_original": "065a623a4ea35b7f5120a1805483f1875cc0e9a64a19d2d407d19a8808305ccc",
+      "sha256_redigido": "9713c86ff09b36b99b01e41b0a57a72a34bc0202a77e10e31940bd5928855a17",
+      "redacoes": {
+        "email": 0,
+        "caminho_usuario": 3,
+        "caminho_usuario_curto": 0
+      }
+    },
+    "06_p1a/evidencias/coleta-20260730-092436/14_google.txt": {
+      "sha256_original": "133d491b1c3fbbda1c5cd0b58d75bcb2a8ff4b6f810dd147a1f2b5de65fc7dc3",
+      "sha256_redigido": "63daef615f306ac2e7e4ce915cd9c20bd8749acd41d2a6662a3bf790a9d1a252",
+      "redacoes": {
+        "email": 0,
+        "caminho_usuario": 1,
+        "caminho_usuario_curto": 0
+      }
+    },
+    "06_p1a/evidencias/coleta-20260730-092436/15_grok.txt": {
+      "sha256_original": "0fc71a529e8d2e3511374910688af6e8e4a92afcd4ab1f4073d762e6c2f5daaf",
+      "sha256_redigido": "ae67acb6fa17ce3223c5b4e48b40c306d692f6dc7c304c065114e9b650281085",
+      "redacoes": {
+        "email": 0,
+        "caminho_usuario": 1,
+        "caminho_usuario_curto": 0
+      }
+    },
+    "06_p1a/evidencias/coleta-20260730-092436/15_grok_limpo.txt": {
+      "sha256_original": "5691651d12534f06f6e00931bddeea36a7c38c6b05576701197a18f657ca5844",
+      "sha256_redigido": "386d77b167d0095118dd7156e54b076b9800fc046598df52b7a09d52ac643e03",
+      "redacoes": {
+        "email": 0,
+        "caminho_usuario": 1,
+        "caminho_usuario_curto": 0
+      }
+    },
+    "06_p1a/evidencias/coleta-20260730-092436/20_configs.txt": {
+      "sha256_original": "92fca635ed5608ce66dd04b1a05898fc75f5ff77bf22df008b8f95865265c804",
+      "sha256_redigido": "7e32e092ab706b122ad8e5f5eba52ee989f97ba1c558f8e2c77f37c07a5d25c0",
+      "redacoes": {
+        "email": 0,
+        "caminho_usuario": 3,
+        "caminho_usuario_curto": 0
+      }
+    },
+    "06_p1a/evidencias/coleta-20260730-092436/21_claims_grok_google_kimi.txt": {
+      "sha256_original": "283e806cb6d0f5e12694f6403bcf841e84bf5549b698fe9d7064d6a5ccceced7",
+      "sha256_redigido": "195cffc9dd8f477fa05b1038557b0a73774a95c72941e65daa6c11cbf0df34e3",
+      "redacoes": {
+        "email": 0,
+        "caminho_usuario": 6,
+        "caminho_usuario_curto": 0
+      }
+    },
+    "06_p1a/evidencias/prova-minima/claude-20260730T120527Z.json": {
+      "sha256_original": "b463805c507eef516662e47b0755c66fc723e0996aa1573cf8faf09053e3d484",
+      "sha256_redigido": "12b9ef0d288e349bdb3766be7c34f5e0cb31aae589b72a9daec5faf45eed19de",
+      "redacoes": {
+        "email": 0,
+        "caminho_usuario": 0,
+        "caminho_usuario_curto": 1
+      }
+    },
+    "06_p1a/evidencias/prova-minima/codex-20260730T120513Z.json": {
+      "sha256_original": "9bbb4aea8e3f1e0b541150b3a78fa4753fefa2872120c844b211c1edec8c32da",
+      "sha256_redigido": "0a14b0a1abe53940bf14a3f2b8656d7b27837ba0c6cc2da7f32d01627944a28e",
+      "redacoes": {
+        "email": 0,
+        "caminho_usuario": 0,
+        "caminho_usuario_curto": 3
+      }
+    },
+    "06_p1a/evidencias/prova-minima/kimi-20260730T120550Z.json": {
+      "sha256_original": "178b18c2d55bc53fc4a53de2e6283878ec44f4c9464dab907a249e3887e7b3f5",
+      "sha256_redigido": "e715e9d76c52d012cfb863022cb6887eef80911b5b27d76bb47ccbeeb78798f4",
+      "redacoes": {
+        "email": 0,
+        "caminho_usuario": 0,
+        "caminho_usuario_curto": 1
+      }
+    },
+    "06_p1a/evidencias/prova-minima/kimi-20260730T122206Z.json": {
+      "sha256_original": "053996f483e140db067d927828d8ad4a9962b35ff444ef711446792d764a470b",
+      "sha256_redigido": "cca2d8003ad828c6ef89f9ea5d23dcbf8e23a154c6593bf73fe3e75b5351da9f",
+      "redacoes": {
+        "email": 0,
+        "caminho_usuario": 0,
+        "caminho_usuario_curto": 1
+      }
+    },
+    "06_p1a/evidencias/prova-minima/kimi-20260730T122255Z.json": {
+      "sha256_original": "0b57ff273b055c84dcef9338e09d6d022f6b186cb573ce48f73fcd39bfa0122a",
+      "sha256_redigido": "78ba27d1d78714d5e0e1f395c6046a34c02630b74c2968dc5d0808eed0d74f4b",
+      "redacoes": {
+        "email": 0,
+        "caminho_usuario": 0,
+        "caminho_usuario_curto": 1
+      }
+    }
+  }
+}

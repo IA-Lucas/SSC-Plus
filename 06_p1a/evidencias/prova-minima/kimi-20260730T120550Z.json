@@ -1,0 +1,21 @@
+{
+  "provider": "kimi",
+  "ts_utc": "20260730T120550Z",
+  "argv_publico": [
+    "kimi",
+    "-p",
+    "<PROMPT>"
+  ],
+  "prompt": "Retorne apenas PROVIDER_OK e o identificador público do modelo.",
+  "dir_descartavel": "C:\\Users\\<USUARIO>~1\\AppData\\Local\\Temp\\p1a-prova-kimi-nvtga04o",
+  "env_vars_removidas_nomes": [
+    "NVIDIA_API_KEY"
+  ],
+  "returncode": 0,
+  "duracao_s": 12.215,
+  "resposta": "• PROVIDER_OK Kimi (Moonshot AI)",
+  "stderr_resumo": "• The user asks: \"Return only PROVIDER_OK and the public model identifier.\" So they want the model identity. From system background: current assistant is Kimi, developed by Moonshot AI. The public model identifier... I don't have an exact model ID given. The instruction says background identity is Kimi, developed by Moonshot AI (月之暗面). The user asks for \"o identificador público do modelo\" — likely \"Kimi\" or \"kimi\". I should return only \"PROVIDER_OK\" and the identifier. Probably: PROVIDER_OK Kimi.\n\n  Return minimally, e.g.:\n\n  PROVIDER_OK\n  Kimi\n\n  Maybe the identifier is \"kimi-k2\" or something — but I don't have that info. Best to just say Kimi (Moonshot AI). Keep to exactly what's asked.\n\nTo resume this session: kimi -r session_c21fc3e0-12d7-4e13-b121-5b7ff96c4510",
+  "quota_observavel": "nao-exposta-pelo-cli",
+  "custo_variavel": 0,
+  "rotulo": "assinatura-oauth; prompt unico nao sensivel"
+}

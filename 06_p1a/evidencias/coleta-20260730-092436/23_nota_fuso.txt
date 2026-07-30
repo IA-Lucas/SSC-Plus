@@ -1,0 +1,1 @@
+fuso: coleta em hora LOCAL no nome do dir; timestamps de conteudo em UTC

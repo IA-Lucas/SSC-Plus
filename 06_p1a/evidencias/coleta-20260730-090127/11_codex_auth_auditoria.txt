@@ -1,0 +1,4 @@
+auth.json existe: True
+auth_mode: chatgpt
+OPENAI_API_KEY presente e nao-vazia: False
+tokens presentes: ['access_token', 'account_id', 'id_token', 'refresh_token']

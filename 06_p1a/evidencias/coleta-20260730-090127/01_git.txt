@@ -1,0 +1,7 @@
+0da9d41 SSC+ 0.3 experimental — frota subscription-only (adendo)
+a96eda5 SSC+ 0.2.1 hardening — READY-FOR-P1
+33bc963 experimental baseline — ADJUST
+8a70e90 Missao SSC+ 0.1 — fundacao, isolamento e engenharia reversa
+ M 05_p0/saidas/prova_central.json
+?? 06_p1a/
+merge-base a96eda5..0da9d41: ANCESTOR_OK

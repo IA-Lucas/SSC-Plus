@@ -1,0 +1,23 @@
+{
+  "provider": "claude",
+  "ts_utc": "20260730T120527Z",
+  "argv_publico": [
+    "claude",
+    "-p",
+    "Retorne apenas PROVIDER_OK e o identificador público do modelo.",
+    "--permission-mode",
+    "<PROMPT>"
+  ],
+  "prompt": "Retorne apenas PROVIDER_OK e o identificador público do modelo.",
+  "dir_descartavel": "C:\\Users\\<USUARIO>~1\\AppData\\Local\\Temp\\p1a-prova-claude-z98hov1p",
+  "env_vars_removidas_nomes": [
+    "NVIDIA_API_KEY"
+  ],
+  "returncode": 0,
+  "duracao_s": 15.578,
+  "resposta": "PROVIDER_OK claude-opus-5[1m]",
+  "stderr_resumo": "",
+  "quota_observavel": "nao-exposta-pelo-cli",
+  "custo_variavel": 0,
+  "rotulo": "assinatura-oauth; prompt unico nao sensivel"
+}

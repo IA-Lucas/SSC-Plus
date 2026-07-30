@@ -1,0 +1,11 @@
+/c/Users/<USUARIO>/.local/bin/claude
+2.1.220 (Claude Code)
+{
+  "loggedIn": true,
+  "authMethod": "claude.ai",
+  "apiProvider": "firstParty",
+  "email": "<EMAIL-REDACTED>",
+  "orgId": "e8e00f17-3c8c-471b-b20d-49c4b1c16633",
+  "orgName": "<EMAIL-REDACTED>'s Organization",
+  "subscriptionType": "max"
+}

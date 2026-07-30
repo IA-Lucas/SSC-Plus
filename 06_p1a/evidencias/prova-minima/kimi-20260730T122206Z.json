@@ -1,0 +1,25 @@
+{
+  "provider": "kimi",
+  "ts_utc": "20260730T122206Z",
+  "argv_publico": [
+    "kimi",
+    "-p",
+    "<PROMPT>",
+    "--plan",
+    "-m",
+    "kimi-code/k3"
+  ],
+  "prompt": "Retorne apenas PROVIDER_OK e o identificador público do modelo.",
+  "dir_descartavel": "C:\\Users\\<USUARIO>~1\\AppData\\Local\\Temp\\p1a-prova-kimi-yuq8kkrg",
+  "dir_descartavel_arquivos_restantes": [],
+  "env_vars_removidas_nomes": [
+    "NVIDIA_API_KEY"
+  ],
+  "returncode": 1,
+  "duracao_s": 0.744,
+  "resposta": "",
+  "stderr_resumo": "error: Cannot combine --prompt with --plan.",
+  "quota_observavel": "nao-exposta-pelo-cli",
+  "custo_variavel": 0,
+  "rotulo": "assinatura-oauth; prompt unico nao sensivel"
+}

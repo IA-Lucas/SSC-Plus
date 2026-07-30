@@ -1,0 +1,118 @@
+test_escritor_unico_appends_concorrentes_serializam_seq (test_concorrencia.TestConcorrencia.test_escritor_unico_appends_concorrentes_serializam_seq) ... ok
+test_segundo_escritor_direto_no_arquivo_detectado (test_concorrencia.TestConcorrencia.test_segundo_escritor_direto_no_arquivo_detectado) ... ok
+test_captura_obrigatoria_quando_resultado_presente (test_contratos.TestContratos.test_captura_obrigatoria_quando_resultado_presente) ... ok
+test_enum_fora_da_lista_e_falha_de_contrato (test_contratos.TestContratos.test_enum_fora_da_lista_e_falha_de_contrato) ... ok
+test_intencao_acima_de_4000_recusada (test_contratos.TestContratos.test_intencao_acima_de_4000_recusada) ... ok
+test_roundtrip_todos_os_contratos (test_contratos.TestContratos.test_roundtrip_todos_os_contratos) ... ok
+test_schema_campo_ausente_recusado (test_contratos.TestContratos.test_schema_campo_ausente_recusado) ... ok
+test_schema_fechado_campo_desconhecido_recusado (test_contratos.TestContratos.test_schema_fechado_campo_desconhecido_recusado) ... ok
+test_sem_coercao_de_enum (test_contratos.TestContratos.test_sem_coercao_de_enum) ... ok
+test_checkpoint_invalido_nao_retoma_escalona (test_crash.TestCrashCheckpoint.test_checkpoint_invalido_nao_retoma_escalona) ... ok
+test_checkpoint_retomada_feliz_estado_identico (test_crash.TestCrashCheckpoint.test_checkpoint_retomada_feliz_estado_identico) ... C:\Python314\Lib\unittest\case.py:615: ResourceWarning: unclosed file <_io.BufferedRandom name='E:\\LucasIA\\Projetos\\SSC-Plus\\05_p0\\saidas\\labs\\tests\\12a72593284d4c009bfdee786e125ca5\\lab\\locks\\b3a36f9851064bf580d0f99ba82e4c30.lock'>
+  result = method()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+ok
+test_checkpoint_selo_divergente_nao_retoma (test_crash.TestCrashCheckpoint.test_checkpoint_selo_divergente_nao_retoma) ... ok
+test_crash_antes_de_persistir_conclusao_orfao_indeterminado (test_crash.TestCrashCheckpoint.test_crash_antes_de_persistir_conclusao_orfao_indeterminado) ... C:\Python314\Lib\unittest\case.py:615: ResourceWarning: unclosed file <_io.BufferedRandom name='E:\\LucasIA\\Projetos\\SSC-Plus\\05_p0\\saidas\\labs\\tests\\c2f9fa0fcac94cac88f51e69f9b24452\\lab\\locks\\8b83fcab6b854c048ca767100e1eb5e6.lock'>
+  result = method()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+ok
+test_crash_depois_de_persistir_retomada_limpa (test_crash.TestCrashCheckpoint.test_crash_depois_de_persistir_retomada_limpa) ... C:\Python314\Lib\unittest\case.py:615: ResourceWarning: unclosed file <_io.BufferedRandom name='E:\\LucasIA\\Projetos\\SSC-Plus\\05_p0\\saidas\\labs\\tests\\a1b50ab60d2f4931a49c723c3dc6a49f\\lab\\locks\\e1956f839d8342689161bd8a5bbc500d.lock'>
+  result = method()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+ok
+test_log_adulterado_nao_retoma (test_crash.TestCrashCheckpoint.test_log_adulterado_nao_retoma) ... ok
+test_cancelamento_de_qualquer_estado_nao_terminal (test_estados.TestEstados.test_cancelamento_de_qualquer_estado_nao_terminal) ... ok
+test_orfao_apenas_via_retomada (test_estados.TestEstados.test_orfao_apenas_via_retomada) ... ok
+test_transicao_ilegal_attempt_recusada (test_estados.TestEstados.test_transicao_ilegal_attempt_recusada) ... ok
+test_transicao_ilegal_sessao_recusada (test_estados.TestEstados.test_transicao_ilegal_sessao_recusada) ... ok
+test_transicao_ilegal_workunit_recusada (test_estados.TestEstados.test_transicao_ilegal_workunit_recusada) ... ok
+test_transicoes_legais_tres_maquinas (test_estados.TestEstados.test_transicoes_legais_tres_maquinas) ... ok
+test_evento_adulterado_detectado_falha_fechada (test_eventlog.TestEventLog.test_evento_adulterado_detectado_falha_fechada) ... ok
+test_evento_duplicado_detectado_falha_fechada (test_eventlog.TestEventLog.test_evento_duplicado_detectado_falha_fechada) ... ok
+test_evento_fora_de_ordem_detectado_falha_fechada (test_eventlog.TestEventLog.test_evento_fora_de_ordem_detectado_falha_fechada) ... ok
+test_evento_truncado_detectado_falha_fechada (test_eventlog.TestEventLog.test_evento_truncado_detectado_falha_fechada) ... ok
+test_idempotency_key_reentrega_ignorada (test_eventlog.TestEventLog.test_idempotency_key_reentrega_ignorada) ... ok
+test_ip4_replay_deterministico_igual_estado_corrente (test_eventlog.TestEventLog.test_ip4_replay_deterministico_igual_estado_corrente) ... C:\Python314\Lib\unittest\case.py:615: ResourceWarning: unclosed file <_io.BufferedRandom name='E:\\LucasIA\\Projetos\\SSC-Plus\\05_p0\\saidas\\labs\\tests\\8ecf84aed84c425b9613710c6bd2f876\\lab\\locks\\2f07e7b4d19147dba3569b5c040f3438.lock'>
+  result = method()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+ok
+test_api_key_presente_nao_substitui_oauth (test_frota.TestFrotaEconomiaEAmbiente.test_api_key_presente_nao_substitui_oauth) ... ok
+test_autor_nao_aprova_propria_entrega_critica (test_frota.TestFrotaEconomiaEAmbiente.test_autor_nao_aprova_propria_entrega_critica) ... ok
+test_billing_desconhecido_bloqueia_antes_da_invocacao (test_frota.TestFrotaEconomiaEAmbiente.test_billing_desconhecido_bloqueia_antes_da_invocacao) ... ok
+test_catalogo_descobre_modelos_sem_aliases_permanentes (test_frota.TestFrotaEconomiaEAmbiente.test_catalogo_descobre_modelos_sem_aliases_permanentes) ... ok
+test_fleetentry_roundtrip_e_enums_fechados (test_frota.TestFrotaEconomiaEAmbiente.test_fleetentry_roundtrip_e_enums_fechados) ... ok
+test_google_grok_respeitam_nivel_de_autonomia (test_frota.TestFrotaEconomiaEAmbiente.test_google_grok_respeitam_nivel_de_autonomia) ... ok
+test_grok_cached_token_acp_sem_xai_key (test_frota.TestFrotaEconomiaEAmbiente.test_grok_cached_token_acp_sem_xai_key) ... ok
+test_quota_esgotada_troca_provedor_preserva_linhagem (test_frota.TestFrotaEconomiaEAmbiente.test_quota_esgotada_troca_provedor_preserva_linhagem) ... ok
+test_sem_provedor_stop_wait_reset_nunca_payg (test_frota.TestFrotaEconomiaEAmbiente.test_sem_provedor_stop_wait_reset_nunca_payg) ... ok
+test_backoff_teto_aplicado_e_indeterminado_nao_repete (test_hardening.TestHardening.test_backoff_teto_aplicado_e_indeterminado_nao_repete) ... ok
+test_causado_por_fora_da_cadeia_recusado (test_hardening.TestHardening.test_causado_por_fora_da_cadeia_recusado) ... ok
+test_checkpoint_escolhido_por_seq_nao_por_uuid (test_hardening.TestHardening.test_checkpoint_escolhido_por_seq_nao_por_uuid) ... ok
+test_contexto_corrompido_ou_ausente_falha_fechada (test_hardening.TestHardening.test_contexto_corrompido_ou_ausente_falha_fechada) ... ok
+test_contexto_ligado_a_outra_workunit_recusado (test_hardening.TestHardening.test_contexto_ligado_a_outra_workunit_recusado) ... ok
+test_crash_de_processo_retomada_por_outro_processo (test_hardening.TestHardening.test_crash_de_processo_retomada_por_outro_processo) ... ok
+test_decisao_mutada_recusada (test_hardening.TestHardening.test_decisao_mutada_recusada) ... ok
+test_divergencia_modelo_effort_falha_fechada (test_hardening.TestHardening.test_divergencia_modelo_effort_falha_fechada) ... ok
+test_evidence_plane_readonly_sem_criar_diretorios (test_hardening.TestHardening.test_evidence_plane_readonly_sem_criar_diretorios) ... ok
+test_fallback_gera_nova_decisao_selecao_real_no_envelope (test_hardening.TestHardening.test_fallback_gera_nova_decisao_selecao_real_no_envelope) ... ok
+test_idempotencia_reentrega_aceita_payload_diferente_conflito (test_hardening.TestHardening.test_idempotencia_reentrega_aceita_payload_diferente_conflito) ... ok
+test_idempotency_key_propagada_ao_provider (test_hardening.TestHardening.test_idempotency_key_propagada_ao_provider) ... ok
+test_ids_invalidos_em_caminhos_recusados (test_hardening.TestHardening.test_ids_invalidos_em_caminhos_recusados) ... ok
+test_lock_obsoleto_fencing_token (test_hardening.TestHardening.test_lock_obsoleto_fencing_token) ... ok
+test_lock_segundo_processo_recusado (test_hardening.TestHardening.test_lock_segundo_processo_recusado) ... ok
+test_reducer_rejeitado_nada_duravel (test_hardening.TestHardening.test_reducer_rejeitado_nada_duravel) ... ok
+test_retry_fora_dos_limites_recusado (test_hardening.TestHardening.test_retry_fora_dos_limites_recusado) ... ok
+test_veredito_cruzado_attempt_de_A_nao_conclui_B (test_hardening.TestHardening.test_veredito_cruzado_attempt_de_A_nao_conclui_B) ... ok
+test_alias_nao_prova_identidade_divergencia_falha_fechada (test_juiz.TestJuiz.test_alias_nao_prova_identidade_divergencia_falha_fechada) ... ok
+test_fila_sem_candidato_independente_falha_fechada (test_juiz.TestJuiz.test_fila_sem_candidato_independente_falha_fechada) ... ok
+test_iv2_humano_tambem_nao_anula (test_juiz.TestJuiz.test_iv2_humano_tambem_nao_anula) ... ok
+test_iv2_veto_deterministico_nao_anulavel_por_juiz_llm (test_juiz.TestJuiz.test_iv2_veto_deterministico_nao_anulavel_por_juiz_llm) ... ok
+test_juiz_llm_so_julga_apos_camada_deterministica (test_juiz.TestJuiz.test_juiz_llm_so_julga_apos_camada_deterministica) ... ok
+test_veredito_criterios_ref_divergente_invalido_iv3 (test_juiz.TestJuiz.test_veredito_criterios_ref_divergente_invalido_iv3) ... ok
+test_veredito_sem_attempt_id_invalido (test_juiz.TestJuiz.test_veredito_sem_attempt_id_invalido) ... ok
+test_classificacao_confianca_baixa_falha_fechada (test_policy.TestPolicy.test_classificacao_confianca_baixa_falha_fechada) ... ok
+test_envelope_expirado_veto (test_policy.TestPolicy.test_envelope_expirado_veto) ... ok
+test_envelope_modelo_fora_da_lista_veto_mesmo_na_politica (test_policy.TestPolicy.test_envelope_modelo_fora_da_lista_veto_mesmo_na_politica) ... ok
+test_perfil_privacidade_local_only_nunca_remoto (test_policy.TestPolicy.test_perfil_privacidade_local_only_nunca_remoto) ... ok
+test_provedor_fora_da_politica_veto_antes_de_chamada (test_policy.TestPolicy.test_provedor_fora_da_politica_veto_antes_de_chamada) ... ok
+test_reroteamento_dentro_do_envelope_sem_nova_aprovacao (test_policy.TestPolicy.test_reroteamento_dentro_do_envelope_sem_nova_aprovacao) ... ok
+test_sem_aprovacao_custo_quando_exigida_veto (test_policy.TestPolicy.test_sem_aprovacao_custo_quando_exigida_veto) ... ok
+test_429_com_retry_after_respeitado (test_recuperacao.TestRecuperacao.test_429_com_retry_after_respeitado) ... ok
+test_4xx_contrato_zero_retry_fallback_direto (test_recuperacao.TestRecuperacao.test_4xx_contrato_zero_retry_fallback_direto) ... ok
+test_attempt_com_decisao_supersedada_recusado (test_recuperacao.TestRecuperacao.test_attempt_com_decisao_supersedada_recusado) ... ok
+test_falha_quota_tipada (test_recuperacao.TestRecuperacao.test_falha_quota_tipada) ... ok
+test_fallback_dentro_do_envelope (test_recuperacao.TestRecuperacao.test_fallback_dentro_do_envelope) ... ok
+test_fallback_fora_do_envelope_e_escalonamento (test_recuperacao.TestRecuperacao.test_fallback_fora_do_envelope_e_escalonamento) ... ok
+test_indeterminado_sem_retry_automatico_escalona_ir2 (test_recuperacao.TestRecuperacao.test_indeterminado_sem_retry_automatico_escalona_ir2) ... ok
+test_reparo_e_nova_workunit_nao_retry (test_recuperacao.TestRecuperacao.test_reparo_e_nova_workunit_nao_retry) ... ok
+test_reroteamento_nova_decisao_supersede_mesma_linhagem (test_recuperacao.TestRecuperacao.test_reroteamento_nova_decisao_supersede_mesma_linhagem) ... ok
+test_retry_com_efeito_nao_aplicado_sem_key_ir1 (test_recuperacao.TestRecuperacao.test_retry_com_efeito_nao_aplicado_sem_key_ir1) ... ok
+test_retry_maximo_3_e_esgotamento (test_recuperacao.TestRecuperacao.test_retry_maximo_3_e_esgotamento) ... ok
+test_retry_negado_sem_key_e_efeito_aplicado_ir1 (test_recuperacao.TestRecuperacao.test_retry_negado_sem_key_e_efeito_aplicado_ir1) ... ok
+test_retry_so_com_idempotency_key_ir1 (test_recuperacao.TestRecuperacao.test_retry_so_com_idempotency_key_ir1) ... ok
+test_saida_invalida_falha_contrato_zero_retry (test_recuperacao.TestRecuperacao.test_saida_invalida_falha_contrato_zero_retry) ... ok
+test_teto_de_custo_escalation_orcamento_sem_chamada_posterior (test_recuperacao.TestRecuperacao.test_teto_de_custo_escalation_orcamento_sem_chamada_posterior) ... ok
+test_timeout_apos_envio_efeito_incerto_indeterminado (test_recuperacao.TestRecuperacao.test_timeout_apos_envio_efeito_incerto_indeterminado) ... ok
+test_ic4_contexto_limpo_aceito (test_seguranca.TestSeguranca.test_ic4_contexto_limpo_aceito) ... ok
+test_ic4_segredo_em_contexto_recusado (test_seguranca.TestSeguranca.test_ic4_segredo_em_contexto_recusado) ... ok
+test_ic4_segredo_em_evento_recusado (test_seguranca.TestSeguranca.test_ic4_segredo_em_evento_recusado) ... ok
+test_ic4_segredo_padrao_token_em_payload_recusado (test_seguranca.TestSeguranca.test_ic4_segredo_padrao_token_em_payload_recusado) ... ok
+test_ic5_fuga_caminho_dotdot_recusada (test_seguranca.TestSeguranca.test_ic5_fuga_caminho_dotdot_recusada) ... ok
+test_ic5_fuga_por_junction_real (test_seguranca.TestSeguranca.test_ic5_fuga_por_junction_real)
+PROVA REAL (Windows): junction/reparse point criado de verdade. ... ok
+test_ic5_fuga_por_symlink_mock_do_resolvedor (test_seguranca.TestSeguranca.test_ic5_fuga_por_symlink_mock_do_resolvedor) ... ok
+test_zero_escrita_externa_tudo_sob_a_raiz (test_seguranca.TestSeguranca.test_zero_escrita_externa_tudo_sob_a_raiz) ... ok
+test_dag_ciclo_recusado_antes_de_execucao (test_workunits.TestWorkUnits.test_dag_ciclo_recusado_antes_de_execucao) ... ok
+test_dependencia_nao_concluida_bloqueia_execucao (test_workunits.TestWorkUnits.test_dependencia_nao_concluida_bloqueia_execucao) ... ok
+test_iw1_sem_decisao_vigente_nao_executa (test_workunits.TestWorkUnits.test_iw1_sem_decisao_vigente_nao_executa) ... ok
+test_iw2_mais_de_12_filhos_recusado (test_workunits.TestWorkUnits.test_iw2_mais_de_12_filhos_recusado) ... ok
+test_iw3_anti_competicao_recusada (test_workunits.TestWorkUnits.test_iw3_anti_competicao_recusada) ... ok
+test_iw3_intencoes_distintas_aceitas (test_workunits.TestWorkUnits.test_iw3_intencoes_distintas_aceitas) ... ok
+test_iw4_classe_c2_nasce_aguardando_aprovacao (test_workunits.TestWorkUnits.test_iw4_classe_c2_nasce_aguardando_aprovacao) ... ok
+test_iw4_tipo1_nasce_aguardando_aprovacao (test_workunits.TestWorkUnits.test_iw4_tipo1_nasce_aguardando_aprovacao) ... ok
+
+----------------------------------------------------------------------
+Ran 100 tests in 5.869s
+
+OK

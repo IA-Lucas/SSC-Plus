@@ -1,0 +1,11 @@
+/c/Users/<USUARIO>/.kimi-code/bin/kimi
+0.30.0
+Kimi doctor
+
+OK config.toml  C:/Users/<USUARIO>/.kimi-code/config.toml
+OK tui.toml     C:\Users\<USUARIO>\.kimi-code\tui.toml
+
+All checked config files are valid.
+managed:kimi-code  type=kimi  models=4  source=oauth
+
+Default model: kimi-code/k3

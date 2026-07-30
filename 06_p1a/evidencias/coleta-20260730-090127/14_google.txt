@@ -1,0 +1,4 @@
+/c/Users/<USUARIO>/AppData/Roaming/npm/gemini
+0.52.0
+security.auth.selectedType: oauth-personal
+GEMINI_API_KEY persistida em settings: False

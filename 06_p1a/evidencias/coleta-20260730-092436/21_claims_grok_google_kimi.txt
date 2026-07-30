@@ -1,0 +1,22 @@
+[grok] ~/.grok:
+delegations
+grok.db
+grok.db-shm
+grok.db-wal
+hooks
+[grok] ~/.config/grok:
+(vazio/ausente)
+[grok] cmdkey (nomes):
+nenhuma entrada grok/xai
+[google] Antigravity IDE:
+/c/Users/<USUARIO>/AppData/Local/Programs/Antigravity IDE
+[google] arquivos ~/.gemini:
+/c/Users/<USUARIO>/.gemini/google_accounts.json
+/c/Users/<USUARIO>/.gemini/projects.json
+/c/Users/<USUARIO>/.gemini/settings.json
+/c/Users/<USUARIO>/.gemini/state.json
+/c/Users/<USUARIO>/.gemini/trustedFolders.json
+[google] hooks em settings.json:
+['AfterAgent', 'AfterTool', 'BeforeAgent', 'BeforeTool']
+[kimi] credentials:
+kimi-code.json

@@ -1,0 +1,21 @@
+[codex config.toml] C:\Users\<USUARIO>/.codex/config.toml
+  model: presente
+  model_provider: ausente
+  preferred_auth_method: ausente
+  base_url: ausente
+  auto_topup: ausente
+  extra_usage: ausente
+  wire_api: ausente
+  nenhuma chave/token persistido
+[kimi config.toml] C:\Users\<USUARIO>/.kimi-code/config.toml
+  default_model: presente
+  base_url: presente
+  api_base: ausente
+  type: presente
+  SUSPEITA: api_key com valor vazio
+  SUSPEITA: api_key com valor vazio
+  SUSPEITA: api_key com valor vazio
+[claude settings.json] C:\Users\<USUARIO>/.claude/settings.json
+  apiKeyHelper: ausente
+  env com chaves anthropic: nenhuma
+  chaves de billing/topup: ['skipWorkflowUsageWarning']
