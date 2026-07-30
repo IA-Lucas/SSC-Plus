@@ -1,0 +1,1680 @@
+diff --git a/02_alvo/09_frota-subscription-only.md b/02_alvo/09_frota-subscription-only.md
+new file mode 100644
+index 0000000..5ffc07b
+--- /dev/null
++++ b/02_alvo/09_frota-subscription-only.md
+@@ -0,0 +1,108 @@
++---
++id: SSC-ALVO-09
++titulo: Frota subscription-only do SSC+ (ADENDO)
++tipo: contrato-experimental
++versao: 0.1.0
++status: ativo
++origem: adendo-obrigatorio-2026-07-30
++autoridade: nenhuma
++normativo: nao
++criado_em: 2026-07-30
++---
++
++# Frota subscription-only do SSC+ (ADENDO)
++
++> Evolução experimental do SSC+. NÃO reescreve nem invalida 0.1/0.2/0.2.1.
++> Nada aqui é promovido automaticamente ao LucaX Enterprise OS canônico.
++
++## 1. Frota inicial (cinco assinaturas)
++
++| provider_id | assinatura | perfil inicial (PREFERÊNCIA, não papel fixo) |
++|---|---|---|
++| `codex` | OpenAI Codex via ChatGPT Pro 5x | implementação principal e operação de repositório |
++| `claude` | Claude Code via Claude Max 5x | arquitetura, Specs e revisão profunda |
++| `kimi` | Kimi Code via Allegretto | engenharia reversa, contexto extenso e volume |
++| `google` | Google Antigravity via Google AI Pro | multimodalidade e julgamento transversal |
++| `grok` | Grok Build via SuperGrok | pesquisa atual, X/web, red team e coding alternativo |
++
++Toda escolha ocorre por **WorkUnit/ExecutionAttempt** dentro do mesmo
++`SessionEnvelope`. Nenhum provedor fica vinculado à sessão inteira.
++
++## 2. Contrato `FleetEntry` (ssc_p0/contratos.py)
++
++Campos: `provider_id`, `model_id` (descoberto, nunca presumido),
++`capability_profile`, `auth_mode`, `billing_mode`, `quota_state` +
++`quota_reset` (reset conhecido), `automation_permission`, `terms_profile`,
++`variable_cost`, `papeis_preferidos` (preferências), `canal_oficial`.
++
++`RoutingDecision` ganha `papel` (autor/revisor/juiz) e
++`independencia_evidencia`; `motivo` e `aprovacao_custo.fallback_autorizado`
++já existiam. Enums fechados: `AUTH_MODES`, `BILLING_MODES`, `QUOTA_STATES`,
++`AUTOMATION_PERMISSIONS`, `PAPEIS_FROTA`.
++
++## 3. Política econômica imutável (`POLITICA_ECONOMICA`, MappingProxyType)
++
++```
++external_variable_cost_cap = 0
++subscription_oauth = ALLOW
++local_model = ALLOW
++payg_api = DENY
++extra_usage = DENY
++auto_topup = DENY
++unknown_billing_mode = DENY
++```
++
++Bloqueio ANTES da invocação (`verificar_economia` +
++`AdaptadorAssinatura`): billing desconhecido/PAYG/pré-pago/extra-usage,
++auth `payg-api` ou desconhecido, ou `variable_cost > 0` =
++`PoliticaEconomicaViolada`, zero chamadas ao provider.
++
++## 4. Ambiente sanitizado
++
++`ambiente_sanitizado(env)` devolve CÓPIA do ambiente sem
++`OPENAI_API_KEY`, `CODEX_API_KEY`, `ANTHROPIC_API_KEY`,
++`ANTHROPIC_AUTH_TOKEN`, `GEMINI_API_KEY`, `GOOGLE_API_KEY`,
++`GOOGLE_APPLICATION_CREDENTIALS`, `XAI_API_KEY` e qualquer sufixo
++`_API_KEY`/`_AUTH_TOKEN`/`_ACCESS_TOKEN`/`_API_SECRET`/`_SECRET_KEY`.
++As credenciais globais **não são apagadas nem alteradas** — apenas não
++entram no processo SSC+. **API key presente nunca substitui OAuth**:
++sem `terms_profile.oauth_profile`, a invocação é bloqueada mesmo com
++chave PAYG no host.
++
++## 5. Regras de canal e autonomia
++
++- **Grok**: somente Grok Build autenticado pela assinatura — cached token,
++  headless ou ACP; **nunca `api.x.ai`**; `canal_oficial` obrigatório.
++  `GROK_SUPERVISED = ALLOW`; `GROK_UNATTENDED = TERMS_REVIEW_REQUIRED`.
++- **Google**: somente canal oficial da assinatura; OAuth não é reutilizado
++  em cliente incompatível; automação **condicional**
++  (`terms-review-required`) até prova do canal permitido.
++
++## 6. QUOTA_EXHAUSTED
++
++`falha-quota` tipada → estado `esgotada` registrado na frota (com
++`quota_reset` conhecido) → sessão, WorkUnit, memória e causalidade
++preservados (mecanismo 0.2.1) → **nova RoutingDecision** para outra
++assinatura capaz (fallback 0.2.1-6, dentro do envelope) → nenhuma
++disponível = **STOP_WAIT_RESET**. Migrar para API paga, créditos extras
++ou saldo pré-pago é **PROIBIDO** (garantido por `verificar_economia`).
++
++## 7. Independência em trabalho crítico
++
++Autor, revisor e juiz independentes: `Frota.verificar_independencia`
++exige provider E modelo distintos e produz a evidência registrada na
++decisão (`independencia_evidencia`); soma-se ao IV-1/IV-2 do Juiz (0.2).
++
++## 8. Rastreabilidade (adendo → contrato → código → teste)
++
++| Exigência do adendo | Código | Teste |
++|---|---|---|
++| API key não substitui OAuth | `AdaptadorAssinatura`, `ambiente_sanitizado` | `test_api_key_presente_nao_substitui_oauth` |
++| Billing desconhecido bloqueia pré-invocacao | `verificar_economia` | `test_billing_desconhecido_bloqueia_antes_da_invocacao` |
++| Quota → nova decisão, linhagem preservada | `executar_com_frota`, `registrar_quota_exhausted` | `test_quota_esgotada_troca_provedor_preserva_linhagem` |
++| Sem provedor = STOP_WAIT_RESET, nunca PAYG | `elegiveis`, `STOP_WAIT_RESET` | `test_sem_provedor_stop_wait_reset_nunca_payg` |
++| Autor não aprova própria entrega | `verificar_independencia` | `test_autor_nao_aprova_propria_entrega_critica` |
++| Grok cached/ACP, nunca api.x.ai | `verificar_canal` | `test_grok_cached_token_acp_sem_xai_key` |
++| Google/Grok níveis de autonomia | `verificar_automacao`, `GROK_AUTOMATION` | `test_google_grok_respeitam_nivel_de_autonomia` |
++| Descoberta de modelos, sem aliases | `Frota.descobrir`, `catalogo_de_frota` | `test_catalogo_descobre_modelos_sem_aliases_permanentes` |
++| Campos do contrato | `FleetEntry`, `RoutingDecision.papel/independencia_evidencia` | `test_fleetentry_roundtrip_e_enums_fechados` |
+diff --git a/05_p0/cenarios/comum.py b/05_p0/cenarios/comum.py
+index 5ed7d0b..dfe4689 100644
+--- a/05_p0/cenarios/comum.py
++++ b/05_p0/cenarios/comum.py
+@@ -31,12 +31,13 @@ class Lab:
+ 
+     def __init__(self, raiz, relogio=None, teto_custo=0.5,
+                  programa_providers=None, seeds=None,
+-                 funcoes_sucesso=None, observados=None):
++                 funcoes_sucesso=None, observados=None,
++                 catalogo=None, politica=None, aprovacao=None):
+         self.raiz = os.path.realpath(str(raiz))
+         self.relogio = relogio or RelogioDeterministico()
+-        self.catalogo = catalogo_padrao()
+-        self.politica = politica_padrao()
+-        self.aprovacao = envelope_aprovacao_padrao()
++        self.catalogo = catalogo or catalogo_padrao()
++        self.politica = politica or politica_padrao()
++        self.aprovacao = aprovacao or envelope_aprovacao_padrao()
+         self.kernel = SessionKernel(self.raiz, self.relogio,
+                                     raizes_fontes=[DIR_FIXTURES])
+         self.control = ControlPlane(self.kernel)
+diff --git a/05_p0/saidas/prova_central.json b/05_p0/saidas/prova_central.json
+index 6a13813..2fb73e4 100644
+--- a/05_p0/saidas/prova_central.json
++++ b/05_p0/saidas/prova_central.json
+@@ -75,7 +75,7 @@
+   ],
+   "attempt_1": {
+     "artefato_ref": null,
+-    "attempt_id": "265c8dd7074046c082e332e08ee28914",
++    "attempt_id": "a740bb6449384bd3b6a806f1c58ecb8e",
+     "captura": {
+       "saida_estruturada_ref": "8ec2c0efb2fa5eacf8294029930391913f20aa62a76f1237aba97d1dda697a93",
+       "saida_final_ref": null
+@@ -85,7 +85,7 @@
+       "tokens": 445,
+       "valor": 0.014
+     },
+-    "decisao_id": "ef3fe4f69344476699b9a04b5d4a318c",
++    "decisao_id": "d26240a8182a4dd69d928d5e63e2da2f",
+     "efeito_externo": "nao-aplicado",
+     "executor_observado": {
+       "effort": "alto",
+@@ -103,7 +103,7 @@
+     },
+     "fim": "2026-07-30T00:00:09Z",
+     "inicio": "2026-07-30T00:00:07Z",
+-    "linhagem_id": "f739b124e070405caab596fc8f5bad9c",
++    "linhagem_id": "a24085e1d7f7444da38445a90325e1a0",
+     "resultado": "falha-quota",
+     "selecao_solicitada": {
+       "controle": "confirma-no-gasto",
+@@ -116,16 +116,16 @@
+     "vinculos": {
+       "hash_aprovacao": "116df29e6c06962b388266d62b6c71f5f5ee9ad1a9a9dfc3614b636619509beb",
+       "hash_catalogo": "f0b3813c6664b7e7d3f80f1453235dda79e102c87021ef3fd3b6429ad484fc0d",
+-      "hash_contexto": "603a2deeeb55b7620bf35b070a322a5bd9d0845584f6d79712fe796dc5427e5d",
+-      "hash_envelope": "3541c66c1b87f57336585e46f929f1f2451d2397e0f77194e08fe3ad7f44e4cb",
++      "hash_contexto": "c788eb69ab69c09598483462c76a450351d14759ad0fd4f7e86f55da33d81b18",
++      "hash_envelope": "ded758a1054505ab77a7431fc8f2a2d97e1129dd091694bce7566e6c98478429",
+       "hash_permissoes": "5683800ce20fea8313db4ee6fe6162e73b1119535cbb1faac5f90b5e136b7d04",
+       "hash_politica": "169b90c813290bcd3c327be79d29975f1c1e6df71c88a27ee16a95502dd0a0a7"
+     },
+-    "work_unit_id": "6d3b45597ab9463bad195473821a22bf"
++    "work_unit_id": "1d9f55bee4914040be846e373f3eecbe"
+   },
+   "attempt_2": {
+     "artefato_ref": "60204bc71025003c0090701ac6712bd39808d0c84b38aa1c95533344568028bf",
+-    "attempt_id": "0ed6227974204fdcacc732e7d6e869d3",
++    "attempt_id": "a1e16c8b4ecd4be4b288fdc7046dc022",
+     "captura": {
+       "saida_estruturada_ref": "60204bc71025003c0090701ac6712bd39808d0c84b38aa1c95533344568028bf",
+       "saida_final_ref": "60204bc71025003c0090701ac6712bd39808d0c84b38aa1c95533344568028bf"
+@@ -135,7 +135,7 @@
+       "tokens": 527,
+       "valor": 0.092
+     },
+-    "decisao_id": "c71caae8194242f2899135d32292c2f0",
++    "decisao_id": "5de5d323118a45aab4d56b71408af0a4",
+     "efeito_externo": "aplicado",
+     "executor_observado": {
+       "effort": "alto",
+@@ -153,7 +153,7 @@
+     },
+     "fim": "2026-07-30T00:00:19Z",
+     "inicio": "2026-07-30T00:00:17Z",
+-    "linhagem_id": "f739b124e070405caab596fc8f5bad9c",
++    "linhagem_id": "a24085e1d7f7444da38445a90325e1a0",
+     "resultado": "sucesso",
+     "selecao_solicitada": {
+       "controle": "confirma-no-gasto",
+@@ -166,12 +166,12 @@
+     "vinculos": {
+       "hash_aprovacao": "116df29e6c06962b388266d62b6c71f5f5ee9ad1a9a9dfc3614b636619509beb",
+       "hash_catalogo": "f0b3813c6664b7e7d3f80f1453235dda79e102c87021ef3fd3b6429ad484fc0d",
+-      "hash_contexto": "603a2deeeb55b7620bf35b070a322a5bd9d0845584f6d79712fe796dc5427e5d",
+-      "hash_envelope": "3541c66c1b87f57336585e46f929f1f2451d2397e0f77194e08fe3ad7f44e4cb",
++      "hash_contexto": "c788eb69ab69c09598483462c76a450351d14759ad0fd4f7e86f55da33d81b18",
++      "hash_envelope": "ded758a1054505ab77a7431fc8f2a2d97e1129dd091694bce7566e6c98478429",
+       "hash_permissoes": "5683800ce20fea8313db4ee6fe6162e73b1119535cbb1faac5f90b5e136b7d04",
+       "hash_politica": "169b90c813290bcd3c327be79d29975f1c1e6df71c88a27ee16a95502dd0a0a7"
+     },
+-    "work_unit_id": "6d3b45597ab9463bad195473821a22bf"
++    "work_unit_id": "1d9f55bee4914040be846e373f3eecbe"
+   },
+   "cenario": "prova_central",
+   "decisao_1": {
+@@ -201,10 +201,12 @@
+       "rotulo": "estimado",
+       "valor": 0.01
+     },
+-    "decisao_id": "ef3fe4f69344476699b9a04b5d4a318c",
+-    "hash_pacote": "603a2deeeb55b7620bf35b070a322a5bd9d0845584f6d79712fe796dc5427e5d",
++    "decisao_id": "d26240a8182a4dd69d928d5e63e2da2f",
++    "hash_pacote": "c788eb69ab69c09598483462c76a450351d14759ad0fd4f7e86f55da33d81b18",
++    "independencia_evidencia": null,
+     "motivo": "rota padrao: X primeiro",
+     "nivel_capacidade_atendido": "L2",
++    "papel": null,
+     "selecao": {
+       "controle": "confirma-no-gasto",
+       "effort": "alto",
+@@ -217,12 +219,12 @@
+     "vinculos": {
+       "hash_aprovacao": "116df29e6c06962b388266d62b6c71f5f5ee9ad1a9a9dfc3614b636619509beb",
+       "hash_catalogo": "f0b3813c6664b7e7d3f80f1453235dda79e102c87021ef3fd3b6429ad484fc0d",
+-      "hash_contexto": "603a2deeeb55b7620bf35b070a322a5bd9d0845584f6d79712fe796dc5427e5d",
+-      "hash_envelope": "3541c66c1b87f57336585e46f929f1f2451d2397e0f77194e08fe3ad7f44e4cb",
++      "hash_contexto": "c788eb69ab69c09598483462c76a450351d14759ad0fd4f7e86f55da33d81b18",
++      "hash_envelope": "ded758a1054505ab77a7431fc8f2a2d97e1129dd091694bce7566e6c98478429",
+       "hash_permissoes": "5683800ce20fea8313db4ee6fe6162e73b1119535cbb1faac5f90b5e136b7d04",
+       "hash_politica": "169b90c813290bcd3c327be79d29975f1c1e6df71c88a27ee16a95502dd0a0a7"
+     },
+-    "work_unit_id": "6d3b45597ab9463bad195473821a22bf"
++    "work_unit_id": "1d9f55bee4914040be846e373f3eecbe"
+   },
+   "decisao_2": {
+     "alternativas": [],
+@@ -251,10 +253,12 @@
+       "rotulo": "estimado",
+       "valor": 0.01
+     },
+-    "decisao_id": "c71caae8194242f2899135d32292c2f0",
+-    "hash_pacote": "603a2deeeb55b7620bf35b070a322a5bd9d0845584f6d79712fe796dc5427e5d",
++    "decisao_id": "5de5d323118a45aab4d56b71408af0a4",
++    "hash_pacote": "c788eb69ab69c09598483462c76a450351d14759ad0fd4f7e86f55da33d81b18",
++    "independencia_evidencia": null,
+     "motivo": "nova evidencia: quota de X esgotada; Y cobre o perfil",
+     "nivel_capacidade_atendido": "L2",
++    "papel": null,
+     "selecao": {
+       "controle": "confirma-no-gasto",
+       "effort": "alto",
+@@ -263,166 +267,166 @@
+       "modo": "read-only",
+       "provedor": "prov-b"
+     },
+-    "supersede": "ef3fe4f69344476699b9a04b5d4a318c",
++    "supersede": "d26240a8182a4dd69d928d5e63e2da2f",
+     "vinculos": {
+       "hash_aprovacao": "116df29e6c06962b388266d62b6c71f5f5ee9ad1a9a9dfc3614b636619509beb",
+       "hash_catalogo": "f0b3813c6664b7e7d3f80f1453235dda79e102c87021ef3fd3b6429ad484fc0d",
+-      "hash_contexto": "603a2deeeb55b7620bf35b070a322a5bd9d0845584f6d79712fe796dc5427e5d",
+-      "hash_envelope": "3541c66c1b87f57336585e46f929f1f2451d2397e0f77194e08fe3ad7f44e4cb",
++      "hash_contexto": "c788eb69ab69c09598483462c76a450351d14759ad0fd4f7e86f55da33d81b18",
++      "hash_envelope": "ded758a1054505ab77a7431fc8f2a2d97e1129dd091694bce7566e6c98478429",
+       "hash_permissoes": "5683800ce20fea8313db4ee6fe6162e73b1119535cbb1faac5f90b5e136b7d04",
+       "hash_politica": "169b90c813290bcd3c327be79d29975f1c1e6df71c88a27ee16a95502dd0a0a7"
+     },
+-    "work_unit_id": "6d3b45597ab9463bad195473821a22bf"
++    "work_unit_id": "1d9f55bee4914040be846e373f3eecbe"
+   },
+   "descricao": "troca de modelo na mesma sessao/linhagem com supersede",
+   "eventos": [
+     {
+       "acao": "abrir",
+       "causado_por": null,
+-      "evento_id": "fc9d819f2028472eb06428953861d3f9",
++      "evento_id": "d4f9d022e2f44926ae33eea01cf5224a",
+       "seq": 1,
+       "tipo": "sessao"
+     },
+     {
+       "acao": "registrar",
+       "causado_por": null,
+-      "evento_id": "ecc8de0fbb6643e8a416091ed17282cb",
++      "evento_id": "c0f0675a32e146d7b779c9cb811b008b",
+       "seq": 2,
+       "tipo": "work-unit"
+     },
+     {
+       "acao": "transicao",
+-      "causado_por": "ecc8de0fbb6643e8a416091ed17282cb",
+-      "evento_id": "ed7177090bea4eb1b0c9200604be8169",
++      "causado_por": "c0f0675a32e146d7b779c9cb811b008b",
++      "evento_id": "66fad63c20aa481fb0442b9c83f52850",
+       "seq": 3,
+       "tipo": "work-unit"
+     },
+     {
+       "acao": "registrar",
+       "causado_por": null,
+-      "evento_id": "1cc2a83da55b4a88ba2a3689fbe27e05",
++      "evento_id": "adecf63e38c5404c9d138441c55b639b",
+       "seq": 4,
+       "tipo": "routing"
+     },
+     {
+       "acao": "transicao",
+-      "causado_por": "1cc2a83da55b4a88ba2a3689fbe27e05",
+-      "evento_id": "7124ff9e316344d1a5e801d62e33fe06",
++      "causado_por": "adecf63e38c5404c9d138441c55b639b",
++      "evento_id": "3cfc2c7045da4fa09c7f03c5be43a7f3",
+       "seq": 5,
+       "tipo": "work-unit"
+     },
+     {
+       "acao": "criar",
+-      "causado_por": "1cc2a83da55b4a88ba2a3689fbe27e05",
+-      "evento_id": "cf691444f7744fc2b2d96c88530cab8c",
++      "causado_por": "adecf63e38c5404c9d138441c55b639b",
++      "evento_id": "674545d9b2ff42538b3c278add8c59eb",
+       "seq": 6,
+       "tipo": "attempt"
+     },
+     {
+       "acao": "despachar",
+-      "causado_por": "cf691444f7744fc2b2d96c88530cab8c",
+-      "evento_id": "ca6f187d329d4cb2a235132ecbd755cc",
++      "causado_por": "674545d9b2ff42538b3c278add8c59eb",
++      "evento_id": "46d1b9a3e1d84bd69d2abcb910bde04e",
+       "seq": 7,
+       "tipo": "attempt"
+     },
+     {
+       "acao": "concluir",
+-      "causado_por": "ca6f187d329d4cb2a235132ecbd755cc",
+-      "evento_id": "1fd997a67a2746069af57d42c371af31",
++      "causado_por": "46d1b9a3e1d84bd69d2abcb910bde04e",
++      "evento_id": "60e474b7f5274feaad126c3bd30df250",
+       "seq": 8,
+       "tipo": "attempt"
+     },
+     {
+       "acao": "consumo",
+-      "causado_por": "1fd997a67a2746069af57d42c371af31",
+-      "evento_id": "35b759de9ce04a69bc00e26e390b603f",
++      "causado_por": "60e474b7f5274feaad126c3bd30df250",
++      "evento_id": "b9dad4cddcab4f07a8c1fc2f2a2008ff",
+       "seq": 9,
+       "tipo": "orcamento"
+     },
+     {
+       "acao": "registrar",
+-      "causado_por": "1fd997a67a2746069af57d42c371af31",
+-      "evento_id": "efc7f7f4e2b84d7daf82ac47f5b10b17",
++      "causado_por": "60e474b7f5274feaad126c3bd30df250",
++      "evento_id": "f61dd09333914c2d91b2bf69d554432e",
+       "seq": 10,
+       "tipo": "escalation"
+     },
+     {
+       "acao": "registrar",
+       "causado_por": null,
+-      "evento_id": "7683b4394dff4e5ab88f94e565202dff",
++      "evento_id": "6cdbf8e42dc1483788cb51bf1b7a737e",
+       "seq": 11,
+       "tipo": "memoria"
+     },
+     {
+       "acao": "registrar",
+       "causado_por": null,
+-      "evento_id": "834ff9d785e740f6b703a3a05be0e0cb",
++      "evento_id": "720bf8ad8c054374a2d5634ad29d806d",
+       "seq": 12,
+       "tipo": "routing"
+     },
+     {
+       "acao": "transicao",
+-      "causado_por": "834ff9d785e740f6b703a3a05be0e0cb",
+-      "evento_id": "8ec1e8aaec5e446d90b55bc4d71b616a",
++      "causado_por": "720bf8ad8c054374a2d5634ad29d806d",
++      "evento_id": "fcc12f59a23a48d19af135ad864ec21d",
+       "seq": 13,
+       "tipo": "work-unit"
+     },
+     {
+       "acao": "criar",
+-      "causado_por": "834ff9d785e740f6b703a3a05be0e0cb",
+-      "evento_id": "462a7492d4c24701a5b82f1606ede9aa",
++      "causado_por": "720bf8ad8c054374a2d5634ad29d806d",
++      "evento_id": "0c72303af4464477a08adccaec8a6c82",
+       "seq": 14,
+       "tipo": "attempt"
+     },
+     {
+       "acao": "despachar",
+-      "causado_por": "462a7492d4c24701a5b82f1606ede9aa",
+-      "evento_id": "cc405a61481941b6bb4cedc62a48e4c8",
++      "causado_por": "0c72303af4464477a08adccaec8a6c82",
++      "evento_id": "d875b1b699014244b9ec3628df30048f",
+       "seq": 15,
+       "tipo": "attempt"
+     },
+     {
+       "acao": "concluir",
+-      "causado_por": "cc405a61481941b6bb4cedc62a48e4c8",
+-      "evento_id": "66a0c40f18c746a2a0d2908978e3ed3f",
++      "causado_por": "d875b1b699014244b9ec3628df30048f",
++      "evento_id": "6c96c988107d4d0093d7558e483a39ba",
+       "seq": 16,
+       "tipo": "attempt"
+     },
+     {
+       "acao": "consumo",
+-      "causado_por": "66a0c40f18c746a2a0d2908978e3ed3f",
+-      "evento_id": "2b90255a007f4b21aee6df0083d85d18",
++      "causado_por": "6c96c988107d4d0093d7558e483a39ba",
++      "evento_id": "35ce625d29f24ceea7eb79ab87ab72ae",
+       "seq": 17,
+       "tipo": "orcamento"
+     },
+     {
+       "acao": "transicao",
+-      "causado_por": "66a0c40f18c746a2a0d2908978e3ed3f",
+-      "evento_id": "1619fd31149e468a84b80711b3ef749d",
++      "causado_por": "6c96c988107d4d0093d7558e483a39ba",
++      "evento_id": "d06a1db5c34b43cd8b6875568dcd4538",
+       "seq": 18,
+       "tipo": "work-unit"
+     },
+     {
+       "acao": "registrar",
+       "causado_por": null,
+-      "evento_id": "d8ecdf2b4303420492a99d82abbc889a",
++      "evento_id": "d0ddc840e2d94e30a573f6aeac29b988",
+       "seq": 19,
+       "tipo": "veredito"
+     },
+     {
+       "acao": "transicao",
+-      "causado_por": "d8ecdf2b4303420492a99d82abbc889a",
+-      "evento_id": "13a6e0ddcfdd4fe5b024083061fb7710",
++      "causado_por": "d0ddc840e2d94e30a573f6aeac29b988",
++      "evento_id": "89f03493db1b456c88a658f618d07162",
+       "seq": 20,
+       "tipo": "work-unit"
+     }
+   ],
+-  "linhagem_id": "f739b124e070405caab596fc8f5bad9c",
++  "linhagem_id": "a24085e1d7f7444da38445a90325e1a0",
+   "projecao": {
+     "attempts": [
+       {
+         "artefato_ref": null,
+-        "attempt_id": "265c8dd7074046c082e332e08ee28914",
++        "attempt_id": "a740bb6449384bd3b6a806f1c58ecb8e",
+         "captura": {
+           "saida_estruturada_ref": "8ec2c0efb2fa5eacf8294029930391913f20aa62a76f1237aba97d1dda697a93",
+           "saida_final_ref": null
+@@ -432,7 +436,7 @@
+           "tokens": 445,
+           "valor": 0.014
+         },
+-        "decisao_id": "ef3fe4f69344476699b9a04b5d4a318c",
++        "decisao_id": "d26240a8182a4dd69d928d5e63e2da2f",
+         "efeito_externo": "nao-aplicado",
+         "executor_observado": {
+           "effort": "alto",
+@@ -450,7 +454,7 @@
+         },
+         "fim": "2026-07-30T00:00:09Z",
+         "inicio": "2026-07-30T00:00:07Z",
+-        "linhagem_id": "f739b124e070405caab596fc8f5bad9c",
++        "linhagem_id": "a24085e1d7f7444da38445a90325e1a0",
+         "resultado": "falha-quota",
+         "selecao_solicitada": {
+           "controle": "confirma-no-gasto",
+@@ -463,16 +467,16 @@
+         "vinculos": {
+           "hash_aprovacao": "116df29e6c06962b388266d62b6c71f5f5ee9ad1a9a9dfc3614b636619509beb",
+           "hash_catalogo": "f0b3813c6664b7e7d3f80f1453235dda79e102c87021ef3fd3b6429ad484fc0d",
+-          "hash_contexto": "603a2deeeb55b7620bf35b070a322a5bd9d0845584f6d79712fe796dc5427e5d",
+-          "hash_envelope": "3541c66c1b87f57336585e46f929f1f2451d2397e0f77194e08fe3ad7f44e4cb",
++          "hash_contexto": "c788eb69ab69c09598483462c76a450351d14759ad0fd4f7e86f55da33d81b18",
++          "hash_envelope": "ded758a1054505ab77a7431fc8f2a2d97e1129dd091694bce7566e6c98478429",
+           "hash_permissoes": "5683800ce20fea8313db4ee6fe6162e73b1119535cbb1faac5f90b5e136b7d04",
+           "hash_politica": "169b90c813290bcd3c327be79d29975f1c1e6df71c88a27ee16a95502dd0a0a7"
+         },
+-        "work_unit_id": "6d3b45597ab9463bad195473821a22bf"
++        "work_unit_id": "1d9f55bee4914040be846e373f3eecbe"
+       },
+       {
+         "artefato_ref": "60204bc71025003c0090701ac6712bd39808d0c84b38aa1c95533344568028bf",
+-        "attempt_id": "0ed6227974204fdcacc732e7d6e869d3",
++        "attempt_id": "a1e16c8b4ecd4be4b288fdc7046dc022",
+         "captura": {
+           "saida_estruturada_ref": "60204bc71025003c0090701ac6712bd39808d0c84b38aa1c95533344568028bf",
+           "saida_final_ref": "60204bc71025003c0090701ac6712bd39808d0c84b38aa1c95533344568028bf"
+@@ -482,7 +486,7 @@
+           "tokens": 527,
+           "valor": 0.092
+         },
+-        "decisao_id": "c71caae8194242f2899135d32292c2f0",
++        "decisao_id": "5de5d323118a45aab4d56b71408af0a4",
+         "efeito_externo": "aplicado",
+         "executor_observado": {
+           "effort": "alto",
+@@ -500,7 +504,7 @@
+         },
+         "fim": "2026-07-30T00:00:19Z",
+         "inicio": "2026-07-30T00:00:17Z",
+-        "linhagem_id": "f739b124e070405caab596fc8f5bad9c",
++        "linhagem_id": "a24085e1d7f7444da38445a90325e1a0",
+         "resultado": "sucesso",
+         "selecao_solicitada": {
+           "controle": "confirma-no-gasto",
+@@ -513,12 +517,12 @@
+         "vinculos": {
+           "hash_aprovacao": "116df29e6c06962b388266d62b6c71f5f5ee9ad1a9a9dfc3614b636619509beb",
+           "hash_catalogo": "f0b3813c6664b7e7d3f80f1453235dda79e102c87021ef3fd3b6429ad484fc0d",
+-          "hash_contexto": "603a2deeeb55b7620bf35b070a322a5bd9d0845584f6d79712fe796dc5427e5d",
+-          "hash_envelope": "3541c66c1b87f57336585e46f929f1f2451d2397e0f77194e08fe3ad7f44e4cb",
++          "hash_contexto": "c788eb69ab69c09598483462c76a450351d14759ad0fd4f7e86f55da33d81b18",
++          "hash_envelope": "ded758a1054505ab77a7431fc8f2a2d97e1129dd091694bce7566e6c98478429",
+           "hash_permissoes": "5683800ce20fea8313db4ee6fe6162e73b1119535cbb1faac5f90b5e136b7d04",
+           "hash_politica": "169b90c813290bcd3c327be79d29975f1c1e6df71c88a27ee16a95502dd0a0a7"
+         },
+-        "work_unit_id": "6d3b45597ab9463bad195473821a22bf"
++        "work_unit_id": "1d9f55bee4914040be846e373f3eecbe"
+       }
+     ],
+     "custo_total": {
+@@ -526,7 +530,7 @@
+       "valor": 0.106
+     },
+     "decisoes": {
+-      "c71caae8194242f2899135d32292c2f0": {
++      "5de5d323118a45aab4d56b71408af0a4": {
+         "alternativas": [],
+         "aprovacao_custo": {
+           "efforts_permitidos": [
+@@ -553,10 +557,12 @@
+           "rotulo": "estimado",
+           "valor": 0.01
+         },
+-        "decisao_id": "c71caae8194242f2899135d32292c2f0",
+-        "hash_pacote": "603a2deeeb55b7620bf35b070a322a5bd9d0845584f6d79712fe796dc5427e5d",
++        "decisao_id": "5de5d323118a45aab4d56b71408af0a4",
++        "hash_pacote": "c788eb69ab69c09598483462c76a450351d14759ad0fd4f7e86f55da33d81b18",
++        "independencia_evidencia": null,
+         "motivo": "nova evidencia: quota de X esgotada; Y cobre o perfil",
+         "nivel_capacidade_atendido": "L2",
++        "papel": null,
+         "selecao": {
+           "controle": "confirma-no-gasto",
+           "effort": "alto",
+@@ -565,18 +571,18 @@
+           "modo": "read-only",
+           "provedor": "prov-b"
+         },
+-        "supersede": "ef3fe4f69344476699b9a04b5d4a318c",
++        "supersede": "d26240a8182a4dd69d928d5e63e2da2f",
+         "vinculos": {
+           "hash_aprovacao": "116df29e6c06962b388266d62b6c71f5f5ee9ad1a9a9dfc3614b636619509beb",
+           "hash_catalogo": "f0b3813c6664b7e7d3f80f1453235dda79e102c87021ef3fd3b6429ad484fc0d",
+-          "hash_contexto": "603a2deeeb55b7620bf35b070a322a5bd9d0845584f6d79712fe796dc5427e5d",
+-          "hash_envelope": "3541c66c1b87f57336585e46f929f1f2451d2397e0f77194e08fe3ad7f44e4cb",
++          "hash_contexto": "c788eb69ab69c09598483462c76a450351d14759ad0fd4f7e86f55da33d81b18",
++          "hash_envelope": "ded758a1054505ab77a7431fc8f2a2d97e1129dd091694bce7566e6c98478429",
+           "hash_permissoes": "5683800ce20fea8313db4ee6fe6162e73b1119535cbb1faac5f90b5e136b7d04",
+           "hash_politica": "169b90c813290bcd3c327be79d29975f1c1e6df71c88a27ee16a95502dd0a0a7"
+         },
+-        "work_unit_id": "6d3b45597ab9463bad195473821a22bf"
++        "work_unit_id": "1d9f55bee4914040be846e373f3eecbe"
+       },
+-      "ef3fe4f69344476699b9a04b5d4a318c": {
++      "d26240a8182a4dd69d928d5e63e2da2f": {
+         "alternativas": [],
+         "aprovacao_custo": {
+           "efforts_permitidos": [
+@@ -603,10 +609,12 @@
+           "rotulo": "estimado",
+           "valor": 0.01
+         },
+-        "decisao_id": "ef3fe4f69344476699b9a04b5d4a318c",
+-        "hash_pacote": "603a2deeeb55b7620bf35b070a322a5bd9d0845584f6d79712fe796dc5427e5d",
++        "decisao_id": "d26240a8182a4dd69d928d5e63e2da2f",
++        "hash_pacote": "c788eb69ab69c09598483462c76a450351d14759ad0fd4f7e86f55da33d81b18",
++        "independencia_evidencia": null,
+         "motivo": "rota padrao: X primeiro",
+         "nivel_capacidade_atendido": "L2",
++        "papel": null,
+         "selecao": {
+           "controle": "confirma-no-gasto",
+           "effort": "alto",
+@@ -619,12 +627,12 @@
+         "vinculos": {
+           "hash_aprovacao": "116df29e6c06962b388266d62b6c71f5f5ee9ad1a9a9dfc3614b636619509beb",
+           "hash_catalogo": "f0b3813c6664b7e7d3f80f1453235dda79e102c87021ef3fd3b6429ad484fc0d",
+-          "hash_contexto": "603a2deeeb55b7620bf35b070a322a5bd9d0845584f6d79712fe796dc5427e5d",
+-          "hash_envelope": "3541c66c1b87f57336585e46f929f1f2451d2397e0f77194e08fe3ad7f44e4cb",
++          "hash_contexto": "c788eb69ab69c09598483462c76a450351d14759ad0fd4f7e86f55da33d81b18",
++          "hash_envelope": "ded758a1054505ab77a7431fc8f2a2d97e1129dd091694bce7566e6c98478429",
+           "hash_permissoes": "5683800ce20fea8313db4ee6fe6162e73b1119535cbb1faac5f90b5e136b7d04",
+           "hash_politica": "169b90c813290bcd3c327be79d29975f1c1e6df71c88a27ee16a95502dd0a0a7"
+         },
+-        "work_unit_id": "6d3b45597ab9463bad195473821a22bf"
++        "work_unit_id": "1d9f55bee4914040be846e373f3eecbe"
+       }
+     },
+     "divergencias_observado_resolvido": [],
+@@ -632,13 +640,13 @@
+       {
+         "destino": "humano",
+         "detalhe": "alternativas esgotadas apos falha-quota",
+-        "escalacao_id": "9fd276a59e54468297d48289efe50c6c",
++        "escalacao_id": "a888d6d239234b2bba4867080c62a72d",
+         "motivo": "sem-alternativa",
+-        "work_unit_id": "6d3b45597ab9463bad195473821a22bf"
++        "work_unit_id": "1d9f55bee4914040be846e373f3eecbe"
+       }
+     ],
+     "fallbacks": [],
+-    "linhagem_id": "f739b124e070405caab596fc8f5bad9c",
++    "linhagem_id": "a24085e1d7f7444da38445a90325e1a0",
+     "n_eventos": 20,
+     "placar_por_executor": {
+       "prov-a/modelo-x": {
+@@ -655,7 +663,7 @@
+       }
+     },
+     "retries": [],
+-    "sessao_id": "f739b124e070405caab596fc8f5bad9c",
++    "sessao_id": "a24085e1d7f7444da38445a90325e1a0",
+     "tokens_total": {
+       "rotulo": "simulado",
+       "valor": 972
+@@ -664,11 +672,11 @@
+       {
+         "alvo": {
+           "artefato_ref": "60204bc71025003c0090701ac6712bd39808d0c84b38aa1c95533344568028bf",
+-          "attempt_id": "0ed6227974204fdcacc732e7d6e869d3",
+-          "work_unit_id": "6d3b45597ab9463bad195473821a22bf"
++          "attempt_id": "a1e16c8b4ecd4be4b288fdc7046dc022",
++          "work_unit_id": "1d9f55bee4914040be846e373f3eecbe"
+         },
+         "camada": "deterministica",
+-        "contexto_ref": "603a2deeeb55b7620bf35b070a322a5bd9d0845584f6d79712fe796dc5427e5d",
++        "contexto_ref": "c788eb69ab69c09598483462c76a450351d14759ad0fd4f7e86f55da33d81b18",
+         "criterios": [
+           {
+             "criterio": "prefixo artefato-final:",
+@@ -702,7 +710,7 @@
+           "seed": null
+         },
+         "resultado": "aprovado",
+-        "veredito_id": "45bc18fd08a84204a2407e86bdf4b71f",
++        "veredito_id": "c1873cdf856d4e85828d1c6872b005b1",
+         "verificador": {
+           "nome": "juiz1-deterministico",
+           "tipo": "deterministico"
+@@ -710,15 +718,15 @@
+       }
+     ],
+     "work_units": {
+-      "6d3b45597ab9463bad195473821a22bf": {
++      "1d9f55bee4914040be846e373f3eecbe": {
+         "classe_governanca": "C1",
+-        "contexto_ref": "603a2deeeb55b7620bf35b070a322a5bd9d0845584f6d79712fe796dc5427e5d",
++        "contexto_ref": "c788eb69ab69c09598483462c76a450351d14759ad0fd4f7e86f55da33d81b18",
+         "criterios_aceite_ref": "ab1219e7dd2bd87460fc78599944651caf878ee73eab8e645ca751e6053b8851",
+         "custo_medido": null,
+         "depende_de": [],
+         "estado": "concluida",
+         "intencao": "produzir artefato final da prova central",
+-        "linhagem_id": "f739b124e070405caab596fc8f5bad9c",
++        "linhagem_id": "a24085e1d7f7444da38445a90325e1a0",
+         "nivel_capacidade": "L2",
+         "parent_work_unit": null,
+         "perfil_capacidade": {
+@@ -732,23 +740,23 @@
+           "privacidade": "remoto-permitido"
+         },
+         "resultado_ref": null,
+-        "sessao_id": "f739b124e070405caab596fc8f5bad9c",
++        "sessao_id": "a24085e1d7f7444da38445a90325e1a0",
+         "tipo": "ato",
+         "tipo_decisao": "tipo-2",
+-        "work_unit_id": "6d3b45597ab9463bad195473821a22bf"
++        "work_unit_id": "1d9f55bee4914040be846e373f3eecbe"
+       }
+     }
+   },
+   "rotulo_numeros": "simulado",
+-  "sessao_id": "f739b124e070405caab596fc8f5bad9c",
++  "sessao_id": "a24085e1d7f7444da38445a90325e1a0",
+   "veredito": {
+     "alvo": {
+       "artefato_ref": "60204bc71025003c0090701ac6712bd39808d0c84b38aa1c95533344568028bf",
+-      "attempt_id": "0ed6227974204fdcacc732e7d6e869d3",
+-      "work_unit_id": "6d3b45597ab9463bad195473821a22bf"
++      "attempt_id": "a1e16c8b4ecd4be4b288fdc7046dc022",
++      "work_unit_id": "1d9f55bee4914040be846e373f3eecbe"
+     },
+     "camada": "deterministica",
+-    "contexto_ref": "603a2deeeb55b7620bf35b070a322a5bd9d0845584f6d79712fe796dc5427e5d",
++    "contexto_ref": "c788eb69ab69c09598483462c76a450351d14759ad0fd4f7e86f55da33d81b18",
+     "criterios": [
+       {
+         "criterio": "prefixo artefato-final:",
+@@ -782,7 +790,7 @@
+       "seed": null
+     },
+     "resultado": "aprovado",
+-    "veredito_id": "45bc18fd08a84204a2407e86bdf4b71f",
++    "veredito_id": "c1873cdf856d4e85828d1c6872b005b1",
+     "verificador": {
+       "nome": "juiz1-deterministico",
+       "tipo": "deterministico"
+diff --git a/05_p0/saidas/to4.json b/05_p0/saidas/to4.json
+index 879dc25..8cce22c 100644
+--- a/05_p0/saidas/to4.json
++++ b/05_p0/saidas/to4.json
+@@ -14,7 +14,7 @@
+   "n_declarado": "1 DAG + 1 competicao + 1 ciclo; sementes {14, 25}",
+   "ordem_topologica_ok": true,
+   "recusas_registradas": [
+-    "IW-3: intencao sobreposta com 73a83a72cbd74f29871749aac7b425f8 (similaridade 0.88)"
++    "IW-3: intencao sobreposta com 128a5c967ab644dfbc06f8de5be898cb (similaridade 0.88)"
+   ],
+   "rotulo_numeros": "simulado",
+   "tarefa": "TO-4"
+diff --git a/05_p0/saidas/to5.json b/05_p0/saidas/to5.json
+index 5936816..12814fe 100644
+--- a/05_p0/saidas/to5.json
++++ b/05_p0/saidas/to5.json
+@@ -28,9 +28,9 @@
+     {
+       "destino": "humano",
+       "detalhe": "classificacao com confianca baixa: falha fechada",
+-      "escalacao_id": "1d83c0dd7d284f929a56a562a5cf7ded",
++      "escalacao_id": "8bf7889be8634f629d8f17b46c4d3b9b",
+       "motivo": "ambiguidade",
+-      "work_unit_id": "efbe1a573ff3410e8a25085d9c7726e5"
++      "work_unit_id": "e780c0bbad7d45bfa797555227706a28"
+     }
+   ],
+   "n_declarado": 3,
+@@ -64,10 +64,12 @@
+           "rotulo": "estimado",
+           "valor": 0.01
+         },
+-        "decisao_id": "0eeb85b32a604f9493193f7bbbcf1a40",
+-        "hash_pacote": "a66906e7966f17c6bdb50d611f899c6a8ee90f7fa9e7722d654d845a13fffacd",
++        "decisao_id": "2f0010cfc8184eb4801ab78f225d246f",
++        "hash_pacote": "72d6a46e829694525eb13d20908a6459fd5d7fe70c83b6c299d4a1881074a6ab",
++        "independencia_evidencia": null,
+         "motivo": "pedido fora da politica",
+         "nivel_capacidade_atendido": "L2",
++        "papel": null,
+         "selecao": {
+           "controle": "confirma-no-gasto",
+           "effort": "alto",
+@@ -80,12 +82,12 @@
+         "vinculos": {
+           "hash_aprovacao": "116df29e6c06962b388266d62b6c71f5f5ee9ad1a9a9dfc3614b636619509beb",
+           "hash_catalogo": "f0b3813c6664b7e7d3f80f1453235dda79e102c87021ef3fd3b6429ad484fc0d",
+-          "hash_contexto": "a66906e7966f17c6bdb50d611f899c6a8ee90f7fa9e7722d654d845a13fffacd",
+-          "hash_envelope": "0fbf161a83432e4e7797771e7053ada8918146d591835cf7fb6b56f92c547355",
++          "hash_contexto": "72d6a46e829694525eb13d20908a6459fd5d7fe70c83b6c299d4a1881074a6ab",
++          "hash_envelope": "49837c30efb507e00dcabbbb41130303b2ec92b2a3ab4222c406e9c27f34c904",
+           "hash_permissoes": "5683800ce20fea8313db4ee6fe6162e73b1119535cbb1faac5f90b5e136b7d04",
+           "hash_politica": "169b90c813290bcd3c327be79d29975f1c1e6df71c88a27ee16a95502dd0a0a7"
+         },
+-        "work_unit_id": "a637cc64c2cb4918a9334f189ae9fb01"
++        "work_unit_id": "8c3d427f55d546b09d0a4cf88556b0e8"
+       },
+       "vetos": [
+         "executor 'prov-ladino/modelo-x' fora da politica",
+diff --git a/05_p0/ssc_p0/contratos.py b/05_p0/ssc_p0/contratos.py
+index 74e974b..9876b55 100644
+--- a/05_p0/ssc_p0/contratos.py
++++ b/05_p0/ssc_p0/contratos.py
+@@ -8,7 +8,7 @@ Falha de validacao e fechada: objeto que nao valida nao entra no EventLog.
+ from dataclasses import dataclass, field, fields, asdict
+ from typing import Any, Optional
+ 
+-SCHEMA_VERSION = "ssc-p0/1.1"
++SCHEMA_VERSION = "ssc-p0/1.2"
+ 
+ # Limites da maquina de recuperacao (D5 §6): retry 1..3, backoff com teto.
+ RETRY_MAX_TENTATIVAS = 3
+@@ -54,6 +54,21 @@ MODALIDADES = frozenset({"texto", "codigo", "dados", "mista"})
+ FORMATOS_SAIDA = frozenset({"livre", "json-schema", "patch"})
+ PRIVACIDADES = frozenset({"local-only", "remoto-permitido"})
+ 
++# --- Frota subscription-only (ADENDO 0.3) -------------------------------------
++AUTH_MODES = frozenset({
++    "subscription-oauth", "cached-token", "acp", "local", "payg-api",
++    "desconhecido",
++})
++BILLING_MODES = frozenset({
++    "subscription", "local-free", "payg", "prepaid", "extra-usage",
++    "desconhecido",
++})
++QUOTA_STATES = frozenset({"disponivel", "limitada", "esgotada", "desconhecida"})
++AUTOMATION_PERMISSIONS = frozenset({
++    "allow", "supervised", "terms-review-required", "deny",
++})
++PAPEIS_FROTA = frozenset({"autor", "revisor", "juiz"})
++
+ 
+ class FalhaContrato(ValueError):
+     """Violacao de contrato: enum fora da lista, campo ausente, schema quebrado."""
+@@ -223,6 +238,9 @@ class RoutingDecision(ContratoBase):
+     aprovacao_custo: Optional[dict]
+     motivo: str
+     supersede: Optional[str]
++    # ADENDO 0.3 (frota): papel na execucao e evidencia de independencia.
++    papel: Optional[str] = None
++    independencia_evidencia: Optional[dict] = None
+ 
+     def validate(self) -> None:
+         _obrigatorio(self.decisao_id, "decisao.decisao_id")
+@@ -251,6 +269,53 @@ class RoutingDecision(ContratoBase):
+             _obrigatorio(ap.get("validade"), "aprovacao_custo.validade")
+             _tipo(ap.get("fallback_autorizado"), bool, "aprovacao_custo.fallback_autorizado")
+         _tipo(self.motivo, str, "decisao.motivo")
++        if self.papel is not None:
++            _enum(self.papel, PAPEIS_FROTA, "decisao.papel")
++        if self.independencia_evidencia is not None:
++            _tipo(self.independencia_evidencia, dict,
++                  "decisao.independencia_evidencia")
++
++
++# --- FleetEntry (ADENDO 0.3: frota subscription-only) ---------------------------
++
++@dataclass
++class FleetEntry(ContratoBase):
++    """Uma assinatura da frota + um modelo descoberto nela.
++
++    Escolha por WorkUnit/ExecutionAttempt dentro do mesmo SessionEnvelope;
++    nenhum provedor fica vinculado a sessao inteira.
++    """
++
++    provider_id: str
++    model_id: str                     # descoberto, nunca presumido
++    capability_profile: dict
++    auth_mode: str
++    billing_mode: str
++    quota_state: str
++    quota_reset: Optional[str]        # reset conhecido, se houver
++    automation_permission: str
++    terms_profile: dict
++    variable_cost: float
++    papeis_preferidos: list           # preferencias, NUNCA papeis fixos
++    canal_oficial: bool
++
++    def validate(self) -> None:
++        _obrigatorio(self.provider_id, "frota.provider_id")
++        _obrigatorio(self.model_id, "frota.model_id")
++        _tipo(self.capability_profile, dict, "frota.capability_profile")
++        _enum(self.auth_mode, AUTH_MODES, "frota.auth_mode")
++        _enum(self.billing_mode, BILLING_MODES, "frota.billing_mode")
++        _enum(self.quota_state, QUOTA_STATES, "frota.quota_state")
++        _enum(self.automation_permission, AUTOMATION_PERMISSIONS,
++              "frota.automation_permission")
++        _tipo(self.terms_profile, dict, "frota.terms_profile")
++        _tipo(self.variable_cost, (int, float), "frota.variable_cost")
++        if self.variable_cost < 0:
++            raise FalhaContrato("frota.variable_cost: negativo")
++        _tipo(self.papeis_preferidos, list, "frota.papeis_preferidos")
++        for papel in self.papeis_preferidos:
++            _enum(papel, PAPEIS_FROTA, "frota.papeis_preferidos")
++        _tipo(self.canal_oficial, bool, "frota.canal_oficial")
+ 
+ 
+ # --- ExecutionAttempt (D5 §5) -------------------------------------------------
+diff --git a/05_p0/ssc_p0/frota.py b/05_p0/ssc_p0/frota.py
+new file mode 100644
+index 0000000..0c3c4a3
+--- /dev/null
++++ b/05_p0/ssc_p0/frota.py
+@@ -0,0 +1,426 @@
++"""Frota subscription-only do SSC+ (ADENDO 0.3 — evolucao experimental).
++
++Cinco assinaturas iniciais (Codex/ChatGPT Pro, Claude Code/Max, Kimi
++Code/Allegretto, Google Antigravity/AI Pro, Grok Build/SuperGrok). Toda
++escolha ocorre por WorkUnit/ExecutionAttempt DENTRO do mesmo
++SessionEnvelope — nenhum provedor fica vinculado a sessao inteira.
++
++POLITICA ECONOMICA IMUTAVEL (POLITICA_ECONOMICA):
++external_variable_cost_cap = 0; subscription_oauth = ALLOW;
++local_model = ALLOW; payg_api = DENY; extra_usage = DENY;
++auto_topup = DENY; unknown_billing_mode = DENY.
++
++Regras de canal:
++- CLIs executam em ambiente SANITIZADO (ambiente_sanitizado): chaves PAYG
++  nunca entram no processo SSC+; as credenciais globais NAO sao apagadas.
++- API key presente NUNCA substitui o OAuth da assinatura.
++- Grok: somente Grok Build da assinatura (cached token, headless ou ACP);
++  NUNCA api.x.ai. GROK_SUPERVISED = ALLOW;
++  GROK_UNATTENDED = TERMS_REVIEW_REQUIRED.
++- Google: somente canal oficial da assinatura; automacao condicional ate
++  prova do canal permitido.
++
++QUOTA_EXHAUSTED: registra evento, preserva sessao/WorkUnit/memoria/
++causalidade, emite NOVA RoutingDecision para outra assinatura capaz;
++nenhuma disponivel = STOP_WAIT_RESET. Migrar para API paga, creditos
++extras ou saldo pre-pago e PROIBIDO.
++"""
++
++import os
++import re
++from types import MappingProxyType
++
++from . import contratos as ct
++from .catalogo import Catalogo
++
++STOP_WAIT_RESET = "STOP_WAIT_RESET"
++
++POLITICA_ECONOMICA = MappingProxyType({
++    "external_variable_cost_cap": 0,
++    "subscription_oauth": "ALLOW",
++    "local_model": "ALLOW",
++    "payg_api": "DENY",
++    "extra_usage": "DENY",
++    "auto_topup": "DENY",
++    "unknown_billing_mode": "DENY",
++})
++
++GROK_AUTOMATION = MappingProxyType({
++    "supervised": "ALLOW",
++    "unattended": "TERMS_REVIEW_REQUIRED",
++})
++
++# Chaves que NUNCA entram no processo SSC+ (adendo). O ambiente global do
++# usuario NAO e modificado — apenas impedimos a heranca pelo subprocesso.
++CHAVES_PROIBIDAS = frozenset({
++    "OPENAI_API_KEY", "CODEX_API_KEY", "ANTHROPIC_API_KEY",
++    "ANTHROPIC_AUTH_TOKEN", "GEMINI_API_KEY", "GOOGLE_API_KEY",
++    "GOOGLE_APPLICATION_CREDENTIALS", "XAI_API_KEY",
++})
++_PADRAO_CHAVE_PAYG = re.compile(
++    r"(_API_KEY|_AUTH_TOKEN|_ACCESS_TOKEN|_API_SECRET|_SECRET_KEY)$")
++
++
++class PoliticaEconomicaViolada(Exception):
++    """Billing/auth/custo fora da politica imutavel: bloqueio pre-invocacao."""
++
++
++class CanalNaoOficial(Exception):
++    """Grok/Google fora do canal oficial da assinatura."""
++
++
++class IndependenciaInsuficiente(ct.FalhaContrato):
++    """Autor, revisor e juiz precisam ser independentes em trabalho critico."""
++
++
++def ambiente_sanitizado(env: dict | None = None) -> dict:
++    """Copia do ambiente SEM chaves PAYG/de plataforma paga.
++
++    Nunca muta `os.environ` nem o dict recebido: as credenciais globais do
++    usuario permanecem intactas — elas apenas nao entram no processo SSC+.
++    """
++    fonte = dict(os.environ if env is None else env)
++    return {k: v for k, v in fonte.items()
++            if k not in CHAVES_PROIBIDAS and not _PADRAO_CHAVE_PAYG.search(k)}
++
++
++def verificar_economia(entry: ct.FleetEntry) -> list:
++    """Vetos da politica economica imutavel (bloqueio ANTES da invocacao)."""
++    vetos = []
++    if entry.variable_cost > POLITICA_ECONOMICA["external_variable_cost_cap"]:
++        vetos.append("external_variable_cost_cap = 0: custo variavel "
++                     f"{entry.variable_cost} proibido")
++    if entry.auth_mode == "payg-api":
++        vetos.append("payg_api = DENY")
++    elif entry.auth_mode == "desconhecido":
++        vetos.append("auth_mode desconhecido = DENY")
++    if entry.billing_mode in ("payg", "prepaid", "extra-usage"):
++        vetos.append(f"billing {entry.billing_mode} = DENY "
++                     "(payg_api/extra_usage/auto_topup proibidos)")
++    elif entry.billing_mode == "desconhecido":
++        vetos.append("unknown_billing_mode = DENY")
++    return vetos
++
++
++def verificar_canal(entry: ct.FleetEntry) -> list:
++    """Regras de canal do adendo: Grok (Build/ACP, nunca api.x.ai) e Google
++    (canal oficial da assinatura)."""
++    vetos = []
++    if entry.provider_id == "grok":
++        if entry.auth_mode not in ("cached-token", "acp"):
++            vetos.append("grok: somente Grok Build da assinatura "
++                         "(cached token, headless ou ACP)")
++        endpoint = entry.terms_profile.get("endpoint", "")
++        if "api.x.ai" in endpoint:
++            vetos.append("grok: api.x.ai PROIBIDO (nunca API paga)")
++        if not entry.canal_oficial:
++            vetos.append("grok: canal fora do Grok Build autenticado")
++    if entry.provider_id == "google" and not entry.canal_oficial:
++        vetos.append("google: OAuth reutilizado em cliente incompativel; "
++                     "somente canal oficial da assinatura")
++    return vetos
++
++
++def verificar_automacao(entry: ct.FleetEntry,
++                        modo_execucao: str = "supervised") -> list:
++    """Nivel de autonomia: Grok unattended = TERMS_REVIEW_REQUIRED; Google
++    condicional ate prova do canal permitido."""
++    vetos = []
++    if entry.automation_permission == "deny":
++        vetos.append("automation_permission = deny")
++    if entry.provider_id == "grok" and modo_execucao == "unattended":
++        vetos.append(f"GROK_UNATTENDED = {GROK_AUTOMATION['unattended']}")
++    if entry.provider_id == "google" \
++            and entry.automation_permission == "terms-review-required":
++        vetos.append("google: automacao condicional ate prova do canal "
++                     "permitido (TERMS_REVIEW_REQUIRED)")
++    return vetos
++
++
++class Frota:
++    """Catalogo de assinaturas com descoberta de modelos.
++
++    O catalogo DESCOBRE os modelos disponiveis por assinatura (sensor
++    injetavel); aliases sao resolvidos na hora da selecao, nunca
++    presumidos permanentes.
++    """
++
++    def __init__(self, entradas: list):
++        self.entradas = [e.validado() for e in entradas]
++        self._por_provider: dict[str, list] = {}
++        for e in self.entradas:
++            self._por_provider.setdefault(e.provider_id, []).append(e)
++
++    def descobrir(self, sensor=None) -> dict:
++        """provider_id -> [model_id disponivel]. sensor(provider_id) ->
++        list[str] substitui a leitura declarada (descoberta real futura)."""
++        modelo_por_provider = {}
++        for provider_id, entradas in self._por_provider.items():
++            if sensor is not None:
++                modelo_por_provider[provider_id] = list(sensor(provider_id))
++            else:
++                modelo_por_provider[provider_id] = [
++                    e.model_id for e in entradas]
++        return modelo_por_provider
++
++    def elegiveis(self, papel: str | None = None,
++                  excluir_providers=frozenset(),
++                  modo_execucao: str = "supervised") -> list:
++        """Assinaturas que passam economia + canal + automacao + quota."""
++        saida = []
++        for e in self.entradas:
++            if e.provider_id in excluir_providers:
++                continue
++            if e.quota_state == "esgotada":
++                continue
++            if papel is not None and e.papeis_preferidos \
++                    and papel not in e.papeis_preferidos:
++                continue  # preferencia registrada; nao e papel fixo
++            if verificar_economia(e) or verificar_canal(e) \
++                    or verificar_automacao(e, modo_execucao):
++                continue
++            saida.append(e)
++        return saida
++
++    def escolher(self, capacidade: str | None = None,
++                 papel: str | None = None,
++                 excluir_providers=frozenset(),
++                 modo_execucao: str = "supervised") -> ct.FleetEntry | None:
++        """Primeira assinatura elegivel que atende a capacidade pedida."""
++        for e in self.elegiveis(papel, excluir_providers, modo_execucao):
++            if capacidade is None \
++                    or capacidade in e.capability_profile.get(
++                        "capacidades", []):
++                return e
++        return None
++
++    def registrar_quota_exhausted(self, provider_id: str,
++                                  model_id: str) -> ct.FleetEntry:
++        """Marca a franquia como esgotada (estado conhecido, com reset)."""
++        for e in self._por_provider.get(provider_id, []):
++            if e.model_id == model_id:
++                e.quota_state = "esgotada"
++                return e
++        raise ct.FalhaContrato(
++            f"quota de entrada desconhecida: {provider_id}/{model_id}")
++
++    @staticmethod
++    def verificar_independencia(autor: ct.FleetEntry,
++                                outro: ct.FleetEntry,
++                                papel_outro: str) -> dict:
++        """Evidencia de independencia autor x revisor/juiz (trabalho critico)."""
++        provider_distinto = autor.provider_id != outro.provider_id
++        modelo_distinto = autor.model_id != outro.model_id
++        evidencia = {
++            "papel": papel_outro,
++            "autor": f"{autor.provider_id}/{autor.model_id}",
++            "outro": f"{outro.provider_id}/{outro.model_id}",
++            "provider_distinto": provider_distinto,
++            "modelo_distinto": modelo_distinto,
++        }
++        if not (provider_distinto and modelo_distinto):
++            raise IndependenciaInsuficiente(
++                f"{papel_outro} nao independente do autor: {evidencia}")
++        return evidencia
++
++
++def frota_inicial() -> list:
++    """As cinco assinaturas do adendo, com perfis INICIAIS (preferencias,
++    nunca papeis fixos). variable_cost = 0 (assinatura), OAuth por perfil.
++    """
++    def entrada(provider_id, model_id, capacidades, preferencias,
++                auth="subscription-oauth", automation="allow",
++                canal=True, terms_extra=None, papeis=None):
++        terms = {"oauth_profile": f"oauth:{provider_id}",
++                 "preferencias_iniciais": preferencias}
++        terms.update(terms_extra or {})
++        return ct.FleetEntry(
++            provider_id=provider_id, model_id=model_id,
++            capability_profile={"capacidades": capacidades},
++            auth_mode=auth, billing_mode="subscription",
++            quota_state="disponivel", quota_reset=None,
++            automation_permission=automation,
++            terms_profile=terms, variable_cost=0.0,
++            papeis_preferidos=papeis or ["autor", "revisor", "juiz"],
++            canal_oficial=canal)
++
++    return [
++        entrada("codex", "gpt-5-codex", ["implementacao", "operacao-repo"],
++                "implementacao principal e operacao de repositorio"),
++        entrada("claude", "claude-opus", ["arquitetura", "specs",
++                                          "revisao-profunda"],
++                "arquitetura, Specs e revisao profunda"),
++        entrada("kimi", "kimi-k2", ["engenharia-reversa", "contexto-extenso",
++                                    "volume"],
++                "engenharia reversa, contexto extenso e volume"),
++        entrada("google", "gemini-pro", ["multimodal",
++                                         "julgamento-transversal"],
++                "multimodalidade e julgamento transversal",
++                automation="terms-review-required"),  # condicional (adendo)
++        entrada("grok", "grok-build", ["pesquisa-atual", "x-web", "red-team",
++                                       "coding-alternativo"],
++                "pesquisa atual, X/web, red team e coding alternativo",
++                auth="cached-token",
++                terms_extra={"endpoint": "grok-build://assinatura"}),
++    ]
++
++
++class AdaptadorAssinatura:
++    """Falso CLI de assinatura: ambiente sanitizado + auth/canal/economia
++    ANTES de qualquer invocacao.
++
++    Em P1+, envolvera o subprocesso real do CLI; na P0/P0.3 envolve um
++    FakeProvider deterministico. Registra o ambiente efetivo para prova.
++    """
++
++    def __init__(self, entry: ct.FleetEntry, provedor_fake, env=None,
++                 modo_execucao: str = "supervised"):
++        self.entry = entry
++        self.env = ambiente_sanitizado(env)
++        vetos = (verificar_economia(entry) + verificar_canal(entry)
++                 + verificar_automacao(entry, modo_execucao))
++        if vetos:
++            raise PoliticaEconomicaViolada("; ".join(vetos))
++        # API key presente NUNCA substitui o OAuth da assinatura: sem perfil
++        # OAuth/cached token valido, a invocacao e bloqueada — mesmo que uma
++        # chave PAYG exista no ambiente original.
++        if entry.auth_mode in ("subscription-oauth", "cached-token", "acp") \
++                and not entry.terms_profile.get("oauth_profile"):
++            raise PoliticaEconomicaViolada(
++                "perfil OAuth da assinatura ausente; chave de API nao "
++                "substitui OAuth (payg_api = DENY)")
++        if any(k in self.env for k in CHAVES_PROIBIDAS):
++            raise PoliticaEconomicaViolada(
++                "ambiente nao sanitizado: chave PAYG presente")
++        self.provedor_fake = provedor_fake
++
++    def invocar(self, entrada: bytes, pacote: dict | None = None,
++                idempotency_key: str | None = None):
++        """Delega ao falso deterministico (P1+: subprocesso sanitizado)."""
++        return self.provedor_fake.invocar(
++            entrada, pacote, idempotency_key=idempotency_key)
++
++
++# --- Integracao com o lab (catalogo/politica/envelope derivados da frota) -----
++
++def catalogo_de_frota(frota: Frota) -> Catalogo:
++    """Catalogo de executores falsos derivado dos modelos DESCOBERTOS."""
++    executores = []
++    for provider_id, modelos in frota.descobrir().items():
++        entry = next(e for e in frota.entradas
++                     if e.provider_id == provider_id and e.model_id in modelos)
++        capacidades = entry.capability_profile.get("capacidades", [])
++        executores.append({
++            "executor_id": f"{provider_id}/{entry.model_id}",
++            "ferramenta": "cli-assinatura",
++            "provedor": provider_id,
++            "modelo": entry.model_id,
++            "efforts": ["baixo", "alto"],
++            "nivel": entry.capability_profile.get("nivel", "L2"),
++            "perfil": {
++                "modalidades": ["texto", "codigo", "mista"],
++                "ferramentas": [],
++                "formatos": ["livre", "json-schema", "patch"],
++                "contexto_max_tokens": 128000,
++                "dominios": ["*"] + capacidades,
++                "privacidade": "remoto-permitido",
++                "latencia_base_ms": 500,
++                "custo_base": 0.0,  # assinatura: custo variavel zero
++            },
++        })
++    return Catalogo(executores)
++
++
++def politica_de_frota(frota: Frota) -> dict:
++    """Politica derivada da frota: so modelos descobertos, rota 'frota'."""
++    descobertos = frota.descobrir()
++    return {
++        "nome": "politica-frota-subscription-only",
++        "rotas_permitidas": ["frota"],
++        "executores": [f"{p}/{m}" for p, modelos in descobertos.items()
++                       for m in modelos],
++        "classe_modos": {
++            "C0": ["read-only", "worktree", "escrita-aprovada"],
++            "C1": ["read-only", "worktree", "escrita-aprovada"],
++            "C2": ["worktree", "escrita-aprovada"],
++            "C3": ["escrita-aprovada"],
++        },
++    }
++
++
++def envelope_de_frota(frota: Frota) -> dict:
++    """Envelope de custo da frota: teto zero de custo variavel, fallback
++    autorizado entre assinaturas (QUOTA_EXHAUSTED -> outra assinatura)."""
++    descobertos = frota.descobrir()
++    return {
++        "modelos_permitidos": [f"{p}/{m}" for p, modelos in descobertos.items()
++                               for m in modelos],
++        "efforts_permitidos": ["baixo", "alto"],
++        "teto_custo": 0.0,  # external_variable_cost_cap = 0
++        "modo": "read-only",
++        "validade": "2027-01-01T00:00:00Z",
++        "fallback_autorizado": True,
++    }
++
++
++class ResultadoFrota:
++    """Resultado de uma rodada orquestrada pela frota."""
++
++    def __init__(self, status: str, resultado_execucao=None, detalhe=""):
++        self.status = status  # sucesso | STOP_WAIT_RESET | escalonado
++        self.resultado = resultado_execucao
++        self.detalhe = detalhe
++
++    def __repr__(self):
++        return f"ResultadoFrota({self.status!r}, {self.detalhe!r})"
++
++
++def executar_com_frota(lab, frota: Frota, wu, papel: str = "autor",
++                       idempotency_key: str | None = None,
++                       entrada: bytes = b"") -> ResultadoFrota:
++    """Escolha por WorkUnit dentro do MESMO SessionEnvelope (adendo).
++
++    QUOTA_EXHAUSTED -> estado registrado na frota + nova RoutingDecision
++    para outra assinatura capaz (sessao, WorkUnit, memoria e causalidade
++    preservados pelo proprio mecanismo de fallback 0.2.1-6). Nenhuma
++    assinatura disponivel = STOP_WAIT_RESET — NUNCA PAYG.
++    """
++    elegiveis = frota.elegiveis(papel=papel)
++    if not elegiveis:
++        return ResultadoFrota(
++            STOP_WAIT_RESET,
++            detalhe="nenhuma assinatura capaz disponivel; migracao para "
++                    "API paga/creditos/saldo pre-pago e PROIBIDA")
++    primeira, *restantes = elegiveis
++
++    def selecao(entry):
++        return {"ferramenta": "cli-assinatura",
++                "provedor": entry.provider_id, "modelo": entry.model_id,
++                "effort": "alto", "modo": "read-only",
++                "controle": "autonomo"}
++
++    decisao = lab.router.propor_decisao(
++        wu, rota="frota", selecao=selecao(primeira),
++        alternativas=[selecao(e) for e in restantes],
++        aprovacao_custo=lab.aprovacao,
++        motivo=f"frota: {primeira.provider_id}/{primeira.model_id} por "
++               f"capacidade/preferencia (fallback autorizado)",
++        papel=papel)
++    resultado = lab.execution.executar(
++        wu, decisao, idempotency_key=idempotency_key, entrada=entrada)
++    # Marca quota esgotada na frota para cada assinatura que falhou quota.
++    for attempt in lab.kernel.attempts.values():
++        att = attempt["attempt"]
++        if att.work_unit_id == wu.work_unit_id \
++                and att.resultado == "falha-quota":
++            resolvido = att.executor_resolvido
++            frota.registrar_quota_exhausted(resolvido["provedor"],
++                                            resolvido["modelo"])
++    if resultado.status == "sucesso":
++        return ResultadoFrota("sucesso", resultado)
++    if resultado.detalhe in ("sem-alternativa", "fallback-fora-do-envelope"):
++        return ResultadoFrota(
++            STOP_WAIT_RESET, resultado,
++            detalhe="assinaturas esgotadas/indisponiveis; STOP_WAIT_RESET, "
++                    "nunca PAYG")
++    return ResultadoFrota(resultado.status, resultado)
+diff --git a/05_p0/ssc_p0/router.py b/05_p0/ssc_p0/router.py
+index c9be6c9..5ddba44 100644
+--- a/05_p0/ssc_p0/router.py
++++ b/05_p0/ssc_p0/router.py
+@@ -129,11 +129,15 @@ class TaskRouter:
+                        custo_previsto: dict | None = None,
+                        aprovacao_custo: dict | None = None,
+                        motivo: str = "",
++                       papel: str | None = None,
++                       independencia_evidencia: dict | None = None,
+                        causado_por: str | None = None) -> ct.RoutingDecision:
+         """Emite RoutingDecision ANTES da execucao, com veto da Policy.
+ 
+         confianca 'baixa' = falha fechada: EscalationEvent 'ambiguidade',
+         nenhuma decisao registrada, zero attempts.
++        ADENDO 0.3: `papel` (autor/revisor/juiz) e `independencia_evidencia`
++        ficam registrados na decisao (frota subscription-only).
+         """
+         if confianca == "baixa":
+             self.control.escalar(
+@@ -166,6 +170,8 @@ class TaskRouter:
+             aprovacao_custo=aprovacao_custo,
+             motivo=motivo,
+             supersede=self.kernel.vigente.get(wu.work_unit_id),
++            papel=papel,
++            independencia_evidencia=independencia_evidencia,
+         ).validado()
+         vetos = self.policy.verificar_decisao(decisao, wu)
+         if vetos:
+diff --git a/05_p0/tests/test_frota.py b/05_p0/tests/test_frota.py
+new file mode 100644
+index 0000000..3fe8398
+--- /dev/null
++++ b/05_p0/tests/test_frota.py
+@@ -0,0 +1,236 @@
++"""Frota subscription-only (ADENDO 0.3): os 8 testes minimos exigidos.
++
++1. API key presente nao substitui OAuth da assinatura.
++2. Billing desconhecido bloqueia ANTES da invocacao.
++3. Quota esgotada troca de provedor sem perder linhagem.
++4. Ausencia de provedor = STOP_WAIT_RESET, nunca PAYG.
++5. Autor nao aprova a propria entrega critica.
++6. Grok usa cached_token/ACP, nunca XAI_API_KEY/api.x.ai.
++7. Google e Grok respeitam o nivel de autonomia permitido.
++8. Catalogo descobre modelos; aliases nunca permanentes.
++"""
++
++import os
++import unittest
++
++import apoio
++from ssc_p0 import contratos as ct
++from ssc_p0.frota import (AdaptadorAssinatura, Frota, IndependenciaInsuficiente,
++                          PoliticaEconomicaViolada, STOP_WAIT_RESET,
++                          ambiente_sanitizado, catalogo_de_frota,
++                          envelope_de_frota, executar_com_frota, frota_inicial,
++                          politica_de_frota, verificar_automacao,
++                          verificar_canal, verificar_economia)
++from ssc_p0.providers import FakeProvider
++
++
++def _entry(provider_id="codex", model_id="gpt-5-codex", **sobre):
++    base = dict(
++        provider_id=provider_id, model_id=model_id,
++        capability_profile={"capacidades": ["implementacao"]},
++        auth_mode="subscription-oauth", billing_mode="subscription",
++        quota_state="disponivel", quota_reset=None,
++        automation_permission="allow",
++        terms_profile={"oauth_profile": f"oauth:{provider_id}"},
++        variable_cost=0.0, papeis_preferidos=["autor", "revisor", "juiz"],
++        canal_oficial=True)
++    base.update(sobre)
++    return ct.FleetEntry(**base).validado()
++
++
++def _lab_frota(apoio_mod, frota, programa=None):
++    return apoio_mod.novo_lab(
++        catalogo=catalogo_de_frota(frota),
++        politica=politica_de_frota(frota),
++        aprovacao=envelope_de_frota(frota),
++        programa_providers=programa or {},
++        teto_custo=1.0)
++
++
++class TestFrotaEconomiaEAmbiente(unittest.TestCase):
++    def tearDown(self):
++        if getattr(self, "lab", None) is not None:
++            apoio.limpar_lab(self.lab)
++
++    # -- 1. API key nao substitui OAuth ---------------------------------------
++
++    def test_api_key_presente_nao_substitui_oauth(self):
++        env_host = dict(os.environ)
++        env_host["OPENAI_API_KEY"] = "sk-teste-payg-nao-usar-123456"
++        # Ambiente sanitizado: a chave NAO entra no processo SSC+...
++        limpo = ambiente_sanitizado(env_host)
++        self.assertNotIn("OPENAI_API_KEY", limpo)
++        # ...e o ambiente global NAO foi apagado/alterado.
++        self.assertEqual(env_host["OPENAI_API_KEY"],
++                         "sk-teste-payg-nao-usar-123456")
++        # Mesmo com a chave PAYG presente no host, sem perfil OAuth da
++        # assinatura a invocacao e BLOQUEADA (payg_api = DENY).
++        sem_oauth = _entry(terms_profile={})
++        fake = FakeProvider({"provedor": "codex", "modelo": "gpt-5-codex",
++                             "effort": "alto"}, seed=1)
++        with self.assertRaises(PoliticaEconomicaViolada):
++            AdaptadorAssinatura(sem_oauth, fake, env=env_host)
++        self.assertEqual(fake.chamadas, 0)  # nada foi invocado
++        # Com o perfil OAuth da assinatura, passa — e a chave PAYG continua
++        # fora do ambiente efetivo do adaptador.
++        adaptador = AdaptadorAssinatura(_entry(), fake, env=env_host)
++        self.assertNotIn("OPENAI_API_KEY", adaptador.env)
++
++    # -- 2. Billing desconhecido bloqueia antes da invocacao ---------------------
++
++    def test_billing_desconhecido_bloqueia_antes_da_invocacao(self):
++        for billing in ("desconhecido", "payg", "prepaid", "extra-usage"):
++            with self.subTest(billing=billing):
++                entry = _entry(billing_mode=billing)
++                self.assertTrue(verificar_economia(entry))
++                fake = FakeProvider(
++                    {"provedor": "codex", "modelo": "gpt-5-codex",
++                     "effort": "alto"}, seed=1)
++                with self.assertRaises(PoliticaEconomicaViolada):
++                    AdaptadorAssinatura(entry, fake, env={})
++                self.assertEqual(fake.chamadas, 0)  # pre-invocacao
++
++    # -- 3. Quota esgotada troca de provedor sem perder linhagem -------------------
++
++    def test_quota_esgotada_troca_provedor_preserva_linhagem(self):
++        frota = Frota(frota_inicial())
++        self.lab = _lab_frota(
++            apoio, frota, programa={"codex/gpt-5-codex": ["falha-quota"]})
++        k = self.lab.kernel
++        wu = self.lab.router.forjar(
++            intencao="implementar peca via frota", criterios={"tipo": "x"},
++            tipo="ato", nivel="L2", classe="C1")
++        r = executar_com_frota(self.lab, frota, wu,
++                               idempotency_key="frota-quota-1")
++        self.assertEqual(r.status, "sucesso")
++        # Codex marcou quota esgotada; Claude assumiu com NOVA decisao.
++        codex = next(e for e in frota.entradas if e.provider_id == "codex")
++        self.assertEqual(codex.quota_state, "esgotada")
++        self.assertEqual(len(k.decisoes), 2)  # nova RoutingDecision emitida
++        attempt = k.attempts[r.resultado.attempt_id]["attempt"]
++        self.assertEqual(attempt.executor_resolvido["provedor"], "claude")
++        # Sessao, WorkUnit, memoria e causalidade preservados.
++        self.assertEqual(attempt.linhagem_id, k.envelope.linhagem_id)
++        self.assertEqual(attempt.work_unit_id, wu.work_unit_id)
++        k.verificar_integridade()  # cadeia causal integra
++
++    # -- 4. Ausencia de provedor = STOP, nunca PAYG --------------------------------
++
++    def test_sem_provedor_stop_wait_reset_nunca_payg(self):
++        esgotada = _entry(provider_id="codex", model_id="gpt-5-codex",
++                          quota_state="esgotada",
++                          quota_reset="2026-08-01T00:00:00Z")
++        payg = _entry(provider_id="openai-payg", model_id="gpt-5",
++                      auth_mode="payg-api", billing_mode="payg",
++                      variable_cost=0.03)
++        frota = Frota([esgotada, payg])
++        self.assertEqual(frota.elegiveis(), [])  # PAYG nunca elegivel
++        self.lab = _lab_frota(apoio, Frota([esgotada]))
++        wu = self.lab.router.forjar(
++            intencao="tarefa sem assinatura disponivel",
++            criterios={"tipo": "x"}, tipo="ato", nivel="L2", classe="C1")
++        r = executar_com_frota(self.lab, frota, wu,
++                               idempotency_key="frota-stop-1")
++        self.assertEqual(r.status, STOP_WAIT_RESET)
++        self.assertEqual(len(self.lab.kernel.attempts), 0)  # zero invocacao
++        with self.assertRaises(PoliticaEconomicaViolada):
++            AdaptadorAssinatura(payg, FakeProvider(
++                {"provedor": "openai-payg", "modelo": "gpt-5",
++                 "effort": "alto"}, seed=1), env={})
++
++    # -- 5. Autor nao aprova a propria entrega critica ------------------------------
++
++    def test_autor_nao_aprova_propria_entrega_critica(self):
++        autor = _entry(provider_id="codex", model_id="gpt-5-codex")
++        mesmo = _entry(provider_id="codex", model_id="gpt-5-codex")
++        revisor = _entry(provider_id="claude", model_id="claude-opus")
++        with self.assertRaises(IndependenciaInsuficiente):
++            Frota.verificar_independencia(autor, mesmo, "revisor")
++        evidencia = Frota.verificar_independencia(autor, revisor, "revisor")
++        self.assertTrue(evidencia["provider_distinto"]
++                        and evidencia["modelo_distinto"])
++
++    # -- 6. Grok: cached token/ACP, nunca XAI_API_KEY/api.x.ai ------------------------
++
++    def test_grok_cached_token_acp_sem_xai_key(self):
++        grok = _entry(provider_id="grok", model_id="grok-build",
++                      auth_mode="cached-token",
++                      terms_profile={"oauth_profile": "cached:grok",
++                                     "endpoint": "grok-build://assinatura"})
++        env = {"XAI_API_KEY": "xai-nao-usar-123456"}
++        adaptador = AdaptadorAssinatura(grok, FakeProvider(
++            {"provedor": "grok", "modelo": "grok-build", "effort": "alto"},
++            seed=1), env=env)
++        self.assertNotIn("XAI_API_KEY", adaptador.env)  # chave fora
++        # api.x.ai e fora do Grok Build: bloqueados.
++        for ruim in (
++                _entry(provider_id="grok", model_id="grok-4",
++                       auth_mode="payg-api", billing_mode="payg",
++                       terms_profile={"endpoint": "https://api.x.ai/v1"}),
++                _entry(provider_id="grok", model_id="grok-build",
++                       auth_mode="subscription-oauth",
++                       terms_profile={"oauth_profile": "oauth:grok"}),
++                _entry(provider_id="grok", model_id="grok-build",
++                       auth_mode="cached-token", canal_oficial=False,
++                       terms_profile={"oauth_profile": "cached:grok"})):
++            with self.subTest(auth=ruim.auth_mode, canal=ruim.canal_oficial):
++                self.assertTrue(verificar_canal(ruim)
++                                or verificar_economia(ruim))
++
++    # -- 7. Google e Grok respeitam o nivel de autonomia ----------------------------
++
++    def test_google_grok_respeitam_nivel_de_autonomia(self):
++        grok = _entry(provider_id="grok", model_id="grok-build",
++                      auth_mode="cached-token",
++                      terms_profile={"oauth_profile": "cached:grok"})
++        # GROK_SUPERVISED = ALLOW; GROK_UNATTENDED = TERMS_REVIEW_REQUIRED.
++        self.assertEqual(verificar_automacao(grok, "supervised"), [])
++        self.assertTrue(any("TERMS_REVIEW_REQUIRED" in v for v in
++                            verificar_automacao(grok, "unattended")))
++        # Google: canal nao-oficial bloqueia; automacao condicional.
++        google_pendente = _entry(
++            provider_id="google", model_id="gemini-pro",
++            automation_permission="terms-review-required",
++            terms_profile={"oauth_profile": "oauth:google"})
++        self.assertTrue(verificar_automacao(google_pendente))
++        google_fora = _entry(provider_id="google", model_id="gemini-pro",
++                             canal_oficial=False,
++                             terms_profile={"oauth_profile": "oauth:google"})
++        self.assertTrue(verificar_canal(google_fora))
++        google_ok = _entry(provider_id="google", model_id="gemini-pro",
++                           terms_profile={"oauth_profile": "oauth:google"})
++        self.assertEqual(verificar_canal(google_ok), [])
++        self.assertEqual(verificar_automacao(google_ok), [])
++
++    # -- 8. Catalogo descobre modelos; aliases nao permanentes -----------------------
++
++    def test_catalogo_descobre_modelos_sem_aliases_permanentes(self):
++        frota = Frota(frota_inicial())
++        declarado = frota.descobrir()
++        self.assertIn("gpt-5-codex", declarado["codex"])
++        # Sensor de descoberta substitui a leitura declarada: modelo novo
++        # aparece sem nenhum alias pre-registrado.
++        descoberto = frota.descobrir(
++            sensor=lambda p: ["claude-opus-4-8"] if p == "claude"
++            else [e.model_id for e in frota._por_provider[p]])
++        self.assertEqual(descoberto["claude"], ["claude-opus-4-8"])
++        catalogo = catalogo_de_frota(frota)
++        self.assertEqual(catalogo.aliases, {})  # zero alias permanente
++        # A selecao resolve por capacidade no momento; nao ha apelido fixo.
++        escolha = frota.escolher(capacidade="revisao-profunda")
++        self.assertEqual(escolha.provider_id, "claude")
++
++    # -- contrato: round-trip e enums fechados da FleetEntry ---------------------------
++
++    def test_fleetentry_roundtrip_e_enums_fechados(self):
++        entry = _entry()
++        clone = ct.FleetEntry.from_dict(entry.to_dict())
++        self.assertEqual(entry, clone)
++        with self.assertRaises(ct.FalhaContrato):
++            _entry(auth_mode="oauth-magic")  # fora do enum
++        with self.assertRaises(ct.FalhaContrato):
++            _entry(automation_permission="yolo")  # fora do enum
++
++
++if __name__ == "__main__":
++    unittest.main()
+diff --git a/99_decisao-ssc-04.md b/99_decisao-ssc-04.md
+new file mode 100644
+index 0000000..2866d79
+--- /dev/null
++++ b/99_decisao-ssc-04.md
+@@ -0,0 +1,77 @@
++---
++id: SSC-DEC-04
++titulo: Relatorio e Decisao do Adendo — Frota subscription-only (SSC+ 0.3 experimental)
++tipo: decisao-experimental
++versao: 0.1.0
++status: ativo
++origem: laboratorio-ssc-plus
++autoridade: nenhuma
++normativo: nao
++criado_em: 2026-07-30
++---
++
++# Relatorio e Decisao do Adendo — Frota subscription-only
++
++> Evolucao experimental do SSC+, incorporada ao escopo vigente SEM
++> reescrever ou invalidar 0.1/0.2/0.2.1. Offline, isolado, sem provider
++> real. **Nada foi promovido ao LucaX Enterprise OS canonico.**
++
++## DECISAO: **REGISTRADO-COMO-EVOLUCAO-EXPERIMENTAL**
++
++Adendo implementado no laboratorio com contratos, politica economica
++imutavel, ambiente sanitizado, fluxo QUOTA_EXHAUSTED e os 8 testes
++minimos exigidos — tudo verde, sem custo para as garantias da 0.2.1.
++
++## 1. O que foi instituido
++
++- **Contrato `FleetEntry`** (`contratos.py`): provider_id, model_id
++  descoberto, capability_profile, auth_mode, billing_mode, quota_state +
++  quota_reset, automation_permission, terms_profile, variable_cost,
++  papeis_preferidos, canal_oficial. Enums fechados novos (auth, billing,
++  quota, automacao, papeis). `RoutingDecision` ganha `papel` e
++  `independencia_evidencia`. `SCHEMA_VERSION` → `ssc-p0/1.2`.
++- **`ssc_p0/frota.py`**: `POLITICA_ECONOMICA` imutavel (cap 0; OAuth de
++  assinatura e local = ALLOW; PAYG/extra/topup/desconhecido = DENY),
++  `ambiente_sanitizado` (chaves PAYG fora do processo, ambiente global
++  intacto), `verificar_economia/canal/automacao`, `Frota` (descoberta de
++  modelos sem aliases permanentes, elegiveis, independencia),
++  `AdaptadorAssinatura` (bloqueio pre-invocacao), `executar_com_frota`
++  (QUOTA_EXHAUSTED → nova RoutingDecision → outra assinatura →
++  STOP_WAIT_RESET, nunca PAYG), `frota_inicial` (as 5 assinaturas com
++  perfis iniciais como PREFERENCIAS).
++- **Regras Grok/Google**: Grok so Grok Build da assinatura
++  (cached-token/headless/ACP; nunca api.x.ai; SUPERVISED=ALLOW,
++  UNATTENDED=TERMS_REVIEW_REQUIRED); Google so canal oficial, automacao
++  condicional ate prova do canal.
++- **Wiring minimo**: `Lab` aceita catalogo/politica/aprovacao derivados
++  da frota; `propor_decisao` registra `papel`/`independencia_evidencia`.
++  Nenhuma garantia da 0.2.1 foi alterada.
++
++## 2. Testes
++
++- **100 testes, 0 falhas, 0 skips** (91 da 0.2.1 + 9 novos em
++  `test_frota.py`: os 8 minimos do adendo + round-trip/enums da
++  FleetEntry). Prova central 18/18; corridas TO-1..TO-5 OK; cobertura
++  stdlib `trace`: **2590/2590 linhas (100%)** de `ssc_p0`.
++- Mapeamento exigencia → teste em `02_alvo/09_frota-subscription-only.md`
++  §8.
++
++## 3. Rastreabilidade e evidencia
++
++- Contrato/alvo: `02_alvo/09_frota-subscription-only.md`.
++- Diff da evolucao: `logs/diff-0.3-frota.patch`.
++- Decisao: este documento. Commit proprio, sem tag, sem remoto, staging
++  explicito (mesma disciplina do PORTAO A da 0.2.1).
++
++## 4. Limitacoes declaradas
++
++- Os adaptadores sao **falsos** (nenhum CLI real e invocado na fase
++  offline); a sanitizacao e provada por construcao do ambiente efetivo,
++  nao por subprocesso real — isso e materia da P1.
++- `descobrir()` usa a leitura declarada; o sensor real de descoberta de
++  modelos entra com os adaptadores reais.
++- `quota_reset` e registrado quando conhecido; nenhuma espera ativa e
++  implementada (STOP_WAIT_RESET e um estado terminal da rodada, nao um
++  timer).
++- Perfis iniciais sao preferencias documentadas; nenhuma rota e forcada
++  por perfil.

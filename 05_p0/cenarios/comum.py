@@ -31,12 +31,13 @@ class Lab:
 
     def __init__(self, raiz, relogio=None, teto_custo=0.5,
                  programa_providers=None, seeds=None,
-                 funcoes_sucesso=None, observados=None):
+                 funcoes_sucesso=None, observados=None,
+                 catalogo=None, politica=None, aprovacao=None):
         self.raiz = os.path.realpath(str(raiz))
         self.relogio = relogio or RelogioDeterministico()
-        self.catalogo = catalogo_padrao()
-        self.politica = politica_padrao()
-        self.aprovacao = envelope_aprovacao_padrao()
+        self.catalogo = catalogo or catalogo_padrao()
+        self.politica = politica or politica_padrao()
+        self.aprovacao = aprovacao or envelope_aprovacao_padrao()
         self.kernel = SessionKernel(self.raiz, self.relogio,
                                     raizes_fontes=[DIR_FIXTURES])
         self.control = ControlPlane(self.kernel)

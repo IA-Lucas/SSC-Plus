@@ -75,7 +75,7 @@
   ],
   "attempt_1": {
     "artefato_ref": null,
-    "attempt_id": "265c8dd7074046c082e332e08ee28914",
+    "attempt_id": "a740bb6449384bd3b6a806f1c58ecb8e",
     "captura": {
       "saida_estruturada_ref": "8ec2c0efb2fa5eacf8294029930391913f20aa62a76f1237aba97d1dda697a93",
       "saida_final_ref": null
@@ -85,7 +85,7 @@
       "tokens": 445,
       "valor": 0.014
     },
-    "decisao_id": "ef3fe4f69344476699b9a04b5d4a318c",
+    "decisao_id": "d26240a8182a4dd69d928d5e63e2da2f",
     "efeito_externo": "nao-aplicado",
     "executor_observado": {
       "effort": "alto",
@@ -103,7 +103,7 @@
     },
     "fim": "2026-07-30T00:00:09Z",
     "inicio": "2026-07-30T00:00:07Z",
-    "linhagem_id": "f739b124e070405caab596fc8f5bad9c",
+    "linhagem_id": "a24085e1d7f7444da38445a90325e1a0",
     "resultado": "falha-quota",
     "selecao_solicitada": {
       "controle": "confirma-no-gasto",
@@ -116,16 +116,16 @@
     "vinculos": {
       "hash_aprovacao": "116df29e6c06962b388266d62b6c71f5f5ee9ad1a9a9dfc3614b636619509beb",
       "hash_catalogo": "f0b3813c6664b7e7d3f80f1453235dda79e102c87021ef3fd3b6429ad484fc0d",
-      "hash_contexto": "603a2deeeb55b7620bf35b070a322a5bd9d0845584f6d79712fe796dc5427e5d",
-      "hash_envelope": "3541c66c1b87f57336585e46f929f1f2451d2397e0f77194e08fe3ad7f44e4cb",
+      "hash_contexto": "c788eb69ab69c09598483462c76a450351d14759ad0fd4f7e86f55da33d81b18",
+      "hash_envelope": "ded758a1054505ab77a7431fc8f2a2d97e1129dd091694bce7566e6c98478429",
       "hash_permissoes": "5683800ce20fea8313db4ee6fe6162e73b1119535cbb1faac5f90b5e136b7d04",
       "hash_politica": "169b90c813290bcd3c327be79d29975f1c1e6df71c88a27ee16a95502dd0a0a7"
     },
-    "work_unit_id": "6d3b45597ab9463bad195473821a22bf"
+    "work_unit_id": "1d9f55bee4914040be846e373f3eecbe"
   },
   "attempt_2": {
     "artefato_ref": "60204bc71025003c0090701ac6712bd39808d0c84b38aa1c95533344568028bf",
-    "attempt_id": "0ed6227974204fdcacc732e7d6e869d3",
+    "attempt_id": "a1e16c8b4ecd4be4b288fdc7046dc022",
     "captura": {
       "saida_estruturada_ref": "60204bc71025003c0090701ac6712bd39808d0c84b38aa1c95533344568028bf",
       "saida_final_ref": "60204bc71025003c0090701ac6712bd39808d0c84b38aa1c95533344568028bf"
@@ -135,7 +135,7 @@
       "tokens": 527,
       "valor": 0.092
     },
-    "decisao_id": "c71caae8194242f2899135d32292c2f0",
+    "decisao_id": "5de5d323118a45aab4d56b71408af0a4",
     "efeito_externo": "aplicado",
     "executor_observado": {
       "effort": "alto",
@@ -153,7 +153,7 @@
     },
     "fim": "2026-07-30T00:00:19Z",
     "inicio": "2026-07-30T00:00:17Z",
-    "linhagem_id": "f739b124e070405caab596fc8f5bad9c",
+    "linhagem_id": "a24085e1d7f7444da38445a90325e1a0",
     "resultado": "sucesso",
     "selecao_solicitada": {
       "controle": "confirma-no-gasto",
@@ -166,12 +166,12 @@
     "vinculos": {
       "hash_aprovacao": "116df29e6c06962b388266d62b6c71f5f5ee9ad1a9a9dfc3614b636619509beb",
       "hash_catalogo": "f0b3813c6664b7e7d3f80f1453235dda79e102c87021ef3fd3b6429ad484fc0d",
-      "hash_contexto": "603a2deeeb55b7620bf35b070a322a5bd9d0845584f6d79712fe796dc5427e5d",
-      "hash_envelope": "3541c66c1b87f57336585e46f929f1f2451d2397e0f77194e08fe3ad7f44e4cb",
+      "hash_contexto": "c788eb69ab69c09598483462c76a450351d14759ad0fd4f7e86f55da33d81b18",
+      "hash_envelope": "ded758a1054505ab77a7431fc8f2a2d97e1129dd091694bce7566e6c98478429",
       "hash_permissoes": "5683800ce20fea8313db4ee6fe6162e73b1119535cbb1faac5f90b5e136b7d04",
       "hash_politica": "169b90c813290bcd3c327be79d29975f1c1e6df71c88a27ee16a95502dd0a0a7"
     },
-    "work_unit_id": "6d3b45597ab9463bad195473821a22bf"
+    "work_unit_id": "1d9f55bee4914040be846e373f3eecbe"
   },
   "cenario": "prova_central",
   "decisao_1": {
@@ -201,10 +201,12 @@
       "rotulo": "estimado",
       "valor": 0.01
     },
-    "decisao_id": "ef3fe4f69344476699b9a04b5d4a318c",
-    "hash_pacote": "603a2deeeb55b7620bf35b070a322a5bd9d0845584f6d79712fe796dc5427e5d",
+    "decisao_id": "d26240a8182a4dd69d928d5e63e2da2f",
+    "hash_pacote": "c788eb69ab69c09598483462c76a450351d14759ad0fd4f7e86f55da33d81b18",
+    "independencia_evidencia": null,
     "motivo": "rota padrao: X primeiro",
     "nivel_capacidade_atendido": "L2",
+    "papel": null,
     "selecao": {
       "controle": "confirma-no-gasto",
       "effort": "alto",
@@ -217,12 +219,12 @@
     "vinculos": {
       "hash_aprovacao": "116df29e6c06962b388266d62b6c71f5f5ee9ad1a9a9dfc3614b636619509beb",
       "hash_catalogo": "f0b3813c6664b7e7d3f80f1453235dda79e102c87021ef3fd3b6429ad484fc0d",
-      "hash_contexto": "603a2deeeb55b7620bf35b070a322a5bd9d0845584f6d79712fe796dc5427e5d",
-      "hash_envelope": "3541c66c1b87f57336585e46f929f1f2451d2397e0f77194e08fe3ad7f44e4cb",
+      "hash_contexto": "c788eb69ab69c09598483462c76a450351d14759ad0fd4f7e86f55da33d81b18",
+      "hash_envelope": "ded758a1054505ab77a7431fc8f2a2d97e1129dd091694bce7566e6c98478429",
       "hash_permissoes": "5683800ce20fea8313db4ee6fe6162e73b1119535cbb1faac5f90b5e136b7d04",
       "hash_politica": "169b90c813290bcd3c327be79d29975f1c1e6df71c88a27ee16a95502dd0a0a7"
     },
-    "work_unit_id": "6d3b45597ab9463bad195473821a22bf"
+    "work_unit_id": "1d9f55bee4914040be846e373f3eecbe"
   },
   "decisao_2": {
     "alternativas": [],
@@ -251,10 +253,12 @@
       "rotulo": "estimado",
       "valor": 0.01
     },
-    "decisao_id": "c71caae8194242f2899135d32292c2f0",
-    "hash_pacote": "603a2deeeb55b7620bf35b070a322a5bd9d0845584f6d79712fe796dc5427e5d",
+    "decisao_id": "5de5d323118a45aab4d56b71408af0a4",
+    "hash_pacote": "c788eb69ab69c09598483462c76a450351d14759ad0fd4f7e86f55da33d81b18",
+    "independencia_evidencia": null,
     "motivo": "nova evidencia: quota de X esgotada; Y cobre o perfil",
     "nivel_capacidade_atendido": "L2",
+    "papel": null,
     "selecao": {
       "controle": "confirma-no-gasto",
       "effort": "alto",
@@ -263,166 +267,166 @@
       "modo": "read-only",
       "provedor": "prov-b"
     },
-    "supersede": "ef3fe4f69344476699b9a04b5d4a318c",
+    "supersede": "d26240a8182a4dd69d928d5e63e2da2f",
     "vinculos": {
       "hash_aprovacao": "116df29e6c06962b388266d62b6c71f5f5ee9ad1a9a9dfc3614b636619509beb",
       "hash_catalogo": "f0b3813c6664b7e7d3f80f1453235dda79e102c87021ef3fd3b6429ad484fc0d",
-      "hash_contexto": "603a2deeeb55b7620bf35b070a322a5bd9d0845584f6d79712fe796dc5427e5d",
-      "hash_envelope": "3541c66c1b87f57336585e46f929f1f2451d2397e0f77194e08fe3ad7f44e4cb",
+      "hash_contexto": "c788eb69ab69c09598483462c76a450351d14759ad0fd4f7e86f55da33d81b18",
+      "hash_envelope": "ded758a1054505ab77a7431fc8f2a2d97e1129dd091694bce7566e6c98478429",
       "hash_permissoes": "5683800ce20fea8313db4ee6fe6162e73b1119535cbb1faac5f90b5e136b7d04",
       "hash_politica": "169b90c813290bcd3c327be79d29975f1c1e6df71c88a27ee16a95502dd0a0a7"
     },
-    "work_unit_id": "6d3b45597ab9463bad195473821a22bf"
+    "work_unit_id": "1d9f55bee4914040be846e373f3eecbe"
   },
   "descricao": "troca de modelo na mesma sessao/linhagem com supersede",
   "eventos": [
     {
       "acao": "abrir",
       "causado_por": null,
-      "evento_id": "fc9d819f2028472eb06428953861d3f9",
+      "evento_id": "d4f9d022e2f44926ae33eea01cf5224a",
       "seq": 1,
       "tipo": "sessao"
     },
     {
       "acao": "registrar",
       "causado_por": null,
-      "evento_id": "ecc8de0fbb6643e8a416091ed17282cb",
+      "evento_id": "c0f0675a32e146d7b779c9cb811b008b",
       "seq": 2,
       "tipo": "work-unit"
     },
     {
       "acao": "transicao",
-      "causado_por": "ecc8de0fbb6643e8a416091ed17282cb",
-      "evento_id": "ed7177090bea4eb1b0c9200604be8169",
+      "causado_por": "c0f0675a32e146d7b779c9cb811b008b",
+      "evento_id": "66fad63c20aa481fb0442b9c83f52850",
       "seq": 3,
       "tipo": "work-unit"
     },
     {
       "acao": "registrar",
       "causado_por": null,
-      "evento_id": "1cc2a83da55b4a88ba2a3689fbe27e05",
+      "evento_id": "adecf63e38c5404c9d138441c55b639b",
       "seq": 4,
       "tipo": "routing"
     },
     {
       "acao": "transicao",
-      "causado_por": "1cc2a83da55b4a88ba2a3689fbe27e05",
-      "evento_id": "7124ff9e316344d1a5e801d62e33fe06",
+      "causado_por": "adecf63e38c5404c9d138441c55b639b",
+      "evento_id": "3cfc2c7045da4fa09c7f03c5be43a7f3",
       "seq": 5,
       "tipo": "work-unit"
     },
     {
       "acao": "criar",
-      "causado_por": "1cc2a83da55b4a88ba2a3689fbe27e05",
-      "evento_id": "cf691444f7744fc2b2d96c88530cab8c",
+      "causado_por": "adecf63e38c5404c9d138441c55b639b",
+      "evento_id": "674545d9b2ff42538b3c278add8c59eb",
       "seq": 6,
       "tipo": "attempt"
     },
     {
       "acao": "despachar",
-      "causado_por": "cf691444f7744fc2b2d96c88530cab8c",
-      "evento_id": "ca6f187d329d4cb2a235132ecbd755cc",
+      "causado_por": "674545d9b2ff42538b3c278add8c59eb",
+      "evento_id": "46d1b9a3e1d84bd69d2abcb910bde04e",
       "seq": 7,
       "tipo": "attempt"
     },
     {
       "acao": "concluir",
-      "causado_por": "ca6f187d329d4cb2a235132ecbd755cc",
-      "evento_id": "1fd997a67a2746069af57d42c371af31",
+      "causado_por": "46d1b9a3e1d84bd69d2abcb910bde04e",
+      "evento_id": "60e474b7f5274feaad126c3bd30df250",
       "seq": 8,
       "tipo": "attempt"
     },
     {
       "acao": "consumo",
-      "causado_por": "1fd997a67a2746069af57d42c371af31",
-      "evento_id": "35b759de9ce04a69bc00e26e390b603f",
+      "causado_por": "60e474b7f5274feaad126c3bd30df250",
+      "evento_id": "b9dad4cddcab4f07a8c1fc2f2a2008ff",
       "seq": 9,
       "tipo": "orcamento"
     },
     {
       "acao": "registrar",
-      "causado_por": "1fd997a67a2746069af57d42c371af31",
-      "evento_id": "efc7f7f4e2b84d7daf82ac47f5b10b17",
+      "causado_por": "60e474b7f5274feaad126c3bd30df250",
+      "evento_id": "f61dd09333914c2d91b2bf69d554432e",
       "seq": 10,
       "tipo": "escalation"
     },
     {
       "acao": "registrar",
       "causado_por": null,
-      "evento_id": "7683b4394dff4e5ab88f94e565202dff",
+      "evento_id": "6cdbf8e42dc1483788cb51bf1b7a737e",
       "seq": 11,
       "tipo": "memoria"
     },
     {
       "acao": "registrar",
       "causado_por": null,
-      "evento_id": "834ff9d785e740f6b703a3a05be0e0cb",
+      "evento_id": "720bf8ad8c054374a2d5634ad29d806d",
       "seq": 12,
       "tipo": "routing"
     },
     {
       "acao": "transicao",
-      "causado_por": "834ff9d785e740f6b703a3a05be0e0cb",
-      "evento_id": "8ec1e8aaec5e446d90b55bc4d71b616a",
+      "causado_por": "720bf8ad8c054374a2d5634ad29d806d",
+      "evento_id": "fcc12f59a23a48d19af135ad864ec21d",
       "seq": 13,
       "tipo": "work-unit"
     },
     {
       "acao": "criar",
-      "causado_por": "834ff9d785e740f6b703a3a05be0e0cb",
-      "evento_id": "462a7492d4c24701a5b82f1606ede9aa",
+      "causado_por": "720bf8ad8c054374a2d5634ad29d806d",
+      "evento_id": "0c72303af4464477a08adccaec8a6c82",
       "seq": 14,
       "tipo": "attempt"
     },
     {
       "acao": "despachar",
-      "causado_por": "462a7492d4c24701a5b82f1606ede9aa",
-      "evento_id": "cc405a61481941b6bb4cedc62a48e4c8",
+      "causado_por": "0c72303af4464477a08adccaec8a6c82",
+      "evento_id": "d875b1b699014244b9ec3628df30048f",
       "seq": 15,
       "tipo": "attempt"
     },
     {
       "acao": "concluir",
-      "causado_por": "cc405a61481941b6bb4cedc62a48e4c8",
-      "evento_id": "66a0c40f18c746a2a0d2908978e3ed3f",
+      "causado_por": "d875b1b699014244b9ec3628df30048f",
+      "evento_id": "6c96c988107d4d0093d7558e483a39ba",
       "seq": 16,
       "tipo": "attempt"
     },
     {
       "acao": "consumo",
-      "causado_por": "66a0c40f18c746a2a0d2908978e3ed3f",
-      "evento_id": "2b90255a007f4b21aee6df0083d85d18",
+      "causado_por": "6c96c988107d4d0093d7558e483a39ba",
+      "evento_id": "35ce625d29f24ceea7eb79ab87ab72ae",
       "seq": 17,
       "tipo": "orcamento"
     },
     {
       "acao": "transicao",
-      "causado_por": "66a0c40f18c746a2a0d2908978e3ed3f",
-      "evento_id": "1619fd31149e468a84b80711b3ef749d",
+      "causado_por": "6c96c988107d4d0093d7558e483a39ba",
+      "evento_id": "d06a1db5c34b43cd8b6875568dcd4538",
       "seq": 18,
       "tipo": "work-unit"
     },
     {
       "acao": "registrar",
       "causado_por": null,
-      "evento_id": "d8ecdf2b4303420492a99d82abbc889a",
+      "evento_id": "d0ddc840e2d94e30a573f6aeac29b988",
       "seq": 19,
       "tipo": "veredito"
     },
     {
       "acao": "transicao",
-      "causado_por": "d8ecdf2b4303420492a99d82abbc889a",
-      "evento_id": "13a6e0ddcfdd4fe5b024083061fb7710",
+      "causado_por": "d0ddc840e2d94e30a573f6aeac29b988",
+      "evento_id": "89f03493db1b456c88a658f618d07162",
       "seq": 20,
       "tipo": "work-unit"
     }
   ],
-  "linhagem_id": "f739b124e070405caab596fc8f5bad9c",
+  "linhagem_id": "a24085e1d7f7444da38445a90325e1a0",
   "projecao": {
     "attempts": [
       {
         "artefato_ref": null,
-        "attempt_id": "265c8dd7074046c082e332e08ee28914",
+        "attempt_id": "a740bb6449384bd3b6a806f1c58ecb8e",
         "captura": {
           "saida_estruturada_ref": "8ec2c0efb2fa5eacf8294029930391913f20aa62a76f1237aba97d1dda697a93",
           "saida_final_ref": null
@@ -432,7 +436,7 @@
           "tokens": 445,
           "valor": 0.014
         },
-        "decisao_id": "ef3fe4f69344476699b9a04b5d4a318c",
+        "decisao_id": "d26240a8182a4dd69d928d5e63e2da2f",
         "efeito_externo": "nao-aplicado",
         "executor_observado": {
           "effort": "alto",
@@ -450,7 +454,7 @@
         },
         "fim": "2026-07-30T00:00:09Z",
         "inicio": "2026-07-30T00:00:07Z",
-        "linhagem_id": "f739b124e070405caab596fc8f5bad9c",
+        "linhagem_id": "a24085e1d7f7444da38445a90325e1a0",
         "resultado": "falha-quota",
         "selecao_solicitada": {
           "controle": "confirma-no-gasto",
@@ -463,16 +467,16 @@
         "vinculos": {
           "hash_aprovacao": "116df29e6c06962b388266d62b6c71f5f5ee9ad1a9a9dfc3614b636619509beb",
           "hash_catalogo": "f0b3813c6664b7e7d3f80f1453235dda79e102c87021ef3fd3b6429ad484fc0d",
-          "hash_contexto": "603a2deeeb55b7620bf35b070a322a5bd9d0845584f6d79712fe796dc5427e5d",
-          "hash_envelope": "3541c66c1b87f57336585e46f929f1f2451d2397e0f77194e08fe3ad7f44e4cb",
+          "hash_contexto": "c788eb69ab69c09598483462c76a450351d14759ad0fd4f7e86f55da33d81b18",
+          "hash_envelope": "ded758a1054505ab77a7431fc8f2a2d97e1129dd091694bce7566e6c98478429",
           "hash_permissoes": "5683800ce20fea8313db4ee6fe6162e73b1119535cbb1faac5f90b5e136b7d04",
           "hash_politica": "169b90c813290bcd3c327be79d29975f1c1e6df71c88a27ee16a95502dd0a0a7"
         },
-        "work_unit_id": "6d3b45597ab9463bad195473821a22bf"
+        "work_unit_id": "1d9f55bee4914040be846e373f3eecbe"
       },
       {
         "artefato_ref": "60204bc71025003c0090701ac6712bd39808d0c84b38aa1c95533344568028bf",
-        "attempt_id": "0ed6227974204fdcacc732e7d6e869d3",
+        "attempt_id": "a1e16c8b4ecd4be4b288fdc7046dc022",
         "captura": {
           "saida_estruturada_ref": "60204bc71025003c0090701ac6712bd39808d0c84b38aa1c95533344568028bf",
           "saida_final_ref": "60204bc71025003c0090701ac6712bd39808d0c84b38aa1c95533344568028bf"
@@ -482,7 +486,7 @@
           "tokens": 527,
           "valor": 0.092
         },
-        "decisao_id": "c71caae8194242f2899135d32292c2f0",
+        "decisao_id": "5de5d323118a45aab4d56b71408af0a4",
         "efeito_externo": "aplicado",
         "executor_observado": {
           "effort": "alto",
@@ -500,7 +504,7 @@
         },
         "fim": "2026-07-30T00:00:19Z",
         "inicio": "2026-07-30T00:00:17Z",
-        "linhagem_id": "f739b124e070405caab596fc8f5bad9c",
+        "linhagem_id": "a24085e1d7f7444da38445a90325e1a0",
         "resultado": "sucesso",
         "selecao_solicitada": {
           "controle": "confirma-no-gasto",
@@ -513,12 +517,12 @@
         "vinculos": {
           "hash_aprovacao": "116df29e6c06962b388266d62b6c71f5f5ee9ad1a9a9dfc3614b636619509beb",
           "hash_catalogo": "f0b3813c6664b7e7d3f80f1453235dda79e102c87021ef3fd3b6429ad484fc0d",
-          "hash_contexto": "603a2deeeb55b7620bf35b070a322a5bd9d0845584f6d79712fe796dc5427e5d",
-          "hash_envelope": "3541c66c1b87f57336585e46f929f1f2451d2397e0f77194e08fe3ad7f44e4cb",
+          "hash_contexto": "c788eb69ab69c09598483462c76a450351d14759ad0fd4f7e86f55da33d81b18",
+          "hash_envelope": "ded758a1054505ab77a7431fc8f2a2d97e1129dd091694bce7566e6c98478429",
           "hash_permissoes": "5683800ce20fea8313db4ee6fe6162e73b1119535cbb1faac5f90b5e136b7d04",
           "hash_politica": "169b90c813290bcd3c327be79d29975f1c1e6df71c88a27ee16a95502dd0a0a7"
         },
-        "work_unit_id": "6d3b45597ab9463bad195473821a22bf"
+        "work_unit_id": "1d9f55bee4914040be846e373f3eecbe"
       }
     ],
     "custo_total": {
@@ -526,7 +530,7 @@
       "valor": 0.106
     },
     "decisoes": {
-      "c71caae8194242f2899135d32292c2f0": {
+      "5de5d323118a45aab4d56b71408af0a4": {
         "alternativas": [],
         "aprovacao_custo": {
           "efforts_permitidos": [
@@ -553,10 +557,12 @@
           "rotulo": "estimado",
           "valor": 0.01
         },
-        "decisao_id": "c71caae8194242f2899135d32292c2f0",
-        "hash_pacote": "603a2deeeb55b7620bf35b070a322a5bd9d0845584f6d79712fe796dc5427e5d",
+        "decisao_id": "5de5d323118a45aab4d56b71408af0a4",
+        "hash_pacote": "c788eb69ab69c09598483462c76a450351d14759ad0fd4f7e86f55da33d81b18",
+        "independencia_evidencia": null,
         "motivo": "nova evidencia: quota de X esgotada; Y cobre o perfil",
         "nivel_capacidade_atendido": "L2",
+        "papel": null,
         "selecao": {
           "controle": "confirma-no-gasto",
           "effort": "alto",
@@ -565,18 +571,18 @@
           "modo": "read-only",
           "provedor": "prov-b"
         },
-        "supersede": "ef3fe4f69344476699b9a04b5d4a318c",
+        "supersede": "d26240a8182a4dd69d928d5e63e2da2f",
         "vinculos": {
           "hash_aprovacao": "116df29e6c06962b388266d62b6c71f5f5ee9ad1a9a9dfc3614b636619509beb",
           "hash_catalogo": "f0b3813c6664b7e7d3f80f1453235dda79e102c87021ef3fd3b6429ad484fc0d",
-          "hash_contexto": "603a2deeeb55b7620bf35b070a322a5bd9d0845584f6d79712fe796dc5427e5d",
-          "hash_envelope": "3541c66c1b87f57336585e46f929f1f2451d2397e0f77194e08fe3ad7f44e4cb",
+          "hash_contexto": "c788eb69ab69c09598483462c76a450351d14759ad0fd4f7e86f55da33d81b18",
+          "hash_envelope": "ded758a1054505ab77a7431fc8f2a2d97e1129dd091694bce7566e6c98478429",
           "hash_permissoes": "5683800ce20fea8313db4ee6fe6162e73b1119535cbb1faac5f90b5e136b7d04",
           "hash_politica": "169b90c813290bcd3c327be79d29975f1c1e6df71c88a27ee16a95502dd0a0a7"
         },
-        "work_unit_id": "6d3b45597ab9463bad195473821a22bf"
+        "work_unit_id": "1d9f55bee4914040be846e373f3eecbe"
       },
-      "ef3fe4f69344476699b9a04b5d4a318c": {
+      "d26240a8182a4dd69d928d5e63e2da2f": {
         "alternativas": [],
         "aprovacao_custo": {
           "efforts_permitidos": [
@@ -603,10 +609,12 @@
           "rotulo": "estimado",
           "valor": 0.01
         },
-        "decisao_id": "ef3fe4f69344476699b9a04b5d4a318c",
-        "hash_pacote": "603a2deeeb55b7620bf35b070a322a5bd9d0845584f6d79712fe796dc5427e5d",
+        "decisao_id": "d26240a8182a4dd69d928d5e63e2da2f",
+        "hash_pacote": "c788eb69ab69c09598483462c76a450351d14759ad0fd4f7e86f55da33d81b18",
+        "independencia_evidencia": null,
         "motivo": "rota padrao: X primeiro",
         "nivel_capacidade_atendido": "L2",
+        "papel": null,
         "selecao": {
           "controle": "confirma-no-gasto",
           "effort": "alto",
@@ -619,12 +627,12 @@
         "vinculos": {
           "hash_aprovacao": "116df29e6c06962b388266d62b6c71f5f5ee9ad1a9a9dfc3614b636619509beb",
           "hash_catalogo": "f0b3813c6664b7e7d3f80f1453235dda79e102c87021ef3fd3b6429ad484fc0d",
-          "hash_contexto": "603a2deeeb55b7620bf35b070a322a5bd9d0845584f6d79712fe796dc5427e5d",
-          "hash_envelope": "3541c66c1b87f57336585e46f929f1f2451d2397e0f77194e08fe3ad7f44e4cb",
+          "hash_contexto": "c788eb69ab69c09598483462c76a450351d14759ad0fd4f7e86f55da33d81b18",
+          "hash_envelope": "ded758a1054505ab77a7431fc8f2a2d97e1129dd091694bce7566e6c98478429",
           "hash_permissoes": "5683800ce20fea8313db4ee6fe6162e73b1119535cbb1faac5f90b5e136b7d04",
           "hash_politica": "169b90c813290bcd3c327be79d29975f1c1e6df71c88a27ee16a95502dd0a0a7"
         },
-        "work_unit_id": "6d3b45597ab9463bad195473821a22bf"
+        "work_unit_id": "1d9f55bee4914040be846e373f3eecbe"
       }
     },
     "divergencias_observado_resolvido": [],
@@ -632,13 +640,13 @@
       {
         "destino": "humano",
         "detalhe": "alternativas esgotadas apos falha-quota",
-        "escalacao_id": "9fd276a59e54468297d48289efe50c6c",
+        "escalacao_id": "a888d6d239234b2bba4867080c62a72d",
         "motivo": "sem-alternativa",
-        "work_unit_id": "6d3b45597ab9463bad195473821a22bf"
+        "work_unit_id": "1d9f55bee4914040be846e373f3eecbe"
       }
     ],
     "fallbacks": [],
-    "linhagem_id": "f739b124e070405caab596fc8f5bad9c",
+    "linhagem_id": "a24085e1d7f7444da38445a90325e1a0",
     "n_eventos": 20,
     "placar_por_executor": {
       "prov-a/modelo-x": {
@@ -655,7 +663,7 @@
       }
     },
     "retries": [],
-    "sessao_id": "f739b124e070405caab596fc8f5bad9c",
+    "sessao_id": "a24085e1d7f7444da38445a90325e1a0",
     "tokens_total": {
       "rotulo": "simulado",
       "valor": 972
@@ -664,11 +672,11 @@
       {
         "alvo": {
           "artefato_ref": "60204bc71025003c0090701ac6712bd39808d0c84b38aa1c95533344568028bf",
-          "attempt_id": "0ed6227974204fdcacc732e7d6e869d3",
-          "work_unit_id": "6d3b45597ab9463bad195473821a22bf"
+          "attempt_id": "a1e16c8b4ecd4be4b288fdc7046dc022",
+          "work_unit_id": "1d9f55bee4914040be846e373f3eecbe"
         },
         "camada": "deterministica",
-        "contexto_ref": "603a2deeeb55b7620bf35b070a322a5bd9d0845584f6d79712fe796dc5427e5d",
+        "contexto_ref": "c788eb69ab69c09598483462c76a450351d14759ad0fd4f7e86f55da33d81b18",
         "criterios": [
           {
             "criterio": "prefixo artefato-final:",
@@ -702,7 +710,7 @@
           "seed": null
         },
         "resultado": "aprovado",
-        "veredito_id": "45bc18fd08a84204a2407e86bdf4b71f",
+        "veredito_id": "c1873cdf856d4e85828d1c6872b005b1",
         "verificador": {
           "nome": "juiz1-deterministico",
           "tipo": "deterministico"
@@ -710,15 +718,15 @@
       }
     ],
     "work_units": {
-      "6d3b45597ab9463bad195473821a22bf": {
+      "1d9f55bee4914040be846e373f3eecbe": {
         "classe_governanca": "C1",
-        "contexto_ref": "603a2deeeb55b7620bf35b070a322a5bd9d0845584f6d79712fe796dc5427e5d",
+        "contexto_ref": "c788eb69ab69c09598483462c76a450351d14759ad0fd4f7e86f55da33d81b18",
         "criterios_aceite_ref": "ab1219e7dd2bd87460fc78599944651caf878ee73eab8e645ca751e6053b8851",
         "custo_medido": null,
         "depende_de": [],
         "estado": "concluida",
         "intencao": "produzir artefato final da prova central",
-        "linhagem_id": "f739b124e070405caab596fc8f5bad9c",
+        "linhagem_id": "a24085e1d7f7444da38445a90325e1a0",
         "nivel_capacidade": "L2",
         "parent_work_unit": null,
         "perfil_capacidade": {
@@ -732,23 +740,23 @@
           "privacidade": "remoto-permitido"
         },
         "resultado_ref": null,
-        "sessao_id": "f739b124e070405caab596fc8f5bad9c",
+        "sessao_id": "a24085e1d7f7444da38445a90325e1a0",
         "tipo": "ato",
         "tipo_decisao": "tipo-2",
-        "work_unit_id": "6d3b45597ab9463bad195473821a22bf"
+        "work_unit_id": "1d9f55bee4914040be846e373f3eecbe"
       }
     }
   },
   "rotulo_numeros": "simulado",
-  "sessao_id": "f739b124e070405caab596fc8f5bad9c",
+  "sessao_id": "a24085e1d7f7444da38445a90325e1a0",
   "veredito": {
     "alvo": {
       "artefato_ref": "60204bc71025003c0090701ac6712bd39808d0c84b38aa1c95533344568028bf",
-      "attempt_id": "0ed6227974204fdcacc732e7d6e869d3",
-      "work_unit_id": "6d3b45597ab9463bad195473821a22bf"
+      "attempt_id": "a1e16c8b4ecd4be4b288fdc7046dc022",
+      "work_unit_id": "1d9f55bee4914040be846e373f3eecbe"
     },
     "camada": "deterministica",
-    "contexto_ref": "603a2deeeb55b7620bf35b070a322a5bd9d0845584f6d79712fe796dc5427e5d",
+    "contexto_ref": "c788eb69ab69c09598483462c76a450351d14759ad0fd4f7e86f55da33d81b18",
     "criterios": [
       {
         "criterio": "prefixo artefato-final:",
@@ -782,7 +790,7 @@
       "seed": null
     },
     "resultado": "aprovado",
-    "veredito_id": "45bc18fd08a84204a2407e86bdf4b71f",
+    "veredito_id": "c1873cdf856d4e85828d1c6872b005b1",
     "verificador": {
       "nome": "juiz1-deterministico",
       "tipo": "deterministico"

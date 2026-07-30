@@ -14,7 +14,7 @@
   "n_declarado": "1 DAG + 1 competicao + 1 ciclo; sementes {14, 25}",
   "ordem_topologica_ok": true,
   "recusas_registradas": [
-    "IW-3: intencao sobreposta com 73a83a72cbd74f29871749aac7b425f8 (similaridade 0.88)"
+    "IW-3: intencao sobreposta com 128a5c967ab644dfbc06f8de5be898cb (similaridade 0.88)"
   ],
   "rotulo_numeros": "simulado",
   "tarefa": "TO-4"

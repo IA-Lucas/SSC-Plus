@@ -8,7 +8,7 @@ Falha de validacao e fechada: objeto que nao valida nao entra no EventLog.
 from dataclasses import dataclass, field, fields, asdict
 from typing import Any, Optional
 
-SCHEMA_VERSION = "ssc-p0/1.1"
+SCHEMA_VERSION = "ssc-p0/1.2"
 
 # Limites da maquina de recuperacao (D5 §6): retry 1..3, backoff com teto.
 RETRY_MAX_TENTATIVAS = 3
@@ -53,6 +53,21 @@ INCLUSOES = frozenset({"verbatim", "recorte", "referencia"})
 MODALIDADES = frozenset({"texto", "codigo", "dados", "mista"})
 FORMATOS_SAIDA = frozenset({"livre", "json-schema", "patch"})
 PRIVACIDADES = frozenset({"local-only", "remoto-permitido"})
+
+# --- Frota subscription-only (ADENDO 0.3) -------------------------------------
+AUTH_MODES = frozenset({
+    "subscription-oauth", "cached-token", "acp", "local", "payg-api",
+    "desconhecido",
+})
+BILLING_MODES = frozenset({
+    "subscription", "local-free", "payg", "prepaid", "extra-usage",
+    "desconhecido",
+})
+QUOTA_STATES = frozenset({"disponivel", "limitada", "esgotada", "desconhecida"})
+AUTOMATION_PERMISSIONS = frozenset({
+    "allow", "supervised", "terms-review-required", "deny",
+})
+PAPEIS_FROTA = frozenset({"autor", "revisor", "juiz"})
 
 
 class FalhaContrato(ValueError):
@@ -223,6 +238,9 @@ class RoutingDecision(ContratoBase):
     aprovacao_custo: Optional[dict]
     motivo: str
     supersede: Optional[str]
+    # ADENDO 0.3 (frota): papel na execucao e evidencia de independencia.
+    papel: Optional[str] = None
+    independencia_evidencia: Optional[dict] = None
 
     def validate(self) -> None:
         _obrigatorio(self.decisao_id, "decisao.decisao_id")
@@ -251,6 +269,53 @@ class RoutingDecision(ContratoBase):
             _obrigatorio(ap.get("validade"), "aprovacao_custo.validade")
             _tipo(ap.get("fallback_autorizado"), bool, "aprovacao_custo.fallback_autorizado")
         _tipo(self.motivo, str, "decisao.motivo")
+        if self.papel is not None:
+            _enum(self.papel, PAPEIS_FROTA, "decisao.papel")
+        if self.independencia_evidencia is not None:
+            _tipo(self.independencia_evidencia, dict,
+                  "decisao.independencia_evidencia")
+
+
+# --- FleetEntry (ADENDO 0.3: frota subscription-only) ---------------------------
+
+@dataclass
+class FleetEntry(ContratoBase):
+    """Uma assinatura da frota + um modelo descoberto nela.
+
+    Escolha por WorkUnit/ExecutionAttempt dentro do mesmo SessionEnvelope;
+    nenhum provedor fica vinculado a sessao inteira.
+    """
+
+    provider_id: str
+    model_id: str                     # descoberto, nunca presumido
+    capability_profile: dict
+    auth_mode: str
+    billing_mode: str
+    quota_state: str
+    quota_reset: Optional[str]        # reset conhecido, se houver
+    automation_permission: str
+    terms_profile: dict
+    variable_cost: float
+    papeis_preferidos: list           # preferencias, NUNCA papeis fixos
+    canal_oficial: bool
+
+    def validate(self) -> None:
+        _obrigatorio(self.provider_id, "frota.provider_id")
+        _obrigatorio(self.model_id, "frota.model_id")
+        _tipo(self.capability_profile, dict, "frota.capability_profile")
+        _enum(self.auth_mode, AUTH_MODES, "frota.auth_mode")
+        _enum(self.billing_mode, BILLING_MODES, "frota.billing_mode")
+        _enum(self.quota_state, QUOTA_STATES, "frota.quota_state")
+        _enum(self.automation_permission, AUTOMATION_PERMISSIONS,
+              "frota.automation_permission")
+        _tipo(self.terms_profile, dict, "frota.terms_profile")
+        _tipo(self.variable_cost, (int, float), "frota.variable_cost")
+        if self.variable_cost < 0:
+            raise FalhaContrato("frota.variable_cost: negativo")
+        _tipo(self.papeis_preferidos, list, "frota.papeis_preferidos")
+        for papel in self.papeis_preferidos:
+            _enum(papel, PAPEIS_FROTA, "frota.papeis_preferidos")
+        _tipo(self.canal_oficial, bool, "frota.canal_oficial")
 
 
 # --- ExecutionAttempt (D5 §5) -------------------------------------------------

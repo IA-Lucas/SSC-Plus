@@ -129,11 +129,15 @@ class TaskRouter:
                        custo_previsto: dict | None = None,
                        aprovacao_custo: dict | None = None,
                        motivo: str = "",
+                       papel: str | None = None,
+                       independencia_evidencia: dict | None = None,
                        causado_por: str | None = None) -> ct.RoutingDecision:
         """Emite RoutingDecision ANTES da execucao, com veto da Policy.
 
         confianca 'baixa' = falha fechada: EscalationEvent 'ambiguidade',
         nenhuma decisao registrada, zero attempts.
+        ADENDO 0.3: `papel` (autor/revisor/juiz) e `independencia_evidencia`
+        ficam registrados na decisao (frota subscription-only).
         """
         if confianca == "baixa":
             self.control.escalar(
@@ -166,6 +170,8 @@ class TaskRouter:
             aprovacao_custo=aprovacao_custo,
             motivo=motivo,
             supersede=self.kernel.vigente.get(wu.work_unit_id),
+            papel=papel,
+            independencia_evidencia=independencia_evidencia,
         ).validado()
         vetos = self.policy.verificar_decisao(decisao, wu)
         if vetos:
