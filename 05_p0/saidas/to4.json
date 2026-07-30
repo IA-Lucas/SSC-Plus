@@ -1,0 +1,21 @@
+{
+  "anti_competicao_recusou": true,
+  "ciclo_recusado": true,
+  "criterio_congelado": "DAG aceito; ordem topologica por seq; competicao recusada (IW-3); ciclo recusado",
+  "custo_decomposicao": {
+    "rotulo": "simulado",
+    "valor": 0.229
+  },
+  "custo_execucao_unica": {
+    "rotulo": "simulado",
+    "valor": 0.019
+  },
+  "dag_aceito": true,
+  "n_declarado": "1 DAG + 1 competicao + 1 ciclo; sementes {14, 25}",
+  "ordem_topologica_ok": true,
+  "recusas_registradas": [
+    "IW-3: intencao sobreposta com a1b53f8316f742ebb39e1a2698d9dded (similaridade 0.88)"
+  ],
+  "rotulo_numeros": "simulado",
+  "tarefa": "TO-4"
+}

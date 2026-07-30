@@ -2,21 +2,26 @@
 id: SSC-DOC-05
 titulo: Contratos-alvo do SSC+
 tipo: especificacao-experimental
-versao: 0.1.0
+versao: 0.2.0
 status: ativo
 origem: laboratorio-ssc-plus
 autoridade: nenhuma
 normativo: nao
 criado_em: 2026-07-30
+atualizado_em: 2026-07-30
 ---
 
 # D5 — Contratos-alvo (especificacao, sem implementacao)
 
 > Contratos do modelo de orquestracao por tarefa em sessao logica persistente.
-> **Especificacao apenas** — nenhum codigo existe nesta fase. Nomes e campos sao
-> vocabulario experimental do laboratorio: **nao** sao entidades do Meta Model
-> canonico (FND-09 §5 nao preve Sessao/Tarefa/Execucao) e **nao** usam IDs
-> canonicos. Se um dia forem propostos ao canonico, passam pelo protocolo D8.
+> Nomes e campos sao vocabulario experimental do laboratorio: **nao** sao
+> entidades do Meta Model canonico (FND-09 §5 nao preve Sessao/Tarefa/Execucao)
+> e **nao** usam IDs canonicos. Se um dia forem propostos ao canonico, passam
+> pelo protocolo D8.
+>
+> **v0.2.0** — versao corrigida pela revisao independente SSC-REV-02 (PORTAO 1
+> da Missao 0.2): os 12 itens mandados + RA-1/RA-2/RA-3. Diff contra v0.1.0 em
+> `02_alvo/diffs/d5-v0.1.0-v0.2.0.diff`.
 
 ## 0. Semantica central (vincula todos os contratos)
 
@@ -26,8 +31,9 @@ criado_em: 2026-07-30
 2. **Cada WorkUnit (ou etapa) escolhe** ferramenta, provedor, modelo, effort, modo
    e controle — decisao registrada em RoutingDecision **antes** da execucao.
 3. **Trocar de modelo cria uma nova invocacao na mesma linhagem** — um novo
-   ExecutionAttempt (e um novo evento de reroteamento) **dentro** da mesma sessao
-   logica. A sessao nao reinicia; a linhagem (`linhagem_id`) nao muda.
+   ExecutionAttempt (e uma nova RoutingDecision que `supersede` a anterior)
+   **dentro** da mesma sessao logica. A sessao nao reinicia; a linhagem
+   (`linhagem_id`) nao muda.
 4. **Quem executa nao verifica; quem propoe nao aprova.** Validacao e julgamento
    sao contratos separados da execucao (ValidationVerdict).
 5. **Falha fechada:** ambiguidade de classificacao, provedor fora da politica ou
@@ -35,8 +41,17 @@ criado_em: 2026-07-30
 6. **Referencia, nao conteudo:** eventos e vereditos guardam referencias
    (`sha256`) de artefatos, nao o conteudo (principio do fio legado, ADR-109).
 
-Convencao de tipos: `id` = identificador local opaco (nao canonico) · `ts` =
-timestamp ISO-8601 UTC · `sha256` = hash de conteudo · `enum` = lista fechada.
+### 0.1 Convencoes
+
+- `id` = identificador local opaco (nao canonico), gerado como UUID-4 hex.
+- `ts` = timestamp ISO-8601 UTC. **O relogio nao e autoridade de ordem** (anda
+  para tras, salta, difere entre processos): a ordem causal e a `seq` do
+  EventLog (§8.2); `ts` e informativo.
+- `sha256` = hash de conteudo sobre **serializacao canonica**: JSON UTF-8, chaves
+  ordenadas, separadores compactos (`,`,`:`), sem NaN/Infinity, listas na ordem
+  declarada. Toda referencia `*_ref` aponta para bytes gravados no CAS (§8.1).
+- `enum` = lista fechada; valor fora da lista = falha de contrato, nunca coercao.
+- **Falha de validacao e fechada:** objeto que nao valida nao entra no EventLog.
 
 ## 1. SessionEnvelope
 
@@ -44,18 +59,46 @@ O envelope da sessao logica. Um por sessao; imutavel nos campos de identidade.
 
 | Campo | Tipo | Semantica |
 |---|---|---|
-| `sessao_id` | id | Identidade da sessao logica; nunca muda |
-| `linhagem_id` | id | Linhagem da conversa/trabalho; igual a `sessao_id` na criacao; **imutavel** mesmo com troca de modelo, provedor ou ferramenta |
+| `sessao_id` | id | Identidade da sessao logica; nunca muda (§1.1) |
+| `linhagem_id` | id | Linhagem do trabalho; igual a `sessao_id` na primeira sessao da linhagem; **imutavel** mesmo com troca de modelo, provedor ou ferramenta (§1.1) |
+| `linhagem_origem` | id \| null | Sessao de onde esta linhagem veio, quando a sessao nao e a primeira da linhagem; `null` = linhagem nova. Heranca **declarada**, nunca silenciosa |
 | `criado_em` / `encerrado_em` | ts | Vida da sessao logica |
-| `estado` | enum(`ativa`,`suspensa`,`retomada`,`encerrada`) | Suspensa = checkpoint gravado, sem processo vivo; retomada = mesma sessao, novo processo |
+| `estado` | enum(`ativa`,`suspensa`,`retomada`,`encerrada`) | Tabela de transicoes em §1.2 |
 | `escopo` | objeto | `repo_alvo` (caminho), `modo` (`read-only` \| `worktree` \| `escrita-aprovada`), `fronteiras` (lista de caminhos proibidos) |
 | `permissoes` | objeto | Capacidades concedidas pelo humano: `pode_escrever`, `pode_executar`, `pode_rede`, `conectores_com_escrita` (lista nominal — herda o gate do ADR-121 legado) |
 | `orcamento` | objeto | `teto_custo`, `teto_tokens`, `teto_tempo`, `consumido_*` (medidos); estouro = EscalationEvent, nunca estouro silencioso |
 | `politica_ref` | sha256 | Hash da politica de roteamento vigente na abertura |
+| `catalogo_ref` | sha256 | Hash do catalogo de executores vigente na abertura (base dos vinculos, §4) |
 | `integridade` | objeto | `assinatura_insumos` (sha256 de repo/perfil/politica/catalogo) + `selo` (HMAC local); revalidado antes de cada operacao (principio do vinculo legado) |
 | `contexto_ativo_ref` | sha256 | Checkpoint/contexto corrente |
 | `memoria_ref` | sha256 | Cabeca da memoria da sessao (append-only, com fonte e validade por entrada) |
 | `resumo_aprovacao` | objeto | Hashes dos resumos de custo e autonomia aprovados pelo humano na abertura (portao bloqueante) |
+
+### 1.1 sessao_id × linhagem_id (resolucao)
+
+- **Sessao** e a unidade de vida logica: abertura cria `sessao_id`; suspensao e
+  retomada (§1.2) **mantem** o mesmo `sessao_id` — so muda o processo vivo.
+- **Linhagem** e a unidade de continuidade do trabalho: `linhagem_id` e criado
+  junto com a primeira sessao e **atravessa** sessoes apenas por heranca
+  declarada (`linhagem_origem` preenchido + evento `sessao` de abertura com
+  `causado_por` apontando o encerramento da sessao anterior).
+- Trocar modelo/provedor/ferramenta **nunca** cria sessao nem linhagem novas
+  (IS-1). Encerrar e reabrir "a mesma conversa" sem `linhagem_origem` e
+  linhagem nova — o sistema nao finge continuidade.
+
+### 1.2 Tabela de estados da Sessao
+
+| De | Para | Gatilho | Quem emite |
+|---|---|---|---|
+| — | `ativa` | Abertura aprovada (portao de custo/autonomia) | Control Plane |
+| `ativa` | `suspensa` | Checkpoint validado gravado (IP-1) | Session Kernel |
+| `suspensa` | `retomada` | Checkpoint valido + selo conferido + EventLog integro ate o offset | Session Kernel |
+| `retomada` | `ativa` | Primeira operacao pos-retomada | Session Kernel |
+| `ativa`/`retomada` | `encerrada` | Ato humano, orcamento esgotado irrecuperavel, ou condicao de encerramento | Control Plane |
+| `suspensa` | `encerrada` | Ato humano | Control Plane |
+
+Qualquer outra transicao e **ilegal** e recusada pelo Kernel. `encerrada` e
+terminal: reabrir trabalho = nova sessao com `linhagem_origem` declarada.
 
 **Invariantes:** IS-1 trocar modelo/provedor/ferramenta **nao** altera
 `sessao_id` nem `linhagem_id`. IS-2 qualquer mudanca em `escopo`, `permissoes`,
@@ -74,20 +117,50 @@ explicita.
 | `sessao_id` / `linhagem_id` | id | Dono (sempre a sessao logica) |
 | `parent_work_unit` | id \| null | Pai na decomposicao; `null` = raiz. Grafo **aciclico** (validacao barata antes de pagar, herdada do decompositor legado) |
 | `tipo` | enum(`ato`,`decomposicao`,`etapa`,`revisao`) | `ato` = folha executavel; `decomposicao` = no com filhos |
+| `tipo_decisao` | enum(`tipo-1`,`tipo-2`) | Reversibilidade na semantica canonica FND-04: `tipo-1` = irreversivel/caro de reverter; `tipo-2` = reversivel. Citada, nao redefinida |
 | `intencao` | texto (≤4.000 chars) | O que deve ser verdadeiro ao final; teto herdado do forjador legado — acima, recusa |
-| `nivel_capacidade` | enum(`L1`,`L2`,`L3`) | **Capacidade exigida** (escala experimental, ver D6 §3): L1 = determinístico/mecanico; L2 = generico com contexto; L3 = especializado/julgamento. Independente de risco |
+| `criterios_aceite_ref` | sha256 | Criterios de aceite **congelados na `proposta`** (semantica SF-01: o que deve ser verdadeiro, sob que condicao, por qual evidencia — citada como vocabulario, sem criar Spec). Mudar criterio = nova WorkUnit, nunca edicao |
+| `nivel_capacidade` | enum(`L1`,`L2`,`L3`) | **Capacidade exigida** (escala experimental, D6 §3). Independente de risco |
+| `perfil_capacidade` | objeto | Dimensoes exigidas alem do nivel (D6 §3): `modalidade` (`texto`\|`codigo`\|`dados`\|`mista`), `ferramentas` (lista, pode ser vazia), `formato_saida` (`livre`\|`json-schema`\|`patch`), `contexto_max_tokens`, `dominio` (rotulo livre), `privacidade` (`local-only`\|`remoto-permitido`), `latencia_max_ms` \| null, `orcamento_max_custo` \| null |
 | `classe_governanca` | enum(`C0`,`C1`,`C2`,`C3`) | **Risco/efeito** da execucao sobre o mundo, na semantica canonica FND-04 §2 (preservada). Independente de capacidade |
 | `contexto_ref` | sha256 | ContextPackage montado para esta unidade (§3) |
 | `depende_de` | lista[id] | Arestas de ordem (ondas topologicas); executa quando todos concluem |
-| `estado` | enum(`proposta`,`aprovada`,`em-execucao`,`aguardando-juiz`,`concluida`,`reprovada`,`cancelada`) | Rotas de risco nascem `aguardando-juiz` (principio Juiz 2 legado) |
+| `estado` | enum(§2.1) | Maquina de estados fechada, §2.1 |
 | `resultado_ref` | sha256 \| null | Artefato produzido (referencia, nao conteudo) |
 | `custo_medido` | objeto \| null | Tokens/custo/latencia medidos; `null` honesto quando a fonte nao mede |
 
+### 2.1 Tabela de estados da WorkUnit
+
+`aguardando-aprovacao` = espera de **ato humano**; `aguardando-validacao` =
+espera de **veredito de juiz**. Sao estados distintos, com gatilhos distintos.
+
+| De | Para | Gatilho |
+|---|---|---|
+| — | `proposta` | Forja/decomposicao (criterios congelados aqui) |
+| `proposta` | `aguardando-aprovacao` | `classe_governanca` ≥ C2 ou `tipo_decisao` = `tipo-1` (IW-4) |
+| `proposta` | `aprovada` | C0/C1 e `tipo-2`: aprovacao automatica registrada (sem humano) |
+| `aguardando-aprovacao` | `aprovada` | Ato humano explicito, datado, hasheado (silencio nao aprova) |
+| `aguardando-aprovacao` | `cancelada` | Recusa humana |
+| `aprovada` | `em-execucao` | RoutingDecision vigente + veto da Policy ausente + dependencias concluidas |
+| `em-execucao` | `aguardando-validacao` | Attempt terminal (`sucesso` ou falha nao-transitoria esgotada) |
+| `em-execucao` | `em-execucao` | Retry/fallback autorizado (novo attempt, mesma WorkUnit) |
+| `aguardando-validacao` | `concluida` | ValidationVerdict `aprovado` |
+| `aguardando-validacao` | `reprovada` | ValidationVerdict `reprovado` |
+| `aguardando-validacao` | `proposta` | Veredito `inconclusivo` → escalonado → humano manda reformular (nova decisao de rota) |
+| `reprovada` | `proposta` | Reparo: reabre com contexto do erro (nova RoutingDecision obrigatoria) |
+| qualquer nao-terminal | `cancelada` | Ato humano ou encerramento da sessao |
+
+Terminais: `concluida`, `cancelada`. `reprovada` so sai para `proposta` (reparo)
+ou `cancelada`. Toda transicao fora da tabela e **ilegal** e recusada pelo
+Kernel, com evento de recusa quando houver contexto suficiente para grava-lo.
+
 **Invariantes:** IW-1 toda WorkUnit tem exatamente uma RoutingDecision vigente
-antes de `em-execucao`. IW-2 `decomposicao` com mais de 12 filhos diretos e
+antes de `em-execucao`, e todo attempt referencia a decisao vigente no instante
+da invocacao (RA-3). IW-2 `decomposicao` com mais de 12 filhos diretos e
 recusada (teto legado). IW-3 duas WorkUnits irmas com `intencao` sobreposta
 (competicao) = recusa (anti-competicao legado). IW-4 `classe_governanca` ≥ C2 ou
-Tipo 1 exige `aprovada` por humano antes de `em-execucao`.
+`tipo_decisao` = `tipo-1` nasce `aguardando-aprovacao` e so executa apos ato
+humano.
 
 ## 3. ContextPackage
 
@@ -109,6 +182,13 @@ como **conteudo**, nao como caminho.
 IC-2 nenhuma entrada atravessa a fronteira de isolamento (D2): fontes read-only
 entram como `evidencia`/`norma-citada`, nunca como instrucao executavel.
 IC-3 conteudo externo nunca vira norma (rotulo preservado no pacote).
+**IC-4 nenhum segredo entra no pacote nem em evento:** a montagem roda um
+scanner deterministico de segredos (padroes de chave/token/senha) sobre cada
+entrada e sobre todo payload de evento; deteccao = **recusa** do pacote/evento,
+nunca redacao silenciosa. **IC-5 contencao de caminho:** toda `origem` do tipo
+caminho resolve **dentro** de raizes declaradas (laboratorio e fontes read-only
+de D2), por caminho real — resolucao **recusa** atravessar symlink/junction e
+qualquer fuga (`..`, prefixo fora das raizes) e falha fechada.
 
 ## 4. RoutingDecision
 
@@ -120,30 +200,43 @@ por nova decisao, nunca editada — principio ADR canonico aplicado localmente).
 | `decisao_id` | id | Identidade |
 | `work_unit_id` / `hash_pacote` | id + sha256 | Objeto e contexto da decisao |
 | `classificacao` | objeto | `rota` (enum da politica), `confianca` (`alta` \| `baixa`), `metodo` (`declarado` \| `sensor` \| `llm`); **`baixa` = falha fechada** para julgamento humano ou decomposicao — substitui o classificador-regex aposentado |
-| `selecao` | objeto | `ferramenta`, `provedor`, `modelo`, `effort`, `modo` (`read-only` \| `worktree` \| `escrita-aprovada`), `controle` (`autonomo` \| `confirma-no-gasto` \| `humano-no-loop`) |
-| `nivel_capacidade_atendido` | enum(`L1`,`L2`,`L3`) | Capacidade do executor escolhido; deve ser ≥ `nivel_capacidade` da WorkUnit |
+| `selecao` | objeto | `ferramenta`, `provedor`, `modelo`, `effort` **solicitados**, `modo` (`read-only` \| `worktree` \| `escrita-aprovada`), `controle` (`autonomo` \| `confirma-no-gasto` \| `humano-no-loop`) |
+| `nivel_capacidade_atendido` | enum(`L1`,`L2`,`L3`) | Capacidade do executor escolhido; deve ser ≥ `nivel_capacidade` da WorkUnit, e o `perfil_capacidade` deve ser atendido em **todas** as dimensoes exigidas (D6 §3) |
 | `alternativas` | lista[objeto] | Ordem de fallback declarada (provedor novo entra no fim da fila — principio legado) |
+| `vinculos` | objeto | **Hashes do estado que autoriza a decisao:** `hash_envelope`, `hash_politica`, `hash_permissoes`, `hash_aprovacao`, `hash_catalogo`, `hash_contexto` (= `hash_pacote`). Attempt com vinculo divergente do estado corrente = falha de contrato **antes** do gasto (RA-3) |
 | `custo_previsto` | objeto \| null | Previsao rotulada `estimado`; nunca apresentada como medicao |
-| `aprovacao_custo_ref` | sha256 \| null | Obrigatorio quando `custo_previsto` > 0 e `controle` ≠ `autonomo` (portao bloqueante) |
+| `aprovacao_custo` | objeto \| null | **Envelope aprovado pelo humano** (nao modelo fixo): `modelos_permitidos` (lista de `provedor/modelo`), `efforts_permitidos` (lista), `teto_custo`, `modo`, `validade` (ts de expiracao), `fallback_autorizado` (bool). Obrigatorio quando `custo_previsto` > 0 e `controle` ≠ `autonomo` (portao bloqueante). Reroteamento **dentro** do envelope nao exige nova aprovacao; fora dele, sim |
 | `motivo` | texto | Por que esta selecao (rastreabilidade fonte→decisao→destino) |
 | `supersede` | id \| null | Decisao anterior substituida (ex.: reroteamento) |
 
 ## 5. ExecutionAttempt
 
 Uma invocacao concreta de executor. Trocar modelo = **novo ExecutionAttempt** na
-mesma WorkUnit e mesma `linhagem_id`.
+mesma WorkUnit e mesma `linhagem_id`, autorizado por **nova RoutingDecision**
+que `supersede` a anterior (§0.3).
 
 | Campo | Tipo | Semantica |
 |---|---|---|
 | `attempt_id` | id | Identidade da invocacao |
-| `work_unit_id` / `decisao_id` | id | WorkUnit e RoutingDecision que autorizam |
+| `work_unit_id` / `decisao_id` | id | WorkUnit e RoutingDecision que autorizam (a vigente no instante da invocacao) |
 | `linhagem_id` | id | Sempre o da sessao logica — **a troca de modelo nao cria sessao nova** |
-| `executor` | objeto | `ferramenta`, `provedor`, `modelo`, `effort` efetivos (resolvidos) |
+| `selecao_solicitada` | objeto | `ferramenta`/`provedor`/`modelo`/`effort` pedidos (copia da decisao) |
+| `executor_resolvido` | objeto | `ferramenta`/`provedor`/`modelo`/`effort` **apos resolucao no catalogo** + `hash_catalogo` + `alias_usado` (bool). **Alias nao prova identidade:** a resolucao e registrada, mas o que vale para evidencia e o observado |
+| `executor_observado` | objeto \| null | `modelo`/`provedor`/`effort` **reportados pelo executor** na resposta; `null` honesto quando o executor nao reporta. Divergencia observado ≠ resolvido = evento tipado + contamina o veredito (o juiz ve a divergencia) |
+| `vinculos` | objeto | Os 6 hashes da decisao, reconferidos no instante da invocacao (§4) |
 | `inicio` / `fim` | ts | Latencia medida |
 | `captura` | objeto | `saida_estruturada_ref` (sha256 do stream capturado — **obrigatoria**: a ausencia desta captura causou perda de dado real no legado), `saida_final_ref` |
-| `resultado` | enum(`sucesso`,`falha-transitoria`,`falha-contrato`,`falha-quota`,`falha-desconhecida`,`recusa`) | Classificacao tipada — fecha a lacuna "quota vira texto cru" do legado |
+| `resultado` | enum(`sucesso`,`falha-transitoria`,`falha-contrato`,`falha-quota`,`falha-desconhecida`,`indeterminado`,`recusa`) | Classificacao tipada. **`indeterminado` = nao se sabe se o efeito externo foi aplicado** (timeout apos envio, conexao cortada sem resposta) — bloqueia retry automatico (IR-1) |
+| `efeito_externo` | enum(`nenhum`,`aplicado`,`nao-aplicado`,`incerto`) | Declarado pelo adaptador com base na resposta; `incerto` ⇒ `resultado=indeterminado` |
 | `custo_medido` | objeto \| null | Tokens/custo; `null` honesto |
 | `artefato_ref` | sha256 \| null | Produzido (worktree/patch), se houver |
+
+### 5.1 Ciclo do Attempt
+
+`criado` → `despachado` → `concluido` (qualquer `resultado` terminal).
+Attempts nao tem retry interno: retry = **novo attempt** com `causado_por`
+apontando o RetryEvent (§6). Attempt sem evento de conclusao apos crash e
+marcado `orfao` na retomada (D6 §4) — nunca assumido como sucesso.
 
 ## 6. RetryEvent, FallbackEvent, EscalationEvent
 
@@ -152,13 +245,14 @@ sao conceitos distintos** (definicoes operacionais em D6 §4):
 
 | Contrato | Gatilho | Campos-chave | Limite |
 |---|---|---|---|
-| **RetryEvent** | `falha-transitoria` no ExecutionAttempt (mesma decisao, mesmo executor) | `attempt_id`, `tentativa_n`, `backoff_ms`, `respeitou_retry_after` (bool) | Max. 3; so transitorio (408/409/425/429/5xx); 4xx de contrato **nunca** repete |
-| **FallbackEvent** | Falha nao-transitoria ou retry esgotado; **proximo executor da `alternativas`** da mesma RoutingDecision | `attempt_id`, `de_executor`, `para_executor`, `motivo` | Segue a ordem declarada; nunca pula para executor fora da politica |
-| **EscalationEvent** | Alternativas esgotadas, orcamento estourado, confianca `baixa`, ou `classe_governanca` exigindo humano | `work_unit_id`, `motivo` (enum: `sem-alternativa` \| `orcamento` \| `ambiguidade` \| `aprovacao-humana` \| `juiz-reprovou`), `destino` (`humano` \| `decompor` \| `abandonar`) | Sempre termina em decisao humana registrada; silencio nao resolve |
+| **RetryEvent** | `falha-transitoria` no ExecutionAttempt (mesma decisao, mesmo executor) | `attempt_id`, `tentativa_n`, `backoff_ms`, `respeitou_retry_after` (bool), `idempotency_key` | Max. 3; so transitorio (408/409/425/429/5xx); 4xx de contrato **nunca** repete; **IR-1: so se a operacao for idempotente (com `idempotency_key`) ou comprovadamente nao aplicada (`efeito_externo=nao-aplicado`)**; `efeito_externo=incerto` → sem retry, resultado `indeterminado`, escalona (IR-2) |
+| **FallbackEvent** | Falha nao-transitoria ou retry esgotado; **proximo executor da `alternativas`** da mesma RoutingDecision, **dentro** do `aprovacao_custo` envelope | `attempt_id`, `de_executor`, `para_executor`, `motivo` | Segue a ordem declarada; nunca pula para executor fora da politica **nem fora do envelope aprovado** (fallback fora do envelope = escalonamento, nao tentativa) |
+| **EscalationEvent** | Alternativas esgotadas, orcamento estourado, confianca `baixa`, `indeterminado`, ou `classe_governanca` exigindo humano | `work_unit_id`, `motivo` (enum: `sem-alternativa` \| `orcamento` \| `ambiguidade` \| `aprovacao-humana` \| `juiz-reprovou` \| `indeterminado`), `destino` (`humano` \| `decompor` \| `abandonar`) | Sempre termina em decisao humana registrada; silencio nao resolve |
 
 Reparo e reroteamento **nao sao eventos proprios**: reparo = nova WorkUnit filha
-de tipo `etapa` com contexto do erro; reroteamento = nova RoutingDecision que
-`supersede` a anterior + FallbackEvent ou novo ExecutionAttempt.
+de tipo `etapa` com contexto do erro (ou a reprovada de volta a `proposta`,
+§2.1); reroteamento = nova RoutingDecision que `supersede` a anterior + novo
+ExecutionAttempt.
 
 ## 7. ValidationVerdict
 
@@ -169,48 +263,95 @@ canonico, ADR-0005, adotada como disciplina do laboratorio).
 | Campo | Tipo | Semantica |
 |---|---|---|
 | `veredito_id` | id | Identidade |
-| `alvo` | objeto | `work_unit_id` ou `sessao_id`; `artefato_ref` |
-| `camada` | enum(`deterministica`,`juiz-llm`,`humana`) | Deterministica = schema/invariantes (Juiz 1); juiz-llm = modelo independente (Juiz 2); humana = soberano |
+| `alvo` | objeto | `work_unit_id` ou `sessao_id`; `artefato_ref`; **`attempt_id`** (a tentativa julgada — veredito sem tentativa e invalido) |
+| `camada` | enum(`deterministica`,`juiz-llm`,`humana`) | Deterministica = schema/invariantes/criterios mecanicos (Juiz 1); juiz-llm = modelo independente (Juiz 2); humana = soberano |
 | `verificador` | objeto | Identidade do verificador; para `juiz-llm`: `provedor` e `modelo` **declarados** (o legado julgou no economico por omissao deste campo — defeito ADR-109) |
-| `independencia` | objeto | `provedor_distinto_do_executor` (bool), `modelo_distinto` (bool), `motivos` — calculado **antes** de julgar; fila minima de candidatos declarada (a fila do legado colapsou com 2 nomes fixos) |
+| `pacote_juiz` | objeto | Reprodutibilidade do julgamento: `provedor`, `modelo`, `effort`, `rubrica_ref` (sha256 da rubrica/criterios usados), `seed` \| null, `hash_catalogo` |
+| `criterios_ref` | sha256 | Hash dos criterios aplicados — **deve ser igual** ao `criterios_aceite_ref` congelado da WorkUnit; divergencia = veredito invalido |
+| `contexto_ref` | sha256 | `hash_pacote` do contexto que o juiz recebeu |
+| `independencia` | objeto | `provedor_distinto_do_executor` (bool), `modelo_distinto` (bool), `motivos` — calculado **antes** de julgar, sobre `executor_observado` quando disponivel (senao, sobre o resolvido, marcado como tal); fila minima de candidatos declarada |
 | `resultado` | enum(`aprovado`,`reprovado`,`inconclusivo`) | Inconclusivo = EscalationEvent, nao nova tentativa automatica |
-| `criterios` | lista[objeto] | Criterio × evidencia × passou/falhou (criterios definidos **antes** da execucao, na WorkUnit) |
+| `criterios` | lista[objeto] | Criterio × evidencia × passou/falhou |
 | `efeitos` | objeto | Carimba `artefato_ref`, placar da sessao e memoria (veredito = memoria com validade longa) |
 
-## 8. Checkpoint e EventLog
+**Invariantes:** IV-1 quem executou nao verifica (independencia calculada antes
+do julgamento; violacao = veredito invalido). **IV-2 a camada deterministica
+veta e nao e anulavel:** `reprovado` deterministico (schema, invariante,
+criterio mecanico) **nao pode ser revertido** por juiz-llm nem por humano sobre
+o mesmo artefato — so um **novo artefato** (novo attempt) reabre julgamento.
+Juiz-llm so julga o que passou na camada deterministica. IV-3 `criterios_ref`
+divergente do congelado = veredito invalido (nenhuma camada julga contra
+criterio movel).
+
+## 8. Checkpoint, EventLog e armazenamento
 
 A persistencia que faz a sessao logica sobreviver a processos.
 
-**EventLog** — append-only, um evento por linha (JSONL), tipos: `sessao`,
-`work-unit`, `routing`, `attempt`, `retry`, `fallback`, `escalation`, `veredito`,
-`checkpoint`, `memoria`, `orcamento`. Campos comuns: `evento_id`, `ts`,
-`linhagem_id`, `tipo`, `payload_ref` (sha256). Streaming por offset de bytes
-(principio do fio legado). Nunca guarda conteudo de artefato — so referencia.
+### 8.1 Armazenamento enderecado por conteudo (CAS)
 
-**Checkpoint**
+Todo conteudo referenciado (artefatos, capturas, criterios, pacotes, rubricas)
+vive em um armazenamento local enderecado por conteudo:
+
+- **Layout:** `objetos/<2 primeiros hex>/<2 hex seguintes>/<sha256 completo>`.
+- **Escrita atomica:** grava em arquivo temporario no mesmo diretorio, `fsync`,
+  `rename`; objeto existente com mesmo hash = ja gravado (idempotente); objeto
+  existente com hash igual e bytes divergentes e impossivel por construcao e
+  tratado como corrupcao (falha fechada).
+- **Leitura verificada:** toda leitura re-calcula o sha256; divergencia =
+  corrupcao detectada, falha fechada.
+- **Imutavel:** nenhuma operacao de escrita sobre objeto existente; sem
+  truncamento, sem append.
+- **Contencao:** o CAS recusa criar/seguir symlink ou junction e recusa qualquer
+  caminho fora da raiz do laboratorio (IC-5).
+
+### 8.2 EventLog
+
+Append-only, um evento por linha (JSONL), tipos: `sessao`, `work-unit`,
+`routing`, `attempt`, `retry`, `fallback`, `escalation`, `veredito`,
+`checkpoint`, `memoria`, `orcamento`.
+
+- **Escritor unico: o Session Kernel.** Router, Policy, Execution, Judge e
+  Control Plane **emitem fatos ao Kernel**; nenhum deles toca o arquivo. O
+  Evidence Plane **apenas le e projeta** (D6 §2.6) — nunca escreve.
+- **Campos comuns de todo evento:** `evento_id`, `seq` (inteiro monotonico por
+  sessao, **autoridade de ordem** — RA-2), `ts` (informativo), `schema_version`,
+  `linhagem_id`, `tipo`, `causado_por` (`evento_id` do evento causador; `null`
+  na abertura), `idempotency_key` (chave de deduplicacao do emissor; reentrega
+  com mesma chave = ignorada), `prev_event_hash` (sha256 do evento anterior na
+  cadeia; genesis = hash do envelope), `payload_ref` (sha256 no CAS).
+- **Integridade:** a cadeia `prev_event_hash` e verificada na retomada e em
+  qualquer replay; evento duplicado (mesma `idempotency_key`), fora de ordem
+  (`seq` regressiva), truncado (linha incompleta) ou adulterado (quebra de
+  cadeia) = falha detectada e fechada (IP-2/IP-4).
+- Nunca guarda conteudo de artefato nem segredo — so referencia (IC-4 aplica-se
+  ao payload antes de gravar).
+
+### 8.3 Checkpoint
 
 | Campo | Tipo | Semantica |
 |---|---|---|
 | `checkpoint_id` | id | Identidade |
 | `sessao_id` / `linhagem_id` | id | Dono |
-| `estado_refs` | objeto | Hashes: envelope, work-units abertas, memoria-cabeca, orcamento-consumido, eventlog-offset |
+| `estado_refs` | objeto | Hashes: envelope, work-units abertas, memoria-cabeca, orcamento-consumido, **`ultimo_evento_hash` + `seq`** (a cadeia, nao um offset de bytes — RA-2) |
 | `ponto_de_retomada` | objeto | Proxima acao pendente, ordenada por consequencia (briefing de retomada **custo zero** — principio legado) |
 | `validacao` | objeto | Veredito deterministico (Juiz 1) sobre o checkpoint gravado — gravacao so e sucesso apos validacao |
 | `selo` | HMAC | Integridade local (vinculo legado) |
 
-**Invariantes:** IP-1 retomar = ler Checkpoint valido + EventLog a partir do
-offset; **nunca** reconstruir por inferencia. IP-2 checkpoint invalido ou selo
-divergente = sessao nao retoma; escalona. IP-3 EventLog nunca e reescrito
-(historico nao se reescreve — AF-16); correcao = novo evento.
+**Invariantes:** IP-1 retomar = ler Checkpoint valido + EventLog verificado ate
+`ultimo_evento_hash`; **nunca** reconstruir por inferencia. IP-2 checkpoint
+invalido, cadeia quebrada ou selo divergente = sessao nao retoma; escalona.
+IP-3 EventLog nunca e reescrito (historico nao se reescreve — AF-16); correcao =
+novo evento. IP-4 o estado corrente e **reconstruivel pelo log** (replay
+deterministico do zero deve reproduzir o checkpoint — prova obrigatoria da P0).
 
 ## 9. Mapa contrato → componente (ponte para D6)
 
 | Contrato | Componente dono (D6) |
 |---|---|
-| SessionEnvelope, Checkpoint, EventLog, memoria da sessao | Session Kernel |
+| SessionEnvelope, Checkpoint, EventLog (escritor unico), CAS, memoria da sessao | Session Kernel |
 | WorkUnit, RoutingDecision | Task Router (com veto do Policy Gateway) |
 | ContextPackage | Session Kernel (montagem) + Policy Gateway (fronteira) |
-| ExecutionAttempt, RetryEvent, FallbackEvent | Execution Gateway |
-| EscalationEvent | Control Plane |
-| ValidationVerdict | Evaluation/Judge |
-| Telemetria, custo medido, placar | Evidence Plane |
+| ExecutionAttempt, RetryEvent, FallbackEvent | Execution Gateway (emite fatos; o Kernel grava) |
+| EscalationEvent | Control Plane (emite; o Kernel grava) |
+| ValidationVerdict | Evaluation/Judge (emite; o Kernel grava) |
+| Telemetria, custo medido, placar | Evidence Plane (**leitura e projecao apenas**) |

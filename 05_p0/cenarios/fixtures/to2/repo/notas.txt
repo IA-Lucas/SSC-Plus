@@ -1,0 +1,2 @@
+Notas soltas do fixture TO-2: nada aqui responde a pergunta.
+Este arquivo esta na lista de exclusao declarada do ContextPackage.

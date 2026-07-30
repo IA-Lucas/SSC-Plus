@@ -1,0 +1,66 @@
+{
+  "aprovados": 3,
+  "criterio_congelado": "igualdade byte-a-byte com o oraculo pre-computado",
+  "esperado": "3/3 aprovados (o barato basta)",
+  "n_declarado": 3,
+  "resultados": [
+    {
+      "custo": {
+        "rotulo": "simulado",
+        "tokens": 932,
+        "valor": 0.017
+      },
+      "entrada_ref": "f911d3179c60fef19dff6586f4c43892ad4aac6a1408f52d951350e487c06531",
+      "executor_observado": {
+        "effort": "alto",
+        "modelo": "modelo-l1",
+        "provedor": "prov-a"
+      },
+      "fim": "2026-07-30T00:00:09Z",
+      "inicio": "2026-07-30T00:00:07Z",
+      "seed": 11,
+      "veredito": "aprovado"
+    },
+    {
+      "custo": {
+        "rotulo": "simulado",
+        "tokens": 183,
+        "valor": 0.026
+      },
+      "entrada_ref": "f911d3179c60fef19dff6586f4c43892ad4aac6a1408f52d951350e487c06531",
+      "executor_observado": {
+        "effort": "alto",
+        "modelo": "modelo-l1",
+        "provedor": "prov-a"
+      },
+      "fim": "2026-07-30T00:00:09Z",
+      "inicio": "2026-07-30T00:00:07Z",
+      "seed": 22,
+      "veredito": "aprovado"
+    },
+    {
+      "custo": {
+        "rotulo": "simulado",
+        "tokens": 462,
+        "valor": 0.014
+      },
+      "entrada_ref": "f911d3179c60fef19dff6586f4c43892ad4aac6a1408f52d951350e487c06531",
+      "executor_observado": {
+        "effort": "alto",
+        "modelo": "modelo-l1",
+        "provedor": "prov-a"
+      },
+      "fim": "2026-07-30T00:00:09Z",
+      "inicio": "2026-07-30T00:00:07Z",
+      "seed": 33,
+      "veredito": "aprovado"
+    }
+  ],
+  "rotulo_numeros": "simulado",
+  "sementes": [
+    11,
+    22,
+    33
+  ],
+  "tarefa": "TO-1"
+}

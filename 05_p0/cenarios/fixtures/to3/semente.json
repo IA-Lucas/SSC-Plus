@@ -1,0 +1,10 @@
+{
+  "descricao": "Semente de defeitos plantados no diff da TO-3 (5 defeitos, 0 reais adicionais).",
+  "defeitos": [
+    {"id": "D1", "arquivo": "alfa.py", "linha": 10, "tipo": "off-by-one"},
+    {"id": "D2", "arquivo": "alfa.py", "linha": 22, "tipo": "None-nao-checado"},
+    {"id": "D3", "arquivo": "beta.py", "linha": 5, "tipo": "recurso-nao-fechado"},
+    {"id": "D4", "arquivo": "beta.py", "linha": 17, "tipo": "comparacao-com-=="},
+    {"id": "D5", "arquivo": "beta.py", "linha": 31, "tipo": "excecao-engolida"}
+  ]
+}

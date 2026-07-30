@@ -6,15 +6,36 @@
 secrets/
 *.local.json
 
+# Chave de selo local do laboratorio (HMAC) — runtime, nunca versionada
+chave_selo.bin
+
 # Logs brutos e temporarios
 logs/*.tmp
 *.log
+*.tmp
+*.trace
 
 # Runtime / caches
 __pycache__/
 *.pyc
 node_modules/
 .venv/
+
+# Cobertura e traces de medicao
+.coverage
+coverage.xml
+htmlcov/
+.tracecov/
+.cover/
+
+# Runtime da P0: laboratorios das corridas e dos testes.
+# Dentro de labs/ ficam CAS (cas/), sessoes (sessoes/), EventLogs (logs/*.jsonl),
+# checkpoints (checkpoints/) e chave_selo.bin — tudo estado de execucao.
+# Os relatorios agregados sem segredo (05_p0/saidas/*.json) PERMANECEM versionados.
+05_p0/saidas/labs/
+
+# EventLogs brutos (JSONL) onde quer que aparecam como runtime
+*.jsonl
 
 # Sistema operacional
 Thumbs.db

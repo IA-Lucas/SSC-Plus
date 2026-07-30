@@ -1,0 +1,791 @@
+{
+  "assercoes": [
+    {
+      "nome": "tentativa 1 falha-quota tipada",
+      "ok": true
+    },
+    {
+      "nome": "escalonamento sem-alternativa registrado",
+      "ok": true
+    },
+    {
+      "nome": "segunda decisao supersede a primeira",
+      "ok": true
+    },
+    {
+      "nome": "tentativa 2 sucesso",
+      "ok": true
+    },
+    {
+      "nome": "veredito aprovado",
+      "ok": true
+    },
+    {
+      "nome": "workunit concluida",
+      "ok": true
+    },
+    {
+      "nome": "linhagem_id unica em todos os eventos",
+      "ok": true
+    },
+    {
+      "nome": "sessao_id inalterado",
+      "ok": true
+    },
+    {
+      "nome": "attempts na mesma linhagem",
+      "ok": true
+    },
+    {
+      "nome": "memoria preservada apos a troca",
+      "ok": true
+    },
+    {
+      "nome": "orcamento acumulou as duas tentativas",
+      "ok": true
+    },
+    {
+      "nome": "attempt 2 causado pela decisao 2 (causado_por)",
+      "ok": true
+    },
+    {
+      "nome": "decisao 2 registrada apos a falha (cadeia causal)",
+      "ok": true
+    },
+    {
+      "nome": "troca passou pela Policy sem veto",
+      "ok": true
+    },
+    {
+      "nome": "mesmo envelope de aprovacao nas duas decisoes",
+      "ok": true
+    },
+    {
+      "nome": "nenhuma aprovacao humana extra exigida na troca",
+      "ok": true
+    },
+    {
+      "nome": "eventos emitidos durante a troca (log cresceu)",
+      "ok": true
+    },
+    {
+      "nome": "placar com os dois executores",
+      "ok": true
+    }
+  ],
+  "attempt_1": {
+    "artefato_ref": null,
+    "attempt_id": "e54e2c6df830458f869da1e5419198f3",
+    "captura": {
+      "saida_estruturada_ref": "8ec2c0efb2fa5eacf8294029930391913f20aa62a76f1237aba97d1dda697a93",
+      "saida_final_ref": null
+    },
+    "custo_medido": {
+      "rotulo": "simulado",
+      "tokens": 445,
+      "valor": 0.014
+    },
+    "decisao_id": "5337c0c65742441bb4bc7848b763f0a7",
+    "efeito_externo": "nao-aplicado",
+    "executor_observado": {
+      "effort": "alto",
+      "modelo": "modelo-x",
+      "provedor": "prov-a"
+    },
+    "executor_resolvido": {
+      "alias_usado": false,
+      "effort": "alto",
+      "executor_id": "prov-a/modelo-x",
+      "ferramenta": "fake-cli",
+      "hash_catalogo": "f0b3813c6664b7e7d3f80f1453235dda79e102c87021ef3fd3b6429ad484fc0d",
+      "modelo": "modelo-x",
+      "provedor": "prov-a"
+    },
+    "fim": "2026-07-30T00:00:09Z",
+    "inicio": "2026-07-30T00:00:07Z",
+    "linhagem_id": "ee8a931fa3504281858fe7943b6259cc",
+    "resultado": "falha-quota",
+    "selecao_solicitada": {
+      "controle": "confirma-no-gasto",
+      "effort": "alto",
+      "ferramenta": "fake-cli",
+      "modelo": "modelo-x",
+      "modo": "read-only",
+      "provedor": "prov-a"
+    },
+    "vinculos": {
+      "hash_aprovacao": "116df29e6c06962b388266d62b6c71f5f5ee9ad1a9a9dfc3614b636619509beb",
+      "hash_catalogo": "f0b3813c6664b7e7d3f80f1453235dda79e102c87021ef3fd3b6429ad484fc0d",
+      "hash_contexto": "e423d5ab53487741e3060b453945795c6ba524f489ab24b569726a20b130a2d4",
+      "hash_envelope": "ec0ed186cd4fbc9551a65ca30345f08260cf265de60094ad729ddb6c3fcf8235",
+      "hash_permissoes": "5683800ce20fea8313db4ee6fe6162e73b1119535cbb1faac5f90b5e136b7d04",
+      "hash_politica": "169b90c813290bcd3c327be79d29975f1c1e6df71c88a27ee16a95502dd0a0a7"
+    },
+    "work_unit_id": "380a6a6342094c6799b362f86120917d"
+  },
+  "attempt_2": {
+    "artefato_ref": "60204bc71025003c0090701ac6712bd39808d0c84b38aa1c95533344568028bf",
+    "attempt_id": "29ec0938328a472f9b5511ec2499c626",
+    "captura": {
+      "saida_estruturada_ref": "60204bc71025003c0090701ac6712bd39808d0c84b38aa1c95533344568028bf",
+      "saida_final_ref": "60204bc71025003c0090701ac6712bd39808d0c84b38aa1c95533344568028bf"
+    },
+    "custo_medido": {
+      "rotulo": "simulado",
+      "tokens": 527,
+      "valor": 0.092
+    },
+    "decisao_id": "2ef96f9b4a184630b4fb332bd3f5fbce",
+    "efeito_externo": "aplicado",
+    "executor_observado": {
+      "effort": "alto",
+      "modelo": "modelo-y",
+      "provedor": "prov-b"
+    },
+    "executor_resolvido": {
+      "alias_usado": false,
+      "effort": "alto",
+      "executor_id": "prov-b/modelo-y",
+      "ferramenta": "fake-openai-compat",
+      "hash_catalogo": "f0b3813c6664b7e7d3f80f1453235dda79e102c87021ef3fd3b6429ad484fc0d",
+      "modelo": "modelo-y",
+      "provedor": "prov-b"
+    },
+    "fim": "2026-07-30T00:00:19Z",
+    "inicio": "2026-07-30T00:00:17Z",
+    "linhagem_id": "ee8a931fa3504281858fe7943b6259cc",
+    "resultado": "sucesso",
+    "selecao_solicitada": {
+      "controle": "confirma-no-gasto",
+      "effort": "alto",
+      "ferramenta": "fake-cli",
+      "modelo": "modelo-y",
+      "modo": "read-only",
+      "provedor": "prov-b"
+    },
+    "vinculos": {
+      "hash_aprovacao": "116df29e6c06962b388266d62b6c71f5f5ee9ad1a9a9dfc3614b636619509beb",
+      "hash_catalogo": "f0b3813c6664b7e7d3f80f1453235dda79e102c87021ef3fd3b6429ad484fc0d",
+      "hash_contexto": "e423d5ab53487741e3060b453945795c6ba524f489ab24b569726a20b130a2d4",
+      "hash_envelope": "ec0ed186cd4fbc9551a65ca30345f08260cf265de60094ad729ddb6c3fcf8235",
+      "hash_permissoes": "5683800ce20fea8313db4ee6fe6162e73b1119535cbb1faac5f90b5e136b7d04",
+      "hash_politica": "169b90c813290bcd3c327be79d29975f1c1e6df71c88a27ee16a95502dd0a0a7"
+    },
+    "work_unit_id": "380a6a6342094c6799b362f86120917d"
+  },
+  "cenario": "prova_central",
+  "decisao_1": {
+    "alternativas": [],
+    "aprovacao_custo": {
+      "efforts_permitidos": [
+        "baixo",
+        "alto"
+      ],
+      "fallback_autorizado": true,
+      "modelos_permitidos": [
+        "prov-a/modelo-l1",
+        "prov-a/modelo-x",
+        "prov-b/modelo-y",
+        "prov-b/modelo-l3"
+      ],
+      "modo": "read-only",
+      "teto_custo": 1.0,
+      "validade": "2027-01-01T00:00:00Z"
+    },
+    "classificacao": {
+      "confianca": "alta",
+      "metodo": "declarado",
+      "rota": "padrao"
+    },
+    "custo_previsto": {
+      "rotulo": "estimado",
+      "valor": 0.01
+    },
+    "decisao_id": "5337c0c65742441bb4bc7848b763f0a7",
+    "hash_pacote": "e423d5ab53487741e3060b453945795c6ba524f489ab24b569726a20b130a2d4",
+    "motivo": "rota padrao: X primeiro",
+    "nivel_capacidade_atendido": "L2",
+    "selecao": {
+      "controle": "confirma-no-gasto",
+      "effort": "alto",
+      "ferramenta": "fake-cli",
+      "modelo": "modelo-x",
+      "modo": "read-only",
+      "provedor": "prov-a"
+    },
+    "supersede": null,
+    "vinculos": {
+      "hash_aprovacao": "116df29e6c06962b388266d62b6c71f5f5ee9ad1a9a9dfc3614b636619509beb",
+      "hash_catalogo": "f0b3813c6664b7e7d3f80f1453235dda79e102c87021ef3fd3b6429ad484fc0d",
+      "hash_contexto": "e423d5ab53487741e3060b453945795c6ba524f489ab24b569726a20b130a2d4",
+      "hash_envelope": "ec0ed186cd4fbc9551a65ca30345f08260cf265de60094ad729ddb6c3fcf8235",
+      "hash_permissoes": "5683800ce20fea8313db4ee6fe6162e73b1119535cbb1faac5f90b5e136b7d04",
+      "hash_politica": "169b90c813290bcd3c327be79d29975f1c1e6df71c88a27ee16a95502dd0a0a7"
+    },
+    "work_unit_id": "380a6a6342094c6799b362f86120917d"
+  },
+  "decisao_2": {
+    "alternativas": [],
+    "aprovacao_custo": {
+      "efforts_permitidos": [
+        "baixo",
+        "alto"
+      ],
+      "fallback_autorizado": true,
+      "modelos_permitidos": [
+        "prov-a/modelo-l1",
+        "prov-a/modelo-x",
+        "prov-b/modelo-y",
+        "prov-b/modelo-l3"
+      ],
+      "modo": "read-only",
+      "teto_custo": 1.0,
+      "validade": "2027-01-01T00:00:00Z"
+    },
+    "classificacao": {
+      "confianca": "alta",
+      "metodo": "declarado",
+      "rota": "padrao"
+    },
+    "custo_previsto": {
+      "rotulo": "estimado",
+      "valor": 0.01
+    },
+    "decisao_id": "2ef96f9b4a184630b4fb332bd3f5fbce",
+    "hash_pacote": "e423d5ab53487741e3060b453945795c6ba524f489ab24b569726a20b130a2d4",
+    "motivo": "nova evidencia: quota de X esgotada; Y cobre o perfil",
+    "nivel_capacidade_atendido": "L2",
+    "selecao": {
+      "controle": "confirma-no-gasto",
+      "effort": "alto",
+      "ferramenta": "fake-cli",
+      "modelo": "modelo-y",
+      "modo": "read-only",
+      "provedor": "prov-b"
+    },
+    "supersede": "5337c0c65742441bb4bc7848b763f0a7",
+    "vinculos": {
+      "hash_aprovacao": "116df29e6c06962b388266d62b6c71f5f5ee9ad1a9a9dfc3614b636619509beb",
+      "hash_catalogo": "f0b3813c6664b7e7d3f80f1453235dda79e102c87021ef3fd3b6429ad484fc0d",
+      "hash_contexto": "e423d5ab53487741e3060b453945795c6ba524f489ab24b569726a20b130a2d4",
+      "hash_envelope": "ec0ed186cd4fbc9551a65ca30345f08260cf265de60094ad729ddb6c3fcf8235",
+      "hash_permissoes": "5683800ce20fea8313db4ee6fe6162e73b1119535cbb1faac5f90b5e136b7d04",
+      "hash_politica": "169b90c813290bcd3c327be79d29975f1c1e6df71c88a27ee16a95502dd0a0a7"
+    },
+    "work_unit_id": "380a6a6342094c6799b362f86120917d"
+  },
+  "descricao": "troca de modelo na mesma sessao/linhagem com supersede",
+  "eventos": [
+    {
+      "acao": "abrir",
+      "causado_por": null,
+      "evento_id": "7683800e385040db83f3fd4f6b9001aa",
+      "seq": 1,
+      "tipo": "sessao"
+    },
+    {
+      "acao": "registrar",
+      "causado_por": null,
+      "evento_id": "c8e1e25c2d1c46c6bfe847ccec8870f8",
+      "seq": 2,
+      "tipo": "work-unit"
+    },
+    {
+      "acao": "transicao",
+      "causado_por": "c8e1e25c2d1c46c6bfe847ccec8870f8",
+      "evento_id": "4c0ab9ec69114b98931adf93ebbe75fd",
+      "seq": 3,
+      "tipo": "work-unit"
+    },
+    {
+      "acao": "registrar",
+      "causado_por": null,
+      "evento_id": "0656e6d9fe3648ac98cd16028a7868c1",
+      "seq": 4,
+      "tipo": "routing"
+    },
+    {
+      "acao": "transicao",
+      "causado_por": "0656e6d9fe3648ac98cd16028a7868c1",
+      "evento_id": "842bdf25863b4851b8cfd4a40fa71ab9",
+      "seq": 5,
+      "tipo": "work-unit"
+    },
+    {
+      "acao": "criar",
+      "causado_por": "0656e6d9fe3648ac98cd16028a7868c1",
+      "evento_id": "4b99dd465d224c9e908e44d7d88fb3f0",
+      "seq": 6,
+      "tipo": "attempt"
+    },
+    {
+      "acao": "despachar",
+      "causado_por": "4b99dd465d224c9e908e44d7d88fb3f0",
+      "evento_id": "159fb0605add46359bbae3508a52f9dc",
+      "seq": 7,
+      "tipo": "attempt"
+    },
+    {
+      "acao": "concluir",
+      "causado_por": "159fb0605add46359bbae3508a52f9dc",
+      "evento_id": "9b1a46ed9b2a4917b09611fd079e8ec8",
+      "seq": 8,
+      "tipo": "attempt"
+    },
+    {
+      "acao": "consumo",
+      "causado_por": "9b1a46ed9b2a4917b09611fd079e8ec8",
+      "evento_id": "3589ab513efc434d8312be7e30900bd8",
+      "seq": 9,
+      "tipo": "orcamento"
+    },
+    {
+      "acao": "registrar",
+      "causado_por": "9b1a46ed9b2a4917b09611fd079e8ec8",
+      "evento_id": "9273348d109745739b0ed4fcb60f7137",
+      "seq": 10,
+      "tipo": "escalation"
+    },
+    {
+      "acao": "registrar",
+      "causado_por": null,
+      "evento_id": "8f303a2e62fd4d0ca4647dfea38e52b3",
+      "seq": 11,
+      "tipo": "memoria"
+    },
+    {
+      "acao": "registrar",
+      "causado_por": null,
+      "evento_id": "69bdec80b260431193ed3e7c5f5fed76",
+      "seq": 12,
+      "tipo": "routing"
+    },
+    {
+      "acao": "transicao",
+      "causado_por": "69bdec80b260431193ed3e7c5f5fed76",
+      "evento_id": "dfedbdcc79764817a5418360233e435a",
+      "seq": 13,
+      "tipo": "work-unit"
+    },
+    {
+      "acao": "criar",
+      "causado_por": "69bdec80b260431193ed3e7c5f5fed76",
+      "evento_id": "d955f6795f254fe7bcff3cb59a2fe3ca",
+      "seq": 14,
+      "tipo": "attempt"
+    },
+    {
+      "acao": "despachar",
+      "causado_por": "d955f6795f254fe7bcff3cb59a2fe3ca",
+      "evento_id": "18d64e7ec40b40338034935d8c3601c3",
+      "seq": 15,
+      "tipo": "attempt"
+    },
+    {
+      "acao": "concluir",
+      "causado_por": "18d64e7ec40b40338034935d8c3601c3",
+      "evento_id": "16d3132f0ac24376a9a07b793f2aba5f",
+      "seq": 16,
+      "tipo": "attempt"
+    },
+    {
+      "acao": "consumo",
+      "causado_por": "16d3132f0ac24376a9a07b793f2aba5f",
+      "evento_id": "b67c369eaae543d6b4d4448c90469b9e",
+      "seq": 17,
+      "tipo": "orcamento"
+    },
+    {
+      "acao": "transicao",
+      "causado_por": "16d3132f0ac24376a9a07b793f2aba5f",
+      "evento_id": "0caa71d0a8344b728543eaebb2a75af4",
+      "seq": 18,
+      "tipo": "work-unit"
+    },
+    {
+      "acao": "registrar",
+      "causado_por": null,
+      "evento_id": "217db8d640e94df79f98652f4d999dc2",
+      "seq": 19,
+      "tipo": "veredito"
+    },
+    {
+      "acao": "transicao",
+      "causado_por": "217db8d640e94df79f98652f4d999dc2",
+      "evento_id": "d4c47d07a9f943389a70bb02ecd61d2c",
+      "seq": 20,
+      "tipo": "work-unit"
+    }
+  ],
+  "linhagem_id": "ee8a931fa3504281858fe7943b6259cc",
+  "projecao": {
+    "attempts": [
+      {
+        "artefato_ref": null,
+        "attempt_id": "e54e2c6df830458f869da1e5419198f3",
+        "captura": {
+          "saida_estruturada_ref": "8ec2c0efb2fa5eacf8294029930391913f20aa62a76f1237aba97d1dda697a93",
+          "saida_final_ref": null
+        },
+        "custo_medido": {
+          "rotulo": "simulado",
+          "tokens": 445,
+          "valor": 0.014
+        },
+        "decisao_id": "5337c0c65742441bb4bc7848b763f0a7",
+        "efeito_externo": "nao-aplicado",
+        "executor_observado": {
+          "effort": "alto",
+          "modelo": "modelo-x",
+          "provedor": "prov-a"
+        },
+        "executor_resolvido": {
+          "alias_usado": false,
+          "effort": "alto",
+          "executor_id": "prov-a/modelo-x",
+          "ferramenta": "fake-cli",
+          "hash_catalogo": "f0b3813c6664b7e7d3f80f1453235dda79e102c87021ef3fd3b6429ad484fc0d",
+          "modelo": "modelo-x",
+          "provedor": "prov-a"
+        },
+        "fim": "2026-07-30T00:00:09Z",
+        "inicio": "2026-07-30T00:00:07Z",
+        "linhagem_id": "ee8a931fa3504281858fe7943b6259cc",
+        "resultado": "falha-quota",
+        "selecao_solicitada": {
+          "controle": "confirma-no-gasto",
+          "effort": "alto",
+          "ferramenta": "fake-cli",
+          "modelo": "modelo-x",
+          "modo": "read-only",
+          "provedor": "prov-a"
+        },
+        "vinculos": {
+          "hash_aprovacao": "116df29e6c06962b388266d62b6c71f5f5ee9ad1a9a9dfc3614b636619509beb",
+          "hash_catalogo": "f0b3813c6664b7e7d3f80f1453235dda79e102c87021ef3fd3b6429ad484fc0d",
+          "hash_contexto": "e423d5ab53487741e3060b453945795c6ba524f489ab24b569726a20b130a2d4",
+          "hash_envelope": "ec0ed186cd4fbc9551a65ca30345f08260cf265de60094ad729ddb6c3fcf8235",
+          "hash_permissoes": "5683800ce20fea8313db4ee6fe6162e73b1119535cbb1faac5f90b5e136b7d04",
+          "hash_politica": "169b90c813290bcd3c327be79d29975f1c1e6df71c88a27ee16a95502dd0a0a7"
+        },
+        "work_unit_id": "380a6a6342094c6799b362f86120917d"
+      },
+      {
+        "artefato_ref": "60204bc71025003c0090701ac6712bd39808d0c84b38aa1c95533344568028bf",
+        "attempt_id": "29ec0938328a472f9b5511ec2499c626",
+        "captura": {
+          "saida_estruturada_ref": "60204bc71025003c0090701ac6712bd39808d0c84b38aa1c95533344568028bf",
+          "saida_final_ref": "60204bc71025003c0090701ac6712bd39808d0c84b38aa1c95533344568028bf"
+        },
+        "custo_medido": {
+          "rotulo": "simulado",
+          "tokens": 527,
+          "valor": 0.092
+        },
+        "decisao_id": "2ef96f9b4a184630b4fb332bd3f5fbce",
+        "efeito_externo": "aplicado",
+        "executor_observado": {
+          "effort": "alto",
+          "modelo": "modelo-y",
+          "provedor": "prov-b"
+        },
+        "executor_resolvido": {
+          "alias_usado": false,
+          "effort": "alto",
+          "executor_id": "prov-b/modelo-y",
+          "ferramenta": "fake-openai-compat",
+          "hash_catalogo": "f0b3813c6664b7e7d3f80f1453235dda79e102c87021ef3fd3b6429ad484fc0d",
+          "modelo": "modelo-y",
+          "provedor": "prov-b"
+        },
+        "fim": "2026-07-30T00:00:19Z",
+        "inicio": "2026-07-30T00:00:17Z",
+        "linhagem_id": "ee8a931fa3504281858fe7943b6259cc",
+        "resultado": "sucesso",
+        "selecao_solicitada": {
+          "controle": "confirma-no-gasto",
+          "effort": "alto",
+          "ferramenta": "fake-cli",
+          "modelo": "modelo-y",
+          "modo": "read-only",
+          "provedor": "prov-b"
+        },
+        "vinculos": {
+          "hash_aprovacao": "116df29e6c06962b388266d62b6c71f5f5ee9ad1a9a9dfc3614b636619509beb",
+          "hash_catalogo": "f0b3813c6664b7e7d3f80f1453235dda79e102c87021ef3fd3b6429ad484fc0d",
+          "hash_contexto": "e423d5ab53487741e3060b453945795c6ba524f489ab24b569726a20b130a2d4",
+          "hash_envelope": "ec0ed186cd4fbc9551a65ca30345f08260cf265de60094ad729ddb6c3fcf8235",
+          "hash_permissoes": "5683800ce20fea8313db4ee6fe6162e73b1119535cbb1faac5f90b5e136b7d04",
+          "hash_politica": "169b90c813290bcd3c327be79d29975f1c1e6df71c88a27ee16a95502dd0a0a7"
+        },
+        "work_unit_id": "380a6a6342094c6799b362f86120917d"
+      }
+    ],
+    "custo_total": {
+      "rotulo": "simulado",
+      "valor": 0.106
+    },
+    "decisoes": {
+      "2ef96f9b4a184630b4fb332bd3f5fbce": {
+        "alternativas": [],
+        "aprovacao_custo": {
+          "efforts_permitidos": [
+            "baixo",
+            "alto"
+          ],
+          "fallback_autorizado": true,
+          "modelos_permitidos": [
+            "prov-a/modelo-l1",
+            "prov-a/modelo-x",
+            "prov-b/modelo-y",
+            "prov-b/modelo-l3"
+          ],
+          "modo": "read-only",
+          "teto_custo": 1.0,
+          "validade": "2027-01-01T00:00:00Z"
+        },
+        "classificacao": {
+          "confianca": "alta",
+          "metodo": "declarado",
+          "rota": "padrao"
+        },
+        "custo_previsto": {
+          "rotulo": "estimado",
+          "valor": 0.01
+        },
+        "decisao_id": "2ef96f9b4a184630b4fb332bd3f5fbce",
+        "hash_pacote": "e423d5ab53487741e3060b453945795c6ba524f489ab24b569726a20b130a2d4",
+        "motivo": "nova evidencia: quota de X esgotada; Y cobre o perfil",
+        "nivel_capacidade_atendido": "L2",
+        "selecao": {
+          "controle": "confirma-no-gasto",
+          "effort": "alto",
+          "ferramenta": "fake-cli",
+          "modelo": "modelo-y",
+          "modo": "read-only",
+          "provedor": "prov-b"
+        },
+        "supersede": "5337c0c65742441bb4bc7848b763f0a7",
+        "vinculos": {
+          "hash_aprovacao": "116df29e6c06962b388266d62b6c71f5f5ee9ad1a9a9dfc3614b636619509beb",
+          "hash_catalogo": "f0b3813c6664b7e7d3f80f1453235dda79e102c87021ef3fd3b6429ad484fc0d",
+          "hash_contexto": "e423d5ab53487741e3060b453945795c6ba524f489ab24b569726a20b130a2d4",
+          "hash_envelope": "ec0ed186cd4fbc9551a65ca30345f08260cf265de60094ad729ddb6c3fcf8235",
+          "hash_permissoes": "5683800ce20fea8313db4ee6fe6162e73b1119535cbb1faac5f90b5e136b7d04",
+          "hash_politica": "169b90c813290bcd3c327be79d29975f1c1e6df71c88a27ee16a95502dd0a0a7"
+        },
+        "work_unit_id": "380a6a6342094c6799b362f86120917d"
+      },
+      "5337c0c65742441bb4bc7848b763f0a7": {
+        "alternativas": [],
+        "aprovacao_custo": {
+          "efforts_permitidos": [
+            "baixo",
+            "alto"
+          ],
+          "fallback_autorizado": true,
+          "modelos_permitidos": [
+            "prov-a/modelo-l1",
+            "prov-a/modelo-x",
+            "prov-b/modelo-y",
+            "prov-b/modelo-l3"
+          ],
+          "modo": "read-only",
+          "teto_custo": 1.0,
+          "validade": "2027-01-01T00:00:00Z"
+        },
+        "classificacao": {
+          "confianca": "alta",
+          "metodo": "declarado",
+          "rota": "padrao"
+        },
+        "custo_previsto": {
+          "rotulo": "estimado",
+          "valor": 0.01
+        },
+        "decisao_id": "5337c0c65742441bb4bc7848b763f0a7",
+        "hash_pacote": "e423d5ab53487741e3060b453945795c6ba524f489ab24b569726a20b130a2d4",
+        "motivo": "rota padrao: X primeiro",
+        "nivel_capacidade_atendido": "L2",
+        "selecao": {
+          "controle": "confirma-no-gasto",
+          "effort": "alto",
+          "ferramenta": "fake-cli",
+          "modelo": "modelo-x",
+          "modo": "read-only",
+          "provedor": "prov-a"
+        },
+        "supersede": null,
+        "vinculos": {
+          "hash_aprovacao": "116df29e6c06962b388266d62b6c71f5f5ee9ad1a9a9dfc3614b636619509beb",
+          "hash_catalogo": "f0b3813c6664b7e7d3f80f1453235dda79e102c87021ef3fd3b6429ad484fc0d",
+          "hash_contexto": "e423d5ab53487741e3060b453945795c6ba524f489ab24b569726a20b130a2d4",
+          "hash_envelope": "ec0ed186cd4fbc9551a65ca30345f08260cf265de60094ad729ddb6c3fcf8235",
+          "hash_permissoes": "5683800ce20fea8313db4ee6fe6162e73b1119535cbb1faac5f90b5e136b7d04",
+          "hash_politica": "169b90c813290bcd3c327be79d29975f1c1e6df71c88a27ee16a95502dd0a0a7"
+        },
+        "work_unit_id": "380a6a6342094c6799b362f86120917d"
+      }
+    },
+    "divergencias_observado_resolvido": [],
+    "escalacoes": [
+      {
+        "destino": "humano",
+        "detalhe": "alternativas esgotadas apos falha-quota",
+        "escalacao_id": "81c5c9b3f5be45948d414f50cef9d196",
+        "motivo": "sem-alternativa",
+        "work_unit_id": "380a6a6342094c6799b362f86120917d"
+      }
+    ],
+    "fallbacks": [],
+    "linhagem_id": "ee8a931fa3504281858fe7943b6259cc",
+    "n_eventos": 20,
+    "placar_por_executor": {
+      "prov-a/modelo-x": {
+        "attempts": 1,
+        "custo_simulado": 0.014,
+        "latencias_simuladas_ms": [],
+        "sucesso": 0
+      },
+      "prov-b/modelo-y": {
+        "attempts": 1,
+        "custo_simulado": 0.092,
+        "latencias_simuladas_ms": [],
+        "sucesso": 1
+      }
+    },
+    "retries": [],
+    "sessao_id": "ee8a931fa3504281858fe7943b6259cc",
+    "tokens_total": {
+      "rotulo": "simulado",
+      "valor": 972
+    },
+    "vereditos": [
+      {
+        "alvo": {
+          "artefato_ref": "60204bc71025003c0090701ac6712bd39808d0c84b38aa1c95533344568028bf",
+          "attempt_id": "29ec0938328a472f9b5511ec2499c626",
+          "work_unit_id": "380a6a6342094c6799b362f86120917d"
+        },
+        "camada": "deterministica",
+        "contexto_ref": "e423d5ab53487741e3060b453945795c6ba524f489ab24b569726a20b130a2d4",
+        "criterios": [
+          {
+            "criterio": "prefixo artefato-final:",
+            "evidencia": "artefato-final:tarefa A",
+            "passou": true
+          }
+        ],
+        "criterios_ref": "ab1219e7dd2bd87460fc78599944651caf878ee73eab8e645ca751e6053b8851",
+        "efeitos": {
+          "artefato_ref": "60204bc71025003c0090701ac6712bd39808d0c84b38aa1c95533344568028bf",
+          "memoria": "veredito registrado",
+          "placar": {
+            "camada": "deterministica"
+          }
+        },
+        "independencia": {
+          "base": "n/a",
+          "fila": [],
+          "modelo_distinto": true,
+          "motivos": [
+            "camada deterministica nao e modelo"
+          ],
+          "provedor_distinto_do_executor": true
+        },
+        "pacote_juiz": {
+          "effort": "n/a",
+          "hash_catalogo": "f0b3813c6664b7e7d3f80f1453235dda79e102c87021ef3fd3b6429ad484fc0d",
+          "modelo": "deterministico",
+          "provedor": "local",
+          "rubrica_ref": "ab1219e7dd2bd87460fc78599944651caf878ee73eab8e645ca751e6053b8851",
+          "seed": null
+        },
+        "resultado": "aprovado",
+        "veredito_id": "edf9214e6d6f4bf4bf2085783264d665",
+        "verificador": {
+          "nome": "juiz1-deterministico",
+          "tipo": "deterministico"
+        }
+      }
+    ],
+    "work_units": {
+      "380a6a6342094c6799b362f86120917d": {
+        "classe_governanca": "C1",
+        "contexto_ref": "e423d5ab53487741e3060b453945795c6ba524f489ab24b569726a20b130a2d4",
+        "criterios_aceite_ref": "ab1219e7dd2bd87460fc78599944651caf878ee73eab8e645ca751e6053b8851",
+        "custo_medido": null,
+        "depende_de": [],
+        "estado": "concluida",
+        "intencao": "produzir artefato final da prova central",
+        "linhagem_id": "ee8a931fa3504281858fe7943b6259cc",
+        "nivel_capacidade": "L2",
+        "parent_work_unit": null,
+        "perfil_capacidade": {
+          "contexto_max_tokens": 8000,
+          "dominio": "geral",
+          "ferramentas": [],
+          "formato_saida": "livre",
+          "latencia_max_ms": null,
+          "modalidade": "texto",
+          "orcamento_max_custo": null,
+          "privacidade": "remoto-permitido"
+        },
+        "resultado_ref": null,
+        "sessao_id": "ee8a931fa3504281858fe7943b6259cc",
+        "tipo": "ato",
+        "tipo_decisao": "tipo-2",
+        "work_unit_id": "380a6a6342094c6799b362f86120917d"
+      }
+    }
+  },
+  "rotulo_numeros": "simulado",
+  "sessao_id": "ee8a931fa3504281858fe7943b6259cc",
+  "veredito": {
+    "alvo": {
+      "artefato_ref": "60204bc71025003c0090701ac6712bd39808d0c84b38aa1c95533344568028bf",
+      "attempt_id": "29ec0938328a472f9b5511ec2499c626",
+      "work_unit_id": "380a6a6342094c6799b362f86120917d"
+    },
+    "camada": "deterministica",
+    "contexto_ref": "e423d5ab53487741e3060b453945795c6ba524f489ab24b569726a20b130a2d4",
+    "criterios": [
+      {
+        "criterio": "prefixo artefato-final:",
+        "evidencia": "artefato-final:tarefa A",
+        "passou": true
+      }
+    ],
+    "criterios_ref": "ab1219e7dd2bd87460fc78599944651caf878ee73eab8e645ca751e6053b8851",
+    "efeitos": {
+      "artefato_ref": "60204bc71025003c0090701ac6712bd39808d0c84b38aa1c95533344568028bf",
+      "memoria": "veredito registrado",
+      "placar": {
+        "camada": "deterministica"
+      }
+    },
+    "independencia": {
+      "base": "n/a",
+      "fila": [],
+      "modelo_distinto": true,
+      "motivos": [
+        "camada deterministica nao e modelo"
+      ],
+      "provedor_distinto_do_executor": true
+    },
+    "pacote_juiz": {
+      "effort": "n/a",
+      "hash_catalogo": "f0b3813c6664b7e7d3f80f1453235dda79e102c87021ef3fd3b6429ad484fc0d",
+      "modelo": "deterministico",
+      "provedor": "local",
+      "rubrica_ref": "ab1219e7dd2bd87460fc78599944651caf878ee73eab8e645ca751e6053b8851",
+      "seed": null
+    },
+    "resultado": "aprovado",
+    "veredito_id": "edf9214e6d6f4bf4bf2085783264d665",
+    "verificador": {
+      "nome": "juiz1-deterministico",
+      "tipo": "deterministico"
+    }
+  }
+}

@@ -1,0 +1,348 @@
+diff --git a/02_alvo/06_arquitetura-alvo.md b/02_alvo/06_arquitetura-alvo.md
+index ce82219..8f85ffe 100644
+--- a/02_alvo/06_arquitetura-alvo.md
++++ b/02_alvo/06_arquitetura-alvo.md
+@@ -2,23 +2,31 @@
+ id: SSC-DOC-06
+ titulo: Arquitetura-alvo do SSC+
+ tipo: arquitetura-experimental
+-versao: 0.1.0
++versao: 0.2.0
+ status: ativo
+ origem: laboratorio-ssc-plus
+ autoridade: nenhuma
+ normativo: nao
+ criado_em: 2026-07-30
++atualizado_em: 2026-07-30
+ ---
+ 
+ # D6 — Arquitetura-alvo
+ 
+-> Desenho dos componentes do SSC+ (especificacao, sem implementacao). Contratos
+-> em D5; origem de cada decisao na Matriz D4. **Capacidade e risco sao eixos
+-> independentes**: L1/L2/L3 (experimental) para capacidade; C0–C3 (canonico,
+-> FND-04 §2) preservado para governanca.
++> Desenho dos componentes do SSC+ (especificacao). Contratos em D5 (v0.2.0);
++> origem de cada decisao na Matriz D4. **Capacidade e risco sao eixos
++> independentes**: L1/L2/L3 (experimental) + perfil de capacidade; C0–C3 e
++> Tipo 1/2 (canonico, FND-04 §2) preservados para governanca.
++>
++> **v0.2.0** — corrigida pela revisao independente SSC-REV-02 (PORTAO 1 da
++> Missao 0.2). Diff contra v0.1.0 em `02_alvo/diffs/d6-v0.1.0-v0.2.0.diff`.
+ 
+ ## 1. Visao geral
+ 
++Fluxo de decisao: **Router propoe → Policy veta → Execution executa.** O Session
++Kernel e o **unico escritor** do EventLog; todos os demais componentes emitem
++fatos ao Kernel. O Evidence Plane **apenas le o log e projeta**.
++
+ ```
+                          ┌────────────────────────────┐
+                          │       CONTROL PLANE        │
+@@ -26,29 +34,30 @@ criado_em: 2026-07-30
+                          │  humana · ciclo de vida    │
+                          └─────────────┬──────────────┘
+                                        │
+-   humano ──► ┌───────────────┐   ┌────▼─────┐   ┌────────────────┐
+-   aprovacao  │ POLICY        ├──►│  TASK    ├──►│ EXECUTION      │
+-   ◄── portao │ GATEWAY       │   │  ROUTER  │   │ GATEWAY        │
+-              │ fronteira ·   │   │ WorkUnit │   │ attempts ·     │
+-              │ portao custo/ │   │ Routing  │   │ retry/fallback │
+-              │ autonomia     │   │ Decision │   │ worktree       │
+-              └───────┬───────┘   └────┬─────┘   └───────┬────────┘
+-                      │                │                 │
++              ┌───────────────┐   ┌────▼─────┐   ┌────────────────┐
++   intencao ─►│  TASK         ├──►│ POLICY   ├──►│ EXECUTION      │
++              │  ROUTER       │   │ GATEWAY  │   │ GATEWAY        │
++              │ WorkUnit ·    │   │ fronteira│   │ attempts ·     │
++              │ Routing       │   │ portao   │   │ retry/fallback │
++              │ Decision      │   │ custo/   │   │ worktree       │
++              └───────┬───────┘   │ autonomia│   └───────┬────────┘
++                      │           └────┬─────┘           │
++                      │     fatos (nao escrevem o log)   │
+               ┌───────▼────────────────▼─────────────────▼────────┐
+               │                SESSION KERNEL                     │
+               │  SessionEnvelope · ContextPackage · memoria ·     │
+-              │  Checkpoint · EventLog                            │
++              │  Checkpoint · EventLog (ESCRITOR UNICO) · CAS     │
+               └───────────────────────┬───────────────────────────┘
+-                                      │
++                                      │ leitura (somente)
+               ┌───────────────────────▼───────────┐   ┌────────────────────┐
+               │        EVIDENCE PLANE             │   │ PROVIDER ADAPTERS  │
+               │ telemetria · custo medido · placar│   │ cli · openai-compat│
+-              │ hashes · trilha de auditoria      │   │ allowlist binarios │
++              │ projecoes · trilha de auditoria   │   │ allowlist binarios │
+               └───────────────────────────────────┘   └────────────────────┘
+                                       ▲
+               ┌───────────────────────┴───────────┐
+               │        EVALUATION / JUDGE         │
+-              │ deterministica · juiz-llm indep.  │
++              │ deterministica (veta) · juiz-llm  │
+               └───────────────────────────────────┘
+ ```
+ 
+@@ -57,135 +66,168 @@ criado_em: 2026-07-30
+ ### 2.1 Session Kernel
+ O coracao: mantem a sessao logica viva entre processos.
+ - Custodia `SessionEnvelope`, `ContextPackage`, memoria da sessao, `Checkpoint`,
+-  `EventLog` (D5 §1, §3, §8).
+-- Monta ContextPackage com proveniencia completa (origem + hash por entrada);
+-  injeta memoria **so por `ID=SHA256`** (principio ADR-121 legado).
+-- Grava checkpoint validado (Juiz 1 deterministico) antes de suspender; retoma por
+-  checkpoint + offset do EventLog, nunca por inferencia.
+-- **Nao roteia, nao executa, nao julga.** Origem: REWRITE "sessao como objeto" +
+-  ADAPT estado assinado/fio/memoria (D4 §1, §5).
++  `EventLog` e o CAS (D5 §1, §3, §8).
++- **Escritor unico do EventLog:** recebe fatos tipados de Router, Policy,
++  Execution, Judge e Control Plane; atribui `seq`, `causado_por`,
++  `idempotency_key` e `prev_event_hash`; grava. Deduplicacao por
++  `idempotency_key`; recusa de evento fora de schema ou com segredo (IC-4).
++- Aplica as maquinas de estado (D5 §1.2, §2.1, §5.1): transicao fora da tabela =
++  recusa com evento.
++- Valida vinculos: attempt cuja RoutingDecision nao e vigente ou cujos
++  `vinculos` divergem do estado corrente = falha de contrato antes do gasto.
++- Monta ContextPackage com proveniencia completa; injeta memoria **so por
++  `ID=SHA256`**; scanner de segredos (IC-4) e contencao de caminho (IC-5) na
++  montagem.
++- Grava checkpoint validado (Juiz 1 deterministico) antes de suspender; retoma
++  por checkpoint + cadeia de hash do EventLog, nunca por inferencia; estado
++  corrente **reconstruivel por replay deterministico do log** (IP-4).
++- **Nao roteia, nao executa, nao julga.**
+ 
+ ### 2.2 Task Router
+-Transforma intencao em trabalho roteavel.
+-- Intake (forja): despacho cru → WorkUnit com `intencao` ≤ 4.000 chars; acima,
+-  recusa (principio do forjador legado).
++Transforma intencao em trabalho roteavel. **Propoe; nao executa, nao julga, nao
++grava no log.**
++- Intake (forja): despacho cru → WorkUnit com `intencao` ≤ 4.000 chars e
++  `criterios_aceite_ref` **congelados** na proposta; acima do teto, recusa.
+ - Decomposicao: WorkUnit `decomposicao` → filhos com `parent_work_unit`, grafo
+   aciclico, ≤12 filhos, anti-competicao, ondas topologicas.
+-- Emite RoutingDecision por WorkUnit **antes** de qualquer execucao: classificacao
+-  declarada com `confianca`; `baixa` = falha fechada (o classificador-regex do
+-  legado e **aposentado** — fragilidade medida, D4 §2).
+-- **Nao executa e nao julga**; suas decisoes passam pelo veto do Policy Gateway.
++- Emite RoutingDecision por WorkUnit **antes** de qualquer execucao, com
++  `vinculos` completos (6 hashes, D5 §4); classificacao declarada com
++  `confianca`; `baixa` = falha fechada.
++- Reroteamento = nova RoutingDecision que `supersede` a anterior (nova invocacao
++  na mesma linhagem, sessao intacta); submete toda decisao ao veto da Policy.
+ 
+ ### 2.3 Policy Gateway
+-O portao que bloqueia.
++O portao que bloqueia. **Veta; nao julga merito, nao executa.**
+ - Verifica toda RoutingDecision contra a politica vigente (`politica_ref` do
+-  envelope): rota permitida, executor na politica, `classe_governanca` × `modo`
+-  coerentes.
++  envelope): rota permitida, executor na politica e no catalogo,
++  `classe_governanca` × `modo` coerentes, `perfil_capacidade` atendido.
+ - Portao de custo e autonomia **bloqueante**: nenhum gasto sem
+-  `aprovacao_custo_ref` hasheada cobrindo **modelo** e `pode_escrever` (herda o
+-  fechamento do ADR-121 legado).
++  `aprovacao_custo` **envelope** (D5 §4): modelos permitidos (lista), efforts
++  permitidos, teto, modo, validade nao expirada e regra de fallback. Selecao
++  fora do envelope = veto, mesmo que o modelo esteja na politica.
++- Verifica o orcamento da sessao antes de autorizar cada attempt; estouro =
++  EscalationEvent (`orcamento`), nunca estouro silencioso.
+ - Guarda a fronteira de isolamento: nenhum ContextPackage atravessa caminho
+-  proibido (D2); conteudo externo entra rotulado como evidencia.
+-- **Nao julga merito** (espelha FND-04 §12): verifica conformidade, nao qualidade.
++  proibido (D2/IC-5); conteudo externo entra rotulado como evidencia.
+ 
+ ### 2.4 Execution Gateway
+-O braco.
+-- Materializa ExecutionAttempt a partir de RoutingDecision aprovada; captura
+-  estruturada da saida **obrigatoria** (a ausencia causou perda real no legado).
+-- Aplica a maquina de recuperacao (§4): retry tipado, fallback na ordem declarada,
+-  esgotamento → EscalationEvent.
++O braco. **Executa; nao decide rota, nao se julga, nao grava no log.**
++- Materializa ExecutionAttempt a partir de RoutingDecision aprovada; registra
++  `selecao_solicitada`, `executor_resolvido` (com `hash_catalogo` e
++  `alias_usado`) e `executor_observado` (ou `null` honesto); divergencia
++  observado ≠ resolvido = evento tipado (D5 §5).
++- Captura estruturada da saida **obrigatoria**; classificacao de falha tipada,
++  incluindo `falha-quota` e **`indeterminado`** (efeito externo incerto).
++- Aplica a maquina de recuperacao (§4): retry tipado **sob IR-1** (idempotente
++  ou comprovadamente nao aplicado), fallback na ordem declarada **dentro** do
++  envelope de custo, esgotamento → EscalationEvent.
+ - Modos de escrita: `read-only` (padrao do piloto), `worktree` (isolada, previa
+-  sem gasto, **merge so humano**, aceite por arquivo, rollback total — herda
+-  worktree/previa/mesclar do legado, com o defeito CRLF tratado como prova
+-  obrigatoria D7), `escrita-aprovada` (futuro, gate nominal de conectores).
+-- **Nao decide rota** (isso e do Router) **nem se julga** (isso e do Judge).
++  sem gasto, **merge so humano**, aceite por arquivo, rollback total — defeito
++  CRLF como prova obrigatoria D7), `escrita-aprovada` (futuro).
+ 
+ ### 2.5 Control Plane
+-O ciclo de vida e a voz humana.
+-- Abertura/suspensao/retomada/encerramento de sessao; recebe EscalationEvent e o
+-  apresenta ao humano com o contexto minimo suficiente.
+-- Registra aprovacoes humanas (ato explicito e datado; **silencio nunca aprova** —
+-  GV-05 como disciplina local).
+-- Superficie = casca que **nao decide** (principio ADR-113: a TUI provou que a
+-  casca pode mudar com custo zero quando quem decide e o nucleo).
++O ciclo de vida e a voz humana. **Apresenta e registra; nao decide rota.**
++- Abertura/suspensao/retomada/encerramento de sessao (tabela D5 §1.2); recebe
++  EscalationEvent e o apresenta ao humano com o contexto minimo suficiente.
++- Registra aprovacoes humanas (ato explicito, datado, hasheado; **silencio nunca
++  aprova** — GV-05 como disciplina local), incluindo o envelope `aprovacao_custo`.
++- Superficie = casca que **nao decide** (principio ADR-113).
+ 
+ ### 2.6 Evidence Plane
+-A memoria dos fatos.
+-- Telemetria append-only por evento; custo/tokens/latencia **medidos ou `null`
+-  honesto** (nunca estimado apresentado como medicao; custo fantasma do legado e
+-  contra-exemplo registrado).
+-- Placar por provedor/modelo/rota; projecoes descartaveis (SQLite) com
+-  equivalencia a fonte JSONL travada por teste (principio ADR-091).
+-- Emite as metricas do Plano de Prova (D7): qualidade, custo, latencia — com base
+-  de medicao declarada.
++A memoria dos fatos. **Somente leitura e projecao sobre o EventLog** — nao
++escreve no log nem no CAS (correcao do item 11: em v0.1.0 havia "telemetria
++append-only por evento", um escritor paralelo; aposentado).
++- Consome o EventLog por leitura (cadeia verificada) e projeta: telemetria,
++  custo/tokens/latencia **medidos ou `null` honesto** (nunca estimado
++  apresentado como medicao).
++- Placar por provedor/modelo/rota, incluindo divergencias observado ≠ resolvido;
++  projecoes descartaveis (SQLite) com equivalencia a fonte JSONL travada por
++  teste (principio ADR-091).
++- Emite as metricas do Plano de Prova (D7): qualidade, custo, latencia — com
++  base de medicao declarada.
+ 
+ ### 2.7 Provider Adapters
+-A fala com os provedores.
+-- Dois tipos bastam: `cli` (binario local, **allowlist fechada auditada** — o
+-  perfil-vetor de execucao do legado e o contra-exemplo) e `openai-compat`
+-  (endpoint + chave por ambiente).
++A fala com os provedores. Na P0: **apenas adaptadores falsos deterministicos
++por seed** (D7); nenhum adaptador real, nenhuma rede.
++- Dois tipos bastam: `cli` (binario local, **allowlist fechada auditada**) e
++  `openai-compat` (endpoint + chave por ambiente) — ambos **fora** da P0.
++- Todo adaptador declara o que observa: preenche `executor_observado` ou admite
++  `null`; declara `efeito_externo` (`nenhum`/`aplicado`/`nao-aplicado`/`incerto`).
+ - Provedor novo entra **no fim da fila**; promocao so por preferencia declarada
+   com evidencia de prova viva.
+-- Nenhum adaptador contem logica de roteamento; erro bruto do provedor entra no
+-  classificador de falha do Execution Gateway (`falha-quota` tipada — lacuna do
+-  legado fechada por contrato).
++- Nenhum adaptador contem logica de roteamento; erro bruto entra no
++  classificador de falha do Execution Gateway.
+ - **Kimi K3:** candidato a piloto (evidencia externa `AC-01-VID-004`,
+   **nao verificado**, zero endosso canonico). Entra — se entrar — como adaptador
+-  `openai-compat` no fim da fila, avaliado pelas tarefas-ouro do D7. Nota de
+-  proveniencia: handoff legado 2026-07-24 registra "Kimi K2.6 fora da rota
+-  (404/410)" — a candidatura e do K3, nao do K2.6, e permanece **a verificar**.
++  `openai-compat` no fim da fila, avaliado pelas tarefas-ouro do D7.
+ 
+ ### 2.8 Evaluation / Judge
+-O veredito independente.
+-- Camada **deterministica** (Juiz 1): valida schemas, invariantes e checkpoints —
+-  antes de qualquer sucesso ser declarado.
+-- Camada **juiz-llm** (Juiz 2): julga WorkUnits de risco (`aguardando-juiz`),
+-  com independencia calculada por provedor **e** modelo **antes** de julgar;
+-  `verificador.modelo` declarado no veredito (o defeito ADR-109 nasceu da omissao).
+-  Fila minima de candidatos declarada — a fila de 2 nomes fixos **colapsou** no
+-  legado.
++O veredito independente. **Julga; nao executa, nao grava no log.**
++- Camada **deterministica** (Juiz 1): valida schemas, invariantes, checkpoints e
++  criterios mecanicos — **antes** de qualquer sucesso ser declarado. Seu
++  `reprovado` **veta e nao e anulavel** por juiz-llm nem por humano sobre o
++  mesmo artefato (IV-2); so novo artefato reabre julgamento.
++- Camada **juiz-llm** (Juiz 2): julga WorkUnits de risco
++  (`aguardando-validacao`), com independencia calculada por provedor **e**
++  modelo — sobre `executor_observado` quando disponivel — **antes** de julgar;
++  `pacote_juiz` completo no veredito (provedor/modelo/effort/rubrica_ref/seed).
++  Fila minima de candidatos declarada. Na P0, o juiz-llm e **falso e
++  deterministico por seed** (mesmo regime dos providers).
+ - Camada **humana**: o Soberano, para C2+ e Tipo 1.
+-- Quem executa nao verifica; quem propoe nao aprova (GV-04; ADR-0005 canonico como
+-  disciplina do laboratorio).
++- Todo veredito vincula `attempt_id`, `criterios_ref` (= congelado da WorkUnit)
++  e `contexto_ref` (D5 §7).
+ 
+ ## 3. Eixos: capacidade × risco (independentes)
+ 
+ | Eixo | Escala | Natureza | Uso |
+ |---|---|---|---|
+-| **Capacidade** | `L1` mecanico/deterministico · `L2` generico com contexto · `L3` especializado/julgamento | **Vocabulario experimental do laboratorio** — o canonico **nao** define L1/L2/L3 (sua maturidade e o eixo de 7 valores de FND-08 §3.3) | Escolher o executor mais barato que atende a WorkUnit (`nivel_capacidade_atendido ≥ nivel_capacidade`) |
++| **Capacidade** | `L1` mecanico/deterministico · `L2` generico com contexto · `L3` especializado/julgamento — **+ perfil** (abaixo) | **Vocabulario experimental do laboratorio** — o canonico **nao** define L1/L2/L3 | Escolher o executor mais barato que atende a WorkUnit |
+ | **Risco/governanca** | `C0` editorial · `C1` operacional · `C2` estrutural · `C3` constitucional (+ Tipo 1/2) | **Semantica canonica preservada** (FND-04 §2), citada, nao redefinida | Decidir portoes: C2+ ou Tipo 1 = aprovacao humana previa; C3 = indelegavel ao humano |
+ 
+-Regras de independencia: EI-1 uma WorkUnit L3/C0 (julgamento sobre texto, sem
+-efeito no mundo) nao precisa de humano; uma L1/C2 (script mecanico que altera
+-estrutura) **precisa**. EI-2 nenhum dos dois eixos se substitui: capacidade alta
+-nao reduz portao de risco; risco baixo nao reduz exigencia de capacidade.
+-EI-3 se a escala L1/L2/L3 for um dia proposta ao canonico, entra como materia
+-propria (rito de FND-09 §11.2 — graduacao de instrumento), nunca como "o que o
+-canonico ja diz".
++**Perfil de capacidade (complemento obrigatorio do nivel):** alem de L1–L3,
++WorkUnit e executor carregam um perfil com 8 dimensoes (D5 §2): `modalidade`,
++`ferramentas`, `formato_saida`, `contexto_max_tokens`, `dominio`, `privacidade`,
++`latencia_max_ms`, `orcamento_max_custo`. Regra de casamento: o executor
++escolhido atende **todas** as dimensoes exigidas (ex.: WorkUnit
++`privacidade=local-only` nunca roteia para executor remoto; WorkUnit
++`formato_saida=json-schema` exige executor com saida estruturada). Falta de
++casamento = falha fechada, nao degradacao silenciosa.
++
++Regras de independencia: EI-1 uma WorkUnit L3/C0 nao precisa de humano; uma
++L1/C2 **precisa**. EI-2 nenhum dos dois eixos se substitui. EI-3 se a escala
++L1/L2/L3 for um dia proposta ao canonico, entra como materia propria (rito de
++FND-09 §11.2), nunca como "o que o canonico ja diz".
+ 
+ ## 4. Recuperacao: sete conceitos distintos
+ 
+ | Conceito | Definicao operacional | Instrumento (D5) | Quem decide |
+ |---|---|---|---|
+-| **Retry** | Mesmo executor, mesma decisao, so falha transitoria, backoff com teto | RetryEvent | Execution Gateway (automatico, limitado a 3) |
+-| **Reparo** | Nova WorkUnit filha (`etapa`) com o erro no contexto; nao repete a mesma chamada | WorkUnit + RoutingDecision novos | Task Router |
+-| **Fallback** | Proximo executor da ordem declarada na mesma RoutingDecision | FallbackEvent | Execution Gateway (ordem da politica) |
+-| **Reroteamento** | Nova RoutingDecision que `supersede` a anterior (ex.: classe errada, modelo indisponivel) — **nova invocacao na mesma linhagem, sessao intacta** | RoutingDecision (`supersede`) | Task Router (+ veto Policy) |
+-| **Escalonamento** | Esgotamento, orcamento, ambiguidade ou juiz reprovou → humano | EscalationEvent | Control Plane → humano |
+-| **Validacao** | Verificacao por camada independente (deterministica/juiz-llm) | ValidationVerdict | Evaluation/Judge |
+-| **Aprovacao humana** | Ato explicito, datado, hasheado; indelegavel em C3/Tipo 1 | `resumo_aprovacao` / `aprovacao_custo_ref` | Humano (Soberano) |
++| **Retry** | Mesmo executor, mesma decisao, so falha transitoria, backoff com teto — **e so se idempotente (`idempotency_key`) ou comprovadamente nao aplicada**; efeito incerto = `indeterminado`, sem retry (IR-1/IR-2) | RetryEvent | Execution Gateway (automatico, limitado a 3) |
++| **Reparo** | Nova WorkUnit filha (`etapa`) com o erro no contexto, ou reprovada de volta a `proposta`; nao repete a mesma chamada | WorkUnit + RoutingDecision novos | Task Router |
++| **Fallback** | Proximo executor da ordem declarada na mesma RoutingDecision, **dentro do envelope `aprovacao_custo`** | FallbackEvent | Execution Gateway (ordem da politica) |
++| **Reroteamento** | Nova RoutingDecision que `supersede` a anterior — **nova invocacao na mesma linhagem, sessao intacta** | RoutingDecision (`supersede`) | Task Router (+ veto Policy) |
++| **Escalonamento** | Esgotamento, orcamento, ambiguidade, `indeterminado` ou juiz reprovou → humano | EscalationEvent | Control Plane → humano |
++| **Validacao** | Verificacao por camada independente; **deterministica veta e nao e anulavel por LLM** | ValidationVerdict | Evaluation/Judge |
++| **Aprovacao humana** | Ato explicito, datado, hasheado; indelegavel em C3/Tipo 1; custo aprovado como **envelope**, nao modelo fixo | `resumo_aprovacao` / `aprovacao_custo` | Humano (Soberano) |
++
++Crash entre despacho e conclusao: na retomada, o attempt sem evento de conclusao
++e marcado `orfao` e tratado como `indeterminado` (IR-2) — nunca como sucesso.
+ 
+ ## 5. Decisoes de desenho e origem (rastreabilidade)
+ 
+ | Decisao | Origem (fonte → decisao) |
+ |---|---|
+-| Sessao logica persistente via EventLog + Checkpoint | Legado ADR-054/109 (sessao e o produto; fio append-only) → REWRITE/ADAPT (D4) |
+-| Portao de custo/autonomia no Gateway, nao na casca | Legado ADR-094/121 (portao na casca funciona, mas a casca congela; o portao cobre modelo e escrita) → ADAPT |
+-| Classificacao declarada com falha fechada (sem regex) | Handoff 2026-07-28 (sequestro por rodape) → RETIRE mecanismo, REWRITE principio (D4 §2) |
++| Sessao logica persistente via EventLog + Checkpoint | Legado ADR-054/109 → REWRITE/ADAPT (D4) |
++| EventLog com escritor unico, cadeia de hash e idempotencia | Revisao SSC-REV-02 (itens 7/11) + principio do fio legado → REWRITE |
++| CAS local, leitura verificada, contencao de caminho | Revisao SSC-REV-02 (itens 6/10) + IC-5 → REWRITE |
++| Portao de custo/autonomia como **envelope** no Gateway | Legado ADR-094/121 + revisao SSC-REV-02 (item 12) → ADAPT |
++| Classificacao declarada com falha fechada (sem regex) | Handoff 2026-07-28 → RETIRE mecanismo, REWRITE principio (D4 §2) |
+ | Captura estruturada obrigatoria | Handoff 2026-07-28 (perda real com `--print`) → REWRITE (D4 §3) |
+-| Juiz independente por provedor **e** modelo, fila minima | ADR-109 (fila colapsada; juiz no economico) → ADAPT (D4 §4) |
+-| Dois tipos de adaptador + allowlist | ADR-098 + handoff 2026-07-27 (perfil-vetor CRITICO) → ADAPT (D4 §3) |
+-| Capacidade × risco em eixos separados | FND-04 §2 (C0–C3 preservado) + ausencia de L1–L3 no canonico (verificado) → vocabulario experimental §3 |
++| Identidade de executor em 3 camadas (solicitado/resolvido/observado) | Revisao SSC-REV-02 (item 4): alias nao prova identidade → REWRITE |
++| Retry condicionado a idempotencia; `indeterminado` | Revisao SSC-REV-02 (item 8) → REWRITE |
++| Juiz independente, precedencia deterministica, veredito vinculado | ADR-109 (fila colapsada; juiz no economico) + revisao SSC-REV-02 (item 9) → ADAPT |
++| Dois tipos de adaptador + allowlist | ADR-098 + handoff 2026-07-27 → ADAPT (D4 §3); **P0: somente falsos** |
++| Capacidade × risco em eixos separados + perfil de 8 dimensoes | FND-04 §2 + ausencia de L1–L3 no canonico + revisao SSC-REV-02 (item 5) → vocabulario experimental §3 |
+ | Worktree/previa/merge humano | ADR-093/109 + defeito CRLF real → ADAPT com prova obrigatoria (D7) |
+ | Nenhuma UI nesta fase | ADR-113 (casca nao decide) → REFERENCE; Control Plane minimal |
+ 
+@@ -194,5 +236,6 @@ canonico ja diz".
+ - UI/TUI/painel (REFERENCE; fase posterior, se houver sinal).
+ - Aprendizado automatico de rotas (REFERENCE; propoe-e-nunca-aplica, futuro).
+ - Midia/mega-brain (RETIRE, fora do escopo de orquestracao).
+-- Multi-tenancy, rede distribuida, fila externa — sem gatilho observado (AF-41 do
+-  Contexto do Soberano: recusa de abstracao sem gatilho, respeitada aqui).
++- Adaptadores reais, rede, multiusuario, integracao canonica — fora da P0 por
++  definicao da Missao 0.2.
++- Multi-tenancy, rede distribuida, fila externa — sem gatilho observado (AF-41).

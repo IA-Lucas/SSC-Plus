@@ -1,0 +1,37 @@
+diff --git a/alfa.py b/alfa.py
+--- a/alfa.py
++++ b/alfa.py
+@@ -8,3 +8,5 @@
+ def total(itens):
+-    return sum(itens)
++    # D1 (linha 10): off-by-one — soma o primeiro item duas vezes
++    return sum(itens) + itens[0]
++
++def primeiro(itens):
+@@ -20,2 +22,4 @@
+ def rotulo(item):
+-    return item["nome"]
++    # D2 (linha 22): None nao checado — item pode ser None
++    return item["nome"]
+diff --git a/beta.py b/beta.py
+--- a/beta.py
++++ b/beta.py
+@@ -3,2 +5,3 @@
+ def ler(caminho):
+-    with open(caminho) as f:
+-        return f.read()
++    # D3 (linha 5): recurso nao fechado
++    return open(caminho).read()
+@@ -15,2 +17,3 @@
+ def ativo(flag):
+-    return flag is True
++    # D4 (linha 17): comparacao com == em vez de 'is'
++    return flag == True
+@@ -29,2 +31,4 @@
+ def carregar(caminho):
+-    return ler(caminho)
++    # D5 (linha 31): excecao engolida
++    try:
++        return ler(caminho)
++    except Exception:
++        pass

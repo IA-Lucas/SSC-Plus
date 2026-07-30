@@ -1,0 +1,66 @@
+{
+  "criterio_congelado": "reportar exatamente os 5 defeitos da semente (deteccao 5/5, FP 0); taxa LIDA registrada ainda que imperfeita",
+  "n_declarado": 3,
+  "resultados": [
+    {
+      "fp_lido": 0,
+      "independencia": {
+        "base": "observado",
+        "fila": [
+          "prov-b/modelo-l3",
+          "prov-c/modelo-juiz"
+        ],
+        "modelo_distinto": true,
+        "motivos": [
+          "candidato prov-c/modelo-juiz distinto do executor (observado)"
+        ],
+        "provedor_distinto_do_executor": true
+      },
+      "pacote_juiz": {
+        "effort": "alto",
+        "hash_catalogo": "f0b3813c6664b7e7d3f80f1453235dda79e102c87021ef3fd3b6429ad484fc0d",
+        "modelo": "modelo-juiz",
+        "provedor": "prov-c",
+        "rubrica_ref": "b3ef82923a0e7514c5c4b4ec86404a8e62b9cdc7d72b81314f3c8c1dedc81499",
+        "seed": 13
+      },
+      "recusas_iv2": [],
+      "seed": 13,
+      "taxa_deteccao_lida": 1.0,
+      "veredito_deterministico": "aprovado",
+      "veredito_juiz_llm": "aprovado"
+    },
+    {
+      "anulacao_iv2": "recusada e registrada (IV-2 respeitado)",
+      "fp_lido": 1,
+      "recusas_iv2": [
+        "IV-2: veto deterministico nao anulavel por juiz-llm sobre o mesmo artefato"
+      ],
+      "seed": 24,
+      "taxa_deteccao_lida": 0.8,
+      "veredito_deterministico": "reprovado"
+    },
+    {
+      "anulacao_iv2": "recusada e registrada (IV-2 respeitado)",
+      "fp_lido": 0,
+      "recusas_iv2": [
+        "IV-2: veto deterministico nao anulavel por juiz-llm sobre o mesmo artefato"
+      ],
+      "seed": 35,
+      "taxa_deteccao_lida": 0.6,
+      "veredito_deterministico": "reprovado"
+    }
+  ],
+  "rotulo_numeros": "simulado",
+  "sementes": [
+    13,
+    24,
+    35
+  ],
+  "tarefa": "TO-3",
+  "taxas_lidas": {
+    "13": 1.0,
+    "24": 0.8,
+    "35": 0.6
+  }
+}

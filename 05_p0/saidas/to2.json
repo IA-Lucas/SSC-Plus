@@ -1,0 +1,65 @@
+{
+  "aprovados": 3,
+  "criterio_congelado": "citacao arquivo/linha correta + pacote suficiente e so o suficiente",
+  "n_declarado": 3,
+  "resultados": [
+    {
+      "custo_contexto_linhas": 12,
+      "entradas": [
+        {
+          "inclusao": "verbatim",
+          "origem": "E:\\LucasIA\\Projetos\\SSC-Plus\\05_p0\\cenarios\\fixtures\\to2\\repo\\kernel.py",
+          "papel": "evidencia",
+          "sha256": "c69748f28ed76e618ccdee934fb552a9fdc310ed3f161915336ca42c5749e6b4"
+        }
+      ],
+      "exclusoes": [
+        "util.py: irrelevante para a pergunta",
+        "notas.txt: irrelevante para a pergunta"
+      ],
+      "seed": 12,
+      "veredito": "aprovado"
+    },
+    {
+      "custo_contexto_linhas": 12,
+      "entradas": [
+        {
+          "inclusao": "verbatim",
+          "origem": "E:\\LucasIA\\Projetos\\SSC-Plus\\05_p0\\cenarios\\fixtures\\to2\\repo\\kernel.py",
+          "papel": "evidencia",
+          "sha256": "c69748f28ed76e618ccdee934fb552a9fdc310ed3f161915336ca42c5749e6b4"
+        }
+      ],
+      "exclusoes": [
+        "util.py: irrelevante para a pergunta",
+        "notas.txt: irrelevante para a pergunta"
+      ],
+      "seed": 23,
+      "veredito": "aprovado"
+    },
+    {
+      "custo_contexto_linhas": 12,
+      "entradas": [
+        {
+          "inclusao": "verbatim",
+          "origem": "E:\\LucasIA\\Projetos\\SSC-Plus\\05_p0\\cenarios\\fixtures\\to2\\repo\\kernel.py",
+          "papel": "evidencia",
+          "sha256": "c69748f28ed76e618ccdee934fb552a9fdc310ed3f161915336ca42c5749e6b4"
+        }
+      ],
+      "exclusoes": [
+        "util.py: irrelevante para a pergunta",
+        "notas.txt: irrelevante para a pergunta"
+      ],
+      "seed": 34,
+      "veredito": "aprovado"
+    }
+  ],
+  "rotulo_numeros": "simulado",
+  "sementes": [
+    12,
+    23,
+    34
+  ],
+  "tarefa": "TO-2"
+}
