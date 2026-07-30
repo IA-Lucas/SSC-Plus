@@ -1,0 +1,97 @@
+{
+  "tipo": "preflight-diagnostico-p1a2-capsula",
+  "gerado_em_utc": "2026-07-30T21:17:48Z",
+  "capsula": {
+    "violacoes_no_env_do_processo": [],
+    "politica": "subscription-only; qualquer credencial de modelo visivel dentro da capsula = bloqueio"
+  },
+  "lock_escritor_unico": {
+    "sessao": "p1a2-ops",
+    "fence": 1
+  },
+  "custo_variavel": 0,
+  "chamadas_de_modelo": 0,
+  "nota": "somente sondas oficiais de diagnostico (version/login/model-list); zero prompt/geracao; sondas receberam nova copia sanitizada do env da capsula",
+  "violacoes_ambiente_nomes": [],
+  "env_sanitizado_remove_nomes": [],
+  "frota": [
+    {
+      "provider_id": "codex",
+      "resultado": "BLOCKED",
+      "caminho": "C:\\Users\\<USUARIO>\\AppData\\Local\\Programs\\OpenAI\\Codex\\bin\\codex.exe",
+      "versao": "0.145.0",
+      "plano": null,
+      "origem_credencial": "subscription-oauth",
+      "quota": "desconhecida",
+      "modelos": [],
+      "erros": [
+        {
+          "tipo": "PlanoNaoReconhecido",
+          "codigo": "P1A-PLANO-DESCONHECIDO",
+          "detalhe": "plano reportado None fora de ['chatgpt pro 5x', 'chatgpt pro', 'pro']",
+          "alvo": null
+        }
+      ]
+    },
+    {
+      "provider_id": "claude",
+      "resultado": "BLOCKED",
+      "caminho": "~/.local/bin/claude",
+      "versao": "2.1.220",
+      "plano": "max",
+      "origem_credencial": "subscription-oauth",
+      "quota": "desconhecida",
+      "modelos": [],
+      "erros": [
+        {
+          "tipo": "ModeloRemovido",
+          "codigo": "P1A-MODELO-REMOVIDO",
+          "detalhe": "descoberta sem nenhum modelo esperado ['claude-opus', 'claude-sonnet']; encontrados: []",
+          "alvo": null
+        }
+      ]
+    },
+    {
+      "provider_id": "kimi",
+      "resultado": "BLOCKED",
+      "caminho": "~/.kimi-code/bin/kimi",
+      "versao": "0.30.0",
+      "plano": null,
+      "origem_credencial": "subscription-oauth",
+      "quota": "desconhecida",
+      "modelos": [],
+      "erros": [
+        {
+          "tipo": "PlanoNaoReconhecido",
+          "codigo": "P1A-PLANO-DESCONHECIDO",
+          "detalhe": "plano reportado None fora de ['allegretto']",
+          "alvo": null
+        }
+      ]
+    },
+    {
+      "provider_id": "google",
+      "resultado": "SUPERVISED",
+      "caminho": "gemini",
+      "versao": null,
+      "plano": "Google AI Pro",
+      "origem_credencial": "subscription-oauth",
+      "quota": "desconhecida",
+      "modelos": [],
+      "erros": [],
+      "nota": "SUPERVISED por regra da missao; sonda real nao necessaria (provedor nao usado na frota)"
+    },
+    {
+      "provider_id": "grok",
+      "resultado": "SUPERVISED",
+      "caminho": "grok",
+      "versao": null,
+      "plano": "SuperGrok",
+      "origem_credencial": "cached-token",
+      "quota": "desconhecida",
+      "modelos": [],
+      "erros": [],
+      "nota": "SUPERVISED por regra da missao; sonda real nao necessaria (provedor nao usado na frota)"
+    }
+  ]
+}

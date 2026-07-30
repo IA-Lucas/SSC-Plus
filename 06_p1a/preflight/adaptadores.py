@@ -10,6 +10,7 @@ timeout e captura de saida — e nunca imprime segredos.
 """
 
 import json
+import os
 import re
 import subprocess
 
@@ -118,9 +119,16 @@ def _resultado(logado, plano, origem, texto):
 
 
 def _login_codex(rc, out, err, espec):
-    logado = _logado_texto(rc, out, ("logged in", "chatgpt"))
-    return _resultado(logado, _plano_de(out, espec.planos_aceitos),
-                      "subscription-oauth", out)
+    # F-2 (P1-A.2): `codex login status` imprime o status em STDERR
+    # (stdout vazio). Login, plano e quota sao avaliados sobre stdout e
+    # stderr COMBINADOS em memoria — a saida bruta nunca e persistida.
+    # rc != 0 ou marcador negativo vence sempre: um conflito entre os
+    # canais (positivo num, negativo noutro) resulta desconhecido/BLOCKED,
+    # nunca login por inferencia.
+    texto = (out or "") + "\n" + (err or "")
+    logado = _logado_texto(rc, texto, ("logged in", "chatgpt"))
+    return _resultado(logado, _plano_de(texto, espec.planos_aceitos),
+                      "subscription-oauth", texto)
 
 
 def _login_claude(rc, out, err, espec):
@@ -178,7 +186,13 @@ class AdaptadorPreflight:
         self.env = dict(env) if env is not None else None
 
     def _argv(self, comando) -> list:
-        return [self.espec.executavel or self.espec.cli] + list(comando)
+        # F-1 (P1-A.2): expande SOMENTE o ~ do executavel (os.path.expanduser).
+        # Sem expandvars, sem shell, sem hardcode de usuario: os argumentos
+        # seguem em lista, intactos (espacos e metacaracteres sao literais,
+        # pois a execucao e sempre argv-lista com shell=False). Caminho
+        # inexistente vira CliIndisponivel na sonda (FileNotFoundError).
+        exe = os.path.expanduser(self.espec.executavel or self.espec.cli)
+        return [exe] + list(comando)
 
     def sonda(self, comando, sensor=None):
         """Executa um comando de diagnostico via sensor injetavel."""

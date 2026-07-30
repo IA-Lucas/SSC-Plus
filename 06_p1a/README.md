@@ -50,3 +50,11 @@ POLITICA_ECONOMICA da P0. O `escritor.py` (P1-A.1) e o runner
 fencing no ponto de entrada das operacoes P1; o estado de lock vive em
 `locks/` (runtime, ignorado pelo Git). Estabilizacao P1-A.1:
 `05_relatorio-estabilizacao-p1a1.md`.
+
+P1-A.2: `capsula.py` (ambiente-filho subscription-only — o SSC+ nasce sem
+nenhuma credencial de modelo; o ambiente global/HKCU nunca e modificado),
+`preflight_capsula.py` (preflight diagnostico real dentro da capsula) e
+`evidencias/revisao_p1a2.py` (revisao read-only por provider distinto,
+uma chamada). Adendo de politica: `06_adendo-capsula-p1a2.md`; decisao:
+`99_decisao-p1a2.md` (ADJUST — bloqueios factuais de especificacao nos
+portoes de plano/descoberta headless).

@@ -1,0 +1,74 @@
+SSC+ P1-A.2 — sondas cruas de diagnostico (redigidas: <USUARIO>).
+Executadas DENTRO da capsula (env sem credenciais de modelo).
+Nenhuma chamada de modelo; custo variavel 0. Valores de segredo: nenhum.
+
+== codex login status
+rc=0
+stdout:
+
+stderr:
+Logged in using ChatGPT
+
+== codex models
+rc=1
+stdout:
+
+stderr:
+Error: stdin is not a terminal
+
+== codex doctor (recorte)
+rc=0
+stdout:
+default model provider   openai
+      rollout DB model providers openai=269
+      model                    gpt-5.6-sol Â· openai
+  âœ“ auth         auth is configured
+      auth storage mode        File
+      auth file                C:\Users\<USUARIO>\.codex\auth.json
+      stored auth mode         chatgpt
+      model provider           openai
+      auth mode                chatgpt
+      models etag present      true
+      server model present     false
+      reachability mode        ChatGPT auth
+stderr:
+
+
+== kimi provider list
+rc=0
+stdout:
+managed:kimi-code  type=kimi  models=4  source=oauth
+
+Default model: kimi-code/k3
+stderr:
+
+
+== claude auth status
+rc=0
+stdout:
+{
+ "loggedIn": true,
+ "authMethod": "claude.ai",
+ "apiProvider": "firstParty",
+ "email": "<EMAIL-REDACTED>",
+ "orgId": "e8e00f17-3c8c-471b-b20d-49c4b1c16633",
+ "orgName": "<EMAIL-REDACTED>",
+ "subscriptionType": "max"
+}
+stderr:
+
+
+== claude models
+rc=0
+stdout:
+Interpretando como o inventÃ¡rio de modelos da frota SSC+ (o que estÃ¡ registrado no repo â€” `06_p1a/preflight/frota_real.py` e `06_p1a/01_inventario-real.md`):
+
+| Provedor | CLI | Plano | Modelos | Resultado |
+|---|---|---|---|---|
+| **codex** | `codex` 0.145.0 | ChatGPT Pro 5x (declarado) | esperado `gpt-5`; **efetivo observado no stderr: `gpt-5.6-sol`** | ELIGIBLE |
+| **claude** | `claude` 2.1.220 | Max (CLI confirma `max`) | esperado `claude-opus`, `claude-sonnet`; auto-relatado `claude-opus-5[1m]` | ELIGIBLE |
+| **kimi** | `kimi` 0.30.0 | Allegretto (declarado) | 4 modelos no provider gerenciado; default `kimi-code/k3` | ELIGIBLE |
+| **google** | `gemini` 0.52.0 | Google AI Pro (declarado) | **nÃ£o consultados** (SUPERVISED: zero chamadas nesta fase) | SUPERVISED |
+| **grok** | `grok
+stderr:
+
