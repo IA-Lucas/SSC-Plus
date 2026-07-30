@@ -1,0 +1,21 @@
+# Segredos e estado local — nunca entram no Git
+.env
+*.secret.json
+*.key
+*.pem
+secrets/
+*.local.json
+
+# Logs brutos e temporarios
+logs/*.tmp
+*.log
+
+# Runtime / caches
+__pycache__/
+*.pyc
+node_modules/
+.venv/
+
+# Sistema operacional
+Thumbs.db
+Desktop.ini
