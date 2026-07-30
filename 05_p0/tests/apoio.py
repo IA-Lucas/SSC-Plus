@@ -1,8 +1,15 @@
-"""Apoio comum dos testes P0: sys.path + helpers de lab em diretorio tmp."""
+"""Apoio comum dos testes P0: sys.path + helpers de lab em diretorio tmp.
+
+0.2.1: os temporarios de teste ficam na pasta IGNORADA do laboratorio
+(05_p0/saidas/labs/tests/) — nada de temp do SO sem autorizacao. Cada
+teste limpa o proprio diretorio no tearDown (limpar_lab).
+"""
 
 import json
 import os
+import shutil
 import sys
+import uuid
 
 _DIR = os.path.dirname(os.path.abspath(__file__))
 _DIR_P0 = os.path.dirname(_DIR)
@@ -14,10 +21,23 @@ from ssc_p0 import contratos as ct  # noqa: E402
 from ssc_p0.canonico import canonico, sha256_de  # noqa: E402
 from ssc_p0.judge import Juiz1  # noqa: E402
 
+DIR_TESTS = os.path.join(_DIR_P0, "saidas", "labs", "tests")
 
-def novo_lab(tmp, **kwargs):
-    """Lab completo numa raiz tmp (isolada por teste)."""
-    return Lab(os.path.join(tmp, "lab"), **kwargs)
+
+def novo_lab(tmp=None, **kwargs):
+    """Lab completo numa raiz isolada por teste (pasta ignorada do lab)."""
+    raiz = tmp or os.path.join(DIR_TESTS, uuid.uuid4().hex)
+    os.makedirs(raiz, exist_ok=True)
+    return Lab(os.path.join(raiz, "lab"), **kwargs)
+
+
+def limpar_lab(lab) -> None:
+    """Remove a raiz do lab de teste (inventario limpo por teste)."""
+    try:
+        lab.kernel.fechar()
+    except Exception:
+        pass
+    shutil.rmtree(os.path.dirname(lab.raiz), ignore_errors=True)
 
 
 def fluxo_sucesso(lab, modelo="modelo-x", provedor="prov-a", nivel="L2",

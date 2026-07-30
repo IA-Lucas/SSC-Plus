@@ -1,0 +1,3089 @@
+diff --git a/05_p0/README.md b/05_p0/README.md
+index 54fdfb1..d372a74 100644
+--- a/05_p0/README.md
++++ b/05_p0/README.md
+@@ -5,6 +5,16 @@ Implementação executável dos contratos **D5 v0.2.0** e dos componentes
+ Stdlib apenas, Python 3.14, zero rede, zero dependências externas, zero
+ escrita fora da raiz declarada de cada corrida.
+ 
++**0.2.1 (hardening)**: as 13 correções da revisão independente estão
++aplicadas — decisão canônica hasheada (mutação recusada), veredito com
++cadeia completa, reducer validado antes do append, escritor único entre
++processos (lock/lease + fencing token), idempotency key com fingerprint
++(propagada ao provider), fallback com nova decisão, ContextPackage ligado
++ao work_unit_id real com bytes no CAS, checkpoint por seq (nunca UUID),
++divergência observado×resolvido fechada, IDs validados em caminhos,
++`causado_por` na linhagem, retry 1..3 com teto de backoff e threat model
++declarado em `THREAT-MODEL.md`.
++
+ ## Como rodar
+ 
+ ```bash
+@@ -12,15 +22,19 @@ escrita fora da raiz declarada de cada corrida.
+ python -m unittest discover -s 05_p0/tests -v
+ python 05_p0/cenarios/prova_central.py
+ python 05_p0/cenarios/corridas_to.py
++python 05_p0/cenarios/cobertura.py   # cobertura de linha (stdlib trace)
+ ```
+ 
+-- Testes: 73 testes, 100% verde (1 skip explícito: symlink real no Windows
+-  sem privilégio — cobertura equivalente via mock do resolvedor).
++- Testes: **91 testes, 0 falhas, 0 skips** (o antigo skip de symlink foi
++  substituído por prova REAL de junction/reparse point no Windows).
++- Cobertura de linha medida com `trace` (stdlib): **2296/2296 linhas
++  (100%)** dos módulos `ssc_p0`; relatório em `saidas/labs/cobertura/`.
+ - A prova central grava `05_p0/saidas/prova_central.json`.
+ - As corridas TO-1..TO-5 gravam `05_p0/saidas/to1.json`..`to5.json`.
+-- Laboratórios das corridas (CAS, logs, checkpoints) ficam em
+-  `05_p0/saidas/labs/`. Todos os números são **simulados** e rotulados
+-  `simulado` (MR-2); nada aqui é medição real.
++- Laboratórios das corridas e dos testes (CAS, logs, checkpoints, locks)
++  ficam em `05_p0/saidas/labs/` (pasta ignorada pelo Git). Todos os
++  números são **simulados** e rotulados `simulado` (MR-2); nada aqui é
++  medição real.
+ 
+ ## Layout
+ 
+@@ -30,8 +44,9 @@ python 05_p0/cenarios/corridas_to.py
+ │   ├── canonico.py         # JSON canônico, sha256, UUID-4, relógio injetável
+ │   ├── contratos.py        # dataclasses D5: to_dict/from_dict/validate
+ │   ├── estados.py          # 3 máquinas de estado; TransicaoIlegal
+-│   ├── cas.py              # CAS 2/2/sha256, escrita atômica, IC-5
+-│   ├── eventlog.py         # JSONL append-only, cadeia prev_event_hash, dedup
++│   ├── cas.py              # CAS 2/2/sha256, escrita atômica, IC-5, read-only
++│   ├── eventlog.py         # JSONL append-only, cadeia prev_event_hash, fingerprint
++│   ├── writelock.py        # lock/lease + fencing token (escritor único entre processos)
+ │   ├── kernel.py           # SessionKernel (escritor único) + ControlPlane
+ │   ├── catalogo.py         # catálogo de executores falsos + aliases
+ │   ├── providers.py        # FakeProvider: bateria de falhas programável
+diff --git a/05_p0/THREAT-MODEL.md b/05_p0/THREAT-MODEL.md
+new file mode 100644
+index 0000000..cf2d626
+--- /dev/null
++++ b/05_p0/THREAT-MODEL.md
+@@ -0,0 +1,58 @@
++# Threat Model — SSC+ P0 (0.2.1)
++
++> Declaração explícita do que os mecanismos de integridade da P0 **fazem** e
++> **não fazem**. Escopo: laboratório offline, isolado, sem rede, sem
++> credenciais, providers falsos. Este documento é exigência do item 13 do
++> hardening 0.2.1.
++
++## 1. O que o hash/HMAC local cobre
++
++- **CAS (sha256 endereçado por conteúdo)**: detecta **corrupção casual** de
++  objetos (bitflip, truncamento, edição acidental, disco/filesystem falho).
++  Leitura sempre re-verifica o hash; divergência = `CorrupcaoDetectada`
++  (falha fechada).
++- **EventLog (cadeia `prev_event_hash` + linha canônica)**: detecta
++  **corrupção casual e edição acidental** do log — evento duplicado, fora de
++  ordem, truncado ou adulterado quebra a verificação (IP-2/IP-4).
++- **Selo HMAC (`chave_selo.bin`) do envelope e dos checkpoints**: detecta
++  modificação casual/acidental desses artefatos por processos que **não**
++  conhecem a chave.
++
++## 2. O que NÃO está coberto (declarado)
++
++- **Um atacante com acesso à `chave_selo.bin` ressela qualquer artefato.**
++  O HMAC local **não** defende contra adversário com acesso à chave — a
++  chave vive no mesmo diretório dos dados, por construção da P0.
++- **Um atacante com escrita no disco do laboratório** pode reescrever log,
++  CAS e checkpoints de forma consistente e indetectável pelos mecanismos
++  locais (recomputa hashes e selos). A defesa contra isso é o **isolamento
++  do laboratório** (Manifesto de Isolamento), não criptografia.
++- **Não há autenticidade de origem**: nada aqui prova *quem* escreveu um
++  evento — apenas que a cadeia é internamente consistente desde a gênese.
++- **Scanner IC-4 é lista fechada de padrões**: detecção de segredo é
++  best-effort determinística, **não** é prova de ausência de segredo.
++- **Hash/HMAC não é controle de acesso**: o escritor único (lock + fencing)
++  previne *corrupção por concorrência*, não *uso malicioso* por quem detém
++  o lock.
++
++## 3. Credenciais futuras — regra dura
++
++Quando a P1+ introduzir providers reais, credenciais entram **somente por
++referência/cofre** (ex.: nome de segredo em gerenciador externo, variável de
++ambiente lida no momento do uso):
++
++- **NUNCA** em objeto do CAS (imutável e replicável por construção);
++- **NUNCA** em ContextPackage (vai para o provider e para a evidência);
++- **NUNCA** em payload de evento (fica durável no EventLog para sempre);
++- o scanner IC-4 permanece como **última linha** (recusa), não como
++  mecanismo primário de proteção.
++
++## 4. Resumo operacional
++
++| Mecanismo | Detecta | NÃO detecta |
++|---|---|---|
++| CAS sha256 | corrupção casual de bytes | reescrita consistente por atacante |
++| Cadeia prev_event_hash | adulteração casual do log | reescrita total da cadeia |
++| HMAC selo | edição por quem não tem a chave | atacante com a chave |
++| Lock + fencing token | escritor concorrente/obsoleto | titular malicioso do lock |
++| Scanner IC-4 | padrões conhecidos de segredo | segredos fora dos padrões |
+diff --git a/05_p0/cenarios/cobertura.py b/05_p0/cenarios/cobertura.py
+new file mode 100644
+index 0000000..175abb0
+--- /dev/null
++++ b/05_p0/cenarios/cobertura.py
+@@ -0,0 +1,65 @@
++"""Cobertura de linha da bateria P0 medida com ferramenta STDLIB (trace).
++
++A missao proibe dependencias externas; `trace` (stdlib) fornece cobertura
++de linha real, sem percentual inventado. Roda a bateria unittest inteira
++sob rastreamento e resume a cobertura dos modulos `ssc_p0`.
++
++Saida: saidas/labs/cobertura/ (pasta ignorada do laboratorio) + resumo no
++stdout. Uso: python 05_p0/cenarios/cobertura.py
++"""
++
++import os
++import sys
++import trace
++import unittest
++
++_DIR = os.path.dirname(os.path.abspath(__file__))
++_DIR_P0 = os.path.dirname(_DIR)
++sys.path.insert(0, _DIR_P0)
++sys.path.insert(0, os.path.join(_DIR_P0, "tests"))
++
++DIR_COBERTURA = os.path.join(_DIR_P0, "saidas", "labs", "cobertura")
++
++
++def _rodar_bateria() -> bool:
++    suite = unittest.TestLoader().discover(os.path.join(_DIR_P0, "tests"))
++    resultado = unittest.TextTestRunner(verbosity=0).run(suite)
++    return resultado.wasSuccessful()
++
++
++def main() -> None:
++    os.makedirs(DIR_COBERTURA, exist_ok=True)
++    trac = trace.Trace(count=1, trace=0, countfuncs=0, countcallers=0,
++                       ignoredirs=[sys.prefix, sys.exec_prefix])
++    ok = trac.runfunc(_rodar_bateria)
++    resultados = trac.results()
++    resultados.write_results(show_missing=True, summary=True,
++                             coverdir=DIR_COBERTURA)
++    # Resumo por modulo ssc_p0: linhas executaveis x executadas.
++    contagens = resultados.counts  # {(arquivo, linha): hits}
++    por_modulo = {}
++    for (arquivo, _linha), hits in contagens.items():
++        if f"{os.sep}ssc_p0{os.sep}" not in arquivo:
++            continue
++        modulo = os.path.basename(arquivo)
++        executadas, total = por_modulo.get(modulo, (0, 0))
++        por_modulo[modulo] = (executadas + (1 if hits else 0), total + 1)
++    print("\n=== Cobertura de linha (stdlib trace) — ssc_p0 ===")
++    soma_exec = soma_total = 0
++    for modulo in sorted(por_modulo):
++        executadas, total = por_modulo[modulo]
++        soma_exec += executadas
++        soma_total += total
++        pct = 100.0 * executadas / total if total else 0.0
++        print(f"  {modulo:<16} {executadas:>4}/{total:<4} linhas  {pct:5.1f}%")
++    pct_total = 100.0 * soma_exec / soma_total if soma_total else 0.0
++    print(f"  {'TOTAL':<16} {soma_exec:>4}/{soma_total:<4} linhas  "
++          f"{pct_total:5.1f}%")
++    print(f"  bateria: {'OK' if ok else 'COM FALHAS'}; "
++          f"detalhes (linhas perdidas) em {DIR_COBERTURA}")
++    if not ok:
++        sys.exit(1)
++
++
++if __name__ == "__main__":
++    main()
+diff --git a/05_p0/cenarios/comum.py b/05_p0/cenarios/comum.py
+index b4971ed..5ed7d0b 100644
+--- a/05_p0/cenarios/comum.py
++++ b/05_p0/cenarios/comum.py
+@@ -60,7 +60,7 @@ class Lab:
+                 observado=observados.get(eid))
+         self.execution = ExecutionGateway(
+             self.kernel, self.policy, self.catalogo, self.providers,
+-            self.control)
++            self.control, router=self.router)
+         self.envelope = self.control.abrir_sessao(
+             escopo={"repo_alvo": self.raiz, "modo": "read-only",
+                     "fronteiras": []},
+diff --git a/05_p0/cenarios/corridas_to.py b/05_p0/cenarios/corridas_to.py
+index 12f8ad6..afaad2e 100644
+--- a/05_p0/cenarios/corridas_to.py
++++ b/05_p0/cenarios/corridas_to.py
+@@ -9,7 +9,7 @@ import os
+ 
+ from comum import DIR_FIXTURES, DIR_LABS, Lab
+ from ssc_p0 import contratos as ct
+-from ssc_p0.canonico import sha256_bytes
++from ssc_p0.canonico import novo_id, sha256_bytes
+ from ssc_p0.evidence import EvidencePlane
+ from ssc_p0.judge import Juiz1
+ from ssc_p0.router import FalhaFechadaClassificacao, RotaVetada, TaskRouter
+@@ -98,8 +98,10 @@ def corrida_to2():
+                   seeds={"prov-a/modelo-x": seed},
+                   funcoes_sucesso={"prov-a/modelo-x": _respondedor_l2})
+         k = lab.kernel
++        # 0.2.1-7: o pacote nasce ligado ao work_unit_id real da WU.
++        wu_id = novo_id()
+         pacote = k.montar_contexto(
+-            "to2",
++            wu_id,
+             [{"origem": os.path.join(DIR_FIXTURES, "to2", "repo", "kernel.py"),
+               "papel": "evidencia", "inclusao": "verbatim"}],
+             exclusoes=["util.py: irrelevante para a pergunta",
+@@ -111,7 +113,7 @@ def corrida_to2():
+                        "arquivo": "kernel.py", "linha_funcao": 5,
+                        "excluir": ["util.py", "notas.txt"]},
+             tipo="ato", nivel="L2", perfil=_perfil(modalidade="codigo"),
+-            classe="C0", contexto_ref=pacote.hash_pacote)
++            classe="C0", contexto_ref=pacote.hash_pacote, wu_id=wu_id)
+         d = lab.router.propor_decisao(
+             wu, rota="padrao", selecao=lab.selecao("prov-a", "modelo-x"),
+             aprovacao_custo=lab.aprovacao, motivo="L2 com contexto suficiente")
+diff --git a/05_p0/saidas/prova_central.json b/05_p0/saidas/prova_central.json
+index 6bee3ed..6a13813 100644
+--- a/05_p0/saidas/prova_central.json
++++ b/05_p0/saidas/prova_central.json
+@@ -75,7 +75,7 @@
+   ],
+   "attempt_1": {
+     "artefato_ref": null,
+-    "attempt_id": "e54e2c6df830458f869da1e5419198f3",
++    "attempt_id": "265c8dd7074046c082e332e08ee28914",
+     "captura": {
+       "saida_estruturada_ref": "8ec2c0efb2fa5eacf8294029930391913f20aa62a76f1237aba97d1dda697a93",
+       "saida_final_ref": null
+@@ -85,7 +85,7 @@
+       "tokens": 445,
+       "valor": 0.014
+     },
+-    "decisao_id": "5337c0c65742441bb4bc7848b763f0a7",
++    "decisao_id": "ef3fe4f69344476699b9a04b5d4a318c",
+     "efeito_externo": "nao-aplicado",
+     "executor_observado": {
+       "effort": "alto",
+@@ -103,7 +103,7 @@
+     },
+     "fim": "2026-07-30T00:00:09Z",
+     "inicio": "2026-07-30T00:00:07Z",
+-    "linhagem_id": "ee8a931fa3504281858fe7943b6259cc",
++    "linhagem_id": "f739b124e070405caab596fc8f5bad9c",
+     "resultado": "falha-quota",
+     "selecao_solicitada": {
+       "controle": "confirma-no-gasto",
+@@ -116,16 +116,16 @@
+     "vinculos": {
+       "hash_aprovacao": "116df29e6c06962b388266d62b6c71f5f5ee9ad1a9a9dfc3614b636619509beb",
+       "hash_catalogo": "f0b3813c6664b7e7d3f80f1453235dda79e102c87021ef3fd3b6429ad484fc0d",
+-      "hash_contexto": "e423d5ab53487741e3060b453945795c6ba524f489ab24b569726a20b130a2d4",
+-      "hash_envelope": "ec0ed186cd4fbc9551a65ca30345f08260cf265de60094ad729ddb6c3fcf8235",
++      "hash_contexto": "603a2deeeb55b7620bf35b070a322a5bd9d0845584f6d79712fe796dc5427e5d",
++      "hash_envelope": "3541c66c1b87f57336585e46f929f1f2451d2397e0f77194e08fe3ad7f44e4cb",
+       "hash_permissoes": "5683800ce20fea8313db4ee6fe6162e73b1119535cbb1faac5f90b5e136b7d04",
+       "hash_politica": "169b90c813290bcd3c327be79d29975f1c1e6df71c88a27ee16a95502dd0a0a7"
+     },
+-    "work_unit_id": "380a6a6342094c6799b362f86120917d"
++    "work_unit_id": "6d3b45597ab9463bad195473821a22bf"
+   },
+   "attempt_2": {
+     "artefato_ref": "60204bc71025003c0090701ac6712bd39808d0c84b38aa1c95533344568028bf",
+-    "attempt_id": "29ec0938328a472f9b5511ec2499c626",
++    "attempt_id": "0ed6227974204fdcacc732e7d6e869d3",
+     "captura": {
+       "saida_estruturada_ref": "60204bc71025003c0090701ac6712bd39808d0c84b38aa1c95533344568028bf",
+       "saida_final_ref": "60204bc71025003c0090701ac6712bd39808d0c84b38aa1c95533344568028bf"
+@@ -135,7 +135,7 @@
+       "tokens": 527,
+       "valor": 0.092
+     },
+-    "decisao_id": "2ef96f9b4a184630b4fb332bd3f5fbce",
++    "decisao_id": "c71caae8194242f2899135d32292c2f0",
+     "efeito_externo": "aplicado",
+     "executor_observado": {
+       "effort": "alto",
+@@ -153,7 +153,7 @@
+     },
+     "fim": "2026-07-30T00:00:19Z",
+     "inicio": "2026-07-30T00:00:17Z",
+-    "linhagem_id": "ee8a931fa3504281858fe7943b6259cc",
++    "linhagem_id": "f739b124e070405caab596fc8f5bad9c",
+     "resultado": "sucesso",
+     "selecao_solicitada": {
+       "controle": "confirma-no-gasto",
+@@ -166,12 +166,12 @@
+     "vinculos": {
+       "hash_aprovacao": "116df29e6c06962b388266d62b6c71f5f5ee9ad1a9a9dfc3614b636619509beb",
+       "hash_catalogo": "f0b3813c6664b7e7d3f80f1453235dda79e102c87021ef3fd3b6429ad484fc0d",
+-      "hash_contexto": "e423d5ab53487741e3060b453945795c6ba524f489ab24b569726a20b130a2d4",
+-      "hash_envelope": "ec0ed186cd4fbc9551a65ca30345f08260cf265de60094ad729ddb6c3fcf8235",
++      "hash_contexto": "603a2deeeb55b7620bf35b070a322a5bd9d0845584f6d79712fe796dc5427e5d",
++      "hash_envelope": "3541c66c1b87f57336585e46f929f1f2451d2397e0f77194e08fe3ad7f44e4cb",
+       "hash_permissoes": "5683800ce20fea8313db4ee6fe6162e73b1119535cbb1faac5f90b5e136b7d04",
+       "hash_politica": "169b90c813290bcd3c327be79d29975f1c1e6df71c88a27ee16a95502dd0a0a7"
+     },
+-    "work_unit_id": "380a6a6342094c6799b362f86120917d"
++    "work_unit_id": "6d3b45597ab9463bad195473821a22bf"
+   },
+   "cenario": "prova_central",
+   "decisao_1": {
+@@ -201,8 +201,8 @@
+       "rotulo": "estimado",
+       "valor": 0.01
+     },
+-    "decisao_id": "5337c0c65742441bb4bc7848b763f0a7",
+-    "hash_pacote": "e423d5ab53487741e3060b453945795c6ba524f489ab24b569726a20b130a2d4",
++    "decisao_id": "ef3fe4f69344476699b9a04b5d4a318c",
++    "hash_pacote": "603a2deeeb55b7620bf35b070a322a5bd9d0845584f6d79712fe796dc5427e5d",
+     "motivo": "rota padrao: X primeiro",
+     "nivel_capacidade_atendido": "L2",
+     "selecao": {
+@@ -217,12 +217,12 @@
+     "vinculos": {
+       "hash_aprovacao": "116df29e6c06962b388266d62b6c71f5f5ee9ad1a9a9dfc3614b636619509beb",
+       "hash_catalogo": "f0b3813c6664b7e7d3f80f1453235dda79e102c87021ef3fd3b6429ad484fc0d",
+-      "hash_contexto": "e423d5ab53487741e3060b453945795c6ba524f489ab24b569726a20b130a2d4",
+-      "hash_envelope": "ec0ed186cd4fbc9551a65ca30345f08260cf265de60094ad729ddb6c3fcf8235",
++      "hash_contexto": "603a2deeeb55b7620bf35b070a322a5bd9d0845584f6d79712fe796dc5427e5d",
++      "hash_envelope": "3541c66c1b87f57336585e46f929f1f2451d2397e0f77194e08fe3ad7f44e4cb",
+       "hash_permissoes": "5683800ce20fea8313db4ee6fe6162e73b1119535cbb1faac5f90b5e136b7d04",
+       "hash_politica": "169b90c813290bcd3c327be79d29975f1c1e6df71c88a27ee16a95502dd0a0a7"
+     },
+-    "work_unit_id": "380a6a6342094c6799b362f86120917d"
++    "work_unit_id": "6d3b45597ab9463bad195473821a22bf"
+   },
+   "decisao_2": {
+     "alternativas": [],
+@@ -251,8 +251,8 @@
+       "rotulo": "estimado",
+       "valor": 0.01
+     },
+-    "decisao_id": "2ef96f9b4a184630b4fb332bd3f5fbce",
+-    "hash_pacote": "e423d5ab53487741e3060b453945795c6ba524f489ab24b569726a20b130a2d4",
++    "decisao_id": "c71caae8194242f2899135d32292c2f0",
++    "hash_pacote": "603a2deeeb55b7620bf35b070a322a5bd9d0845584f6d79712fe796dc5427e5d",
+     "motivo": "nova evidencia: quota de X esgotada; Y cobre o perfil",
+     "nivel_capacidade_atendido": "L2",
+     "selecao": {
+@@ -263,166 +263,166 @@
+       "modo": "read-only",
+       "provedor": "prov-b"
+     },
+-    "supersede": "5337c0c65742441bb4bc7848b763f0a7",
++    "supersede": "ef3fe4f69344476699b9a04b5d4a318c",
+     "vinculos": {
+       "hash_aprovacao": "116df29e6c06962b388266d62b6c71f5f5ee9ad1a9a9dfc3614b636619509beb",
+       "hash_catalogo": "f0b3813c6664b7e7d3f80f1453235dda79e102c87021ef3fd3b6429ad484fc0d",
+-      "hash_contexto": "e423d5ab53487741e3060b453945795c6ba524f489ab24b569726a20b130a2d4",
+-      "hash_envelope": "ec0ed186cd4fbc9551a65ca30345f08260cf265de60094ad729ddb6c3fcf8235",
++      "hash_contexto": "603a2deeeb55b7620bf35b070a322a5bd9d0845584f6d79712fe796dc5427e5d",
++      "hash_envelope": "3541c66c1b87f57336585e46f929f1f2451d2397e0f77194e08fe3ad7f44e4cb",
+       "hash_permissoes": "5683800ce20fea8313db4ee6fe6162e73b1119535cbb1faac5f90b5e136b7d04",
+       "hash_politica": "169b90c813290bcd3c327be79d29975f1c1e6df71c88a27ee16a95502dd0a0a7"
+     },
+-    "work_unit_id": "380a6a6342094c6799b362f86120917d"
++    "work_unit_id": "6d3b45597ab9463bad195473821a22bf"
+   },
+   "descricao": "troca de modelo na mesma sessao/linhagem com supersede",
+   "eventos": [
+     {
+       "acao": "abrir",
+       "causado_por": null,
+-      "evento_id": "7683800e385040db83f3fd4f6b9001aa",
++      "evento_id": "fc9d819f2028472eb06428953861d3f9",
+       "seq": 1,
+       "tipo": "sessao"
+     },
+     {
+       "acao": "registrar",
+       "causado_por": null,
+-      "evento_id": "c8e1e25c2d1c46c6bfe847ccec8870f8",
++      "evento_id": "ecc8de0fbb6643e8a416091ed17282cb",
+       "seq": 2,
+       "tipo": "work-unit"
+     },
+     {
+       "acao": "transicao",
+-      "causado_por": "c8e1e25c2d1c46c6bfe847ccec8870f8",
+-      "evento_id": "4c0ab9ec69114b98931adf93ebbe75fd",
++      "causado_por": "ecc8de0fbb6643e8a416091ed17282cb",
++      "evento_id": "ed7177090bea4eb1b0c9200604be8169",
+       "seq": 3,
+       "tipo": "work-unit"
+     },
+     {
+       "acao": "registrar",
+       "causado_por": null,
+-      "evento_id": "0656e6d9fe3648ac98cd16028a7868c1",
++      "evento_id": "1cc2a83da55b4a88ba2a3689fbe27e05",
+       "seq": 4,
+       "tipo": "routing"
+     },
+     {
+       "acao": "transicao",
+-      "causado_por": "0656e6d9fe3648ac98cd16028a7868c1",
+-      "evento_id": "842bdf25863b4851b8cfd4a40fa71ab9",
++      "causado_por": "1cc2a83da55b4a88ba2a3689fbe27e05",
++      "evento_id": "7124ff9e316344d1a5e801d62e33fe06",
+       "seq": 5,
+       "tipo": "work-unit"
+     },
+     {
+       "acao": "criar",
+-      "causado_por": "0656e6d9fe3648ac98cd16028a7868c1",
+-      "evento_id": "4b99dd465d224c9e908e44d7d88fb3f0",
++      "causado_por": "1cc2a83da55b4a88ba2a3689fbe27e05",
++      "evento_id": "cf691444f7744fc2b2d96c88530cab8c",
+       "seq": 6,
+       "tipo": "attempt"
+     },
+     {
+       "acao": "despachar",
+-      "causado_por": "4b99dd465d224c9e908e44d7d88fb3f0",
+-      "evento_id": "159fb0605add46359bbae3508a52f9dc",
++      "causado_por": "cf691444f7744fc2b2d96c88530cab8c",
++      "evento_id": "ca6f187d329d4cb2a235132ecbd755cc",
+       "seq": 7,
+       "tipo": "attempt"
+     },
+     {
+       "acao": "concluir",
+-      "causado_por": "159fb0605add46359bbae3508a52f9dc",
+-      "evento_id": "9b1a46ed9b2a4917b09611fd079e8ec8",
++      "causado_por": "ca6f187d329d4cb2a235132ecbd755cc",
++      "evento_id": "1fd997a67a2746069af57d42c371af31",
+       "seq": 8,
+       "tipo": "attempt"
+     },
+     {
+       "acao": "consumo",
+-      "causado_por": "9b1a46ed9b2a4917b09611fd079e8ec8",
+-      "evento_id": "3589ab513efc434d8312be7e30900bd8",
++      "causado_por": "1fd997a67a2746069af57d42c371af31",
++      "evento_id": "35b759de9ce04a69bc00e26e390b603f",
+       "seq": 9,
+       "tipo": "orcamento"
+     },
+     {
+       "acao": "registrar",
+-      "causado_por": "9b1a46ed9b2a4917b09611fd079e8ec8",
+-      "evento_id": "9273348d109745739b0ed4fcb60f7137",
++      "causado_por": "1fd997a67a2746069af57d42c371af31",
++      "evento_id": "efc7f7f4e2b84d7daf82ac47f5b10b17",
+       "seq": 10,
+       "tipo": "escalation"
+     },
+     {
+       "acao": "registrar",
+       "causado_por": null,
+-      "evento_id": "8f303a2e62fd4d0ca4647dfea38e52b3",
++      "evento_id": "7683b4394dff4e5ab88f94e565202dff",
+       "seq": 11,
+       "tipo": "memoria"
+     },
+     {
+       "acao": "registrar",
+       "causado_por": null,
+-      "evento_id": "69bdec80b260431193ed3e7c5f5fed76",
++      "evento_id": "834ff9d785e740f6b703a3a05be0e0cb",
+       "seq": 12,
+       "tipo": "routing"
+     },
+     {
+       "acao": "transicao",
+-      "causado_por": "69bdec80b260431193ed3e7c5f5fed76",
+-      "evento_id": "dfedbdcc79764817a5418360233e435a",
++      "causado_por": "834ff9d785e740f6b703a3a05be0e0cb",
++      "evento_id": "8ec1e8aaec5e446d90b55bc4d71b616a",
+       "seq": 13,
+       "tipo": "work-unit"
+     },
+     {
+       "acao": "criar",
+-      "causado_por": "69bdec80b260431193ed3e7c5f5fed76",
+-      "evento_id": "d955f6795f254fe7bcff3cb59a2fe3ca",
++      "causado_por": "834ff9d785e740f6b703a3a05be0e0cb",
++      "evento_id": "462a7492d4c24701a5b82f1606ede9aa",
+       "seq": 14,
+       "tipo": "attempt"
+     },
+     {
+       "acao": "despachar",
+-      "causado_por": "d955f6795f254fe7bcff3cb59a2fe3ca",
+-      "evento_id": "18d64e7ec40b40338034935d8c3601c3",
++      "causado_por": "462a7492d4c24701a5b82f1606ede9aa",
++      "evento_id": "cc405a61481941b6bb4cedc62a48e4c8",
+       "seq": 15,
+       "tipo": "attempt"
+     },
+     {
+       "acao": "concluir",
+-      "causado_por": "18d64e7ec40b40338034935d8c3601c3",
+-      "evento_id": "16d3132f0ac24376a9a07b793f2aba5f",
++      "causado_por": "cc405a61481941b6bb4cedc62a48e4c8",
++      "evento_id": "66a0c40f18c746a2a0d2908978e3ed3f",
+       "seq": 16,
+       "tipo": "attempt"
+     },
+     {
+       "acao": "consumo",
+-      "causado_por": "16d3132f0ac24376a9a07b793f2aba5f",
+-      "evento_id": "b67c369eaae543d6b4d4448c90469b9e",
++      "causado_por": "66a0c40f18c746a2a0d2908978e3ed3f",
++      "evento_id": "2b90255a007f4b21aee6df0083d85d18",
+       "seq": 17,
+       "tipo": "orcamento"
+     },
+     {
+       "acao": "transicao",
+-      "causado_por": "16d3132f0ac24376a9a07b793f2aba5f",
+-      "evento_id": "0caa71d0a8344b728543eaebb2a75af4",
++      "causado_por": "66a0c40f18c746a2a0d2908978e3ed3f",
++      "evento_id": "1619fd31149e468a84b80711b3ef749d",
+       "seq": 18,
+       "tipo": "work-unit"
+     },
+     {
+       "acao": "registrar",
+       "causado_por": null,
+-      "evento_id": "217db8d640e94df79f98652f4d999dc2",
++      "evento_id": "d8ecdf2b4303420492a99d82abbc889a",
+       "seq": 19,
+       "tipo": "veredito"
+     },
+     {
+       "acao": "transicao",
+-      "causado_por": "217db8d640e94df79f98652f4d999dc2",
+-      "evento_id": "d4c47d07a9f943389a70bb02ecd61d2c",
++      "causado_por": "d8ecdf2b4303420492a99d82abbc889a",
++      "evento_id": "13a6e0ddcfdd4fe5b024083061fb7710",
+       "seq": 20,
+       "tipo": "work-unit"
+     }
+   ],
+-  "linhagem_id": "ee8a931fa3504281858fe7943b6259cc",
++  "linhagem_id": "f739b124e070405caab596fc8f5bad9c",
+   "projecao": {
+     "attempts": [
+       {
+         "artefato_ref": null,
+-        "attempt_id": "e54e2c6df830458f869da1e5419198f3",
++        "attempt_id": "265c8dd7074046c082e332e08ee28914",
+         "captura": {
+           "saida_estruturada_ref": "8ec2c0efb2fa5eacf8294029930391913f20aa62a76f1237aba97d1dda697a93",
+           "saida_final_ref": null
+@@ -432,7 +432,7 @@
+           "tokens": 445,
+           "valor": 0.014
+         },
+-        "decisao_id": "5337c0c65742441bb4bc7848b763f0a7",
++        "decisao_id": "ef3fe4f69344476699b9a04b5d4a318c",
+         "efeito_externo": "nao-aplicado",
+         "executor_observado": {
+           "effort": "alto",
+@@ -450,7 +450,7 @@
+         },
+         "fim": "2026-07-30T00:00:09Z",
+         "inicio": "2026-07-30T00:00:07Z",
+-        "linhagem_id": "ee8a931fa3504281858fe7943b6259cc",
++        "linhagem_id": "f739b124e070405caab596fc8f5bad9c",
+         "resultado": "falha-quota",
+         "selecao_solicitada": {
+           "controle": "confirma-no-gasto",
+@@ -463,16 +463,16 @@
+         "vinculos": {
+           "hash_aprovacao": "116df29e6c06962b388266d62b6c71f5f5ee9ad1a9a9dfc3614b636619509beb",
+           "hash_catalogo": "f0b3813c6664b7e7d3f80f1453235dda79e102c87021ef3fd3b6429ad484fc0d",
+-          "hash_contexto": "e423d5ab53487741e3060b453945795c6ba524f489ab24b569726a20b130a2d4",
+-          "hash_envelope": "ec0ed186cd4fbc9551a65ca30345f08260cf265de60094ad729ddb6c3fcf8235",
++          "hash_contexto": "603a2deeeb55b7620bf35b070a322a5bd9d0845584f6d79712fe796dc5427e5d",
++          "hash_envelope": "3541c66c1b87f57336585e46f929f1f2451d2397e0f77194e08fe3ad7f44e4cb",
+           "hash_permissoes": "5683800ce20fea8313db4ee6fe6162e73b1119535cbb1faac5f90b5e136b7d04",
+           "hash_politica": "169b90c813290bcd3c327be79d29975f1c1e6df71c88a27ee16a95502dd0a0a7"
+         },
+-        "work_unit_id": "380a6a6342094c6799b362f86120917d"
++        "work_unit_id": "6d3b45597ab9463bad195473821a22bf"
+       },
+       {
+         "artefato_ref": "60204bc71025003c0090701ac6712bd39808d0c84b38aa1c95533344568028bf",
+-        "attempt_id": "29ec0938328a472f9b5511ec2499c626",
++        "attempt_id": "0ed6227974204fdcacc732e7d6e869d3",
+         "captura": {
+           "saida_estruturada_ref": "60204bc71025003c0090701ac6712bd39808d0c84b38aa1c95533344568028bf",
+           "saida_final_ref": "60204bc71025003c0090701ac6712bd39808d0c84b38aa1c95533344568028bf"
+@@ -482,7 +482,7 @@
+           "tokens": 527,
+           "valor": 0.092
+         },
+-        "decisao_id": "2ef96f9b4a184630b4fb332bd3f5fbce",
++        "decisao_id": "c71caae8194242f2899135d32292c2f0",
+         "efeito_externo": "aplicado",
+         "executor_observado": {
+           "effort": "alto",
+@@ -500,7 +500,7 @@
+         },
+         "fim": "2026-07-30T00:00:19Z",
+         "inicio": "2026-07-30T00:00:17Z",
+-        "linhagem_id": "ee8a931fa3504281858fe7943b6259cc",
++        "linhagem_id": "f739b124e070405caab596fc8f5bad9c",
+         "resultado": "sucesso",
+         "selecao_solicitada": {
+           "controle": "confirma-no-gasto",
+@@ -513,12 +513,12 @@
+         "vinculos": {
+           "hash_aprovacao": "116df29e6c06962b388266d62b6c71f5f5ee9ad1a9a9dfc3614b636619509beb",
+           "hash_catalogo": "f0b3813c6664b7e7d3f80f1453235dda79e102c87021ef3fd3b6429ad484fc0d",
+-          "hash_contexto": "e423d5ab53487741e3060b453945795c6ba524f489ab24b569726a20b130a2d4",
+-          "hash_envelope": "ec0ed186cd4fbc9551a65ca30345f08260cf265de60094ad729ddb6c3fcf8235",
++          "hash_contexto": "603a2deeeb55b7620bf35b070a322a5bd9d0845584f6d79712fe796dc5427e5d",
++          "hash_envelope": "3541c66c1b87f57336585e46f929f1f2451d2397e0f77194e08fe3ad7f44e4cb",
+           "hash_permissoes": "5683800ce20fea8313db4ee6fe6162e73b1119535cbb1faac5f90b5e136b7d04",
+           "hash_politica": "169b90c813290bcd3c327be79d29975f1c1e6df71c88a27ee16a95502dd0a0a7"
+         },
+-        "work_unit_id": "380a6a6342094c6799b362f86120917d"
++        "work_unit_id": "6d3b45597ab9463bad195473821a22bf"
+       }
+     ],
+     "custo_total": {
+@@ -526,7 +526,7 @@
+       "valor": 0.106
+     },
+     "decisoes": {
+-      "2ef96f9b4a184630b4fb332bd3f5fbce": {
++      "c71caae8194242f2899135d32292c2f0": {
+         "alternativas": [],
+         "aprovacao_custo": {
+           "efforts_permitidos": [
+@@ -553,8 +553,8 @@
+           "rotulo": "estimado",
+           "valor": 0.01
+         },
+-        "decisao_id": "2ef96f9b4a184630b4fb332bd3f5fbce",
+-        "hash_pacote": "e423d5ab53487741e3060b453945795c6ba524f489ab24b569726a20b130a2d4",
++        "decisao_id": "c71caae8194242f2899135d32292c2f0",
++        "hash_pacote": "603a2deeeb55b7620bf35b070a322a5bd9d0845584f6d79712fe796dc5427e5d",
+         "motivo": "nova evidencia: quota de X esgotada; Y cobre o perfil",
+         "nivel_capacidade_atendido": "L2",
+         "selecao": {
+@@ -565,18 +565,18 @@
+           "modo": "read-only",
+           "provedor": "prov-b"
+         },
+-        "supersede": "5337c0c65742441bb4bc7848b763f0a7",
++        "supersede": "ef3fe4f69344476699b9a04b5d4a318c",
+         "vinculos": {
+           "hash_aprovacao": "116df29e6c06962b388266d62b6c71f5f5ee9ad1a9a9dfc3614b636619509beb",
+           "hash_catalogo": "f0b3813c6664b7e7d3f80f1453235dda79e102c87021ef3fd3b6429ad484fc0d",
+-          "hash_contexto": "e423d5ab53487741e3060b453945795c6ba524f489ab24b569726a20b130a2d4",
+-          "hash_envelope": "ec0ed186cd4fbc9551a65ca30345f08260cf265de60094ad729ddb6c3fcf8235",
++          "hash_contexto": "603a2deeeb55b7620bf35b070a322a5bd9d0845584f6d79712fe796dc5427e5d",
++          "hash_envelope": "3541c66c1b87f57336585e46f929f1f2451d2397e0f77194e08fe3ad7f44e4cb",
+           "hash_permissoes": "5683800ce20fea8313db4ee6fe6162e73b1119535cbb1faac5f90b5e136b7d04",
+           "hash_politica": "169b90c813290bcd3c327be79d29975f1c1e6df71c88a27ee16a95502dd0a0a7"
+         },
+-        "work_unit_id": "380a6a6342094c6799b362f86120917d"
++        "work_unit_id": "6d3b45597ab9463bad195473821a22bf"
+       },
+-      "5337c0c65742441bb4bc7848b763f0a7": {
++      "ef3fe4f69344476699b9a04b5d4a318c": {
+         "alternativas": [],
+         "aprovacao_custo": {
+           "efforts_permitidos": [
+@@ -603,8 +603,8 @@
+           "rotulo": "estimado",
+           "valor": 0.01
+         },
+-        "decisao_id": "5337c0c65742441bb4bc7848b763f0a7",
+-        "hash_pacote": "e423d5ab53487741e3060b453945795c6ba524f489ab24b569726a20b130a2d4",
++        "decisao_id": "ef3fe4f69344476699b9a04b5d4a318c",
++        "hash_pacote": "603a2deeeb55b7620bf35b070a322a5bd9d0845584f6d79712fe796dc5427e5d",
+         "motivo": "rota padrao: X primeiro",
+         "nivel_capacidade_atendido": "L2",
+         "selecao": {
+@@ -619,12 +619,12 @@
+         "vinculos": {
+           "hash_aprovacao": "116df29e6c06962b388266d62b6c71f5f5ee9ad1a9a9dfc3614b636619509beb",
+           "hash_catalogo": "f0b3813c6664b7e7d3f80f1453235dda79e102c87021ef3fd3b6429ad484fc0d",
+-          "hash_contexto": "e423d5ab53487741e3060b453945795c6ba524f489ab24b569726a20b130a2d4",
+-          "hash_envelope": "ec0ed186cd4fbc9551a65ca30345f08260cf265de60094ad729ddb6c3fcf8235",
++          "hash_contexto": "603a2deeeb55b7620bf35b070a322a5bd9d0845584f6d79712fe796dc5427e5d",
++          "hash_envelope": "3541c66c1b87f57336585e46f929f1f2451d2397e0f77194e08fe3ad7f44e4cb",
+           "hash_permissoes": "5683800ce20fea8313db4ee6fe6162e73b1119535cbb1faac5f90b5e136b7d04",
+           "hash_politica": "169b90c813290bcd3c327be79d29975f1c1e6df71c88a27ee16a95502dd0a0a7"
+         },
+-        "work_unit_id": "380a6a6342094c6799b362f86120917d"
++        "work_unit_id": "6d3b45597ab9463bad195473821a22bf"
+       }
+     },
+     "divergencias_observado_resolvido": [],
+@@ -632,13 +632,13 @@
+       {
+         "destino": "humano",
+         "detalhe": "alternativas esgotadas apos falha-quota",
+-        "escalacao_id": "81c5c9b3f5be45948d414f50cef9d196",
++        "escalacao_id": "9fd276a59e54468297d48289efe50c6c",
+         "motivo": "sem-alternativa",
+-        "work_unit_id": "380a6a6342094c6799b362f86120917d"
++        "work_unit_id": "6d3b45597ab9463bad195473821a22bf"
+       }
+     ],
+     "fallbacks": [],
+-    "linhagem_id": "ee8a931fa3504281858fe7943b6259cc",
++    "linhagem_id": "f739b124e070405caab596fc8f5bad9c",
+     "n_eventos": 20,
+     "placar_por_executor": {
+       "prov-a/modelo-x": {
+@@ -655,7 +655,7 @@
+       }
+     },
+     "retries": [],
+-    "sessao_id": "ee8a931fa3504281858fe7943b6259cc",
++    "sessao_id": "f739b124e070405caab596fc8f5bad9c",
+     "tokens_total": {
+       "rotulo": "simulado",
+       "valor": 972
+@@ -664,11 +664,11 @@
+       {
+         "alvo": {
+           "artefato_ref": "60204bc71025003c0090701ac6712bd39808d0c84b38aa1c95533344568028bf",
+-          "attempt_id": "29ec0938328a472f9b5511ec2499c626",
+-          "work_unit_id": "380a6a6342094c6799b362f86120917d"
++          "attempt_id": "0ed6227974204fdcacc732e7d6e869d3",
++          "work_unit_id": "6d3b45597ab9463bad195473821a22bf"
+         },
+         "camada": "deterministica",
+-        "contexto_ref": "e423d5ab53487741e3060b453945795c6ba524f489ab24b569726a20b130a2d4",
++        "contexto_ref": "603a2deeeb55b7620bf35b070a322a5bd9d0845584f6d79712fe796dc5427e5d",
+         "criterios": [
+           {
+             "criterio": "prefixo artefato-final:",
+@@ -702,7 +702,7 @@
+           "seed": null
+         },
+         "resultado": "aprovado",
+-        "veredito_id": "edf9214e6d6f4bf4bf2085783264d665",
++        "veredito_id": "45bc18fd08a84204a2407e86bdf4b71f",
+         "verificador": {
+           "nome": "juiz1-deterministico",
+           "tipo": "deterministico"
+@@ -710,15 +710,15 @@
+       }
+     ],
+     "work_units": {
+-      "380a6a6342094c6799b362f86120917d": {
++      "6d3b45597ab9463bad195473821a22bf": {
+         "classe_governanca": "C1",
+-        "contexto_ref": "e423d5ab53487741e3060b453945795c6ba524f489ab24b569726a20b130a2d4",
++        "contexto_ref": "603a2deeeb55b7620bf35b070a322a5bd9d0845584f6d79712fe796dc5427e5d",
+         "criterios_aceite_ref": "ab1219e7dd2bd87460fc78599944651caf878ee73eab8e645ca751e6053b8851",
+         "custo_medido": null,
+         "depende_de": [],
+         "estado": "concluida",
+         "intencao": "produzir artefato final da prova central",
+-        "linhagem_id": "ee8a931fa3504281858fe7943b6259cc",
++        "linhagem_id": "f739b124e070405caab596fc8f5bad9c",
+         "nivel_capacidade": "L2",
+         "parent_work_unit": null,
+         "perfil_capacidade": {
+@@ -732,23 +732,23 @@
+           "privacidade": "remoto-permitido"
+         },
+         "resultado_ref": null,
+-        "sessao_id": "ee8a931fa3504281858fe7943b6259cc",
++        "sessao_id": "f739b124e070405caab596fc8f5bad9c",
+         "tipo": "ato",
+         "tipo_decisao": "tipo-2",
+-        "work_unit_id": "380a6a6342094c6799b362f86120917d"
++        "work_unit_id": "6d3b45597ab9463bad195473821a22bf"
+       }
+     }
+   },
+   "rotulo_numeros": "simulado",
+-  "sessao_id": "ee8a931fa3504281858fe7943b6259cc",
++  "sessao_id": "f739b124e070405caab596fc8f5bad9c",
+   "veredito": {
+     "alvo": {
+       "artefato_ref": "60204bc71025003c0090701ac6712bd39808d0c84b38aa1c95533344568028bf",
+-      "attempt_id": "29ec0938328a472f9b5511ec2499c626",
+-      "work_unit_id": "380a6a6342094c6799b362f86120917d"
++      "attempt_id": "0ed6227974204fdcacc732e7d6e869d3",
++      "work_unit_id": "6d3b45597ab9463bad195473821a22bf"
+     },
+     "camada": "deterministica",
+-    "contexto_ref": "e423d5ab53487741e3060b453945795c6ba524f489ab24b569726a20b130a2d4",
++    "contexto_ref": "603a2deeeb55b7620bf35b070a322a5bd9d0845584f6d79712fe796dc5427e5d",
+     "criterios": [
+       {
+         "criterio": "prefixo artefato-final:",
+@@ -782,7 +782,7 @@
+       "seed": null
+     },
+     "resultado": "aprovado",
+-    "veredito_id": "edf9214e6d6f4bf4bf2085783264d665",
++    "veredito_id": "45bc18fd08a84204a2407e86bdf4b71f",
+     "verificador": {
+       "nome": "juiz1-deterministico",
+       "tipo": "deterministico"
+diff --git a/05_p0/saidas/to2.json b/05_p0/saidas/to2.json
+index 1bae69d..b3ed419 100644
+--- a/05_p0/saidas/to2.json
++++ b/05_p0/saidas/to2.json
+@@ -7,6 +7,7 @@
+       "custo_contexto_linhas": 12,
+       "entradas": [
+         {
++          "bytes_ref": "c69748f28ed76e618ccdee934fb552a9fdc310ed3f161915336ca42c5749e6b4",
+           "inclusao": "verbatim",
+           "origem": "E:\\LucasIA\\Projetos\\SSC-Plus\\05_p0\\cenarios\\fixtures\\to2\\repo\\kernel.py",
+           "papel": "evidencia",
+@@ -24,6 +25,7 @@
+       "custo_contexto_linhas": 12,
+       "entradas": [
+         {
++          "bytes_ref": "c69748f28ed76e618ccdee934fb552a9fdc310ed3f161915336ca42c5749e6b4",
+           "inclusao": "verbatim",
+           "origem": "E:\\LucasIA\\Projetos\\SSC-Plus\\05_p0\\cenarios\\fixtures\\to2\\repo\\kernel.py",
+           "papel": "evidencia",
+@@ -41,6 +43,7 @@
+       "custo_contexto_linhas": 12,
+       "entradas": [
+         {
++          "bytes_ref": "c69748f28ed76e618ccdee934fb552a9fdc310ed3f161915336ca42c5749e6b4",
+           "inclusao": "verbatim",
+           "origem": "E:\\LucasIA\\Projetos\\SSC-Plus\\05_p0\\cenarios\\fixtures\\to2\\repo\\kernel.py",
+           "papel": "evidencia",
+diff --git a/05_p0/saidas/to4.json b/05_p0/saidas/to4.json
+index 56a4ccb..879dc25 100644
+--- a/05_p0/saidas/to4.json
++++ b/05_p0/saidas/to4.json
+@@ -14,7 +14,7 @@
+   "n_declarado": "1 DAG + 1 competicao + 1 ciclo; sementes {14, 25}",
+   "ordem_topologica_ok": true,
+   "recusas_registradas": [
+-    "IW-3: intencao sobreposta com a1b53f8316f742ebb39e1a2698d9dded (similaridade 0.88)"
++    "IW-3: intencao sobreposta com 73a83a72cbd74f29871749aac7b425f8 (similaridade 0.88)"
+   ],
+   "rotulo_numeros": "simulado",
+   "tarefa": "TO-4"
+diff --git a/05_p0/saidas/to5.json b/05_p0/saidas/to5.json
+index 12230b5..5936816 100644
+--- a/05_p0/saidas/to5.json
++++ b/05_p0/saidas/to5.json
+@@ -28,9 +28,9 @@
+     {
+       "destino": "humano",
+       "detalhe": "classificacao com confianca baixa: falha fechada",
+-      "escalacao_id": "db357863cb66414084133d148a005f60",
++      "escalacao_id": "1d83c0dd7d284f929a56a562a5cf7ded",
+       "motivo": "ambiguidade",
+-      "work_unit_id": "693f9b0135254f8a9a04f97ccd0cb546"
++      "work_unit_id": "efbe1a573ff3410e8a25085d9c7726e5"
+     }
+   ],
+   "n_declarado": 3,
+@@ -64,8 +64,8 @@
+           "rotulo": "estimado",
+           "valor": 0.01
+         },
+-        "decisao_id": "c2823ad3b7c1431caa8bfac00ae32830",
+-        "hash_pacote": "a8b64be6147614651b2a14727257f4d76b82259a1b4c2882ba3041f1723e0b53",
++        "decisao_id": "0eeb85b32a604f9493193f7bbbcf1a40",
++        "hash_pacote": "a66906e7966f17c6bdb50d611f899c6a8ee90f7fa9e7722d654d845a13fffacd",
+         "motivo": "pedido fora da politica",
+         "nivel_capacidade_atendido": "L2",
+         "selecao": {
+@@ -80,12 +80,12 @@
+         "vinculos": {
+           "hash_aprovacao": "116df29e6c06962b388266d62b6c71f5f5ee9ad1a9a9dfc3614b636619509beb",
+           "hash_catalogo": "f0b3813c6664b7e7d3f80f1453235dda79e102c87021ef3fd3b6429ad484fc0d",
+-          "hash_contexto": "a8b64be6147614651b2a14727257f4d76b82259a1b4c2882ba3041f1723e0b53",
+-          "hash_envelope": "0b17f68dad942ea4f462887f7190743f93d190dc7f2c502d795d415c3c30ea02",
++          "hash_contexto": "a66906e7966f17c6bdb50d611f899c6a8ee90f7fa9e7722d654d845a13fffacd",
++          "hash_envelope": "0fbf161a83432e4e7797771e7053ada8918146d591835cf7fb6b56f92c547355",
+           "hash_permissoes": "5683800ce20fea8313db4ee6fe6162e73b1119535cbb1faac5f90b5e136b7d04",
+           "hash_politica": "169b90c813290bcd3c327be79d29975f1c1e6df71c88a27ee16a95502dd0a0a7"
+         },
+-        "work_unit_id": "85322125a6c447058ea1f58c5223977e"
++        "work_unit_id": "a637cc64c2cb4918a9334f189ae9fb01"
+       },
+       "vetos": [
+         "executor 'prov-ladino/modelo-x' fora da politica",
+diff --git a/05_p0/ssc_p0/cas.py b/05_p0/ssc_p0/cas.py
+index 57ecad1..c75d3f9 100644
+--- a/05_p0/ssc_p0/cas.py
++++ b/05_p0/ssc_p0/cas.py
+@@ -63,12 +63,48 @@ def resolver_contido(caminho: str, raizes, resolvedor=os.path.realpath) -> str:
+     raise FugaDeCaminho(f"caminho fora das raizes declaradas: {caminho!r}")
+ 
+ 
++def ler_arquivo_contido(caminho: str, raizes,
++                        resolvedor=os.path.realpath) -> bytes:
++    """Le arquivo DENTRO das raizes com reducao de TOCTOU.
++
++    Apos a validacao de contencao e a abertura, compara (st_dev, st_ino) do
++    descritor com os do caminho e re-resolve o caminho real: se o alvo mudou
++    entre a validacao e a leitura, falha fechada.
++    """
++    resolvido = resolver_contido(caminho, raizes, resolvedor)
++    fd = os.open(resolvido, os.O_RDONLY)
++    try:
++        st_fd = os.fstat(fd)
++        st_caminho = os.stat(resolvido)
++        if (st_fd.st_dev, st_fd.st_ino) != (st_caminho.st_dev,
++                                            st_caminho.st_ino):
++            raise FugaDeCaminho(
++                f"TOCTOU: alvo trocado apos a validacao: {caminho!r}")
++        if os.path.normcase(os.path.normpath(resolvedor(resolvido))) \
++                != os.path.normcase(os.path.normpath(resolvido)):
++            raise FugaDeCaminho(
++                f"TOCTOU: caminho real mudou apos a abertura: {caminho!r}")
++        arq = os.fdopen(fd, "rb")
++        fd = None
++        with arq:
++            return arq.read()
++    finally:
++        if fd is not None:
++            os.close(fd)
++
++
+ class CAS:
+-    """Armazenamento de objetos imutaveis enderecados por sha256."""
++    """Armazenamento de objetos imutaveis enderecados por sha256.
++
++    somente_leitura=True (Evidence Plane): nao cria diretorios e recusa
++    qualquer gravacao (PermissionError).
++    """
+ 
+-    def __init__(self, raiz_cas: str):
++    def __init__(self, raiz_cas: str, somente_leitura: bool = False):
+         self.raiz = os.path.realpath(str(raiz_cas))
+-        os.makedirs(os.path.join(self.raiz, "objetos"), exist_ok=True)
++        self.somente_leitura = bool(somente_leitura)
++        if not self.somente_leitura:
++            os.makedirs(os.path.join(self.raiz, "objetos"), exist_ok=True)
+ 
+     def _caminho(self, hash_hex: str) -> str:
+         if (not isinstance(hash_hex, str) or len(hash_hex) != 64
+@@ -88,6 +124,8 @@ class CAS:
+ 
+     def gravar(self, dados: bytes) -> str:
+         """Grava bytes e devolve o sha256. Idempotente para mesmo conteudo."""
++        if self.somente_leitura:
++            raise PermissionError("CAS somente leitura (Evidence Plane)")
+         if not isinstance(dados, (bytes, bytearray)):
+             raise TypeError("CAS.gravar aceita apenas bytes")
+         dados = bytes(dados)
+diff --git a/05_p0/ssc_p0/contratos.py b/05_p0/ssc_p0/contratos.py
+index 16e32af..74e974b 100644
+--- a/05_p0/ssc_p0/contratos.py
++++ b/05_p0/ssc_p0/contratos.py
+@@ -8,7 +8,11 @@ Falha de validacao e fechada: objeto que nao valida nao entra no EventLog.
+ from dataclasses import dataclass, field, fields, asdict
+ from typing import Any, Optional
+ 
+-SCHEMA_VERSION = "ssc-p0/1"
++SCHEMA_VERSION = "ssc-p0/1.1"
++
++# Limites da maquina de recuperacao (D5 §6): retry 1..3, backoff com teto.
++RETRY_MAX_TENTATIVAS = 3
++BACKOFF_TETO_MS = 60_000
+ 
+ # --- Enums fechados (D5) ---------------------------------------------------
+ 
+@@ -35,7 +39,7 @@ TIPOS_EVENTO = frozenset({
+ })
+ MOTIVOS_ESCALONAMENTO = frozenset({
+     "sem-alternativa", "orcamento", "ambiguidade", "aprovacao-humana",
+-    "juiz-reprovou", "indeterminado",
++    "juiz-reprovou", "indeterminado", "divergencia-executor",
+ })
+ DESTINOS_ESCALONAMENTO = frozenset({"humano", "decompor", "abandonar"})
+ MODOS = frozenset({"read-only", "worktree", "escrita-aprovada"})
+@@ -308,7 +312,15 @@ class RetryEvent(ContratoBase):
+         _obrigatorio(self.retry_id, "retry.retry_id")
+         _obrigatorio(self.attempt_id, "retry.attempt_id")
+         _tipo(self.tentativa_n, int, "retry.tentativa_n")
++        if not 1 <= self.tentativa_n <= RETRY_MAX_TENTATIVAS:
++            raise FalhaContrato(
++                f"retry.tentativa_n fora de 1..{RETRY_MAX_TENTATIVAS}: "
++                f"{self.tentativa_n}")
+         _tipo(self.backoff_ms, int, "retry.backoff_ms")
++        if not 0 <= self.backoff_ms <= BACKOFF_TETO_MS:
++            raise FalhaContrato(
++                f"retry.backoff_ms fora de 0..{BACKOFF_TETO_MS}: "
++                f"{self.backoff_ms}")
+         _tipo(self.respeitou_retry_after, bool, "retry.respeitou_retry_after")
+ 
+ 
+diff --git a/05_p0/ssc_p0/eventlog.py b/05_p0/ssc_p0/eventlog.py
+index 99d9287..f14e926 100644
+--- a/05_p0/ssc_p0/eventlog.py
++++ b/05_p0/ssc_p0/eventlog.py
+@@ -20,6 +20,14 @@ class EventoDuplicado(Exception):
+     """Mesma idempotency_key (ou evento_id) ja presente na cadeia verificada."""
+ 
+ 
++class EventoConflitoIdempotencia(Exception):
++    """Mesma idempotency_key com payload DIFERENTE: conflito (falha fechada).
++
++    Reentrega identica (mesmo fingerprint = payload_ref) e aceita e ignorada;
++    mesma chave com outro conteudo nunca e anexada.
++    """
++
++
+ class EventoForaDeOrdem(Exception):
+     """seq regressiva ou com buraco."""
+ 
+@@ -45,13 +53,14 @@ class EventLog:
+         self.hash_genese = hash_genese
+         self._seq = 0
+         self._ultimo_hash = hash_genese
+-        self._chaves = {}  # idempotency_key -> evento_id
++        self._chaves = {}  # idempotency_key -> (evento_id, payload_ref)
+         if os.path.exists(self.caminho):
+             for registro in self.verificar(self.caminho, hash_genese):
+                 evento = registro["evento"]
+                 self._seq = evento.seq
+                 self._ultimo_hash = registro["hash"]
+-                self._chaves[evento.idempotency_key] = evento.evento_id
++                self._chaves[evento.idempotency_key] = (
++                    evento.evento_id, evento.payload_ref)
+ 
+     def proxima_seq(self) -> int:
+         return self._seq + 1
+@@ -66,11 +75,18 @@ class EventLog:
+         return idempotency_key in self._chaves
+ 
+     def anexar(self, evento: Evento) -> bool:
+-        """Anexa o evento. Devolve False se a idempotency_key ja existia
+-        (reentrega ignorada, D5 §8.2). O chamador (Kernel) serializa."""
++        """Anexa o evento. Devolve False se a idempotency_key ja existia COM
++        O MESMO fingerprint (reentrega identica aceita e ignorada, D5 §8.2).
++        Mesma chave com payload diferente = EventoConflitoIdempotencia.
++        O chamador (Kernel) serializa."""
+         evento.validate()
+-        if evento.idempotency_key in self._chaves:
+-            return False
++        visto = self._chaves.get(evento.idempotency_key)
++        if visto is not None:
++            if visto[1] == evento.payload_ref:
++                return False  # reentrega identica: aceita, sem efeito
++            raise EventoConflitoIdempotencia(
++                f"idempotency_key {evento.idempotency_key!r} reutilizada "
++                "com payload diferente")
+         if evento.seq != self._seq + 1:
+             raise EventoForaDeOrdem(
+                 f"seq {evento.seq} fora de ordem (esperada {self._seq + 1})"
+@@ -84,7 +100,8 @@ class EventLog:
+             os.fsync(f.fileno())
+         self._seq = evento.seq
+         self._ultimo_hash = hash_evento(evento)
+-        self._chaves[evento.idempotency_key] = evento.evento_id
++        self._chaves[evento.idempotency_key] = (
++            evento.evento_id, evento.payload_ref)
+         return True
+ 
+     @staticmethod
+diff --git a/05_p0/ssc_p0/evidence.py b/05_p0/ssc_p0/evidence.py
+index 727ed54..c433c61 100644
+--- a/05_p0/ssc_p0/evidence.py
++++ b/05_p0/ssc_p0/evidence.py
+@@ -7,21 +7,28 @@ de escrita — so EventLog.verificar e CAS.ler.
+ 
+ import json
+ import os
++import re
+ 
+ from .cas import CAS
+ from .eventlog import EventLog
+ 
++_ID_RE = re.compile(r"^[0-9a-f]{32}$")
++
+ 
+ class EvidencePlane:
+     def __init__(self, raiz, sessao_id: str):
+         self.raiz = os.path.realpath(str(raiz))
++        # 0.2.1-10: id validado antes de compor qualquer caminho.
++        if not isinstance(sessao_id, str) or not _ID_RE.match(sessao_id):
++            raise ValueError(f"sessao_id invalido: {sessao_id!r}")
+         self.sessao_id = sessao_id
+         with open(os.path.join(self.raiz, "sessoes",
+                                f"{sessao_id}.envelope.json"), "rb") as f:
+             self.envelope = json.loads(f.read())
+         from .canonico import sha256_de
+         self.hash_genese = sha256_de(self.envelope)
+-        self.cas = CAS(os.path.join(self.raiz, "cas"))
++        # 0.2.1-10: CAS read-only — nao cria diretorios, nao grava nada.
++        self.cas = CAS(os.path.join(self.raiz, "cas"), somente_leitura=True)
+ 
+     def _log_path(self) -> str:
+         return os.path.join(self.raiz, "logs", f"{self.sessao_id}.jsonl")
+diff --git a/05_p0/ssc_p0/execution.py b/05_p0/ssc_p0/execution.py
+index d515cdd..3b129a3 100644
+--- a/05_p0/ssc_p0/execution.py
++++ b/05_p0/ssc_p0/execution.py
+@@ -5,18 +5,25 @@ Kernel). Aplica a maquina de recuperacao (D5 §6 / D6 §4):
+ 
+ - retry: so falha transitoria, max 3, backoff com teto, respeitando
+   Retry-After, e SO sob IR-1 (idempotency_key ou efeito nao-aplicado);
+-- fallback: proximo executor da ordem declarada, DENTRO do envelope;
++- fallback (0.2.1-6): NOVA RoutingDecision (todos os portoes de novo:
++  Catalogo + Policy + envelope), registra a selecao REAL e permanece
++  dentro do envelope aprovado;
++- divergencia modelo/effort observado x resolvido (0.2.1-9): falha fechada
++  — EscalationEvent 'divergencia-executor', a WorkUnit nao avanca;
+ - indeterminado (efeito incerto): SEM retry automatico, escalona (IR-2);
+ - 4xx de contrato: zero retry;
+ - esgotamento: EscalationEvent.
++
++0.2.1-1: a execucao usa SOMENTE a copia canonica da RoutingDecision
++registrada no log (kernel.decisao_canonica); objeto mutado = recusado.
+ """
+ 
+ from . import contratos as ct
+-from .canonico import canonico, novo_id, sha256_bytes
++from .canonico import novo_id
+ from .catalogo import Catalogo
+ from .kernel import ControlPlane, SessionKernel
+ from .policy import OrcamentoEstourado, PolicyGateway
+-from .providers import FakeProvider
++from .router import RotaVetada
+ 
+ 
+ class ResultadoExecucao:
+@@ -34,27 +41,31 @@ class ResultadoExecucao:
+ class ExecutionGateway:
+     def __init__(self, kernel: SessionKernel, policy: PolicyGateway,
+                  catalogo: Catalogo, providers: dict,
+-                 control: ControlPlane):
+-        """providers: {(provedor, modelo): FakeProvider}."""
++                 control: ControlPlane, router=None):
++        """providers: {(provedor, modelo): FakeProvider}.
++        router: TaskRouter — obrigatorio para fallback com nova decisao."""
+         self.kernel = kernel
+         self.policy = policy
+         self.catalogo = catalogo
+         self.providers = providers
+         self.control = control
++        self.router = router
+ 
+     def _pacote(self, wu: ct.WorkUnit) -> dict:
+-        try:
+-            dados = self.kernel.cas.ler(wu.contexto_ref)
+-            import json
+-            return json.loads(dados)
+-        except Exception:
+-            return {}
++        """ContextPackage do CAS, ligado a ESTA WorkUnit (0.2.1-7).
++
++        Falha fechada: ausencia/corrupcao/vinculo cruzado levantam — nunca
++        devolve pacote vazio.
++        """
++        return self.kernel.ler_pacote(wu.contexto_ref, wu.work_unit_id)
+ 
+     def executar(self, wu: ct.WorkUnit, decisao: ct.RoutingDecision,
+                  idempotency_key: str | None = None,
+                  entrada: bytes = b"") -> ResultadoExecucao:
+         """Materializa attempts ate sucesso, fallback esgotado ou escalonamento."""
+         k = self.kernel
++        # 0.2.1-1: somente a copia canonica registrada e executada.
++        decisao = k.decisao_canonica(decisao.decisao_id)
+         executores = [dict(decisao.selecao)] + [
+             dict(a) for a in decisao.alternativas
+         ]
+@@ -84,7 +95,7 @@ class ExecutionGateway:
+                 work_unit_id=wu.work_unit_id,
+                 decisao_id=decisao.decisao_id,
+                 linhagem_id=k.envelope.linhagem_id,
+-                selecao_solicitada=dict(decisao.selecao),
++                selecao_solicitada=dict(selecao),
+                 executor_resolvido=resolvido,
+                 executor_observado=None,
+                 vinculos=k.vinculos_correntes(decisao.hash_pacote),
+@@ -96,7 +107,9 @@ class ExecutionGateway:
+                                           ev_criar.evento_id)
+             provider = self.providers[(resolvido["provedor"],
+                                        resolvido["modelo"])]
+-            resposta = provider.invocar(entrada, pacote)
++            # 0.2.1-5: a idempotency_key e propagada ao Provider Adapter.
++            resposta = provider.invocar(entrada, pacote,
++                                        idempotency_key=idempotency_key)
+             # Captura estruturada OBRIGATORIA (D5 §5), mesmo em falha.
+             saida_ref = k.cas.gravar(resposta.saida or b"")
+             captura = {
+@@ -104,14 +117,11 @@ class ExecutionGateway:
+                 "saida_final_ref": saida_ref if resposta.ok else None,
+             }
+             observado = resposta.executor_observado
+-            if observado and (
++            divergente = bool(observado) and (
+                 observado.get("modelo") != resolvido["modelo"]
+                 or observado.get("provedor") != resolvido["provedor"]
+                 or observado.get("effort") != resolvido["effort"]
+-            ):
+-                k.registrar_divergencia_executor(
+-                    attempt.attempt_id, resolvido, observado,
+-                    ev_desp.evento_id)
++            )
+             if resposta.ok:
+                 resultado = "sucesso"
+                 artefato_ref = saida_ref
+@@ -123,6 +133,20 @@ class ExecutionGateway:
+                 captura, observado, resposta.custo, artefato_ref,
+                 ev_desp.evento_id)
+ 
++            if divergente:
++                # 0.2.1-9: observado != resolvido = falha fechada. O evento
++                # tipado fica registrado e a WorkUnit NAO avanca — escala.
++                k.registrar_divergencia_executor(
++                    attempt.attempt_id, resolvido, observado,
++                    ev_conc.evento_id)
++                self.control.escalar(
++                    wu.work_unit_id, "divergencia-executor", "humano",
++                    detalhe="modelo/effort observado diverge do resolvido: "
++                            "falha fechada, execucao nao conclui a WorkUnit",
++                    causado_por=ev_conc.evento_id)
++                return ResultadoExecucao("escalonado", attempt.attempt_id,
++                                         "divergencia-executor")
++
+             if resultado == "sucesso":
+                 k.transicionar_work_unit(wu.work_unit_id,
+                                          "aguardando-validacao",
+@@ -138,18 +162,21 @@ class ExecutionGateway:
+                     causado_por=ev_conc.evento_id)
+                 return ResultadoExecucao("indeterminado", attempt.attempt_id)
+ 
+-            if resultado == "falha-transitoria" and retries_feitos < 3:
++            if resultado == "falha-transitoria" \
++                    and retries_feitos < ct.RETRY_MAX_TENTATIVAS:
+                 # IR-1: so se idempotente ou comprovadamente nao aplicada.
+                 if idempotency_key or resposta.efeito_externo == "nao-aplicado":
+                     retries_feitos += 1
+                     retry_after = resposta.retry_after_ms or 0
+-                    backoff = max(1000 * (2 ** (retries_feitos - 1)),
+-                                  retry_after)
++                    # 0.2.1-12: backoff exponencial com TETO absoluto.
++                    backoff = min(
++                        max(1000 * (2 ** (retries_feitos - 1)), retry_after),
++                        ct.BACKOFF_TETO_MS)
+                     retry = ct.RetryEvent(
+                         retry_id=novo_id(),
+                         attempt_id=attempt.attempt_id,
+                         work_unit_id=wu.work_unit_id,
+-                        tentativa_n=retries_feitos + 1,
++                        tentativa_n=retries_feitos,
+                         backoff_ms=backoff,
+                         respeitou_retry_after=backoff >= retry_after,
+                         idempotency_key=idempotency_key,
+@@ -160,10 +187,39 @@ class ExecutionGateway:
+                     continue
+                 # IR-1 violado: sem retry; cai no caminho de fallback/escalona.
+ 
+-            # Fallback: proximo executor da ordem declarada, dentro do envelope.
++            # Fallback (0.2.1-6): NOVA RoutingDecision com a selecao real —
++            # repete TODOS os portoes (Catalogo + Policy + envelope).
+             if idx + 1 < len(executores):
+                 proximo = executores[idx + 1]
+-                if self.policy.verificar_fallback_envelope(decisao, proximo):
++                if self.router is not None \
++                        and self.policy.verificar_fallback_envelope(
++                            decisao, proximo):
++                    try:
++                        nova_decisao = self.router.rerotear(
++                            wu,
++                            rota=decisao.classificacao.get("rota"),
++                            selecao=proximo,
++                            confianca=decisao.classificacao.get(
++                                "confianca", "alta"),
++                            metodo=decisao.classificacao.get(
++                                "metodo", "declarado"),
++                            alternativas=executores[idx + 2:],
++                            custo_previsto=decisao.custo_previsto,
++                            aprovacao_custo=decisao.aprovacao_custo,
++                            motivo=f"fallback de {resolvido['modelo']} "
++                                   f"apos {resultado}",
++                            causado_por=ev_conc.evento_id)
++                    except (RotaVetada, ct.FalhaContrato) as exc:
++                        # Veto legitimo dos portoes = escalonamento; qualquer
++                        # outra excecao e bug e sobe (nunca rotulada de veto).
++                        self.control.escalar(
++                            wu.work_unit_id, "sem-alternativa", "humano",
++                            detalhe="nova decisao de fallback vetada nos "
++                                    f"portoes: {exc}",
++                            causado_por=ev_conc.evento_id)
++                        return ResultadoExecucao("escalonado",
++                                                 attempt.attempt_id,
++                                                 "fallback-fora-do-envelope")
+                     fallback = ct.FallbackEvent(
+                         fallback_id=novo_id(),
+                         attempt_id=attempt.attempt_id,
+@@ -178,12 +234,19 @@ class ExecutionGateway:
+                             "modelo": proximo["modelo"],
+                             "effort": proximo["effort"],
+                         },
+-                        motivo=f"{resultado} em {resolvido['modelo']}",
++                        motivo=f"{resultado} em {resolvido['modelo']}; "
++                               f"nova decisao {nova_decisao.decisao_id[:8]}",
+                     ).validado()
+                     ev_fb = k.registrar_fallback(fallback, ev_conc.evento_id)
+-                    idx += 1
++                    # 0.2.1-1: a decisao de fallback TAMBEM so executa pela
++                    # copia canonica registrada (re-verificada aqui).
++                    decisao = k.decisao_canonica(nova_decisao.decisao_id)
++                    executores = [dict(decisao.selecao)] + [
++                        dict(a) for a in decisao.alternativas
++                    ]
++                    idx = 0
+                     retries_feitos = 0
+-                    causador = ev_fb.evento_id
++                    causador = k.evento_de_decisao(decisao.decisao_id)
+                     continue
+                 self.control.escalar(
+                     wu.work_unit_id, "sem-alternativa", "humano",
+diff --git a/05_p0/ssc_p0/judge.py b/05_p0/ssc_p0/judge.py
+index cff709c..a4615bf 100644
+--- a/05_p0/ssc_p0/judge.py
++++ b/05_p0/ssc_p0/judge.py
+@@ -54,10 +54,8 @@ class Juiz1:
+             "saida_estruturada_ref")
+         if ref:
+             saida = kernel.cas.ler(ref)
+-        try:
+-            pacote = __import__("json").loads(kernel.cas.ler(wu.contexto_ref))
+-        except Exception:
+-            pacote = {}
++        # 0.2.1-7: falha fechada — pacote ausente/corrompido/cruzado levanta.
++        pacote = kernel.ler_pacote(wu.contexto_ref, wu.work_unit_id)
+         criterios, resultado = avaliador(saida, pacote, attempt)
+         if resultado not in ct.RESULTADOS_VEREDITO:
+             raise ct.FalhaContrato(f"avaliador devolveu {resultado!r}")
+diff --git a/05_p0/ssc_p0/kernel.py b/05_p0/ssc_p0/kernel.py
+index 30f0b3d..3c3d467 100644
+--- a/05_p0/ssc_p0/kernel.py
++++ b/05_p0/ssc_p0/kernel.py
+@@ -13,6 +13,7 @@ Control Plane: ciclo de vida da sessao, escalonamento e aprovacao humana
+ registra; nao decide rota.
+ """
+ 
++import copy
+ import hashlib
+ import hmac as hmac_mod
+ import json
+@@ -22,10 +23,11 @@ import threading
+ 
+ from . import contratos as ct
+ from .canonico import Relogio, RelogioReal, canonico, novo_id, sha256_bytes, sha256_de
+-from .cas import CAS, FugaDeCaminho, resolver_contido
++from .cas import CAS, CorrupcaoDetectada, ler_arquivo_contido
+ from .estados import (TransicaoIlegal, marcar_orfao, transitar_attempt,
+                       transitar_sessao, transitar_workunit)
+-from .eventlog import EventLog, hash_evento
++from .eventlog import EventLog, EventoAdulterado, hash_evento
++from .writelock import LockSessao
+ 
+ 
+ class SegredoDetectado(Exception):
+@@ -36,10 +38,24 @@ class VinculoDivergente(ct.FalhaContrato):
+     """Attempt/decisao com vinculos divergentes do estado corrente (RA-3)."""
+ 
+ 
++class DecisaoMutada(ct.FalhaContrato):
++    """RoutingDecision alterada apos o registro: execucao recusada (0.2.1-1)."""
++
++
+ class CheckpointInvalido(Exception):
+     """IP-2: checkpoint invalido, cadeia quebrada ou selo divergente."""
+ 
+ 
++# IDs locais sao UUID-4 hex (novo_id); usados em nomes de arquivo, nunca
++# interpolados sem validacao (0.2.1-10).
++_ID_RE = re.compile(r"^[0-9a-f]{32}$")
++
++
++def _validar_id(valor, rotulo: str) -> None:
++    if not isinstance(valor, str) or not _ID_RE.match(valor):
++        raise ct.FalhaContrato(f"{rotulo}: id invalido para uso em caminho")
++
++
+ # Scanner deterministico de segredos (IC-4). Deteccao = recusa, nunca redacao.
+ PADROES_SEGREDO = [
+     re.compile(p) for p in (
+@@ -82,7 +98,7 @@ class SessionKernel:
+                  raizes_fontes=None, resolvedor=os.path.realpath):
+         self.raiz = os.path.realpath(str(raiz))
+         os.makedirs(self.raiz, exist_ok=True)
+-        for sub in ("logs", "checkpoints", "sessoes"):
++        for sub in ("logs", "checkpoints", "sessoes", "locks"):
+             os.makedirs(os.path.join(self.raiz, sub), exist_ok=True)
+         self.cas = CAS(os.path.join(self.raiz, "cas"))
+         self.relogio = relogio or RelogioReal()
+@@ -92,6 +108,8 @@ class SessionKernel:
+         ]
+         self._lock = threading.RLock()
+         self.chave_selo = self._carregar_chave()
++        # Escritor unico entre processos (0.2.1-4): lock/lease + fencing.
++        self._lock_sessao: LockSessao | None = None
+         # Estado vivo (reconstruivel pelo log, IP-4).
+         self.log: EventLog | None = None
+         self.envelope: ct.SessionEnvelope | None = None
+@@ -109,6 +127,8 @@ class SessionKernel:
+         self.recusas: list = []
+         self.checkpoints: list = []
+         self._evento_routing: dict[str, str] = {}  # decisao_id -> evento_id
++        self._hashes_decisao: dict[str, str] = {}  # decisao_id -> sha256 canonico
++        self._eventos_vistos: set = set()          # cadeia causal da sessao
+ 
+     # -- infraestrutura interna -------------------------------------------
+ 
+@@ -131,8 +151,44 @@ class SessionKernel:
+                             hashlib.sha256).hexdigest()
+ 
+     def _log_path(self, sessao_id: str) -> str:
++        _validar_id(sessao_id, "sessao_id")
+         return os.path.join(self.raiz, "logs", f"{sessao_id}.jsonl")
+ 
++    # -- escritor unico entre processos (0.2.1-4) ----------------------------
++
++    def _adquirir_lock(self, sessao_id: str) -> None:
++        _validar_id(sessao_id, "sessao_id")
++        base = os.path.join(self.raiz, "locks", sessao_id)
++        self._lock_sessao = LockSessao(base + ".lock", base + ".fence")
++        self._lock_sessao.adquirir()
++
++    def fechar(self) -> None:
++        """Libera o lock da sessao (handoff limpo e explicito do escritor)."""
++        if self._lock_sessao is not None:
++            self._lock_sessao.liberar()
++
++    def _simular_crash(self) -> None:
++        """SO TESTE: morte do processo. O escritor fica obsoleto (fencing)."""
++        if self._lock_sessao is not None:
++            self._lock_sessao.simular_crash()
++
++    # -- snapshot do estado vivo (reducer validado antes do append, 0.2.1-3) --
++
++    _ESTADO_MUTAVEL = (
++        "envelope", "work_units", "decisoes", "vigente", "attempts",
++        "memoria", "memoria_ref", "vereditos", "vereditos_recusados",
++        "escalacoes", "retries", "fallbacks", "recusas", "checkpoints",
++        "_evento_routing", "_hashes_decisao", "_eventos_vistos",
++    )
++
++    def _snapshot_estado(self) -> dict:
++        return {nome: copy.deepcopy(getattr(self, nome))
++                for nome in self._ESTADO_MUTAVEL}
++
++    def _restaurar_estado(self, backup: dict) -> None:
++        for nome, valor in backup.items():
++            setattr(self, nome, valor)
++
+     def _garantir_ativa(self) -> None:
+         """retomada -> ativa na primeira operacao pos-retomada (D5 §1.2)."""
+         if self.envelope is not None and self.envelope.estado == "retomada":
+@@ -143,10 +199,22 @@ class SessionKernel:
+     def _emitir(self, tipo: str, payload: dict, causado_por,
+                 idempotency_key: str | None = None,
+                 _sem_garantia: bool = False) -> tuple[ct.Evento, bool]:
+-        """Unico caminho de escrita no EventLog (escritor unico)."""
++        """Unico caminho de escrita no EventLog (escritor unico).
++
++        0.2.1-3: o reducer (_aplicar) e validado ANTES do append; se a fold
++        ou o append falham, nada fica duravel e o estado vivo e restaurado.
++        0.2.1-4: fencing token verificado a cada escrita.
++        0.2.1-11: causado_por precisa existir na cadeia desta sessao.
++        """
+         with self._lock:
+             if not _sem_garantia:
+                 self._garantir_ativa()
++            if causado_por is not None \
++                    and causado_por not in self._eventos_vistos:
++                raise ct.FalhaContrato(
++                    f"causado_por fora da cadeia da sessao: {causado_por!r}")
++            if self._lock_sessao is not None:
++                self._lock_sessao.verificar()  # fencing (escritor unico)
+             dados = canonico(payload)
+             escanear_segredos(dados, f"payload de evento {tipo}")  # IC-4
+             payload_ref = self.cas.gravar(dados)
+@@ -162,9 +230,18 @@ class SessionKernel:
+                 prev_event_hash=self.log.ultimo_hash(),
+                 payload_ref=payload_ref,
+             )
+-            criado = self.log.anexar(evento)
+-            if criado:
++            backup = self._snapshot_estado()
++            try:
++                # Reducer executado ANTES do append; se a fold ou o append
++                # falham, o estado vivo e restaurado e nada fica duravel.
+                 self._aplicar(evento, payload)
++                criado = self.log.anexar(evento)
++            except BaseException:
++                self._restaurar_estado(backup)
++                raise
++            if not criado:
++                # Reentrega identica (idempotencia): aceita, sem efeito.
++                self._restaurar_estado(backup)
+             return evento, criado
+ 
+     # -- abertura / ciclo de vida ------------------------------------------
+@@ -199,6 +276,7 @@ class SessionKernel:
+         }
+         envelope = ct.SessionEnvelope(integridade=integridade, **base).validado()
+         hash_genese = sha256_de(envelope.to_dict())
++        self._adquirir_lock(sessao_id)  # escritor unico (0.2.1-4)
+         self.log = EventLog(self._log_path(sessao_id), hash_genese)
+         caminho_env = os.path.join(self.raiz, "sessoes", f"{sessao_id}.envelope.json")
+         tmp = caminho_env + ".tmp"
+@@ -282,6 +360,9 @@ class SessionKernel:
+             raise ct.FalhaContrato("workunit de outra linhagem (IS-1)")
+         if wu.work_unit_id in self.work_units:
+             raise ct.FalhaContrato("work_unit_id duplicado")
++        # 0.2.1-7: o ContextPackage precisa existir no CAS, integro, ligado
++        # a ESTA work_unit_id — falha fechada, nunca pacote vazio.
++        self.ler_pacote(wu.contexto_ref, wu.work_unit_id)
+         for dep in wu.depende_de:
+             if dep not in self.work_units:
+                 raise ct.FalhaContrato(f"depende_de desconhecido: {dep!r}")
+@@ -368,6 +449,22 @@ class SessionKernel:
+             causado_por=causado_por)
+         return evento
+ 
++    def decisao_canonica(self, decisao_id: str) -> ct.RoutingDecision:
++        """A UNICA copia executavel da decisao: a registrada no log (0.2.1-1).
++
++        A decisao completa e persistida (payload no CAS) e hasheada no
++        registro. Qualquer mutacao posterior — selecao, alternativas, custo,
++        hashes, aprovacao — diverge do hash registrado e e recusada.
++        """
++        dec = self.decisoes.get(decisao_id)
++        if dec is None:
++            raise ct.FalhaContrato(f"decisao desconhecida: {decisao_id!r}")
++        if sha256_de(dec.to_dict()) != self._hashes_decisao.get(decisao_id):
++            raise DecisaoMutada(
++                f"RoutingDecision {decisao_id[:8]} mutada apos o registro: "
++                "a execucao usa somente a copia canonica registrada")
++        return dec
++
+     # -- Attempts --------------------------------------------------------------
+ 
+     def criar_attempt(self, attempt: ct.ExecutionAttempt,
+@@ -376,9 +473,9 @@ class SessionKernel:
+         wu = self.work_units[attempt.work_unit_id]
+         if attempt.linhagem_id != self.envelope.linhagem_id:
+             raise VinculoDivergente("attempt de outra linhagem (IS-1)")
+-        decisao = self.decisoes.get(attempt.decisao_id)
+-        if decisao is None:
+-            raise VinculoDivergente("decisao desconhecida")
++        # 0.2.1-1: a decisao do attempt e a copia canonica registrada;
++        # mutacao posterior = recusa antes de qualquer gasto.
++        decisao = self.decisao_canonica(attempt.decisao_id)
+         if self.vigente.get(attempt.work_unit_id) != attempt.decisao_id:
+             self._registrar_recusa(
+                 "attempt", attempt.to_dict(),
+@@ -469,9 +566,9 @@ class SessionKernel:
+ 
+     def registrar_retry(self, retry: ct.RetryEvent,
+                         causado_por: str | None) -> ct.Evento:
++        # 0.2.1-12: tentativa_n em 1..3 e backoff com teto — impostos pelo
++        # contrato (RetryEvent.validate), falha fechada fora dos limites.
+         retry.validate()
+-        if retry.tentativa_n > 4:
+-            raise ct.FalhaContrato("retry acima do maximo de 3")
+         evento, _ = self._emitir("retry", {"acao": "registrar",
+                                            "retry": retry.to_dict()},
+                                  causado_por=causado_por)
+@@ -505,13 +602,36 @@ class SessionKernel:
+         if not attempt_id or attempt_id not in self.attempts:
+             raise ct.FalhaContrato(
+                 "veredito sem attempt_id valido e invalido (D5 §7)")
++        reg = self.attempts[attempt_id]
++        if reg["estado"] != "concluido":
++            raise ct.FalhaContrato(
++                "veredito exige attempt concluido (mesma cadeia)")
++        attempt = reg["attempt"]
+         wu_id = veredito.alvo.get("work_unit_id")
+         wu = self.work_units.get(wu_id)
+         if wu is None:
+             raise ct.FalhaContrato("veredito para workunit desconhecida")
++        # 0.2.1-2: attempt, WorkUnit, decisao, contexto, criterios e artefato
++        # precisam pertencer a MESMA cadeia; attempt de A nunca conclui B.
++        if attempt.work_unit_id != wu_id:
++            raise ct.FalhaContrato(
++                "veredito cruzado: o attempt pertence a outra WorkUnit")
++        decisao = self.decisoes.get(attempt.decisao_id)
++        if decisao is None or decisao.work_unit_id != wu_id:
++            raise ct.FalhaContrato(
++                "decisao do attempt fora da cadeia da WorkUnit")
++        if attempt.linhagem_id != self.envelope.linhagem_id \
++                or wu.linhagem_id != self.envelope.linhagem_id:
++            raise ct.FalhaContrato("veredito fora da linhagem da sessao")
+         if veredito.criterios_ref != wu.criterios_aceite_ref:
+             raise ct.FalhaContrato(
+                 "IV-3: criterios_ref divergente do congelado da WorkUnit")
++        if veredito.alvo.get("artefato_ref") != attempt.artefato_ref:
++            raise ct.FalhaContrato(
++                "artefato do veredito fora da cadeia do attempt")
++        if veredito.contexto_ref != wu.contexto_ref:
++            raise ct.FalhaContrato(
++                "contexto_ref do veredito diverge do da WorkUnit")
+         # IV-2: reprovado deterministico NAO e anulavel sobre o mesmo artefato.
+         for v in self.vereditos:
+             if (v.alvo.get("attempt_id") == attempt_id
+@@ -569,11 +689,15 @@ class SessionKernel:
+                         politica_inclusao: dict | None = None) -> ct.ContextPackage:
+         """Monta ContextPackage com proveniencia completa e contencao.
+ 
++        0.2.1-7: nasce ligado a um work_unit_id REAL (formato de id local) e
++        os BYTES de cada entrada ficam no CAS (`bytes_ref` por entrada).
+         Cada entrada: {'origem', 'papel', 'inclusao'} + opcional 'conteudo'
+         (str/bytes) para origens nao-caminho (memoria por ID=SHA256, dados
+         inline). Sem 'conteudo', 'origem' e resolvida como caminho DENTRO das
+-        raizes declaradas (IC-5). Tudo passa pelo scanner de segredos (IC-4).
++        raizes declaradas (IC-5) com reducao de TOCTOU. Tudo passa pelo
++        scanner de segredos (IC-4).
+         """
++        _validar_id(work_unit_id, "contexto.work_unit_id")
+         politica = dict(politica_inclusao or {})
+         verbatim_ate = politica.get("verbatim_ate", VERBATIM_ATE_DEFAULT)
+         politica.setdefault("verbatim_ate", verbatim_ate)
+@@ -594,10 +718,8 @@ class SessionKernel:
+                     raise ct.FalhaContrato(
+                         "IC-2/IC-3: conteudo externo nao entra como instrucao "
+                         "executavel; use papel evidencia/norma-citada")
+-                caminho = resolver_contido(origem, self.raizes_fontes,
+-                                           self.resolvedor)
+-                with open(caminho, "rb") as f:
+-                    dados = f.read()
++                dados = ler_arquivo_contido(origem, self.raizes_fontes,
++                                            self.resolvedor)
+             escanear_segredos(dados, f"entrada de contexto {origem!r}")  # IC-4
+             if inclusao == "verbatim" and len(dados) > verbatim_ate:
+                 raise ct.FalhaContrato(
+@@ -606,6 +728,7 @@ class SessionKernel:
+             linhas += dados.count(b"\n") + (1 if dados else 0)
+             montadas.append({
+                 "origem": origem, "sha256": sha256_bytes(dados),
++                "bytes_ref": self.cas.gravar(dados),
+                 "papel": papel, "inclusao": inclusao,
+             })
+         pacote = ct.ContextPackage(
+@@ -623,6 +746,34 @@ class SessionKernel:
+         self.cas.gravar(canonico(corpo))
+         return pacote
+ 
++    def ler_pacote(self, contexto_ref: str,
++                   work_unit_id: str | None = None) -> dict:
++        """Le o ContextPackage do CAS com falha fechada (0.2.1-7).
++
++        Corrupcao (hash divergente), ausencia do pacote ou dos bytes de
++        qualquer entrada, ou vinculo com outro work_unit_id = FalhaContrato.
++        NUNCA devolve pacote vazio/substituto.
++        """
++        try:
++            dados = self.cas.ler(contexto_ref)
++        except FileNotFoundError as exc:
++            raise ct.FalhaContrato(
++                f"ContextPackage ausente no CAS: {contexto_ref!r}") from exc
++        pacote = json.loads(dados)
++        if not pacote.get("work_unit_id"):
++            raise ct.FalhaContrato("ContextPackage sem work_unit_id")
++        if work_unit_id is not None \
++                and pacote["work_unit_id"] != work_unit_id:
++            raise ct.FalhaContrato(
++                "ContextPackage ligado a outro work_unit_id")
++        for entrada in pacote.get("entradas", []):
++            ref = entrada.get("bytes_ref")
++            if ref is None or not self.cas.existe(ref):
++                raise ct.FalhaContrato(
++                    "bytes de entrada de contexto ausentes no CAS: "
++                    f"{entrada.get('origem')!r}")
++        return pacote
++
+     # -- Checkpoint / retomada (D5 §8.3, IP-1..IP-4) ---------------------------------
+ 
+     def _estado_refs(self) -> dict:
+@@ -710,10 +861,16 @@ class SessionKernel:
+                          resolvedor=os.path.realpath) -> "SessionKernel":
+         """Reabre a sessao por replay deterministico do log (IP-4)."""
+         k = cls(raiz, relogio, raizes_fontes=raizes_fontes, resolvedor=resolvedor)
+-        k._replay_de_zero(sessao_id)
++        k._adquirir_lock(sessao_id)  # escritor unico (0.2.1-4)
++        try:
++            k._replay_de_zero(sessao_id)
++        except BaseException:
++            k.fechar()  # falha fechada sem vazar o lock
++            raise
+         return k
+ 
+     def _replay_de_zero(self, sessao_id: str) -> None:
++        _validar_id(sessao_id, "sessao_id")
+         caminho_env = os.path.join(self.raiz, "sessoes",
+                                    f"{sessao_id}.envelope.json")
+         with open(caminho_env, "rb") as f:
+@@ -730,7 +887,20 @@ class SessionKernel:
+         self.log = EventLog(caminho_log, hash_genese)
+         for registro in registros:
+             evento = registro["evento"]
+-            payload = json.loads(self.cas.ler(evento.payload_ref))
++            # 0.2.1-11: mesma linhagem, causado_por na cadeia e payload
++            # existente/integro no CAS — tudo falha fechada no replay.
++            if evento.linhagem_id != envelope.linhagem_id:
++                raise EventoAdulterado(
++                    f"evento de outra linhagem na seq {evento.seq}")
++            if evento.causado_por is not None \
++                    and evento.causado_por not in self._eventos_vistos:
++                raise EventoAdulterado(
++                    f"causado_por fora da cadeia na seq {evento.seq}")
++            try:
++                payload = json.loads(self.cas.ler(evento.payload_ref))
++            except FileNotFoundError as exc:
++                raise CorrupcaoDetectada(
++                    f"payload ausente no CAS: {evento.payload_ref}") from exc
+             self._aplicar(evento, payload)
+ 
+     @classmethod
+@@ -742,33 +912,58 @@ class SessionKernel:
+         IP-2: checkpoint invalido, cadeia quebrada ou selo divergente =
+         sessao nao retoma (CheckpointInvalido); o chamador escalona.
+         Attempts sem conclusao viram orfaos -> indeterminado (D6 §4).
++        0.2.1-8: o checkpoint e escolhido pelo ULTIMO evento valido/seq
++        ancorado na cadeia — nunca pelo nome (UUID) do arquivo.
+         """
+         k = cls(raiz, relogio, raizes_fontes=raizes_fontes, resolvedor=resolvedor)
++        k._adquirir_lock(sessao_id)  # escritor unico (0.2.1-4)
++        try:
++            return k._retomar_interno(sessao_id)
++        except BaseException:
++            k.fechar()  # falha fechada sem vazar o lock
++            raise
++
++    def _retomar_interno(self, sessao_id: str) -> "SessionKernel":
++        k = self
++        _validar_id(sessao_id, "sessao_id")
+         diretorio = os.path.join(k.raiz, "checkpoints", sessao_id)
+         if not os.path.isdir(diretorio):
+             raise CheckpointInvalido("nenhum checkpoint para a sessao")
+-        arquivos = sorted(os.listdir(diretorio))
+-        if not arquivos:
+-            raise CheckpointInvalido("nenhum checkpoint para a sessao")
+-        with open(os.path.join(diretorio, arquivos[-1]), "rb") as f:
+-            dados = json.loads(f.read())
+-        checkpoint = ct.Checkpoint.from_dict(dados)
+-        checkpoint.validate()
+-        corpo = {c: v for c, v in checkpoint.to_dict().items()
+-                 if c not in ("validacao", "selo")}
+-        if not hmac_mod.compare_digest(k._selo(canonico(corpo)),
+-                                       checkpoint.selo):
+-            raise CheckpointInvalido("IP-2: selo do checkpoint divergente")
++        # Candidatos: parse + schema + selo HMAC validos.
++        candidatos = []
++        for nome in os.listdir(diretorio):
++            if not nome.endswith(".json"):
++                continue
++            try:
++                with open(os.path.join(diretorio, nome), "rb") as f:
++                    dados = json.loads(f.read())
++                cp = ct.Checkpoint.from_dict(dados)
++                cp.validate()
++            except (OSError, UnicodeDecodeError, json.JSONDecodeError,
++                    ct.FalhaContrato):
++                continue  # ilegivel/fora de schema: nao e candidato
++            corpo = {c: v for c, v in cp.to_dict().items()
++                     if c not in ("validacao", "selo")}
++            if not hmac_mod.compare_digest(k._selo(canonico(corpo)), cp.selo):
++                continue  # IP-2: selo divergente, descartado
++            candidatos.append(cp)
++        if not candidatos:
++            raise CheckpointInvalido(
++                "nenhum checkpoint com selo valido para a sessao")
+         k._replay_de_zero(sessao_id)  # levanta em cadeia quebrada/adulterada
+-        refs = checkpoint.estado_refs
+         registros = EventLog.verificar(k._log_path(sessao_id),
+                                        k.log.hash_genese)
+-        ancora = [r for r in registros
+-                  if r["hash"] == refs["ultimo_evento_hash"]
+-                  and r["evento"].seq == refs["seq"]]
+-        if not ancora:
++        ancorados = [
++            cp for cp in candidatos
++            if any(r["hash"] == cp.estado_refs["ultimo_evento_hash"]
++                   and r["evento"].seq == cp.estado_refs["seq"]
++                   for r in registros)
++        ]
++        if not ancorados:
+             raise CheckpointInvalido(
+                 "IP-2: ultimo_evento_hash/seq do checkpoint fora da cadeia")
++        # Ultimo evento valido/seq — ordem por seq, nunca por UUID (0.2.1-8).
++        checkpoint = max(ancorados, key=lambda c: c.estado_refs["seq"])
+         # suspensa -> retomada
+         ev_retomada, _ = k._emitir(
+             "sessao", {"acao": "retomar", "sessao_id": sessao_id,
+@@ -849,6 +1044,8 @@ class SessionKernel:
+                 self.decisoes[dec.decisao_id] = dec
+                 self.vigente[dec.work_unit_id] = dec.decisao_id
+                 self._evento_routing[dec.decisao_id] = evento.evento_id
++                # Hash da decisao completa no registro (0.2.1-1).
++                self._hashes_decisao[dec.decisao_id] = sha256_de(dec.to_dict())
+             elif acao in ("veto", "recusa"):
+                 self.recusas.append(payload)
+         elif tipo == "attempt":
+@@ -904,6 +1101,9 @@ class SessionKernel:
+         elif tipo == "checkpoint":
+             self.checkpoints.append(
+                 ct.Checkpoint.from_dict(payload["checkpoint"]))
++        # Cadeia causal da sessao (0.2.1-11): causado_por validado contra
++        # este conjunto a cada emissao e no replay.
++        self._eventos_vistos.add(evento.evento_id)
+ 
+ 
+ class ControlPlane:
+diff --git a/05_p0/ssc_p0/providers.py b/05_p0/ssc_p0/providers.py
+index c60ee7d..4e3f0a4 100644
+--- a/05_p0/ssc_p0/providers.py
++++ b/05_p0/ssc_p0/providers.py
+@@ -33,6 +33,7 @@ class RespostaProvedor:
+     latencia_ms: int
+     latencia_rotulo: str                 # sempre 'simulado'
+     retry_after_ms: Optional[int]
++    idempotency_key: Optional[str] = None  # eco da chave recebida (0.2.1-5)
+ 
+ 
+ class FakeProvider:
+@@ -62,6 +63,7 @@ class FakeProvider:
+         self.funcao_sucesso = funcao_sucesso
+         self.observado_programado = observado
+         self.chamadas = 0
++        self.chaves_recebidas = []  # idempotency_keys propagadas (0.2.1-5)
+ 
+     def _derivado(self, rotulo: str, modulo: int) -> int:
+         h = sha256_bytes(f"{self.seed}|{self.executor.get('modelo')}|"
+@@ -83,7 +85,16 @@ class FakeProvider:
+         latencia = 50 + self._derivado("latencia", 950)
+         return ({"valor": valor, "tokens": tokens, "rotulo": "simulado"}, latencia)
+ 
+-    def invocar(self, entrada: bytes, pacote: Optional[dict] = None) -> RespostaProvedor:
++    def invocar(self, entrada: bytes, pacote: Optional[dict] = None,
++                idempotency_key: Optional[str] = None) -> RespostaProvedor:
++        """0.2.1-5: a idempotency_key do Execution e propagada ao adaptador
++        (registrada e ecoada na resposta)."""
++        self.chaves_recebidas.append(idempotency_key)
++        resposta = self._invocar(entrada, pacote)
++        resposta.idempotency_key = idempotency_key
++        return resposta
++
++    def _invocar(self, entrada: bytes, pacote: Optional[dict] = None) -> RespostaProvedor:
+         item = self.programa[min(self.chamadas, len(self.programa) - 1)]
+         self.chamadas += 1
+         if isinstance(item, str):
+diff --git a/05_p0/ssc_p0/router.py b/05_p0/ssc_p0/router.py
+index 909774f..c9be6c9 100644
+--- a/05_p0/ssc_p0/router.py
++++ b/05_p0/ssc_p0/router.py
+@@ -38,21 +38,25 @@ class TaskRouter:
+                perfil: dict | None = None, classe: str = "C0",
+                parent: str | None = None, depende_de: list | None = None,
+                contexto_ref: str | None = None,
++               wu_id: str | None = None,
+                causado_por: str | None = None) -> ct.WorkUnit:
+         """Intake: despacho cru -> WorkUnit com criterios CONGELADOS.
+ 
+         IW-4: classe >= C2 ou tipo-1 nasce aguardando-aprovacao; C0/C1 e
+         tipo-2 recebem aprovacao automatica registrada (sem humano).
++        0.2.1-7: o ContextPackage nasce ligado ao work_unit_id REAL — o id
++        e gerado ANTES do pacote minimo (nunca 'pendente').
+         """
+         if len(intencao) > 4000:
+             raise ct.FalhaContrato("intencao acima do teto de 4000 chars")
++        wu_id = wu_id or novo_id()
+         criterios_ref = self.kernel.cas.gravar(canonico(criterios))
+         if contexto_ref is None:
+             pacote_vazio = self.kernel.montar_contexto(
+-                "pendente", [], exclusoes=["sem entradas: contexto minimo"])
++                wu_id, [], exclusoes=["sem entradas: contexto minimo"])
+             contexto_ref = pacote_vazio.hash_pacote
+         wu = ct.WorkUnit(
+-            work_unit_id=novo_id(),
++            work_unit_id=wu_id,
+             sessao_id=self.kernel.envelope.sessao_id,
+             linhagem_id=self.kernel.envelope.linhagem_id,
+             parent_work_unit=parent,
+@@ -186,8 +190,10 @@ class TaskRouter:
+         if reprovada.estado != "reprovada":
+             raise ct.FalhaContrato("reparo exige workunit 'reprovada'")
+         ref_erro = self.kernel.cas.gravar(canonico(contexto_erro))
++        # 0.2.1-7: o pacote de contexto da filha nasce ligado ao id DELA.
++        filha_id = novo_id()
+         pacote = self.kernel.montar_contexto(
+-            reprovada.work_unit_id,
++            filha_id,
+             [{"origem": f"erro:{ref_erro[:12]}", "papel": "artefato-anterior",
+               "inclusao": "referencia", "conteudo": canonico(contexto_erro)}],
+             exclusoes=["demais artefatos: reparo foca no erro"])
+@@ -202,5 +208,6 @@ class TaskRouter:
+             classe=reprovada.classe_governanca,
+             parent=reprovada.work_unit_id,
+             contexto_ref=pacote.hash_pacote,
++            wu_id=filha_id,
+             causado_por=causado_por)
+         return filha
+diff --git a/05_p0/ssc_p0/writelock.py b/05_p0/ssc_p0/writelock.py
+new file mode 100644
+index 0000000..b3db03d
+--- /dev/null
++++ b/05_p0/ssc_p0/writelock.py
+@@ -0,0 +1,132 @@
++"""Escritor unico ENTRE processos: lock/lease de arquivo + fencing token.
++
++Um lock por sessao (`locks/<sessao_id>.lock`) sobre primitiva do SO
++(msvcrt no Windows, fcntl no POSIX). O fencing token
++(`locks/<sessao_id>.fence`) e um inteiro monotonico incrementado a cada
++aquisicao: um escritor antigo (crashado ou substituido) tem token defasado
++e e recusado na proxima escrita (EscritorObsoleto).
++
++- Morte de processo libera o lock do SO; o sucessor incrementa o fence.
++- Guarda intra-processo impede dois kernels vivos na mesma sessao no
++  mesmo processo (o lock do SO nao distingue handles do mesmo processo).
++- Stdlib apenas; nenhum conteudo sensivel nos arquivos (token e inteiro).
++"""
++
++import os
++
++if os.name == "nt":
++    import msvcrt
++else:
++    import fcntl
++
++
++class LockIndisponivel(Exception):
++    """Outro processo (ou kernel vivo) detem o lock da sessao."""
++
++
++class EscritorObsoleto(Exception):
++    """Fencing token defasado: este escritor foi substituido ou liberou."""
++
++
++_DETIDOS = {}  # caminho_lock (normcase/realpath) -> token (intra-processo)
++
++
++def _travar(arq) -> None:
++    if os.name == "nt":
++        arq.seek(0)
++        msvcrt.locking(arq.fileno(), msvcrt.LK_NBLCK, 1)
++    else:
++        fcntl.flock(arq.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
++
++
++def _destravar(arq) -> None:
++    try:
++        if os.name == "nt":
++            arq.seek(0)
++            msvcrt.locking(arq.fileno(), msvcrt.LK_UNLCK, 1)
++        else:
++            fcntl.flock(arq.fileno(), fcntl.LOCK_UN)
++    except OSError:
++        pass
++
++
++class LockSessao:
++    """Lock exclusivo + fencing token de uma sessao logica."""
++
++    def __init__(self, caminho_lock: str, caminho_fence: str):
++        self.caminho_lock = str(caminho_lock)
++        self.caminho_fence = str(caminho_fence)
++        self.token: int | None = None
++        self._arq = None
++        self._ativo = False
++
++    def _ler_fence(self) -> int:
++        # Arquivo ausente/ilegivel = 0 (token inicial). A unicidade do
++        # escritor NAO depende desta leitura: quem a garante e o lock do SO;
++        # o fencing e defesa secundaria contra escritor obsoleto
++        # (THREAT-MODEL §2: corrupcao de disco esta fora de escopo).
++        try:
++            with open(self.caminho_fence, "rb") as f:
++                return int(f.read().decode("ascii").strip())
++        except (OSError, ValueError):
++            return 0
++
++    def adquirir(self) -> int:
++        """Adquire o lock (nao bloqueante) e incrementa o fencing token."""
++        chave = os.path.normcase(os.path.realpath(self.caminho_lock))
++        if chave in _DETIDOS:
++            raise LockIndisponivel(
++                f"kernel vivo ja detem o lock da sessao: {chave}")
++        novo = not os.path.exists(self.caminho_lock)
++        arq = open(self.caminho_lock, "a+b")
++        try:
++            if novo:
++                arq.write(b"\0")
++                arq.flush()
++            _travar(arq)
++        except OSError as exc:
++            arq.close()
++            raise LockIndisponivel(
++                f"lock da sessao detido por outro processo: {exc}") from exc
++        self._arq = arq
++        self.token = self._ler_fence() + 1
++        tmp = self.caminho_fence + ".tmp"
++        with open(tmp, "wb") as f:
++            f.write(str(self.token).encode("ascii"))
++            f.flush()
++            os.fsync(f.fileno())
++        os.replace(tmp, self.caminho_fence)
++        self._ativo = True
++        _DETIDOS[chave] = self.token
++        return self.token
++
++    def verificar(self) -> None:
++        """Fencing: chamado antes de CADA escrita no EventLog."""
++        if not self._ativo or self.token is None:
++            raise EscritorObsoleto("escritor sem lock ativo na sessao")
++        if self._ler_fence() != self.token:
++            raise EscritorObsoleto(
++                "fencing token defasado: escritor substituido por outro "
++                "processo")
++
++    def _soltar(self) -> None:
++        chave = os.path.normcase(os.path.realpath(self.caminho_lock))
++        _DETIDOS.pop(chave, None)
++        if self._arq is not None:
++            _destravar(self._arq)
++            self._arq.close()
++            self._arq = None
++        self._ativo = False
++
++    def liberar(self) -> None:
++        """Fechamento limpo do escritor (handoff explicito)."""
++        self._soltar()
++
++    def simular_crash(self) -> None:
++        """Morte de processo (so teste): solta o lock do SO sem aviso.
++
++        O token deste escritor fica defasado assim que outro escritor
++        adquirir o lock; qualquer escrita posterior deste objeto e
++        recusada pelo fencing (EscritorObsoleto).
++        """
++        self._soltar()
+diff --git a/05_p0/tests/apoio.py b/05_p0/tests/apoio.py
+index 18f79af..67646c5 100644
+--- a/05_p0/tests/apoio.py
++++ b/05_p0/tests/apoio.py
+@@ -1,8 +1,15 @@
+-"""Apoio comum dos testes P0: sys.path + helpers de lab em diretorio tmp."""
++"""Apoio comum dos testes P0: sys.path + helpers de lab em diretorio tmp.
++
++0.2.1: os temporarios de teste ficam na pasta IGNORADA do laboratorio
++(05_p0/saidas/labs/tests/) — nada de temp do SO sem autorizacao. Cada
++teste limpa o proprio diretorio no tearDown (limpar_lab).
++"""
+ 
+ import json
+ import os
++import shutil
+ import sys
++import uuid
+ 
+ _DIR = os.path.dirname(os.path.abspath(__file__))
+ _DIR_P0 = os.path.dirname(_DIR)
+@@ -14,10 +21,23 @@ from ssc_p0 import contratos as ct  # noqa: E402
+ from ssc_p0.canonico import canonico, sha256_de  # noqa: E402
+ from ssc_p0.judge import Juiz1  # noqa: E402
+ 
++DIR_TESTS = os.path.join(_DIR_P0, "saidas", "labs", "tests")
++
++
++def novo_lab(tmp=None, **kwargs):
++    """Lab completo numa raiz isolada por teste (pasta ignorada do lab)."""
++    raiz = tmp or os.path.join(DIR_TESTS, uuid.uuid4().hex)
++    os.makedirs(raiz, exist_ok=True)
++    return Lab(os.path.join(raiz, "lab"), **kwargs)
++
+ 
+-def novo_lab(tmp, **kwargs):
+-    """Lab completo numa raiz tmp (isolada por teste)."""
+-    return Lab(os.path.join(tmp, "lab"), **kwargs)
++def limpar_lab(lab) -> None:
++    """Remove a raiz do lab de teste (inventario limpo por teste)."""
++    try:
++        lab.kernel.fechar()
++    except Exception:
++        pass
++    shutil.rmtree(os.path.dirname(lab.raiz), ignore_errors=True)
+ 
+ 
+ def fluxo_sucesso(lab, modelo="modelo-x", provedor="prov-a", nivel="L2",
+diff --git a/05_p0/tests/test_concorrencia.py b/05_p0/tests/test_concorrencia.py
+index 8e98c28..a9de249 100644
+--- a/05_p0/tests/test_concorrencia.py
++++ b/05_p0/tests/test_concorrencia.py
+@@ -1,7 +1,6 @@
+ """Escritor unico: concorrencia serializa; segundo escritor e detectado."""
+ 
+ import os
+-import tempfile
+ import threading
+ import unittest
+ 
+@@ -12,12 +11,11 @@ from ssc_p0.eventlog import EventLog
+ 
+ class TestConcorrencia(unittest.TestCase):
+     def setUp(self):
+-        self._tmp = tempfile.TemporaryDirectory()
+-        self.lab = apoio.novo_lab(self._tmp.name)
++        self.lab = apoio.novo_lab()
+         self.k = self.lab.kernel
+ 
+     def tearDown(self):
+-        self._tmp.cleanup()
++        apoio.limpar_lab(self.lab)
+ 
+     def _log_path(self):
+         return os.path.join(self.k.raiz, "logs",
+diff --git a/05_p0/tests/test_crash.py b/05_p0/tests/test_crash.py
+index 85e24ff..b31fcaf 100644
+--- a/05_p0/tests/test_crash.py
++++ b/05_p0/tests/test_crash.py
+@@ -2,7 +2,6 @@
+ 
+ import json
+ import os
+-import tempfile
+ import unittest
+ 
+ import apoio
+@@ -13,12 +12,11 @@ from ssc_p0.kernel import CheckpointInvalido, SessionKernel
+ 
+ class TestCrashCheckpoint(unittest.TestCase):
+     def setUp(self):
+-        self._tmp = tempfile.TemporaryDirectory()
+-        self.lab = apoio.novo_lab(self._tmp.name)
++        self.lab = apoio.novo_lab()
+         self.k = self.lab.kernel
+ 
+     def tearDown(self):
+-        self._tmp.cleanup()
++        apoio.limpar_lab(self.lab)
+ 
+     def _attempt_despachado(self):
+         wu = self.lab.router.forjar(
+@@ -49,7 +47,7 @@ class TestCrashCheckpoint(unittest.TestCase):
+         self.k.gravar_checkpoint()
+         self.k.suspender()
+         sessao = self.k.envelope.sessao_id
+-        del self.k  # "crash": nenhuma conclusao persistida
++        self.k._simular_crash()  # "crash": processo morre, lock do SO liberado
+         k2 = SessionKernel.retomar(self.lab.raiz, sessao,
+                                    relogio=self.lab.relogio)
+         reg = k2.attempts[attempt.attempt_id]
+@@ -65,6 +63,7 @@ class TestCrashCheckpoint(unittest.TestCase):
+         self.k.gravar_checkpoint()
+         self.k.suspender()
+         sessao = self.k.envelope.sessao_id
++        self.k._simular_crash()
+         k2 = SessionKernel.retomar(self.lab.raiz, sessao,
+                                    relogio=self.lab.relogio)
+         # Nenhum orfao: tudo concluido antes do crash.
+@@ -80,6 +79,7 @@ class TestCrashCheckpoint(unittest.TestCase):
+         snap_antes = apoio.snapshot_normalizado(self.k)
+         self.k.suspender()
+         sessao = self.k.envelope.sessao_id
++        self.k._simular_crash()
+         k2 = SessionKernel.retomar(self.lab.raiz, sessao,
+                                    relogio=self.lab.relogio)
+         snap_depois = apoio.snapshot_normalizado(k2)
+@@ -102,6 +102,7 @@ class TestCrashCheckpoint(unittest.TestCase):
+         with open(caminho, "wb") as f:
+             f.write(canonico(dados))
+         seq_antes = self.k.log.seq_atual()
++        self.k._simular_crash()
+         with self.assertRaises(CheckpointInvalido):
+             SessionKernel.retomar(self.lab.raiz, sessao,
+                                   relogio=self.lab.relogio)
+@@ -120,6 +121,7 @@ class TestCrashCheckpoint(unittest.TestCase):
+             + dados["selo"][1:]
+         with open(caminho, "wb") as f:
+             f.write(canonico(dados))
++        self.k._simular_crash()
+         with self.assertRaises(CheckpointInvalido):
+             SessionKernel.retomar(self.lab.raiz, sessao,
+                                   relogio=self.lab.relogio)
+@@ -139,6 +141,7 @@ class TestCrashCheckpoint(unittest.TestCase):
+             for linha in linhas:
+                 f.write(linha + b"\n")
+         from ssc_p0.eventlog import EventoAdulterado
++        self.k._simular_crash()
+         with self.assertRaises(EventoAdulterado):
+             SessionKernel.retomar(self.lab.raiz, sessao,
+                                   relogio=self.lab.relogio)
+diff --git a/05_p0/tests/test_eventlog.py b/05_p0/tests/test_eventlog.py
+index f382ed3..a33f1cd 100644
+--- a/05_p0/tests/test_eventlog.py
++++ b/05_p0/tests/test_eventlog.py
+@@ -2,7 +2,6 @@
+ 
+ import json
+ import os
+-import tempfile
+ import unittest
+ 
+ import apoio
+@@ -14,12 +13,11 @@ from ssc_p0.kernel import SessionKernel
+ 
+ class TestEventLog(unittest.TestCase):
+     def setUp(self):
+-        self._tmp = tempfile.TemporaryDirectory()
+-        self.lab = apoio.novo_lab(self._tmp.name)
++        self.lab = apoio.novo_lab()
+         self.k = self.lab.kernel
+ 
+     def tearDown(self):
+-        self._tmp.cleanup()
++        apoio.limpar_lab(self.lab)
+ 
+     def _log_path(self):
+         return os.path.join(self.k.raiz, "logs",
+@@ -45,6 +43,7 @@ class TestEventLog(unittest.TestCase):
+             {"fonte": "teste", "validade": "sessao", "rotulo": "nota"}, None)
+         snap_vivo = apoio.snapshot_normalizado(self.k)
+         # Replay do zero em kernel novo sobre o mesmo log (IP-4).
++        self.k.fechar()  # handoff limpo do escritor antes de reanexar
+         k2 = SessionKernel.anexar_existente(
+             self.k.raiz, self.k.envelope.sessao_id,
+             relogio=self.lab.relogio)
+diff --git a/05_p0/tests/test_hardening.py b/05_p0/tests/test_hardening.py
+new file mode 100644
+index 0000000..35b3a9b
+--- /dev/null
++++ b/05_p0/tests/test_hardening.py
+@@ -0,0 +1,467 @@
++"""Regressoes do hardening 0.2.1 — um teste por item obrigatorio.
++
++1  decisao mutada apos o registro e recusada (copia canonica)
++2  veredito cruzado: attempt de A nunca conclui B
++3  reducer validado antes do append: evento rejeitado nao fica duravel
++4  escritor unico entre processos: lock/lease + fencing (2 processos reais,
++   crash de processo, retomada e lock obsoleto)
++5  idempotency key com fingerprint: reentrega identica aceita; payload
++   diferente com a mesma chave = conflito; chave propagada ao Provider
++6  fallback gera NOVA decisao (todos os portoes) com selecao real no envelope
++7  ContextPackage ligado ao work_unit_id real; bytes no CAS; corrupcao/
++   ausencia falha fechada
++8  checkpoint escolhido pelo ultimo evento valido/seq, nunca por UUID
++9  divergencia modelo/effort observado x resolvido falha fechado (escala)
++10 IDs validados em caminhos; Evidence Plane read-only sem criar diretorios
++11 causado_por validado na cadeia da sessao
++12 RetryEvent em 1..3 e teto de backoff; indeterminado nunca repete
++13 (threat model: documento 05_p0/THREAT-MODEL.md — verificado no fechamento)
++"""
++
++import json
++import multiprocessing as mp
++import os
++import time
++import unittest
++
++import apoio
++from ssc_p0 import contratos as ct
++from ssc_p0.canonico import canonico, novo_id
++from ssc_p0.cas import CorrupcaoDetectada
++from ssc_p0.eventlog import EventoConflitoIdempotencia
++from ssc_p0.kernel import DecisaoMutada, SessionKernel
++from ssc_p0.writelock import EscritorObsoleto
++
++_DIR_P0 = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
++
++
++def _filho_tenta_anexar(raiz, sessao_id, dir_p0, resultado_path):
++    """Processo filho: tenta assumir a sessao com o lock detido pelo pai."""
++    import sys
++    sys.path.insert(0, dir_p0)
++    try:
++        from ssc_p0.kernel import SessionKernel as SK
++        k = SK.anexar_existente(raiz, sessao_id)
++        k.fechar()
++        resultado = {"erro": "anexou-sem-lock"}
++    except Exception as exc:
++        resultado = {"erro": type(exc).__name__}
++    with open(resultado_path, "w", encoding="utf-8") as f:
++        json.dump(resultado, f)
++
++
++def _filho_abre_sessao_e_dorme(raiz, dir_p0, sessao_path, pronto_path):
++    """Processo filho: abre sessao propria, sinaliza e dorme (sera morto)."""
++    import sys
++    sys.path.insert(0, dir_p0)
++    from ssc_p0.canonico import sha256_de
++    from ssc_p0.kernel import SessionKernel as SK
++    k = SK(raiz)
++    envelope = k.abrir_sessao(
++        escopo={"repo_alvo": raiz, "modo": "read-only", "fronteiras": []},
++        permissoes={"pode_escrever": False},
++        orcamento={"teto_custo": 1.0, "consumido_custo": 0.0},
++        politica_ref=sha256_de({"politica": "filho"}),
++        catalogo_ref=sha256_de({"catalogo": "filho"}),
++        resumo_aprovacao={"custo": sha256_de({"aprovacao": "filho"})})
++    with open(sessao_path, "w", encoding="utf-8") as f:
++        f.write(envelope.sessao_id)
++    with open(pronto_path, "w", encoding="utf-8") as f:
++        f.write("pronto")
++    time.sleep(120)
++
++
++class TestHardening(unittest.TestCase):
++    def setUp(self):
++        self.lab = apoio.novo_lab()
++        self.k = self.lab.kernel
++
++    def tearDown(self):
++        apoio.limpar_lab(self.lab)
++
++    # -- 1. decisao mutada ------------------------------------------------------
++
++    def test_decisao_mutada_recusada(self):
++        wu = self.lab.router.forjar(
++            intencao="tarefa com decisao que sera adulterada",
++            criterios={"tipo": "x"}, tipo="ato", nivel="L2", classe="C1")
++        d = self.lab.router.propor_decisao(
++            wu, rota="padrao", selecao=self.lab.selecao("prov-a", "modelo-x"),
++            aprovacao_custo=self.lab.aprovacao, motivo="t")
++        for campo, valor in (("selecao", dict(d.selecao, modelo="modelo-l3")),
++                             ("custo_previsto", {"valor": 0.0}),
++                             ("aprovacao_custo", None),
++                             ("alternativas", [dict(d.selecao)]),
++                             ("vinculos", dict(d.vinculos,
++                                               hash_aprovacao="0" * 64))):
++            canonica = self.k.decisoes[d.decisao_id]
++            original = getattr(canonica, campo)
++            setattr(canonica, campo, valor)  # mutacao posterior ao registro
++            try:
++                with self.assertRaises(DecisaoMutada, msg=campo):
++                    self.lab.execution.executar(wu, d, idempotency_key="m")
++            finally:
++                setattr(canonica, campo, original)
++        # Integra: a copia canonica executa normalmente.
++        r = self.lab.execution.executar(wu, d, idempotency_key="m-ok")
++        self.assertEqual(r.status, "sucesso")
++
++    # -- 2. veredito cruzado ------------------------------------------------------
++
++    def test_veredito_cruzado_attempt_de_A_nao_conclui_B(self):
++        wu_a, _d, r_a, _v = apoio.fluxo_sucesso(
++            self.lab, intencao="tarefa A concluida")
++        wu_b = self.lab.router.forjar(
++            intencao="tarefa B distinta", criterios={"tipo": "x"},
++            tipo="ato", nivel="L2", classe="C1")
++        d_b = self.lab.router.propor_decisao(
++            wu_b, rota="padrao", selecao=self.lab.selecao("prov-a", "modelo-x"),
++            aprovacao_custo=self.lab.aprovacao, motivo="t")
++        r_b = self.lab.execution.executar(wu_b, d_b, idempotency_key="op-b")
++        attempt_a = self.k.attempts[r_a.attempt_id]["attempt"]
++        veredito_cruzado = ct.ValidationVerdict(
++            veredito_id=novo_id(),
++            alvo={"work_unit_id": wu_b.work_unit_id,      # B...
++                  "attempt_id": attempt_a.attempt_id,      # ...com attempt de A
++                  "artefato_ref": attempt_a.artefato_ref},
++            camada="deterministica", verificador={"nome": "j"},
++            pacote_juiz={}, criterios_ref=wu_b.criterios_aceite_ref,
++            contexto_ref=wu_b.contexto_ref, independencia={},
++            resultado="aprovado", criterios=[], efeitos={})
++        with self.assertRaises(ct.FalhaContrato) as ctx:
++            self.k.registrar_veredito(veredito_cruzado, None)
++        self.assertIn("cruzado", str(ctx.exception))
++        self.assertEqual(self.k.work_units[wu_b.work_unit_id].estado,
++                         "aguardando-validacao")  # B NAO foi concluida
++
++    # -- 3. append rejeitado nao fica duravel -------------------------------------
++
++    def test_reducer_rejeitado_nada_duravel(self):
++        apoio.fluxo_sucesso(self.lab)
++        log_path = os.path.join(self.k.raiz, "logs",
++                                f"{self.k.envelope.sessao_id}.jsonl")
++        with open(log_path, "rb") as f:
++            bytes_antes = f.read()
++        seq_antes = self.k.log.seq_atual()
++        n_wus = len(self.k.work_units)
++        with self.assertRaises(Exception):
++            self.k._emitir("work-unit",
++                           {"acao": "transicao",
++                            "work_unit_id": "workunit-que-nao-existe",
++                            "de": "proposta", "para": "concluida"},
++                           causado_por=None)
++        with open(log_path, "rb") as f:
++            self.assertEqual(f.read(), bytes_antes)  # nada duravel
++        self.assertEqual(self.k.log.seq_atual(), seq_antes)
++        self.assertEqual(len(self.k.work_units), n_wus)  # estado restaurado
++
++    # -- 4. escritor unico entre processos -----------------------------------------
++
++    def test_lock_segundo_processo_recusado(self):
++        base = os.path.dirname(self.k.raiz)
++        resultado_path = os.path.join(base, "resultado_filho.json")
++        ctx = mp.get_context("spawn")
++        filho = ctx.Process(
++            target=_filho_tenta_anexar,
++            args=(self.k.raiz, self.k.envelope.sessao_id, _DIR_P0,
++                  resultado_path))
++        filho.start()
++        filho.join(timeout=60)
++        if filho.is_alive():
++            filho.terminate()
++            filho.join()
++            self.fail("filho nao terminou (lock nao recusou?)")
++        with open(resultado_path, encoding="utf-8") as f:
++            resultado = json.load(f)
++        self.assertEqual(resultado["erro"], "LockIndisponivel",
++                         "segundo processo NAO foi recusado pelo lock")
++
++    def test_crash_de_processo_retomada_por_outro_processo(self):
++        base = os.path.dirname(self.k.raiz)
++        sessao_path = os.path.join(base, "sessao_filho.txt")
++        pronto_path = os.path.join(base, "filho_pronto.txt")
++        ctx = mp.get_context("spawn")
++        filho = ctx.Process(
++            target=_filho_abre_sessao_e_dorme,
++            args=(self.k.raiz, _DIR_P0, sessao_path, pronto_path))
++        filho.start()
++        limite = time.time() + 60
++        while not os.path.exists(pronto_path) and time.time() < limite:
++            time.sleep(0.1)
++        self.assertTrue(os.path.exists(pronto_path),
++                        "filho nao abriu a sessao a tempo")
++        with open(sessao_path, encoding="utf-8") as f:
++            sessao_filho = f.read().strip()
++        filho.terminate()  # crash real: o SO libera o lock do processo
++        filho.join(timeout=30)
++        # Outro processo (este) assume: lock livre + fencing incrementado.
++        k2 = SessionKernel.anexar_existente(self.k.raiz, sessao_filho,
++                                            relogio=self.lab.relogio)
++        try:
++            self.assertEqual(k2._lock_sessao.token, 2)
++            ev, criado = k2._emitir(
++                "memoria",
++                {"acao": "registrar",
++                 "entrada": {"fonte": "retomada", "validade": "sessao"}},
++                causado_por=None)
++            self.assertTrue(criado)  # o sucessor escreve normalmente
++        finally:
++            k2.fechar()
++
++    def test_lock_obsoleto_fencing_token(self):
++        sessao = self.k.envelope.sessao_id
++        self.k._simular_crash()  # processo "morre" sem fechar
++        k2 = SessionKernel.anexar_existente(self.k.raiz, sessao,
++                                            relogio=self.lab.relogio)
++        try:
++            with self.assertRaises(EscritorObsoleto):
++                self.k._emitir("memoria",
++                               {"acao": "registrar",
++                                "entrada": {"fonte": "fantasma",
++                                            "validade": "sessao"}},
++                               causado_por=None)
++        finally:
++            k2.fechar()
++
++    # -- 5. idempotency key com fingerprint -----------------------------------------
++
++    def test_idempotencia_reentrega_aceita_payload_diferente_conflito(self):
++        payload_a = {"acao": "registrar",
++                     "entrada": {"fonte": "t", "validade": "s", "n": 1}}
++        payload_b = {"acao": "registrar",
++                     "entrada": {"fonte": "t", "validade": "s", "n": 2}}
++        _ev1, criado1 = self.k._emitir("memoria", payload_a, causado_por=None,
++                                       idempotency_key="chave-X")
++        self.assertTrue(criado1)
++        _ev2, criado2 = self.k._emitir("memoria", payload_a, causado_por=None,
++                                       idempotency_key="chave-X")
++        self.assertFalse(criado2)  # reentrega identica: aceita, sem efeito
++        self.assertEqual(len(self.k.memoria), 1)
++        with self.assertRaises(EventoConflitoIdempotencia):
++            self.k._emitir("memoria", payload_b, causado_por=None,
++                           idempotency_key="chave-X")
++        self.assertEqual(len(self.k.memoria), 1)  # conflito nao grava nada
++
++    def test_idempotency_key_propagada_ao_provider(self):
++        wu = self.lab.router.forjar(
++            intencao="tarefa com chave de idempotencia",
++            criterios={"tipo": "x"}, tipo="ato", nivel="L2", classe="C1")
++        d = self.lab.router.propor_decisao(
++            wu, rota="padrao", selecao=self.lab.selecao("prov-a", "modelo-x"),
++            aprovacao_custo=self.lab.aprovacao, motivo="t")
++        self.lab.execution.executar(wu, d, idempotency_key="op-prop-1")
++        provider = self.lab.providers[("prov-a", "modelo-x")]
++        self.assertIn("op-prop-1", provider.chaves_recebidas)
++
++    # -- 6. fallback com nova decisao -------------------------------------------------
++
++    def test_fallback_gera_nova_decisao_selecao_real_no_envelope(self):
++        lab = apoio.novo_lab(
++            programa_providers={"prov-a/modelo-x": ["falha-quota"]})
++        try:
++            wu = lab.router.forjar(
++                intencao="tarefa com fallback", criterios={"tipo": "x"},
++                tipo="ato", nivel="L2", classe="C1")
++            d1 = lab.router.propor_decisao(
++                wu, rota="padrao",
++                selecao=lab.selecao("prov-a", "modelo-x"),
++                alternativas=[lab.selecao("prov-b", "modelo-y")],
++                aprovacao_custo=lab.aprovacao, motivo="t")
++            r = lab.execution.executar(wu, d1, idempotency_key="op-fb-nova")
++            self.assertEqual(r.status, "sucesso")
++            # NOVA RoutingDecision registrada, supersede a anterior.
++            self.assertEqual(len(lab.kernel.decisoes), 2)
++            d2 = lab.kernel.decisoes[lab.kernel.vigente[wu.work_unit_id]]
++            self.assertEqual(d2.supersede, d1.decisao_id)
++            # Selecao REAL registrada na decisao e no attempt.
++            self.assertEqual(d2.selecao["modelo"], "modelo-y")
++            attempt = lab.kernel.attempts[r.attempt_id]["attempt"]
++            self.assertEqual(attempt.decisao_id, d2.decisao_id)
++            self.assertEqual(attempt.selecao_solicitada["modelo"], "modelo-y")
++            # FallbackEvent com a selecao real; mesmo envelope aprovado.
++            self.assertEqual(lab.kernel.fallbacks[0].para_executor["modelo"],
++                             "modelo-y")
++            self.assertEqual(d2.aprovacao_custo, d1.aprovacao_custo)
++            # Todos os portoes repetidos: decisao passou pela Policy sem veto.
++            self.assertFalse(any(rec.get("acao") == "veto"
++                                 for rec in lab.kernel.recusas))
++        finally:
++            apoio.limpar_lab(lab)
++
++    # -- 7. contexto ligado, bytes no CAS, falha fechada -------------------------------
++
++    def test_contexto_corrompido_ou_ausente_falha_fechada(self):
++        wu = self.lab.router.forjar(
++            intencao="tarefa com contexto no CAS", criterios={"tipo": "x"},
++            tipo="ato", nivel="L2", classe="C1")
++        d = self.lab.router.propor_decisao(
++            wu, rota="padrao", selecao=self.lab.selecao("prov-a", "modelo-x"),
++            aprovacao_custo=self.lab.aprovacao, motivo="t")
++        caminho_pacote = self.k.cas._caminho(wu.contexto_ref)
++        with open(caminho_pacote, "rb") as f:
++            original = f.read()
++        with open(caminho_pacote, "wb") as f:
++            f.write(b"corrupcao" + original[9:])  # corrompe DEPOIS do registro
++        with self.assertRaises(CorrupcaoDetectada):
++            self.lab.execution.executar(wu, d, idempotency_key="op-corr")
++        os.remove(caminho_pacote)  # ausencia: tambem falha fechada
++        with self.assertRaises(ct.FalhaContrato):
++            self.lab.execution.executar(wu, d, idempotency_key="op-aus")
++
++    def test_contexto_ligado_a_outra_workunit_recusado(self):
++        pacote = self.k.montar_contexto(
++            novo_id(), [], exclusoes=["pacote de outra WU"])
++        with self.assertRaises(ct.FalhaContrato) as ctx:
++            self.lab.router.forjar(
++                intencao="tarefa com contexto alheio", criterios={"tipo": "x"},
++                tipo="ato", nivel="L2", classe="C1",
++                contexto_ref=pacote.hash_pacote, wu_id=novo_id())
++        self.assertIn("work_unit_id", str(ctx.exception))
++
++    # -- 8. checkpoint por seq, nunca por UUID --------------------------------------------
++
++    def test_checkpoint_escolhido_por_seq_nao_por_uuid(self):
++        apoio.fluxo_sucesso(self.lab)
++        cp1 = self.k.gravar_checkpoint()
++        self.k.registrar_memoria(
++            {"fonte": "t", "validade": "sessao", "rotulo": "depois-cp1"}, None)
++        cp2 = self.k.gravar_checkpoint()
++        self.k.suspender()
++        sessao = self.k.envelope.sessao_id
++        # Renomeia o checkpoint ANTIGO para ordenar por ultimo (armadilha
++        # de UUID): a escolha correta e por seq, nao por nome.
++        diretorio = os.path.join(self.k.raiz, "checkpoints", sessao)
++        os.rename(os.path.join(diretorio, f"{cp1.checkpoint_id}.json"),
++                  os.path.join(diretorio, f"zzzz{cp1.checkpoint_id}.json"))
++        self.k._simular_crash()
++        k2 = SessionKernel.retomar(self.k.raiz, sessao,
++                                   relogio=self.lab.relogio)
++        try:
++            from ssc_p0.evidence import EvidencePlane
++            eventos = EvidencePlane(self.k.raiz, sessao).eventos()
++            retomadas = [e for e in eventos
++                         if e["payload"].get("acao") == "retomar"]
++            self.assertEqual(retomadas[-1]["payload"]["checkpoint_id"],
++                             cp2.checkpoint_id)
++        finally:
++            k2.fechar()
++
++    # -- 9. divergencia observado x resolvido ------------------------------------------------
++
++    def test_divergencia_modelo_effort_falha_fechada(self):
++        lab = apoio.novo_lab(observados={
++            "prov-a/modelo-x": {"provedor": "prov-a", "modelo": "modelo-x",
++                                "effort": "baixo"}})  # effort divergente
++        try:
++            wu = lab.router.forjar(
++                intencao="tarefa com executor que mente o effort",
++                criterios={"tipo": "x"}, tipo="ato", nivel="L2", classe="C1")
++            d = lab.router.propor_decisao(
++                wu, rota="padrao",
++                selecao=lab.selecao("prov-a", "modelo-x", "alto"),
++                aprovacao_custo=lab.aprovacao, motivo="t")
++            r = lab.execution.executar(wu, d, idempotency_key="op-div")
++            self.assertEqual(r.status, "escalonado")
++            self.assertEqual(r.detalhe, "divergencia-executor")
++            self.assertTrue(any(e.motivo == "divergencia-executor"
++                                for e in lab.kernel.escalacoes))
++            self.assertEqual(len(lab.kernel.retries), 0)
++            self.assertEqual(lab.kernel.work_units[wu.work_unit_id].estado,
++                             "em-execucao")  # NAO avancou para validacao
++        finally:
++            apoio.limpar_lab(lab)
++
++    # -- 10. ids em caminhos + Evidence read-only ---------------------------------------------
++
++    def test_ids_invalidos_em_caminhos_recusados(self):
++        from ssc_p0.evidence import EvidencePlane
++        for ruim in ("../fora", "x" * 31, "zz" * 16, "a/b", ""):
++            with self.subTest(id=ruim):
++                with self.assertRaises(ct.FalhaContrato):
++                    SessionKernel.anexar_existente(self.k.raiz, ruim)
++                with self.assertRaises(ct.FalhaContrato):
++                    SessionKernel.retomar(self.k.raiz, ruim)
++                with self.assertRaises(ValueError):
++                    EvidencePlane(self.k.raiz, ruim)
++
++    def test_evidence_plane_readonly_sem_criar_diretorios(self):
++        apoio.fluxo_sucesso(self.lab)
++        from ssc_p0.evidence import EvidencePlane
++        antes = {b for b, _d, _f in os.walk(self.k.raiz)}
++        evi = EvidencePlane(self.k.raiz, self.k.envelope.sessao_id)
++        depois = {b for b, _d, _f in os.walk(self.k.raiz)}
++        self.assertEqual(antes, depois)  # nenhum diretorio criado
++        with self.assertRaises(PermissionError):
++            evi.cas.gravar(b"escrita proibida")
++        evi.projetar()  # leitura funciona normalmente
++
++    # -- 11. causado_por na cadeia -----------------------------------------------------------
++
++    def test_causado_por_fora_da_cadeia_recusado(self):
++        with self.assertRaises(ct.FalhaContrato):
++            self.k._emitir("memoria",
++                           {"acao": "registrar",
++                            "entrada": {"fonte": "t", "validade": "s"}},
++                           causado_por="evento-que-nao-existe-nesta-sessao")
++        ev = self.k.registrar_memoria(
++            {"fonte": "t", "validade": "s", "rotulo": "ok"}, None)
++        # Cadeia valida funciona.
++        self.k.registrar_memoria(
++            {"fonte": "t", "validade": "s", "rotulo": "filho"},
++            ev.evento_id)
++
++    # -- 12. retry 1..3 e teto de backoff -----------------------------------------------------
++
++    def test_retry_fora_dos_limites_recusado(self):
++        base = dict(retry_id=novo_id(), attempt_id=novo_id(),
++                    work_unit_id=novo_id(), respeitou_retry_after=True,
++                    idempotency_key=None, motivo="t")
++        for tentativa_n in (0, 4, 99):
++            with self.subTest(tentativa_n=tentativa_n):
++                with self.assertRaises(ct.FalhaContrato):
++                    ct.RetryEvent(tentativa_n=tentativa_n, backoff_ms=1000,
++                                  **base).validado()
++        with self.assertRaises(ct.FalhaContrato):
++            ct.RetryEvent(tentativa_n=1,
++                          backoff_ms=ct.BACKOFF_TETO_MS + 1, **base).validado()
++        # Limites inclusos passam.
++        ct.RetryEvent(tentativa_n=3, backoff_ms=ct.BACKOFF_TETO_MS,
++                      **base).validado()
++
++    def test_backoff_teto_aplicado_e_indeterminado_nao_repete(self):
++        lab = apoio.novo_lab(programa_providers={"prov-a/modelo-x": [
++            {"comportamento": "falha-transitoria", "retry_after_ms": 999999},
++            "sucesso"]})
++        try:
++            wu = lab.router.forjar(
++                intencao="tarefa com retry-after gigante",
++                criterios={"tipo": "x"}, tipo="ato", nivel="L2", classe="C1")
++            d = lab.router.propor_decisao(
++                wu, rota="padrao",
++                selecao=lab.selecao("prov-a", "modelo-x"),
++                aprovacao_custo=lab.aprovacao, motivo="t")
++            lab.execution.executar(wu, d, idempotency_key="op-teto")
++            retry = lab.kernel.retries[0]
++            self.assertEqual(retry.backoff_ms, ct.BACKOFF_TETO_MS)  # teto
++            self.assertFalse(retry.respeitou_retry_after)  # registrado, nao escondido
++        finally:
++            apoio.limpar_lab(lab)
++        lab2 = apoio.novo_lab(
++            programa_providers={"prov-a/modelo-x": ["timeout"]})
++        try:
++            wu2 = lab2.router.forjar(
++                intencao="tarefa com timeout apos envio",
++                criterios={"tipo": "x"}, tipo="ato", nivel="L2", classe="C1")
++            d2 = lab2.router.propor_decisao(
++                wu2, rota="padrao",
++                selecao=lab2.selecao("prov-a", "modelo-x"),
++                aprovacao_custo=lab2.aprovacao, motivo="t")
++            r2 = lab2.execution.executar(wu2, d2, idempotency_key="op-ind")
++            self.assertEqual(r2.status, "indeterminado")
++            self.assertEqual(len(lab2.kernel.retries), 0)  # nunca repete
++        finally:
++            apoio.limpar_lab(lab2)
++
++
++if __name__ == "__main__":
++    unittest.main()
+diff --git a/05_p0/tests/test_juiz.py b/05_p0/tests/test_juiz.py
+index ac21a62..f7e6b8f 100644
+--- a/05_p0/tests/test_juiz.py
++++ b/05_p0/tests/test_juiz.py
+@@ -1,6 +1,5 @@
+ """Juiz: IV-2 nao anulavel, veredito vinculado, independencia, alias."""
+ 
+-import tempfile
+ import unittest
+ 
+ import apoio
+@@ -10,12 +9,11 @@ from ssc_p0.judge import IndependenciaImpossivel, Juiz1, Juiz2
+ 
+ class TestJuiz(unittest.TestCase):
+     def setUp(self):
+-        self._tmp = tempfile.TemporaryDirectory()
+-        self.lab = apoio.novo_lab(self._tmp.name)
++        self.lab = apoio.novo_lab()
+         self.k = self.lab.kernel
+ 
+     def tearDown(self):
+-        self._tmp.cleanup()
++        apoio.limpar_lab(self.lab)
+ 
+     def _reprovar_deterministico(self):
+         wu, d, r, _ = None, None, None, None
+@@ -108,45 +106,46 @@ class TestJuiz(unittest.TestCase):
+         with self.assertRaises(IndependenciaImpossivel):
+             juiz2.julgar(self.k, wu, r.attempt_id, None)
+ 
+-    def test_alias_nao_prova_identidade_divergencia_registrada(self):
+-        self._tmp2 = tempfile.TemporaryDirectory()
++    def test_alias_nao_prova_identidade_divergencia_falha_fechada(self):
++        lab2 = apoio.novo_lab(observados={
++            "prov-a/modelo-l1": {"provedor": "prov-a",
++                                 "modelo": "modelo-l1-REAL-DIFERENTE",
++                                 "effort": "alto"}})
+         try:
+-            lab = apoio.novo_lab(self._tmp2.name, observados={
+-                "prov-a/modelo-l1": {"provedor": "prov-a",
+-                                     "modelo": "modelo-l1-REAL-DIFERENTE",
+-                                     "effort": "alto"}})
+-            wu = lab.router.forjar(
++            wu = lab2.router.forjar(
+                 intencao="tarefa roteada por alias", criterios={"tipo": "x"},
+                 tipo="ato", nivel="L1", classe="C0",
+                 perfil={"modalidade": "texto", "ferramentas": [],
+                         "formato_saida": "livre", "contexto_max_tokens": 100,
+                         "dominio": "geral", "privacidade": "local-only",
+                         "latencia_max_ms": None, "orcamento_max_custo": None})
+-            d = lab.router.propor_decisao(
++            d = lab2.router.propor_decisao(
+                 wu, rota="barata",
+-                selecao=lab.selecao("prov-a", "barato"),  # alias registrado
+-                aprovacao_custo=lab.aprovacao, motivo="alias")
+-            r = lab.execution.executar(wu, d, idempotency_key="op-alias")
+-            attempt = lab.kernel.attempts[r.attempt_id]["attempt"]
++                selecao=lab2.selecao("prov-a", "barato"),  # alias registrado
++                aprovacao_custo=lab2.aprovacao, motivo="alias")
++            r = lab2.execution.executar(wu, d, idempotency_key="op-alias")
++            # 0.2.1-9: divergencia observado x resolvido = falha fechada.
++            self.assertEqual(r.status, "escalonado")
++            self.assertEqual(r.detalhe, "divergencia-executor")
++            attempt = lab2.kernel.attempts[r.attempt_id]["attempt"]
+             self.assertTrue(attempt.executor_resolvido["alias_usado"])
+             self.assertNotEqual(attempt.executor_observado["modelo"],
+                                 attempt.executor_resolvido["modelo"])
++            self.assertTrue(any(e.motivo == "divergencia-executor"
++                                for e in lab2.kernel.escalacoes))
+             # Evento tipado de divergencia gravado.
+             from ssc_p0.evidence import EvidencePlane
+-            proj = EvidencePlane(lab.raiz, lab.envelope.sessao_id).projetar()
++            proj = EvidencePlane(lab2.raiz, lab2.envelope.sessao_id).projetar()
+             self.assertEqual(len(proj["divergencias_observado_resolvido"]), 1)
+             # O juiz calcula independencia sobre o OBSERVADO (nao o alias).
+-            Juiz1.julgar(lab.kernel, wu, r.attempt_id,
+-                         lambda saida, pacote, att: ([], "aprovado"),
+-                         conclui=False)
+-            juiz2 = lab.juiz2()
+-            v2 = juiz2.julgar(lab.kernel, wu, r.attempt_id, None)
+-            self.assertEqual(v2.independencia["base"], "observado")
++            juiz2 = lab2.juiz2()
++            indep, _cand = juiz2._independencia(attempt)
++            self.assertEqual(indep["base"], "observado")
+             self.assertTrue(
+-                v2.independencia["provedor_distinto_do_executor"]
+-                and v2.independencia["modelo_distinto"])
++                indep["provedor_distinto_do_executor"]
++                and indep["modelo_distinto"])
+         finally:
+-            self._tmp2.cleanup()
++            apoio.limpar_lab(lab2)
+ 
+ 
+ if __name__ == "__main__":
+diff --git a/05_p0/tests/test_policy.py b/05_p0/tests/test_policy.py
+index 7ac38b7..c6704c8 100644
+--- a/05_p0/tests/test_policy.py
++++ b/05_p0/tests/test_policy.py
+@@ -1,6 +1,5 @@
+ """Policy Gateway: envelope de aprovacao de custo, veto, perfil, fronteira."""
+ 
+-import tempfile
+ import unittest
+ 
+ import apoio
+@@ -9,12 +8,11 @@ from ssc_p0.router import FalhaFechadaClassificacao, RotaVetada
+ 
+ class TestPolicy(unittest.TestCase):
+     def setUp(self):
+-        self._tmp = tempfile.TemporaryDirectory()
+-        self.lab = apoio.novo_lab(self._tmp.name)
++        self.lab = apoio.novo_lab()
+         self.k = self.lab.kernel
+ 
+     def tearDown(self):
+-        self._tmp.cleanup()
++        apoio.limpar_lab(self.lab)
+ 
+     def _wu(self, privacidade="remoto-permitido", nivel="L2"):
+         return self.lab.router.forjar(
+diff --git a/05_p0/tests/test_recuperacao.py b/05_p0/tests/test_recuperacao.py
+index 6f85f9b..bf36341 100644
+--- a/05_p0/tests/test_recuperacao.py
++++ b/05_p0/tests/test_recuperacao.py
+@@ -1,7 +1,6 @@
+ """Recuperacao: retry/fallback/reroteamento/reparo/escalonamento distintos,
+ IR-1/IR-2, timeout, 429 Retry-After, quota, contrato, teto de custo."""
+ 
+-import tempfile
+ import unittest
+ 
+ import apoio
+@@ -11,14 +10,17 @@ from ssc_p0.judge import Juiz1
+ 
+ class TestRecuperacao(unittest.TestCase):
+     def setUp(self):
+-        self._tmp = tempfile.TemporaryDirectory()
++        self._labs = []
+ 
+     def tearDown(self):
+-        self._tmp.cleanup()
++        for lab in self._labs:
++            apoio.limpar_lab(lab)
+ 
+     def _lab(self, programa=None, **kw):
+         programa = programa or {}
+-        return apoio.novo_lab(self._tmp.name, programa_providers=programa, **kw)
++        lab = apoio.novo_lab(programa_providers=programa, **kw)
++        self._labs.append(lab)
++        return lab
+ 
+     def _wu_decisao(self, lab, alternativas=None, modelo="modelo-x",
+                     provedor="prov-a"):
+@@ -142,10 +144,18 @@ class TestRecuperacao(unittest.TestCase):
+ 
+     def test_fallback_fora_do_envelope_e_escalonamento(self):
+         lab = self._lab({"prov-a/modelo-x": ["falha-quota"]})
+-        wu, d = self._wu_decisao(lab, alternativas=self._alt_y(lab))
+-        # Envelope estreito: so modelo-x permitido; fallback para y = fora.
+-        d.aprovacao_custo = dict(lab.aprovacao,
++        # Envelope estreito DESDE o registro: so modelo-x permitido;
++        # fallback para y = fora. (Mutar a decisao apos o registro seria
++        # recusado — 0.2.1-1; o envelope correto nasce na proposta.)
++        envelope_estreito = dict(lab.aprovacao,
+                                  modelos_permitidos=["prov-a/modelo-x"])
++        wu = lab.router.forjar(
++            intencao="tarefa de recuperacao", criterios={"tipo": "x"},
++            tipo="ato", nivel="L2", classe="C1")
++        d = lab.router.propor_decisao(
++            wu, rota="padrao", selecao=lab.selecao("prov-a", "modelo-x"),
++            alternativas=self._alt_y(lab),
++            aprovacao_custo=envelope_estreito, motivo="t")
+         r = lab.execution.executar(wu, d, idempotency_key="op-fbx")
+         self.assertEqual(r.status, "escalonado")
+         self.assertEqual(r.detalhe, "fallback-fora-do-envelope")
+diff --git a/05_p0/tests/test_seguranca.py b/05_p0/tests/test_seguranca.py
+index 02fcadb..0f2a9ae 100644
+--- a/05_p0/tests/test_seguranca.py
++++ b/05_p0/tests/test_seguranca.py
+@@ -1,23 +1,29 @@
+-"""Seguranca: IC-4 (segredos), IC-5 (contencao de caminho), zero escrita externa."""
++"""Seguranca: IC-4 (segredos), IC-5 (contencao de caminho), zero escrita externa.
++
++0.2.1: teste REAL de junction/reparse point no Windows (mklink /J nao exige
++privilegio) — mock nao substitui prova real. Temporarios na pasta ignorada
++do laboratorio (apoio.DIR_TESTS), limpos por teste.
++"""
+ 
+ import os
+-import tempfile
++import subprocess
+ import unittest
++import uuid
+ 
+ import apoio
+ from ssc_p0 import contratos as ct
+-from ssc_p0.cas import FugaDeCaminho, resolver_contido
++from ssc_p0.canonico import novo_id
++from ssc_p0.cas import FugaDeCaminho, ler_arquivo_contido, resolver_contido
+ from ssc_p0.kernel import SegredoDetectado, SessionKernel
+ 
+ 
+ class TestSeguranca(unittest.TestCase):
+     def setUp(self):
+-        self._tmp = tempfile.TemporaryDirectory()
+-        self.lab = apoio.novo_lab(self._tmp.name)
++        self.lab = apoio.novo_lab()
+         self.k = self.lab.kernel
+ 
+     def tearDown(self):
+-        self._tmp.cleanup()
++        apoio.limpar_lab(self.lab)
+ 
+     # -- IC-4 ----------------------------------------------------------------
+ 
+@@ -38,14 +44,14 @@ class TestSeguranca(unittest.TestCase):
+     def test_ic4_segredo_em_contexto_recusado(self):
+         with self.assertRaises(SegredoDetectado):
+             self.k.montar_contexto(
+-                "wu",
++                novo_id(),
+                 [{"origem": "inline:segredo", "papel": "evidencia",
+                   "inclusao": "verbatim",
+                   "conteudo": "-----BEGIN PRIVATE KEY-----\nabc"}])
+ 
+     def test_ic4_contexto_limpo_aceito(self):
+         pacote = self.k.montar_contexto(
+-            "wu",
++            novo_id(),
+             [{"origem": "inline:ok", "papel": "evidencia",
+               "inclusao": "verbatim", "conteudo": "texto absolutamente limpo"}])
+         pacote.validate()
+@@ -58,12 +64,13 @@ class TestSeguranca(unittest.TestCase):
+             resolver_contido(fora, [self.k.raiz])
+         with self.assertRaises(FugaDeCaminho):
+             self.k.montar_contexto(
+-                "wu", [{"origem": fora, "papel": "evidencia",
+-                        "inclusao": "verbatim"}])
++                novo_id(), [{"origem": fora, "papel": "evidencia",
++                             "inclusao": "verbatim"}])
+ 
+     def test_ic5_fuga_por_symlink_mock_do_resolvedor(self):
+         # Resolvedor mock: simula junction apontando para fora da raiz.
+-        alvo_fora = os.path.join(tempfile.gettempdir(), "alvo_secreto_fora")
++        alvo_fora = os.path.join(os.path.dirname(self.k.raiz),
++                                 "alvo_secreto_fora")
+         dentro = os.path.join(self.k.raiz, "link_falso.txt")
+         resolvedor_mock = lambda p: (
+             alvo_fora if os.path.normpath(p) == os.path.normpath(dentro)
+@@ -71,39 +78,61 @@ class TestSeguranca(unittest.TestCase):
+         with self.assertRaises(FugaDeCaminho):
+             resolver_contido(dentro, [self.k.raiz], resolvedor=resolvedor_mock)
+ 
+-    def test_ic5_fuga_por_symlink_real(self):
+-        alvo = os.path.join(self._tmp.name, "alvo_real.txt")
+-        with open(alvo, "w", encoding="utf-8") as f:
+-            f.write("conteudo do alvo fora do lab")
+-        link = os.path.join(self.k.raiz, "link_real.txt")
+-        try:
+-            os.symlink(alvo, link)
+-        except OSError as exc:
+-            self.skipTest(
+-                f"Windows sem privilegio para criar symlink ({exc}); "
+-                "cobertura garantida pelo teste com mock do resolvedor")
++    def test_ic5_fuga_por_junction_real(self):
++        """PROVA REAL (Windows): junction/reparse point criado de verdade.
++
++        mklink /J nao exige privilegio. Se a criacao falhar, o teste FALHA
++        (teste critico nao pode ficar skipped para liberar P1). Fora do
++        Windows, usa symlink de diretorio.
++        """
++        base = os.path.dirname(self.k.raiz)
++        alvo = os.path.join(base, "alvo_junction_real")
++        os.makedirs(alvo, exist_ok=True)
++        with open(os.path.join(alvo, "segredo.txt"), "w",
++                  encoding="utf-8") as f:
++            f.write("conteudo fora do lab, alcancado via reparse point")
++        link = os.path.join(self.k.raiz, "junction_dir")
++        if os.name == "nt":
++            resultado = subprocess.run(
++                ["cmd", "/c", "mklink", "/J", link, alvo],
++                capture_output=True, text=True)
++            self.assertEqual(
++                resultado.returncode, 0,
++                f"mklink /J falhou (ambiente Windows nao preparado): "
++                f"{resultado.stdout}{resultado.stderr}")
++            self.assertTrue(os.path.isdir(link))
++        else:
++            os.symlink(alvo, link, target_is_directory=True)
++        caminho_via_link = os.path.join(link, "segredo.txt")
++        # O resolvedor real atravessa o reparse point: fuga detectada.
++        with self.assertRaises(FugaDeCaminho):
++            resolver_contido(caminho_via_link, [self.k.raiz])
++        with self.assertRaises(FugaDeCaminho):
++            ler_arquivo_contido(caminho_via_link, [self.k.raiz])
+         with self.assertRaises(FugaDeCaminho):
+             self.k.montar_contexto(
+-                "wu", [{"origem": link, "papel": "evidencia",
+-                        "inclusao": "verbatim"}])
++                novo_id(), [{"origem": caminho_via_link, "papel": "evidencia",
++                             "inclusao": "verbatim"}])
+ 
+     # -- zero escrita externa -----------------------------------------------------
+ 
+     def test_zero_escrita_externa_tudo_sob_a_raiz(self):
+-        tmp2 = tempfile.TemporaryDirectory()
++        base = os.path.join(apoio.DIR_TESTS, uuid.uuid4().hex)
++        lab = apoio.novo_lab(base)
+         try:
+-            raiz_lab = os.path.join(tmp2.name, "lab")
+-            lab = apoio.novo_lab(tmp2.name)
++            raiz_lab = lab.raiz
+             apoio.fluxo_sucesso(lab)
+             lab.kernel.gravar_checkpoint()
+             lab.kernel.suspender()
+-            SessionKernel.retomar(lab.raiz, lab.envelope.sessao_id,
+-                                  relogio=lab.relogio)
+-            # Todo arquivo criado no tmp esta sob a raiz declarada do lab.
++            lab.kernel._simular_crash()
++            k2 = SessionKernel.retomar(lab.raiz, lab.envelope.sessao_id,
++                                       relogio=lab.relogio)
++            k2.fechar()
++            # Todo arquivo criado esta sob a raiz declarada do lab.
+             criados = []
+-            for base, _dirs, arquivos in os.walk(tmp2.name):
++            for base_dir, _dirs, arquivos in os.walk(base):
+                 for nome in arquivos:
+-                    criados.append(os.path.join(base, nome))
++                    criados.append(os.path.join(base_dir, nome))
+             self.assertTrue(criados)
+             for caminho in criados:
+                 self.assertTrue(
+@@ -111,7 +140,7 @@ class TestSeguranca(unittest.TestCase):
+                         os.path.normcase(os.path.realpath(raiz_lab))),
+                     f"arquivo fora da raiz declarada: {caminho}")
+         finally:
+-            tmp2.cleanup()
++            apoio.limpar_lab(lab)
+ 
+ 
+ if __name__ == "__main__":
+diff --git a/05_p0/tests/test_workunits.py b/05_p0/tests/test_workunits.py
+index b930018..e4989b3 100644
+--- a/05_p0/tests/test_workunits.py
++++ b/05_p0/tests/test_workunits.py
+@@ -1,6 +1,5 @@
+ """WorkUnits: DAG/ciclo, anti-competicao (IW-3), IW-1, IW-2, IW-4."""
+ 
+-import tempfile
+ import unittest
+ 
+ import apoio
+@@ -10,12 +9,11 @@ from ssc_p0.router import TaskRouter
+ 
+ class TestWorkUnits(unittest.TestCase):
+     def setUp(self):
+-        self._tmp = tempfile.TemporaryDirectory()
+-        self.lab = apoio.novo_lab(self._tmp.name)
++        self.lab = apoio.novo_lab()
+         self.k = self.lab.kernel
+ 
+     def tearDown(self):
+-        self._tmp.cleanup()
++        apoio.limpar_lab(self.lab)
+ 
+     def _pai(self):
+         return self.lab.router.forjar(

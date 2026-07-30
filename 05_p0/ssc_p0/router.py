@@ -38,21 +38,25 @@ class TaskRouter:
                perfil: dict | None = None, classe: str = "C0",
                parent: str | None = None, depende_de: list | None = None,
                contexto_ref: str | None = None,
+               wu_id: str | None = None,
                causado_por: str | None = None) -> ct.WorkUnit:
         """Intake: despacho cru -> WorkUnit com criterios CONGELADOS.
 
         IW-4: classe >= C2 ou tipo-1 nasce aguardando-aprovacao; C0/C1 e
         tipo-2 recebem aprovacao automatica registrada (sem humano).
+        0.2.1-7: o ContextPackage nasce ligado ao work_unit_id REAL — o id
+        e gerado ANTES do pacote minimo (nunca 'pendente').
         """
         if len(intencao) > 4000:
             raise ct.FalhaContrato("intencao acima do teto de 4000 chars")
+        wu_id = wu_id or novo_id()
         criterios_ref = self.kernel.cas.gravar(canonico(criterios))
         if contexto_ref is None:
             pacote_vazio = self.kernel.montar_contexto(
-                "pendente", [], exclusoes=["sem entradas: contexto minimo"])
+                wu_id, [], exclusoes=["sem entradas: contexto minimo"])
             contexto_ref = pacote_vazio.hash_pacote
         wu = ct.WorkUnit(
-            work_unit_id=novo_id(),
+            work_unit_id=wu_id,
             sessao_id=self.kernel.envelope.sessao_id,
             linhagem_id=self.kernel.envelope.linhagem_id,
             parent_work_unit=parent,
@@ -186,8 +190,10 @@ class TaskRouter:
         if reprovada.estado != "reprovada":
             raise ct.FalhaContrato("reparo exige workunit 'reprovada'")
         ref_erro = self.kernel.cas.gravar(canonico(contexto_erro))
+        # 0.2.1-7: o pacote de contexto da filha nasce ligado ao id DELA.
+        filha_id = novo_id()
         pacote = self.kernel.montar_contexto(
-            reprovada.work_unit_id,
+            filha_id,
             [{"origem": f"erro:{ref_erro[:12]}", "papel": "artefato-anterior",
               "inclusao": "referencia", "conteudo": canonico(contexto_erro)}],
             exclusoes=["demais artefatos: reparo foca no erro"])
@@ -202,5 +208,6 @@ class TaskRouter:
             classe=reprovada.classe_governanca,
             parent=reprovada.work_unit_id,
             contexto_ref=pacote.hash_pacote,
+            wu_id=filha_id,
             causado_por=causado_por)
         return filha

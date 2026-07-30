@@ -7,6 +7,7 @@
       "custo_contexto_linhas": 12,
       "entradas": [
         {
+          "bytes_ref": "c69748f28ed76e618ccdee934fb552a9fdc310ed3f161915336ca42c5749e6b4",
           "inclusao": "verbatim",
           "origem": "E:\\LucasIA\\Projetos\\SSC-Plus\\05_p0\\cenarios\\fixtures\\to2\\repo\\kernel.py",
           "papel": "evidencia",
@@ -24,6 +25,7 @@
       "custo_contexto_linhas": 12,
       "entradas": [
         {
+          "bytes_ref": "c69748f28ed76e618ccdee934fb552a9fdc310ed3f161915336ca42c5749e6b4",
           "inclusao": "verbatim",
           "origem": "E:\\LucasIA\\Projetos\\SSC-Plus\\05_p0\\cenarios\\fixtures\\to2\\repo\\kernel.py",
           "papel": "evidencia",
@@ -41,6 +43,7 @@
       "custo_contexto_linhas": 12,
       "entradas": [
         {
+          "bytes_ref": "c69748f28ed76e618ccdee934fb552a9fdc310ed3f161915336ca42c5749e6b4",
           "inclusao": "verbatim",
           "origem": "E:\\LucasIA\\Projetos\\SSC-Plus\\05_p0\\cenarios\\fixtures\\to2\\repo\\kernel.py",
           "papel": "evidencia",

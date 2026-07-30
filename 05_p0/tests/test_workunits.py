@@ -1,6 +1,5 @@
 """WorkUnits: DAG/ciclo, anti-competicao (IW-3), IW-1, IW-2, IW-4."""
 
-import tempfile
 import unittest
 
 import apoio
@@ -10,12 +9,11 @@ from ssc_p0.router import TaskRouter
 
 class TestWorkUnits(unittest.TestCase):
     def setUp(self):
-        self._tmp = tempfile.TemporaryDirectory()
-        self.lab = apoio.novo_lab(self._tmp.name)
+        self.lab = apoio.novo_lab()
         self.k = self.lab.kernel
 
     def tearDown(self):
-        self._tmp.cleanup()
+        apoio.limpar_lab(self.lab)
 
     def _pai(self):
         return self.lab.router.forjar(

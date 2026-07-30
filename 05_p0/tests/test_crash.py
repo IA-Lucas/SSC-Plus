@@ -2,7 +2,6 @@
 
 import json
 import os
-import tempfile
 import unittest
 
 import apoio
@@ -13,12 +12,11 @@ from ssc_p0.kernel import CheckpointInvalido, SessionKernel
 
 class TestCrashCheckpoint(unittest.TestCase):
     def setUp(self):
-        self._tmp = tempfile.TemporaryDirectory()
-        self.lab = apoio.novo_lab(self._tmp.name)
+        self.lab = apoio.novo_lab()
         self.k = self.lab.kernel
 
     def tearDown(self):
-        self._tmp.cleanup()
+        apoio.limpar_lab(self.lab)
 
     def _attempt_despachado(self):
         wu = self.lab.router.forjar(
@@ -49,7 +47,7 @@ class TestCrashCheckpoint(unittest.TestCase):
         self.k.gravar_checkpoint()
         self.k.suspender()
         sessao = self.k.envelope.sessao_id
-        del self.k  # "crash": nenhuma conclusao persistida
+        self.k._simular_crash()  # "crash": processo morre, lock do SO liberado
         k2 = SessionKernel.retomar(self.lab.raiz, sessao,
                                    relogio=self.lab.relogio)
         reg = k2.attempts[attempt.attempt_id]
@@ -65,6 +63,7 @@ class TestCrashCheckpoint(unittest.TestCase):
         self.k.gravar_checkpoint()
         self.k.suspender()
         sessao = self.k.envelope.sessao_id
+        self.k._simular_crash()
         k2 = SessionKernel.retomar(self.lab.raiz, sessao,
                                    relogio=self.lab.relogio)
         # Nenhum orfao: tudo concluido antes do crash.
@@ -80,6 +79,7 @@ class TestCrashCheckpoint(unittest.TestCase):
         snap_antes = apoio.snapshot_normalizado(self.k)
         self.k.suspender()
         sessao = self.k.envelope.sessao_id
+        self.k._simular_crash()
         k2 = SessionKernel.retomar(self.lab.raiz, sessao,
                                    relogio=self.lab.relogio)
         snap_depois = apoio.snapshot_normalizado(k2)
@@ -102,6 +102,7 @@ class TestCrashCheckpoint(unittest.TestCase):
         with open(caminho, "wb") as f:
             f.write(canonico(dados))
         seq_antes = self.k.log.seq_atual()
+        self.k._simular_crash()
         with self.assertRaises(CheckpointInvalido):
             SessionKernel.retomar(self.lab.raiz, sessao,
                                   relogio=self.lab.relogio)
@@ -120,6 +121,7 @@ class TestCrashCheckpoint(unittest.TestCase):
             + dados["selo"][1:]
         with open(caminho, "wb") as f:
             f.write(canonico(dados))
+        self.k._simular_crash()
         with self.assertRaises(CheckpointInvalido):
             SessionKernel.retomar(self.lab.raiz, sessao,
                                   relogio=self.lab.relogio)
@@ -139,6 +141,7 @@ class TestCrashCheckpoint(unittest.TestCase):
             for linha in linhas:
                 f.write(linha + b"\n")
         from ssc_p0.eventlog import EventoAdulterado
+        self.k._simular_crash()
         with self.assertRaises(EventoAdulterado):
             SessionKernel.retomar(self.lab.raiz, sessao,
                                   relogio=self.lab.relogio)

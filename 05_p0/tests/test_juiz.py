@@ -1,6 +1,5 @@
 """Juiz: IV-2 nao anulavel, veredito vinculado, independencia, alias."""
 
-import tempfile
 import unittest
 
 import apoio
@@ -10,12 +9,11 @@ from ssc_p0.judge import IndependenciaImpossivel, Juiz1, Juiz2
 
 class TestJuiz(unittest.TestCase):
     def setUp(self):
-        self._tmp = tempfile.TemporaryDirectory()
-        self.lab = apoio.novo_lab(self._tmp.name)
+        self.lab = apoio.novo_lab()
         self.k = self.lab.kernel
 
     def tearDown(self):
-        self._tmp.cleanup()
+        apoio.limpar_lab(self.lab)
 
     def _reprovar_deterministico(self):
         wu, d, r, _ = None, None, None, None
@@ -108,45 +106,46 @@ class TestJuiz(unittest.TestCase):
         with self.assertRaises(IndependenciaImpossivel):
             juiz2.julgar(self.k, wu, r.attempt_id, None)
 
-    def test_alias_nao_prova_identidade_divergencia_registrada(self):
-        self._tmp2 = tempfile.TemporaryDirectory()
+    def test_alias_nao_prova_identidade_divergencia_falha_fechada(self):
+        lab2 = apoio.novo_lab(observados={
+            "prov-a/modelo-l1": {"provedor": "prov-a",
+                                 "modelo": "modelo-l1-REAL-DIFERENTE",
+                                 "effort": "alto"}})
         try:
-            lab = apoio.novo_lab(self._tmp2.name, observados={
-                "prov-a/modelo-l1": {"provedor": "prov-a",
-                                     "modelo": "modelo-l1-REAL-DIFERENTE",
-                                     "effort": "alto"}})
-            wu = lab.router.forjar(
+            wu = lab2.router.forjar(
                 intencao="tarefa roteada por alias", criterios={"tipo": "x"},
                 tipo="ato", nivel="L1", classe="C0",
                 perfil={"modalidade": "texto", "ferramentas": [],
                         "formato_saida": "livre", "contexto_max_tokens": 100,
                         "dominio": "geral", "privacidade": "local-only",
                         "latencia_max_ms": None, "orcamento_max_custo": None})
-            d = lab.router.propor_decisao(
+            d = lab2.router.propor_decisao(
                 wu, rota="barata",
-                selecao=lab.selecao("prov-a", "barato"),  # alias registrado
-                aprovacao_custo=lab.aprovacao, motivo="alias")
-            r = lab.execution.executar(wu, d, idempotency_key="op-alias")
-            attempt = lab.kernel.attempts[r.attempt_id]["attempt"]
+                selecao=lab2.selecao("prov-a", "barato"),  # alias registrado
+                aprovacao_custo=lab2.aprovacao, motivo="alias")
+            r = lab2.execution.executar(wu, d, idempotency_key="op-alias")
+            # 0.2.1-9: divergencia observado x resolvido = falha fechada.
+            self.assertEqual(r.status, "escalonado")
+            self.assertEqual(r.detalhe, "divergencia-executor")
+            attempt = lab2.kernel.attempts[r.attempt_id]["attempt"]
             self.assertTrue(attempt.executor_resolvido["alias_usado"])
             self.assertNotEqual(attempt.executor_observado["modelo"],
                                 attempt.executor_resolvido["modelo"])
+            self.assertTrue(any(e.motivo == "divergencia-executor"
+                                for e in lab2.kernel.escalacoes))
             # Evento tipado de divergencia gravado.
             from ssc_p0.evidence import EvidencePlane
-            proj = EvidencePlane(lab.raiz, lab.envelope.sessao_id).projetar()
+            proj = EvidencePlane(lab2.raiz, lab2.envelope.sessao_id).projetar()
             self.assertEqual(len(proj["divergencias_observado_resolvido"]), 1)
             # O juiz calcula independencia sobre o OBSERVADO (nao o alias).
-            Juiz1.julgar(lab.kernel, wu, r.attempt_id,
-                         lambda saida, pacote, att: ([], "aprovado"),
-                         conclui=False)
-            juiz2 = lab.juiz2()
-            v2 = juiz2.julgar(lab.kernel, wu, r.attempt_id, None)
-            self.assertEqual(v2.independencia["base"], "observado")
+            juiz2 = lab2.juiz2()
+            indep, _cand = juiz2._independencia(attempt)
+            self.assertEqual(indep["base"], "observado")
             self.assertTrue(
-                v2.independencia["provedor_distinto_do_executor"]
-                and v2.independencia["modelo_distinto"])
+                indep["provedor_distinto_do_executor"]
+                and indep["modelo_distinto"])
         finally:
-            self._tmp2.cleanup()
+            apoio.limpar_lab(lab2)
 
 
 if __name__ == "__main__":

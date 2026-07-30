@@ -60,7 +60,7 @@ class Lab:
                 observado=observados.get(eid))
         self.execution = ExecutionGateway(
             self.kernel, self.policy, self.catalogo, self.providers,
-            self.control)
+            self.control, router=self.router)
         self.envelope = self.control.abrir_sessao(
             escopo={"repo_alvo": self.raiz, "modo": "read-only",
                     "fronteiras": []},

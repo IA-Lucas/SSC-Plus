@@ -13,6 +13,7 @@ Control Plane: ciclo de vida da sessao, escalonamento e aprovacao humana
 registra; nao decide rota.
 """
 
+import copy
 import hashlib
 import hmac as hmac_mod
 import json
@@ -22,10 +23,11 @@ import threading
 
 from . import contratos as ct
 from .canonico import Relogio, RelogioReal, canonico, novo_id, sha256_bytes, sha256_de
-from .cas import CAS, FugaDeCaminho, resolver_contido
+from .cas import CAS, CorrupcaoDetectada, ler_arquivo_contido
 from .estados import (TransicaoIlegal, marcar_orfao, transitar_attempt,
                       transitar_sessao, transitar_workunit)
-from .eventlog import EventLog, hash_evento
+from .eventlog import EventLog, EventoAdulterado, hash_evento
+from .writelock import LockSessao
 
 
 class SegredoDetectado(Exception):
@@ -36,8 +38,22 @@ class VinculoDivergente(ct.FalhaContrato):
     """Attempt/decisao com vinculos divergentes do estado corrente (RA-3)."""
 
 
+class DecisaoMutada(ct.FalhaContrato):
+    """RoutingDecision alterada apos o registro: execucao recusada (0.2.1-1)."""
+
+
 class CheckpointInvalido(Exception):
     """IP-2: checkpoint invalido, cadeia quebrada ou selo divergente."""
+
+
+# IDs locais sao UUID-4 hex (novo_id); usados em nomes de arquivo, nunca
+# interpolados sem validacao (0.2.1-10).
+_ID_RE = re.compile(r"^[0-9a-f]{32}$")
+
+
+def _validar_id(valor, rotulo: str) -> None:
+    if not isinstance(valor, str) or not _ID_RE.match(valor):
+        raise ct.FalhaContrato(f"{rotulo}: id invalido para uso em caminho")
 
 
 # Scanner deterministico de segredos (IC-4). Deteccao = recusa, nunca redacao.
@@ -82,7 +98,7 @@ class SessionKernel:
                  raizes_fontes=None, resolvedor=os.path.realpath):
         self.raiz = os.path.realpath(str(raiz))
         os.makedirs(self.raiz, exist_ok=True)
-        for sub in ("logs", "checkpoints", "sessoes"):
+        for sub in ("logs", "checkpoints", "sessoes", "locks"):
             os.makedirs(os.path.join(self.raiz, sub), exist_ok=True)
         self.cas = CAS(os.path.join(self.raiz, "cas"))
         self.relogio = relogio or RelogioReal()
@@ -92,6 +108,8 @@ class SessionKernel:
         ]
         self._lock = threading.RLock()
         self.chave_selo = self._carregar_chave()
+        # Escritor unico entre processos (0.2.1-4): lock/lease + fencing.
+        self._lock_sessao: LockSessao | None = None
         # Estado vivo (reconstruivel pelo log, IP-4).
         self.log: EventLog | None = None
         self.envelope: ct.SessionEnvelope | None = None
@@ -109,6 +127,8 @@ class SessionKernel:
         self.recusas: list = []
         self.checkpoints: list = []
         self._evento_routing: dict[str, str] = {}  # decisao_id -> evento_id
+        self._hashes_decisao: dict[str, str] = {}  # decisao_id -> sha256 canonico
+        self._eventos_vistos: set = set()          # cadeia causal da sessao
 
     # -- infraestrutura interna -------------------------------------------
 
@@ -131,7 +151,43 @@ class SessionKernel:
                             hashlib.sha256).hexdigest()
 
     def _log_path(self, sessao_id: str) -> str:
+        _validar_id(sessao_id, "sessao_id")
         return os.path.join(self.raiz, "logs", f"{sessao_id}.jsonl")
+
+    # -- escritor unico entre processos (0.2.1-4) ----------------------------
+
+    def _adquirir_lock(self, sessao_id: str) -> None:
+        _validar_id(sessao_id, "sessao_id")
+        base = os.path.join(self.raiz, "locks", sessao_id)
+        self._lock_sessao = LockSessao(base + ".lock", base + ".fence")
+        self._lock_sessao.adquirir()
+
+    def fechar(self) -> None:
+        """Libera o lock da sessao (handoff limpo e explicito do escritor)."""
+        if self._lock_sessao is not None:
+            self._lock_sessao.liberar()
+
+    def _simular_crash(self) -> None:
+        """SO TESTE: morte do processo. O escritor fica obsoleto (fencing)."""
+        if self._lock_sessao is not None:
+            self._lock_sessao.simular_crash()
+
+    # -- snapshot do estado vivo (reducer validado antes do append, 0.2.1-3) --
+
+    _ESTADO_MUTAVEL = (
+        "envelope", "work_units", "decisoes", "vigente", "attempts",
+        "memoria", "memoria_ref", "vereditos", "vereditos_recusados",
+        "escalacoes", "retries", "fallbacks", "recusas", "checkpoints",
+        "_evento_routing", "_hashes_decisao", "_eventos_vistos",
+    )
+
+    def _snapshot_estado(self) -> dict:
+        return {nome: copy.deepcopy(getattr(self, nome))
+                for nome in self._ESTADO_MUTAVEL}
+
+    def _restaurar_estado(self, backup: dict) -> None:
+        for nome, valor in backup.items():
+            setattr(self, nome, valor)
 
     def _garantir_ativa(self) -> None:
         """retomada -> ativa na primeira operacao pos-retomada (D5 §1.2)."""
@@ -143,10 +199,22 @@ class SessionKernel:
     def _emitir(self, tipo: str, payload: dict, causado_por,
                 idempotency_key: str | None = None,
                 _sem_garantia: bool = False) -> tuple[ct.Evento, bool]:
-        """Unico caminho de escrita no EventLog (escritor unico)."""
+        """Unico caminho de escrita no EventLog (escritor unico).
+
+        0.2.1-3: o reducer (_aplicar) e validado ANTES do append; se a fold
+        ou o append falham, nada fica duravel e o estado vivo e restaurado.
+        0.2.1-4: fencing token verificado a cada escrita.
+        0.2.1-11: causado_por precisa existir na cadeia desta sessao.
+        """
         with self._lock:
             if not _sem_garantia:
                 self._garantir_ativa()
+            if causado_por is not None \
+                    and causado_por not in self._eventos_vistos:
+                raise ct.FalhaContrato(
+                    f"causado_por fora da cadeia da sessao: {causado_por!r}")
+            if self._lock_sessao is not None:
+                self._lock_sessao.verificar()  # fencing (escritor unico)
             dados = canonico(payload)
             escanear_segredos(dados, f"payload de evento {tipo}")  # IC-4
             payload_ref = self.cas.gravar(dados)
@@ -162,9 +230,18 @@ class SessionKernel:
                 prev_event_hash=self.log.ultimo_hash(),
                 payload_ref=payload_ref,
             )
-            criado = self.log.anexar(evento)
-            if criado:
+            backup = self._snapshot_estado()
+            try:
+                # Reducer executado ANTES do append; se a fold ou o append
+                # falham, o estado vivo e restaurado e nada fica duravel.
                 self._aplicar(evento, payload)
+                criado = self.log.anexar(evento)
+            except BaseException:
+                self._restaurar_estado(backup)
+                raise
+            if not criado:
+                # Reentrega identica (idempotencia): aceita, sem efeito.
+                self._restaurar_estado(backup)
             return evento, criado
 
     # -- abertura / ciclo de vida ------------------------------------------
@@ -199,6 +276,7 @@ class SessionKernel:
         }
         envelope = ct.SessionEnvelope(integridade=integridade, **base).validado()
         hash_genese = sha256_de(envelope.to_dict())
+        self._adquirir_lock(sessao_id)  # escritor unico (0.2.1-4)
         self.log = EventLog(self._log_path(sessao_id), hash_genese)
         caminho_env = os.path.join(self.raiz, "sessoes", f"{sessao_id}.envelope.json")
         tmp = caminho_env + ".tmp"
@@ -282,6 +360,9 @@ class SessionKernel:
             raise ct.FalhaContrato("workunit de outra linhagem (IS-1)")
         if wu.work_unit_id in self.work_units:
             raise ct.FalhaContrato("work_unit_id duplicado")
+        # 0.2.1-7: o ContextPackage precisa existir no CAS, integro, ligado
+        # a ESTA work_unit_id — falha fechada, nunca pacote vazio.
+        self.ler_pacote(wu.contexto_ref, wu.work_unit_id)
         for dep in wu.depende_de:
             if dep not in self.work_units:
                 raise ct.FalhaContrato(f"depende_de desconhecido: {dep!r}")
@@ -368,6 +449,22 @@ class SessionKernel:
             causado_por=causado_por)
         return evento
 
+    def decisao_canonica(self, decisao_id: str) -> ct.RoutingDecision:
+        """A UNICA copia executavel da decisao: a registrada no log (0.2.1-1).
+
+        A decisao completa e persistida (payload no CAS) e hasheada no
+        registro. Qualquer mutacao posterior — selecao, alternativas, custo,
+        hashes, aprovacao — diverge do hash registrado e e recusada.
+        """
+        dec = self.decisoes.get(decisao_id)
+        if dec is None:
+            raise ct.FalhaContrato(f"decisao desconhecida: {decisao_id!r}")
+        if sha256_de(dec.to_dict()) != self._hashes_decisao.get(decisao_id):
+            raise DecisaoMutada(
+                f"RoutingDecision {decisao_id[:8]} mutada apos o registro: "
+                "a execucao usa somente a copia canonica registrada")
+        return dec
+
     # -- Attempts --------------------------------------------------------------
 
     def criar_attempt(self, attempt: ct.ExecutionAttempt,
@@ -376,9 +473,9 @@ class SessionKernel:
         wu = self.work_units[attempt.work_unit_id]
         if attempt.linhagem_id != self.envelope.linhagem_id:
             raise VinculoDivergente("attempt de outra linhagem (IS-1)")
-        decisao = self.decisoes.get(attempt.decisao_id)
-        if decisao is None:
-            raise VinculoDivergente("decisao desconhecida")
+        # 0.2.1-1: a decisao do attempt e a copia canonica registrada;
+        # mutacao posterior = recusa antes de qualquer gasto.
+        decisao = self.decisao_canonica(attempt.decisao_id)
         if self.vigente.get(attempt.work_unit_id) != attempt.decisao_id:
             self._registrar_recusa(
                 "attempt", attempt.to_dict(),
@@ -469,9 +566,9 @@ class SessionKernel:
 
     def registrar_retry(self, retry: ct.RetryEvent,
                         causado_por: str | None) -> ct.Evento:
+        # 0.2.1-12: tentativa_n em 1..3 e backoff com teto — impostos pelo
+        # contrato (RetryEvent.validate), falha fechada fora dos limites.
         retry.validate()
-        if retry.tentativa_n > 4:
-            raise ct.FalhaContrato("retry acima do maximo de 3")
         evento, _ = self._emitir("retry", {"acao": "registrar",
                                            "retry": retry.to_dict()},
                                  causado_por=causado_por)
@@ -505,13 +602,36 @@ class SessionKernel:
         if not attempt_id or attempt_id not in self.attempts:
             raise ct.FalhaContrato(
                 "veredito sem attempt_id valido e invalido (D5 §7)")
+        reg = self.attempts[attempt_id]
+        if reg["estado"] != "concluido":
+            raise ct.FalhaContrato(
+                "veredito exige attempt concluido (mesma cadeia)")
+        attempt = reg["attempt"]
         wu_id = veredito.alvo.get("work_unit_id")
         wu = self.work_units.get(wu_id)
         if wu is None:
             raise ct.FalhaContrato("veredito para workunit desconhecida")
+        # 0.2.1-2: attempt, WorkUnit, decisao, contexto, criterios e artefato
+        # precisam pertencer a MESMA cadeia; attempt de A nunca conclui B.
+        if attempt.work_unit_id != wu_id:
+            raise ct.FalhaContrato(
+                "veredito cruzado: o attempt pertence a outra WorkUnit")
+        decisao = self.decisoes.get(attempt.decisao_id)
+        if decisao is None or decisao.work_unit_id != wu_id:
+            raise ct.FalhaContrato(
+                "decisao do attempt fora da cadeia da WorkUnit")
+        if attempt.linhagem_id != self.envelope.linhagem_id \
+                or wu.linhagem_id != self.envelope.linhagem_id:
+            raise ct.FalhaContrato("veredito fora da linhagem da sessao")
         if veredito.criterios_ref != wu.criterios_aceite_ref:
             raise ct.FalhaContrato(
                 "IV-3: criterios_ref divergente do congelado da WorkUnit")
+        if veredito.alvo.get("artefato_ref") != attempt.artefato_ref:
+            raise ct.FalhaContrato(
+                "artefato do veredito fora da cadeia do attempt")
+        if veredito.contexto_ref != wu.contexto_ref:
+            raise ct.FalhaContrato(
+                "contexto_ref do veredito diverge do da WorkUnit")
         # IV-2: reprovado deterministico NAO e anulavel sobre o mesmo artefato.
         for v in self.vereditos:
             if (v.alvo.get("attempt_id") == attempt_id
@@ -569,11 +689,15 @@ class SessionKernel:
                         politica_inclusao: dict | None = None) -> ct.ContextPackage:
         """Monta ContextPackage com proveniencia completa e contencao.
 
+        0.2.1-7: nasce ligado a um work_unit_id REAL (formato de id local) e
+        os BYTES de cada entrada ficam no CAS (`bytes_ref` por entrada).
         Cada entrada: {'origem', 'papel', 'inclusao'} + opcional 'conteudo'
         (str/bytes) para origens nao-caminho (memoria por ID=SHA256, dados
         inline). Sem 'conteudo', 'origem' e resolvida como caminho DENTRO das
-        raizes declaradas (IC-5). Tudo passa pelo scanner de segredos (IC-4).
+        raizes declaradas (IC-5) com reducao de TOCTOU. Tudo passa pelo
+        scanner de segredos (IC-4).
         """
+        _validar_id(work_unit_id, "contexto.work_unit_id")
         politica = dict(politica_inclusao or {})
         verbatim_ate = politica.get("verbatim_ate", VERBATIM_ATE_DEFAULT)
         politica.setdefault("verbatim_ate", verbatim_ate)
@@ -594,10 +718,8 @@ class SessionKernel:
                     raise ct.FalhaContrato(
                         "IC-2/IC-3: conteudo externo nao entra como instrucao "
                         "executavel; use papel evidencia/norma-citada")
-                caminho = resolver_contido(origem, self.raizes_fontes,
-                                           self.resolvedor)
-                with open(caminho, "rb") as f:
-                    dados = f.read()
+                dados = ler_arquivo_contido(origem, self.raizes_fontes,
+                                            self.resolvedor)
             escanear_segredos(dados, f"entrada de contexto {origem!r}")  # IC-4
             if inclusao == "verbatim" and len(dados) > verbatim_ate:
                 raise ct.FalhaContrato(
@@ -606,6 +728,7 @@ class SessionKernel:
             linhas += dados.count(b"\n") + (1 if dados else 0)
             montadas.append({
                 "origem": origem, "sha256": sha256_bytes(dados),
+                "bytes_ref": self.cas.gravar(dados),
                 "papel": papel, "inclusao": inclusao,
             })
         pacote = ct.ContextPackage(
@@ -621,6 +744,34 @@ class SessionKernel:
         # O objeto do CAS e o corpo SEM o campo hash_pacote: seu sha256 e
         # exatamente o hash_pacote (enderecamento por conteudo consistente).
         self.cas.gravar(canonico(corpo))
+        return pacote
+
+    def ler_pacote(self, contexto_ref: str,
+                   work_unit_id: str | None = None) -> dict:
+        """Le o ContextPackage do CAS com falha fechada (0.2.1-7).
+
+        Corrupcao (hash divergente), ausencia do pacote ou dos bytes de
+        qualquer entrada, ou vinculo com outro work_unit_id = FalhaContrato.
+        NUNCA devolve pacote vazio/substituto.
+        """
+        try:
+            dados = self.cas.ler(contexto_ref)
+        except FileNotFoundError as exc:
+            raise ct.FalhaContrato(
+                f"ContextPackage ausente no CAS: {contexto_ref!r}") from exc
+        pacote = json.loads(dados)
+        if not pacote.get("work_unit_id"):
+            raise ct.FalhaContrato("ContextPackage sem work_unit_id")
+        if work_unit_id is not None \
+                and pacote["work_unit_id"] != work_unit_id:
+            raise ct.FalhaContrato(
+                "ContextPackage ligado a outro work_unit_id")
+        for entrada in pacote.get("entradas", []):
+            ref = entrada.get("bytes_ref")
+            if ref is None or not self.cas.existe(ref):
+                raise ct.FalhaContrato(
+                    "bytes de entrada de contexto ausentes no CAS: "
+                    f"{entrada.get('origem')!r}")
         return pacote
 
     # -- Checkpoint / retomada (D5 §8.3, IP-1..IP-4) ---------------------------------
@@ -710,10 +861,16 @@ class SessionKernel:
                          resolvedor=os.path.realpath) -> "SessionKernel":
         """Reabre a sessao por replay deterministico do log (IP-4)."""
         k = cls(raiz, relogio, raizes_fontes=raizes_fontes, resolvedor=resolvedor)
-        k._replay_de_zero(sessao_id)
+        k._adquirir_lock(sessao_id)  # escritor unico (0.2.1-4)
+        try:
+            k._replay_de_zero(sessao_id)
+        except BaseException:
+            k.fechar()  # falha fechada sem vazar o lock
+            raise
         return k
 
     def _replay_de_zero(self, sessao_id: str) -> None:
+        _validar_id(sessao_id, "sessao_id")
         caminho_env = os.path.join(self.raiz, "sessoes",
                                    f"{sessao_id}.envelope.json")
         with open(caminho_env, "rb") as f:
@@ -730,7 +887,20 @@ class SessionKernel:
         self.log = EventLog(caminho_log, hash_genese)
         for registro in registros:
             evento = registro["evento"]
-            payload = json.loads(self.cas.ler(evento.payload_ref))
+            # 0.2.1-11: mesma linhagem, causado_por na cadeia e payload
+            # existente/integro no CAS — tudo falha fechada no replay.
+            if evento.linhagem_id != envelope.linhagem_id:
+                raise EventoAdulterado(
+                    f"evento de outra linhagem na seq {evento.seq}")
+            if evento.causado_por is not None \
+                    and evento.causado_por not in self._eventos_vistos:
+                raise EventoAdulterado(
+                    f"causado_por fora da cadeia na seq {evento.seq}")
+            try:
+                payload = json.loads(self.cas.ler(evento.payload_ref))
+            except FileNotFoundError as exc:
+                raise CorrupcaoDetectada(
+                    f"payload ausente no CAS: {evento.payload_ref}") from exc
             self._aplicar(evento, payload)
 
     @classmethod
@@ -742,33 +912,58 @@ class SessionKernel:
         IP-2: checkpoint invalido, cadeia quebrada ou selo divergente =
         sessao nao retoma (CheckpointInvalido); o chamador escalona.
         Attempts sem conclusao viram orfaos -> indeterminado (D6 §4).
+        0.2.1-8: o checkpoint e escolhido pelo ULTIMO evento valido/seq
+        ancorado na cadeia — nunca pelo nome (UUID) do arquivo.
         """
         k = cls(raiz, relogio, raizes_fontes=raizes_fontes, resolvedor=resolvedor)
+        k._adquirir_lock(sessao_id)  # escritor unico (0.2.1-4)
+        try:
+            return k._retomar_interno(sessao_id)
+        except BaseException:
+            k.fechar()  # falha fechada sem vazar o lock
+            raise
+
+    def _retomar_interno(self, sessao_id: str) -> "SessionKernel":
+        k = self
+        _validar_id(sessao_id, "sessao_id")
         diretorio = os.path.join(k.raiz, "checkpoints", sessao_id)
         if not os.path.isdir(diretorio):
             raise CheckpointInvalido("nenhum checkpoint para a sessao")
-        arquivos = sorted(os.listdir(diretorio))
-        if not arquivos:
-            raise CheckpointInvalido("nenhum checkpoint para a sessao")
-        with open(os.path.join(diretorio, arquivos[-1]), "rb") as f:
-            dados = json.loads(f.read())
-        checkpoint = ct.Checkpoint.from_dict(dados)
-        checkpoint.validate()
-        corpo = {c: v for c, v in checkpoint.to_dict().items()
-                 if c not in ("validacao", "selo")}
-        if not hmac_mod.compare_digest(k._selo(canonico(corpo)),
-                                       checkpoint.selo):
-            raise CheckpointInvalido("IP-2: selo do checkpoint divergente")
+        # Candidatos: parse + schema + selo HMAC validos.
+        candidatos = []
+        for nome in os.listdir(diretorio):
+            if not nome.endswith(".json"):
+                continue
+            try:
+                with open(os.path.join(diretorio, nome), "rb") as f:
+                    dados = json.loads(f.read())
+                cp = ct.Checkpoint.from_dict(dados)
+                cp.validate()
+            except (OSError, UnicodeDecodeError, json.JSONDecodeError,
+                    ct.FalhaContrato):
+                continue  # ilegivel/fora de schema: nao e candidato
+            corpo = {c: v for c, v in cp.to_dict().items()
+                     if c not in ("validacao", "selo")}
+            if not hmac_mod.compare_digest(k._selo(canonico(corpo)), cp.selo):
+                continue  # IP-2: selo divergente, descartado
+            candidatos.append(cp)
+        if not candidatos:
+            raise CheckpointInvalido(
+                "nenhum checkpoint com selo valido para a sessao")
         k._replay_de_zero(sessao_id)  # levanta em cadeia quebrada/adulterada
-        refs = checkpoint.estado_refs
         registros = EventLog.verificar(k._log_path(sessao_id),
                                        k.log.hash_genese)
-        ancora = [r for r in registros
-                  if r["hash"] == refs["ultimo_evento_hash"]
-                  and r["evento"].seq == refs["seq"]]
-        if not ancora:
+        ancorados = [
+            cp for cp in candidatos
+            if any(r["hash"] == cp.estado_refs["ultimo_evento_hash"]
+                   and r["evento"].seq == cp.estado_refs["seq"]
+                   for r in registros)
+        ]
+        if not ancorados:
             raise CheckpointInvalido(
                 "IP-2: ultimo_evento_hash/seq do checkpoint fora da cadeia")
+        # Ultimo evento valido/seq — ordem por seq, nunca por UUID (0.2.1-8).
+        checkpoint = max(ancorados, key=lambda c: c.estado_refs["seq"])
         # suspensa -> retomada
         ev_retomada, _ = k._emitir(
             "sessao", {"acao": "retomar", "sessao_id": sessao_id,
@@ -849,6 +1044,8 @@ class SessionKernel:
                 self.decisoes[dec.decisao_id] = dec
                 self.vigente[dec.work_unit_id] = dec.decisao_id
                 self._evento_routing[dec.decisao_id] = evento.evento_id
+                # Hash da decisao completa no registro (0.2.1-1).
+                self._hashes_decisao[dec.decisao_id] = sha256_de(dec.to_dict())
             elif acao in ("veto", "recusa"):
                 self.recusas.append(payload)
         elif tipo == "attempt":
@@ -904,6 +1101,9 @@ class SessionKernel:
         elif tipo == "checkpoint":
             self.checkpoints.append(
                 ct.Checkpoint.from_dict(payload["checkpoint"]))
+        # Cadeia causal da sessao (0.2.1-11): causado_por validado contra
+        # este conjunto a cada emissao e no replay.
+        self._eventos_vistos.add(evento.evento_id)
 
 
 class ControlPlane:

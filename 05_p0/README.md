@@ -5,6 +5,16 @@ Implementação executável dos contratos **D5 v0.2.0** e dos componentes
 Stdlib apenas, Python 3.14, zero rede, zero dependências externas, zero
 escrita fora da raiz declarada de cada corrida.
 
+**0.2.1 (hardening)**: as 13 correções da revisão independente estão
+aplicadas — decisão canônica hasheada (mutação recusada), veredito com
+cadeia completa, reducer validado antes do append, escritor único entre
+processos (lock/lease + fencing token), idempotency key com fingerprint
+(propagada ao provider), fallback com nova decisão, ContextPackage ligado
+ao work_unit_id real com bytes no CAS, checkpoint por seq (nunca UUID),
+divergência observado×resolvido fechada, IDs validados em caminhos,
+`causado_por` na linhagem, retry 1..3 com teto de backoff e threat model
+declarado em `THREAT-MODEL.md`.
+
 ## Como rodar
 
 ```bash
@@ -12,15 +22,19 @@ escrita fora da raiz declarada de cada corrida.
 python -m unittest discover -s 05_p0/tests -v
 python 05_p0/cenarios/prova_central.py
 python 05_p0/cenarios/corridas_to.py
+python 05_p0/cenarios/cobertura.py   # cobertura de linha (stdlib trace)
 ```
 
-- Testes: 73 testes, 100% verde (1 skip explícito: symlink real no Windows
-  sem privilégio — cobertura equivalente via mock do resolvedor).
+- Testes: **91 testes, 0 falhas, 0 skips** (o antigo skip de symlink foi
+  substituído por prova REAL de junction/reparse point no Windows).
+- Cobertura de linha medida com `trace` (stdlib): **2296/2296 linhas
+  (100%)** dos módulos `ssc_p0`; relatório em `saidas/labs/cobertura/`.
 - A prova central grava `05_p0/saidas/prova_central.json`.
 - As corridas TO-1..TO-5 gravam `05_p0/saidas/to1.json`..`to5.json`.
-- Laboratórios das corridas (CAS, logs, checkpoints) ficam em
-  `05_p0/saidas/labs/`. Todos os números são **simulados** e rotulados
-  `simulado` (MR-2); nada aqui é medição real.
+- Laboratórios das corridas e dos testes (CAS, logs, checkpoints, locks)
+  ficam em `05_p0/saidas/labs/` (pasta ignorada pelo Git). Todos os
+  números são **simulados** e rotulados `simulado` (MR-2); nada aqui é
+  medição real.
 
 ## Layout
 
@@ -30,8 +44,9 @@ python 05_p0/cenarios/corridas_to.py
 │   ├── canonico.py         # JSON canônico, sha256, UUID-4, relógio injetável
 │   ├── contratos.py        # dataclasses D5: to_dict/from_dict/validate
 │   ├── estados.py          # 3 máquinas de estado; TransicaoIlegal
-│   ├── cas.py              # CAS 2/2/sha256, escrita atômica, IC-5
-│   ├── eventlog.py         # JSONL append-only, cadeia prev_event_hash, dedup
+│   ├── cas.py              # CAS 2/2/sha256, escrita atômica, IC-5, read-only
+│   ├── eventlog.py         # JSONL append-only, cadeia prev_event_hash, fingerprint
+│   ├── writelock.py        # lock/lease + fencing token (escritor único entre processos)
 │   ├── kernel.py           # SessionKernel (escritor único) + ControlPlane
 │   ├── catalogo.py         # catálogo de executores falsos + aliases
 │   ├── providers.py        # FakeProvider: bateria de falhas programável

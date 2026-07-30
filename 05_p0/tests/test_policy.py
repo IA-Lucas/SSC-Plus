@@ -1,6 +1,5 @@
 """Policy Gateway: envelope de aprovacao de custo, veto, perfil, fronteira."""
 
-import tempfile
 import unittest
 
 import apoio
@@ -9,12 +8,11 @@ from ssc_p0.router import FalhaFechadaClassificacao, RotaVetada
 
 class TestPolicy(unittest.TestCase):
     def setUp(self):
-        self._tmp = tempfile.TemporaryDirectory()
-        self.lab = apoio.novo_lab(self._tmp.name)
+        self.lab = apoio.novo_lab()
         self.k = self.lab.kernel
 
     def tearDown(self):
-        self._tmp.cleanup()
+        apoio.limpar_lab(self.lab)
 
     def _wu(self, privacidade="remoto-permitido", nivel="L2"):
         return self.lab.router.forjar(

@@ -20,6 +20,14 @@ class EventoDuplicado(Exception):
     """Mesma idempotency_key (ou evento_id) ja presente na cadeia verificada."""
 
 
+class EventoConflitoIdempotencia(Exception):
+    """Mesma idempotency_key com payload DIFERENTE: conflito (falha fechada).
+
+    Reentrega identica (mesmo fingerprint = payload_ref) e aceita e ignorada;
+    mesma chave com outro conteudo nunca e anexada.
+    """
+
+
 class EventoForaDeOrdem(Exception):
     """seq regressiva ou com buraco."""
 
@@ -45,13 +53,14 @@ class EventLog:
         self.hash_genese = hash_genese
         self._seq = 0
         self._ultimo_hash = hash_genese
-        self._chaves = {}  # idempotency_key -> evento_id
+        self._chaves = {}  # idempotency_key -> (evento_id, payload_ref)
         if os.path.exists(self.caminho):
             for registro in self.verificar(self.caminho, hash_genese):
                 evento = registro["evento"]
                 self._seq = evento.seq
                 self._ultimo_hash = registro["hash"]
-                self._chaves[evento.idempotency_key] = evento.evento_id
+                self._chaves[evento.idempotency_key] = (
+                    evento.evento_id, evento.payload_ref)
 
     def proxima_seq(self) -> int:
         return self._seq + 1
@@ -66,11 +75,18 @@ class EventLog:
         return idempotency_key in self._chaves
 
     def anexar(self, evento: Evento) -> bool:
-        """Anexa o evento. Devolve False se a idempotency_key ja existia
-        (reentrega ignorada, D5 §8.2). O chamador (Kernel) serializa."""
+        """Anexa o evento. Devolve False se a idempotency_key ja existia COM
+        O MESMO fingerprint (reentrega identica aceita e ignorada, D5 §8.2).
+        Mesma chave com payload diferente = EventoConflitoIdempotencia.
+        O chamador (Kernel) serializa."""
         evento.validate()
-        if evento.idempotency_key in self._chaves:
-            return False
+        visto = self._chaves.get(evento.idempotency_key)
+        if visto is not None:
+            if visto[1] == evento.payload_ref:
+                return False  # reentrega identica: aceita, sem efeito
+            raise EventoConflitoIdempotencia(
+                f"idempotency_key {evento.idempotency_key!r} reutilizada "
+                "com payload diferente")
         if evento.seq != self._seq + 1:
             raise EventoForaDeOrdem(
                 f"seq {evento.seq} fora de ordem (esperada {self._seq + 1})"
@@ -84,7 +100,8 @@ class EventLog:
             os.fsync(f.fileno())
         self._seq = evento.seq
         self._ultimo_hash = hash_evento(evento)
-        self._chaves[evento.idempotency_key] = evento.evento_id
+        self._chaves[evento.idempotency_key] = (
+            evento.evento_id, evento.payload_ref)
         return True
 
     @staticmethod

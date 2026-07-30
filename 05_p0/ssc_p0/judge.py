@@ -54,10 +54,8 @@ class Juiz1:
             "saida_estruturada_ref")
         if ref:
             saida = kernel.cas.ler(ref)
-        try:
-            pacote = __import__("json").loads(kernel.cas.ler(wu.contexto_ref))
-        except Exception:
-            pacote = {}
+        # 0.2.1-7: falha fechada — pacote ausente/corrompido/cruzado levanta.
+        pacote = kernel.ler_pacote(wu.contexto_ref, wu.work_unit_id)
         criterios, resultado = avaliador(saida, pacote, attempt)
         if resultado not in ct.RESULTADOS_VEREDITO:
             raise ct.FalhaContrato(f"avaliador devolveu {resultado!r}")

@@ -2,7 +2,6 @@
 
 import json
 import os
-import tempfile
 import unittest
 
 import apoio
@@ -14,12 +13,11 @@ from ssc_p0.kernel import SessionKernel
 
 class TestEventLog(unittest.TestCase):
     def setUp(self):
-        self._tmp = tempfile.TemporaryDirectory()
-        self.lab = apoio.novo_lab(self._tmp.name)
+        self.lab = apoio.novo_lab()
         self.k = self.lab.kernel
 
     def tearDown(self):
-        self._tmp.cleanup()
+        apoio.limpar_lab(self.lab)
 
     def _log_path(self):
         return os.path.join(self.k.raiz, "logs",
@@ -45,6 +43,7 @@ class TestEventLog(unittest.TestCase):
             {"fonte": "teste", "validade": "sessao", "rotulo": "nota"}, None)
         snap_vivo = apoio.snapshot_normalizado(self.k)
         # Replay do zero em kernel novo sobre o mesmo log (IP-4).
+        self.k.fechar()  # handoff limpo do escritor antes de reanexar
         k2 = SessionKernel.anexar_existente(
             self.k.raiz, self.k.envelope.sessao_id,
             relogio=self.lab.relogio)

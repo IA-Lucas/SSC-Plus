@@ -33,6 +33,7 @@ class RespostaProvedor:
     latencia_ms: int
     latencia_rotulo: str                 # sempre 'simulado'
     retry_after_ms: Optional[int]
+    idempotency_key: Optional[str] = None  # eco da chave recebida (0.2.1-5)
 
 
 class FakeProvider:
@@ -62,6 +63,7 @@ class FakeProvider:
         self.funcao_sucesso = funcao_sucesso
         self.observado_programado = observado
         self.chamadas = 0
+        self.chaves_recebidas = []  # idempotency_keys propagadas (0.2.1-5)
 
     def _derivado(self, rotulo: str, modulo: int) -> int:
         h = sha256_bytes(f"{self.seed}|{self.executor.get('modelo')}|"
@@ -83,7 +85,16 @@ class FakeProvider:
         latencia = 50 + self._derivado("latencia", 950)
         return ({"valor": valor, "tokens": tokens, "rotulo": "simulado"}, latencia)
 
-    def invocar(self, entrada: bytes, pacote: Optional[dict] = None) -> RespostaProvedor:
+    def invocar(self, entrada: bytes, pacote: Optional[dict] = None,
+                idempotency_key: Optional[str] = None) -> RespostaProvedor:
+        """0.2.1-5: a idempotency_key do Execution e propagada ao adaptador
+        (registrada e ecoada na resposta)."""
+        self.chaves_recebidas.append(idempotency_key)
+        resposta = self._invocar(entrada, pacote)
+        resposta.idempotency_key = idempotency_key
+        return resposta
+
+    def _invocar(self, entrada: bytes, pacote: Optional[dict] = None) -> RespostaProvedor:
         item = self.programa[min(self.chamadas, len(self.programa) - 1)]
         self.chamadas += 1
         if isinstance(item, str):

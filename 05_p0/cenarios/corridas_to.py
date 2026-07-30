@@ -9,7 +9,7 @@ import os
 
 from comum import DIR_FIXTURES, DIR_LABS, Lab
 from ssc_p0 import contratos as ct
-from ssc_p0.canonico import sha256_bytes
+from ssc_p0.canonico import novo_id, sha256_bytes
 from ssc_p0.evidence import EvidencePlane
 from ssc_p0.judge import Juiz1
 from ssc_p0.router import FalhaFechadaClassificacao, RotaVetada, TaskRouter
@@ -98,8 +98,10 @@ def corrida_to2():
                   seeds={"prov-a/modelo-x": seed},
                   funcoes_sucesso={"prov-a/modelo-x": _respondedor_l2})
         k = lab.kernel
+        # 0.2.1-7: o pacote nasce ligado ao work_unit_id real da WU.
+        wu_id = novo_id()
         pacote = k.montar_contexto(
-            "to2",
+            wu_id,
             [{"origem": os.path.join(DIR_FIXTURES, "to2", "repo", "kernel.py"),
               "papel": "evidencia", "inclusao": "verbatim"}],
             exclusoes=["util.py: irrelevante para a pergunta",
@@ -111,7 +113,7 @@ def corrida_to2():
                        "arquivo": "kernel.py", "linha_funcao": 5,
                        "excluir": ["util.py", "notas.txt"]},
             tipo="ato", nivel="L2", perfil=_perfil(modalidade="codigo"),
-            classe="C0", contexto_ref=pacote.hash_pacote)
+            classe="C0", contexto_ref=pacote.hash_pacote, wu_id=wu_id)
         d = lab.router.propor_decisao(
             wu, rota="padrao", selecao=lab.selecao("prov-a", "modelo-x"),
             aprovacao_custo=lab.aprovacao, motivo="L2 com contexto suficiente")

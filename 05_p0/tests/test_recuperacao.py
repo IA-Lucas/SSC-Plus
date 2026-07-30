@@ -1,7 +1,6 @@
 """Recuperacao: retry/fallback/reroteamento/reparo/escalonamento distintos,
 IR-1/IR-2, timeout, 429 Retry-After, quota, contrato, teto de custo."""
 
-import tempfile
 import unittest
 
 import apoio
@@ -11,14 +10,17 @@ from ssc_p0.judge import Juiz1
 
 class TestRecuperacao(unittest.TestCase):
     def setUp(self):
-        self._tmp = tempfile.TemporaryDirectory()
+        self._labs = []
 
     def tearDown(self):
-        self._tmp.cleanup()
+        for lab in self._labs:
+            apoio.limpar_lab(lab)
 
     def _lab(self, programa=None, **kw):
         programa = programa or {}
-        return apoio.novo_lab(self._tmp.name, programa_providers=programa, **kw)
+        lab = apoio.novo_lab(programa_providers=programa, **kw)
+        self._labs.append(lab)
+        return lab
 
     def _wu_decisao(self, lab, alternativas=None, modelo="modelo-x",
                     provedor="prov-a"):
@@ -142,10 +144,18 @@ class TestRecuperacao(unittest.TestCase):
 
     def test_fallback_fora_do_envelope_e_escalonamento(self):
         lab = self._lab({"prov-a/modelo-x": ["falha-quota"]})
-        wu, d = self._wu_decisao(lab, alternativas=self._alt_y(lab))
-        # Envelope estreito: so modelo-x permitido; fallback para y = fora.
-        d.aprovacao_custo = dict(lab.aprovacao,
+        # Envelope estreito DESDE o registro: so modelo-x permitido;
+        # fallback para y = fora. (Mutar a decisao apos o registro seria
+        # recusado — 0.2.1-1; o envelope correto nasce na proposta.)
+        envelope_estreito = dict(lab.aprovacao,
                                  modelos_permitidos=["prov-a/modelo-x"])
+        wu = lab.router.forjar(
+            intencao="tarefa de recuperacao", criterios={"tipo": "x"},
+            tipo="ato", nivel="L2", classe="C1")
+        d = lab.router.propor_decisao(
+            wu, rota="padrao", selecao=lab.selecao("prov-a", "modelo-x"),
+            alternativas=self._alt_y(lab),
+            aprovacao_custo=envelope_estreito, motivo="t")
         r = lab.execution.executar(wu, d, idempotency_key="op-fbx")
         self.assertEqual(r.status, "escalonado")
         self.assertEqual(r.detalhe, "fallback-fora-do-envelope")

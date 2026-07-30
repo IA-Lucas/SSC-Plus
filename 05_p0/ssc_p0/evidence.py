@@ -7,21 +7,28 @@ de escrita — so EventLog.verificar e CAS.ler.
 
 import json
 import os
+import re
 
 from .cas import CAS
 from .eventlog import EventLog
+
+_ID_RE = re.compile(r"^[0-9a-f]{32}$")
 
 
 class EvidencePlane:
     def __init__(self, raiz, sessao_id: str):
         self.raiz = os.path.realpath(str(raiz))
+        # 0.2.1-10: id validado antes de compor qualquer caminho.
+        if not isinstance(sessao_id, str) or not _ID_RE.match(sessao_id):
+            raise ValueError(f"sessao_id invalido: {sessao_id!r}")
         self.sessao_id = sessao_id
         with open(os.path.join(self.raiz, "sessoes",
                                f"{sessao_id}.envelope.json"), "rb") as f:
             self.envelope = json.loads(f.read())
         from .canonico import sha256_de
         self.hash_genese = sha256_de(self.envelope)
-        self.cas = CAS(os.path.join(self.raiz, "cas"))
+        # 0.2.1-10: CAS read-only — nao cria diretorios, nao grava nada.
+        self.cas = CAS(os.path.join(self.raiz, "cas"), somente_leitura=True)
 
     def _log_path(self) -> str:
         return os.path.join(self.raiz, "logs", f"{self.sessao_id}.jsonl")

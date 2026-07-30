@@ -1,7 +1,6 @@
 """Escritor unico: concorrencia serializa; segundo escritor e detectado."""
 
 import os
-import tempfile
 import threading
 import unittest
 
@@ -12,12 +11,11 @@ from ssc_p0.eventlog import EventLog
 
 class TestConcorrencia(unittest.TestCase):
     def setUp(self):
-        self._tmp = tempfile.TemporaryDirectory()
-        self.lab = apoio.novo_lab(self._tmp.name)
+        self.lab = apoio.novo_lab()
         self.k = self.lab.kernel
 
     def tearDown(self):
-        self._tmp.cleanup()
+        apoio.limpar_lab(self.lab)
 
     def _log_path(self):
         return os.path.join(self.k.raiz, "logs",

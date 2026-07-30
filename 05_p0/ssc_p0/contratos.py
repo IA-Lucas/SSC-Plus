@@ -8,7 +8,11 @@ Falha de validacao e fechada: objeto que nao valida nao entra no EventLog.
 from dataclasses import dataclass, field, fields, asdict
 from typing import Any, Optional
 
-SCHEMA_VERSION = "ssc-p0/1"
+SCHEMA_VERSION = "ssc-p0/1.1"
+
+# Limites da maquina de recuperacao (D5 §6): retry 1..3, backoff com teto.
+RETRY_MAX_TENTATIVAS = 3
+BACKOFF_TETO_MS = 60_000
 
 # --- Enums fechados (D5) ---------------------------------------------------
 
@@ -35,7 +39,7 @@ TIPOS_EVENTO = frozenset({
 })
 MOTIVOS_ESCALONAMENTO = frozenset({
     "sem-alternativa", "orcamento", "ambiguidade", "aprovacao-humana",
-    "juiz-reprovou", "indeterminado",
+    "juiz-reprovou", "indeterminado", "divergencia-executor",
 })
 DESTINOS_ESCALONAMENTO = frozenset({"humano", "decompor", "abandonar"})
 MODOS = frozenset({"read-only", "worktree", "escrita-aprovada"})
@@ -308,7 +312,15 @@ class RetryEvent(ContratoBase):
         _obrigatorio(self.retry_id, "retry.retry_id")
         _obrigatorio(self.attempt_id, "retry.attempt_id")
         _tipo(self.tentativa_n, int, "retry.tentativa_n")
+        if not 1 <= self.tentativa_n <= RETRY_MAX_TENTATIVAS:
+            raise FalhaContrato(
+                f"retry.tentativa_n fora de 1..{RETRY_MAX_TENTATIVAS}: "
+                f"{self.tentativa_n}")
         _tipo(self.backoff_ms, int, "retry.backoff_ms")
+        if not 0 <= self.backoff_ms <= BACKOFF_TETO_MS:
+            raise FalhaContrato(
+                f"retry.backoff_ms fora de 0..{BACKOFF_TETO_MS}: "
+                f"{self.backoff_ms}")
         _tipo(self.respeitou_retry_after, bool, "retry.respeitou_retry_after")
 
 

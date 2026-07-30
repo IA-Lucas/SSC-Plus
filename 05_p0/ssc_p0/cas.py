@@ -63,12 +63,48 @@ def resolver_contido(caminho: str, raizes, resolvedor=os.path.realpath) -> str:
     raise FugaDeCaminho(f"caminho fora das raizes declaradas: {caminho!r}")
 
 
-class CAS:
-    """Armazenamento de objetos imutaveis enderecados por sha256."""
+def ler_arquivo_contido(caminho: str, raizes,
+                        resolvedor=os.path.realpath) -> bytes:
+    """Le arquivo DENTRO das raizes com reducao de TOCTOU.
 
-    def __init__(self, raiz_cas: str):
+    Apos a validacao de contencao e a abertura, compara (st_dev, st_ino) do
+    descritor com os do caminho e re-resolve o caminho real: se o alvo mudou
+    entre a validacao e a leitura, falha fechada.
+    """
+    resolvido = resolver_contido(caminho, raizes, resolvedor)
+    fd = os.open(resolvido, os.O_RDONLY)
+    try:
+        st_fd = os.fstat(fd)
+        st_caminho = os.stat(resolvido)
+        if (st_fd.st_dev, st_fd.st_ino) != (st_caminho.st_dev,
+                                            st_caminho.st_ino):
+            raise FugaDeCaminho(
+                f"TOCTOU: alvo trocado apos a validacao: {caminho!r}")
+        if os.path.normcase(os.path.normpath(resolvedor(resolvido))) \
+                != os.path.normcase(os.path.normpath(resolvido)):
+            raise FugaDeCaminho(
+                f"TOCTOU: caminho real mudou apos a abertura: {caminho!r}")
+        arq = os.fdopen(fd, "rb")
+        fd = None
+        with arq:
+            return arq.read()
+    finally:
+        if fd is not None:
+            os.close(fd)
+
+
+class CAS:
+    """Armazenamento de objetos imutaveis enderecados por sha256.
+
+    somente_leitura=True (Evidence Plane): nao cria diretorios e recusa
+    qualquer gravacao (PermissionError).
+    """
+
+    def __init__(self, raiz_cas: str, somente_leitura: bool = False):
         self.raiz = os.path.realpath(str(raiz_cas))
-        os.makedirs(os.path.join(self.raiz, "objetos"), exist_ok=True)
+        self.somente_leitura = bool(somente_leitura)
+        if not self.somente_leitura:
+            os.makedirs(os.path.join(self.raiz, "objetos"), exist_ok=True)
 
     def _caminho(self, hash_hex: str) -> str:
         if (not isinstance(hash_hex, str) or len(hash_hex) != 64
@@ -88,6 +124,8 @@ class CAS:
 
     def gravar(self, dados: bytes) -> str:
         """Grava bytes e devolve o sha256. Idempotente para mesmo conteudo."""
+        if self.somente_leitura:
+            raise PermissionError("CAS somente leitura (Evidence Plane)")
         if not isinstance(dados, (bytes, bytearray)):
             raise TypeError("CAS.gravar aceita apenas bytes")
         dados = bytes(dados)
