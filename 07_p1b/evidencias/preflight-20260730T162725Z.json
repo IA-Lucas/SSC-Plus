@@ -1,0 +1,117 @@
+{
+  "tipo": "preflight-atual-p1b",
+  "gerado_em_utc": "2026-07-30T16:27:25Z",
+  "lock_escritor_unico": {
+    "sessao": "p1b-ops",
+    "pid_titular": 104580,
+    "fence": 1,
+    "expira_em": 1785429731.1194856
+  },
+  "custo_variavel": 0,
+  "chamadas_de_modelo": 0,
+  "nota": "somente sondas de diagnostico (versao/login/modelos); nenhuma invocacao de modelo; env das sondas sanitizado pela canonica preflight.economia.ambiente_sanitizado",
+  "violacoes_ambiente_nomes": [
+    "NVIDIA_API_KEY"
+  ],
+  "env_sanitizado_remove_nomes": [
+    "NVIDIA_API_KEY"
+  ],
+  "frota": [
+    {
+      "provider_id": "codex",
+      "resultado": "BLOCKED",
+      "caminho": "C:\\Users\\<USUARIO>\\AppData\\Local\\Programs\\OpenAI\\Codex\\bin\\codex.exe",
+      "versao": null,
+      "plano": null,
+      "origem_credencial": "ausente",
+      "quota": "desconhecida",
+      "modelos": [],
+      "erros": [
+        {
+          "tipo": "ChavePaygDetectada",
+          "codigo": "P1A-PAYG-ENV",
+          "detalhe": "variavel PAYG no ambiente: NVIDIA_API_KEY (payg_api = DENY)",
+          "alvo": "NVIDIA_API_KEY"
+        },
+        {
+          "tipo": "ConfigPaygPersistida",
+          "codigo": "P1A-PAYG-CONFIG",
+          "detalhe": "chave de API persistida substituindo OAuth: tokens.access_token (payg_api = DENY)",
+          "alvo": "tokens.access_token"
+        }
+      ]
+    },
+    {
+      "provider_id": "claude",
+      "resultado": "BLOCKED",
+      "caminho": "~/.local/bin/claude",
+      "versao": null,
+      "plano": null,
+      "origem_credencial": "ausente",
+      "quota": "desconhecida",
+      "modelos": [],
+      "erros": [
+        {
+          "tipo": "ChavePaygDetectada",
+          "codigo": "P1A-PAYG-ENV",
+          "detalhe": "variavel PAYG no ambiente: NVIDIA_API_KEY (payg_api = DENY)",
+          "alvo": "NVIDIA_API_KEY"
+        }
+      ]
+    },
+    {
+      "provider_id": "kimi",
+      "resultado": "BLOCKED",
+      "caminho": "~/.kimi-code/bin/kimi",
+      "versao": null,
+      "plano": null,
+      "origem_credencial": "ausente",
+      "quota": "desconhecida",
+      "modelos": [],
+      "erros": [
+        {
+          "tipo": "ChavePaygDetectada",
+          "codigo": "P1A-PAYG-ENV",
+          "detalhe": "variavel PAYG no ambiente: NVIDIA_API_KEY (payg_api = DENY)",
+          "alvo": "NVIDIA_API_KEY"
+        }
+      ]
+    },
+    {
+      "provider_id": "google",
+      "resultado": "BLOCKED",
+      "caminho": "gemini",
+      "versao": null,
+      "plano": null,
+      "origem_credencial": "ausente",
+      "quota": "desconhecida",
+      "modelos": [],
+      "erros": [
+        {
+          "tipo": "ChavePaygDetectada",
+          "codigo": "P1A-PAYG-ENV",
+          "detalhe": "variavel PAYG no ambiente: NVIDIA_API_KEY (payg_api = DENY)",
+          "alvo": "NVIDIA_API_KEY"
+        }
+      ]
+    },
+    {
+      "provider_id": "grok",
+      "resultado": "BLOCKED",
+      "caminho": "grok",
+      "versao": null,
+      "plano": null,
+      "origem_credencial": "ausente",
+      "quota": "desconhecida",
+      "modelos": [],
+      "erros": [
+        {
+          "tipo": "ChavePaygDetectada",
+          "codigo": "P1A-PAYG-ENV",
+          "detalhe": "variavel PAYG no ambiente: NVIDIA_API_KEY (payg_api = DENY)",
+          "alvo": "NVIDIA_API_KEY"
+        }
+      ]
+    }
+  ]
+}
