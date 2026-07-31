@@ -1,0 +1,57 @@
+{
+  "provider": "kimi",
+  "ts_utc": "20260731T155932Z",
+  "tipo": "revisao-p1a33",
+  "chamadas_de_modelo": 1,
+  "custo_variavel": 0,
+  "rotulo": "assinatura-oauth; UMA chamada; enforcement read-only",
+  "enforcement_read_only": "sem sandbox de filesystem no CLI (nao ha equivalente ao `--sandbox read-only` do codex): restricao PARCIAL por `--plan` + `--skills-dir` vazio, sem `-y/--yolo/--auto`; cwd descartavel; e DETECCAO INTEGRAL por manifesto SHA-256 da arvore inteira antes/depois da chamada (mutacao fora do descartavel e registrada e reprova a corrida)",
+  "tier_declarado_no_instante": {
+    "provider_id": "kimi",
+    "tier": "Allegretto",
+    "declarado_por": "proprietario",
+    "declarado_em_utc": "2026-07-31T01:31:00Z",
+    "expira_em_utc": "2026-08-01T01:31:00Z",
+    "valido_no_instante": true
+  },
+  "lock_escritor_unico": {
+    "sessao": "p1a33-ops",
+    "pid_titular": 91384,
+    "fence": 1
+  },
+  "argv_publico": [
+    "C:\\Users\\<USUARIO>/.kimi-code/bin/kimi",
+    "--plan",
+    "--skills-dir",
+    "C:\\Users\\<USUARIO>\\AppData\\Local\\Temp\\p1a33-skills-vazio-kimi-5yngzeyh",
+    "-p",
+    "<PROMPT>"
+  ],
+  "prompt_sha256": "956f052a95127119b7ad9aafdaa759ed52e1437182df02f9f04fb9a23b45c4de",
+  "pacote_sha256": "87f415031aa1c7ee6464ac6c74f73b8508912350816fc6402fde6a8e435b87c2",
+  "pacote_bytes_entregues": 318389,
+  "dir_descartavel": "C:\\Users\\<USUARIO>\\AppData\\Local\\Temp\\p1a33-revisao-kimi-7hcvj4si",
+  "dir_descartavel_arquivos_restantes": [
+    "pacote-revisao.txt"
+  ],
+  "contencao": {
+    "medida": "manifesto SHA-256 da arvore inteira antes/depois",
+    "arquivos_no_manifesto": 2841,
+    "excluido_e_declarado": [
+      "locks"
+    ],
+    "mutacoes_fora_do_descartavel": [],
+    "violada": false
+  },
+  "lock_verificado_antes_da_persistencia": true,
+  "env_vars_removidas_nomes": [
+    "NVIDIA_API_KEY",
+    "VSCODE_GIT_IPC_AUTH_TOKEN"
+  ],
+  "returncode": 1,
+  "duracao_s": 0.667,
+  "modelo_efetivo_no_banner": "DESCONHECIDO (nao exposto pelo CLI)",
+  "resposta": "",
+  "stderr_resumo": "error: Cannot combine --prompt with --plan.",
+  "quota_observavel": "nao-exposta-pelo-cli"
+}
