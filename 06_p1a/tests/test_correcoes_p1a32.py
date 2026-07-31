@@ -42,6 +42,13 @@ _ENV_LIMPO = {"PATH": os.environ.get("PATH", "")}
 _PROVEDORES = ("codex", "claude", "kimi", "google", "grok")
 
 
+class _SaidaMuda(io.StringIO):
+    """stdout de teste: os runners chamam `reconfigure`, que StringIO nao tem."""
+
+    def reconfigure(self, **kwargs):
+        return None
+
+
 def _sensores():
     """Sensores falsos verdes por provedor, com contador acessivel."""
     return {pid: apoio.sensores_dict(pid) for pid in _PROVEDORES}
@@ -275,6 +282,88 @@ class ContencaoDoReviewer(unittest.TestCase):
             with self.subTest(flag=flag):
                 self.assertNotIn(flag, argv)
 
+    # --- Fim a fim: detectar nao basta, tem de REPROVAR a corrida ----
+    #
+    # Os testes acima medem `manifesto`/`mutacoes` isolados. O que
+    # importa em operacao e outra coisa: um reviewer que escreve fora do
+    # descartavel precisa fazer a ferramenta devolver codigo de falha e
+    # gravar a violacao na evidencia. Aqui roda `revisao_p1a31.main()`
+    # de verdade, com um reviewer FALSO no lugar do CLI — zero chamada
+    # de modelo, zero rede.
+
+    def _revisao_com_reviewer_falso(self, raiz, corpo_do_reviewer):
+        import importlib.util
+        from pathlib import Path
+        caminho = os.path.join(_DIR_P1A, "evidencias", "revisao_p1a31.py")
+        spec = importlib.util.spec_from_file_location(
+            "revisao_p1a31_sob_teste", caminho)
+        modulo = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(modulo)
+
+        _escrever_lock(os.path.join(raiz, "locks"), modulo.SESSAO_LOCK, 4,
+                       time.time() + 600)
+        os.makedirs(os.path.join(raiz, "06_p1a"), exist_ok=True)
+        agora = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+        with open(os.path.join(raiz, "06_p1a", "tiers_declarados.json"),
+                  "w", encoding="utf-8") as f:
+            json.dump({"validade_maxima_horas": 24,
+                       "declaracoes": [{"provider_id": "kimi",
+                                        "tier": "allegretto",
+                                        "declarado_por": "proprietario",
+                                        "declarado_em_utc": agora,
+                                        "validade_horas": 24}]}, f)
+        pacote = os.path.join(raiz, "pacote.txt")
+        with open(pacote, "wb") as f:
+            f.write(b"pacote de mentira\n")
+
+        saida = Path(raiz) / "06_p1a" / "evidencias" / "revisao-p1a31"
+        env_minimo = {k: os.environ[k] for k in
+                      ("PATH", "SYSTEMROOT", "TEMP", "TMP", "COMSPEC",
+                       "PATHEXT") if k in os.environ}
+        with mock.patch.dict(os.environ, env_minimo, clear=True), \
+                mock.patch.object(modulo, "RAIZ", Path(raiz)), \
+                mock.patch.object(modulo, "SAIDA", saida), \
+                mock.patch.object(modulo, "COMANDOS", {
+                    "kimi": lambda tmp, skills, prompt: [
+                        sys.executable, "-c", corpo_do_reviewer]}), \
+                mock.patch.object(sys, "argv",
+                                  ["revisao_p1a31.py", "kimi", pacote]), \
+                mock.patch("sys.stdout", _SaidaMuda()):
+            rc = modulo.main()
+        gravados = sorted(os.listdir(saida))
+        with open(os.path.join(saida, gravados[0]), encoding="utf-8") as f:
+            return rc, json.load(f)
+
+    def test_reviewer_que_escreve_fora_reprova_a_corrida(self):
+        with tempfile.TemporaryDirectory() as raiz:
+            os.makedirs(os.path.join(raiz, "codigo"))
+            with open(os.path.join(raiz, "codigo", "a.py"), "w") as f:
+                f.write("original\n")
+            fora = os.path.join(raiz, "codigo", "backdoor.py").replace(
+                "\\", "\\\\")
+            rc, evidencia = self._revisao_com_reviewer_falso(
+                raiz, f"open(r'{fora}', 'w').write('escrevi fora')")
+            self.assertEqual(rc, 3, "corrida com violacao nao pode dar 0")
+            self.assertTrue(evidencia["contencao"]["violada"])
+            self.assertIn("criado: codigo/backdoor.py",
+                          evidencia["contencao"]["mutacoes_fora_do_descartavel"])
+
+    def test_reviewer_bem_comportado_nao_reprova(self):
+        # Contraprova: sem ela, um guarda que reprovasse sempre passaria
+        # no teste acima. Escrever DENTRO do descartavel e permitido.
+        with tempfile.TemporaryDirectory() as raiz:
+            os.makedirs(os.path.join(raiz, "codigo"))
+            with open(os.path.join(raiz, "codigo", "a.py"), "w") as f:
+                f.write("original\n")
+            rc, evidencia = self._revisao_com_reviewer_falso(
+                raiz, "open('rascunho.txt', 'w').write('dentro do tmp')")
+            self.assertEqual(rc, 0)
+            self.assertFalse(evidencia["contencao"]["violada"])
+            self.assertEqual(
+                evidencia["contencao"]["mutacoes_fora_do_descartavel"], [])
+            self.assertIn("rascunho.txt",
+                          evidencia["dir_descartavel_arquivos_restantes"])
+
     def test_enforcement_nao_afirma_sandbox_que_nao_existe(self):
         # Honestidade do rotulo faz parte do conserto: o kimi nao tem
         # sandbox de filesystem, e a evidencia nao pode sugerir que tem.
@@ -336,7 +425,7 @@ class LeaseAntesDaPersistencia(unittest.TestCase):
                 mock.patch.object(preflight_capsula, "_RAIZ", raiz), \
                 mock.patch.object(preflight_capsula, "classificar_frota",
                                   durante_as_sondas), \
-                mock.patch("sys.stdout", io.StringIO()):
+                mock.patch("sys.stdout", _SaidaMuda()):
             return preflight_capsula.main()
 
     def test_capsula_para_se_o_titular_muda_entre_a_sonda_e_a_gravacao(self):
@@ -458,6 +547,49 @@ class AncoragemDoPacoteNoCommit(unittest.TestCase):
     def test_duas_geracoes_produzem_o_mesmo_texto(self):
         self.assertEqual(self.spec.montar_pacote(),
                          self.spec.montar_pacote())
+
+    # --- O portao novo nao e mais fraco que o antigo ------------------
+    # O portao antigo era `rev-parse HEAD == ALVO`. Ele so tinha valor
+    # protetor porque o conteudo vinha da arvore de trabalho: dizia
+    # "o checkout e o alvo, logo o que eu li e o alvo". Lendo do banco
+    # de objetos, essa inferencia fica vazia — o checkout nao entra no
+    # pacote. Os tres testes abaixo medem que o portao novo recusa
+    # exatamente o que importa: alvo inexistente e paternidade errada.
+
+    def test_portao_recusa_commit_alvo_inexistente(self):
+        inexistente = "0" * 40
+        with mock.patch.object(self.spec, "ALVO", inexistente):
+            with self.assertRaises(SystemExit) as ctx:
+                self.spec.montar_pacote()
+        self.assertIn("commit alvo", str(ctx.exception))
+        self.assertIn("ausente do repositorio", str(ctx.exception))
+
+    def test_portao_recusa_paternidade_divergente(self):
+        # PAI trocado por um commit real, porem que nao e o pai de ALVO.
+        outro = subprocess.run(
+            ["git", "rev-parse", "HEAD"], cwd=_RAIZ_REPO,
+            capture_output=True, text=True, check=True).stdout.strip()
+        with mock.patch.object(self.spec, "PAI", outro):
+            with self.assertRaises(SystemExit) as ctx:
+                self.spec.montar_pacote()
+        self.assertIn("pai inesperado", str(ctx.exception))
+
+    def test_tree_publicado_e_o_do_alvo_e_nao_o_do_checkout(self):
+        # O gerador antigo lia `HEAD^{tree}` — o tree do CHECKOUT. So
+        # coincidia com o do alvo porque o portao forcava HEAD == ALVO.
+        # Agora o tree publicado e o do proprio ALVO, e por isso vale
+        # mesmo com o checkout em outro commit.
+        modulo = self.spec
+        tree_alvo = subprocess.run(
+            ["git", "rev-parse", f"{modulo.ALVO}^{{tree}}"], cwd=_RAIZ_REPO,
+            capture_output=True, text=True, check=True).stdout.strip()
+        tree_checkout = subprocess.run(
+            ["git", "rev-parse", "HEAD^{tree}"], cwd=_RAIZ_REPO,
+            capture_output=True, text=True, check=True).stdout.strip()
+        pacote = modulo.montar_pacote()
+        self.assertIn(f"tree:   {tree_alvo}", pacote)
+        if tree_checkout != tree_alvo:
+            self.assertNotIn(tree_checkout, pacote)
 
 
 if __name__ == "__main__":

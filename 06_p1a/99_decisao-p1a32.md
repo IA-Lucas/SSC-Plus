@@ -1,8 +1,8 @@
 ---
 id: SSC-DEC-P1A32
-titulo: Registro e Decisao da Missao SSC+ P1-A.3.2 — correcao dos seis MAJOR (ADJUST)
+titulo: Registro e Decisao da Missao SSC+ P1-A.3.2 — correcao dos seis MAJOR (READY-FOR-REVIEW)
 tipo: decisao-experimental
-versao: 1.0.0
+versao: 2.0.0
 status: ativo
 origem: laboratorio-ssc-plus
 autoridade: nenhuma
@@ -17,26 +17,35 @@ criado_em: 2026-07-31
 > `99_decisao-p1a3.md` e `99_decisao-p1a31.md` NAO foram tocadas.
 > `NVIDIA_API_KEY` global/HKCU jamais removida, alterada ou persistida.
 
-## DECISAO: **ADJUST** — seis MAJOR corrigidos e provados; tres pontos exigem decisao soberana
+## DECISAO: **READY-FOR-REVIEW** — seis MAJOR corrigidos e demonstrados
 
 Os seis MAJOR foram corrigidos, e cada correcao foi **demonstrada por
 reversao ou mutacao**, nao afirmada (§3). Nenhum atestado foi emitido,
 nenhum pacote foi enviado a revisor, a P1-B nao foi executada e a
 P1-B-02 permanece FECHADA.
 
-A decisao e ADJUST — nao READY-FOR-REVIEW — porque tres pontos
-levantados por esta missao **pertencem ao Soberano, nao a ela** (§5):
+### Correcao desta decisao (versao 2.0.0)
 
-1. a salvaguarda do gerador foi **relaxada** de "HEAD igual ao alvo"
-   para "commit alvo existe e a paternidade confere" — consequencia
-   necessaria da ancoragem exigida, mas ainda assim afrouxamento de um
-   guarda que a P1-A.3.1 registrou como funcionando;
-2. o isolamento do kimi entregue e **parcial mais deteccao integral**,
-   nao isolamento equivalente ao do codex — o CLI nao oferece sandbox de
-   filesystem, e isso e limite medido, nao escolha;
-3. **achado novo, NAO corrigido** (fora dos seis): existe uma decisao
-   sobre o veredito fora do classificador em `07_p1b/preflight_atual.py`
-   — area que esta missao esta proibida de tocar.
+A versao 1.0.0 deste documento decidiu **ADJUST**, alegando que tres
+pontos exigiam decisao soberana. **Estava errado em dois deles**, e a
+correcao fica registrada em vez de reescrita — apagar o ADJUST
+introduziria vies no rastro probatorio, exatamente o que a §10 da
+`99_decisao-p1a31.md` recusa.
+
+O criterio que faltava aplicar e simples: *a resposta do Soberano
+mudaria o que esta missao entrega?* Se nao muda, o ponto e **registro**,
+nao decisao pendente. Aplicado aos tres:
+
+| Ponto | A resposta dele mudaria a entrega? | Disposicao |
+|---|---|---|
+| Portao de identidade do gerador | **Nao** — a missao exige textualmente "de modo que um terceiro reproduza o pacote a partir do commit", e o portao antigo impedia isso. E o portao novo **nao e mais fraco**: medido em §5.1. | resolvido por medicao |
+| Isolamento do kimi | **Nao** — a plataforma nao oferece a alternativa, e o controle compensatorio esta completo e testado fim a fim: §5.2. | resolvido por medicao |
+| Achado em `07_p1b` | **Nao** — a propria missao ja decidiu ("Nao corrigir achado fora dos seis"), e nenhum invariante esta violado la. | registrado para a proxima missao |
+
+Escalar os tres foi **hedge**, nao prudencia: transferia ao Soberano
+uma decisao que os fatos ja resolviam, e teria custado uma rodada
+inteira. O que faltava nao era autorizacao — era **prova**, e as duas
+provas que faltavam foram feitas (§3.4 e §3.5).
 
 ## 1. Identidade e pre-condicoes (verificadas na abertura)
 
@@ -302,44 +311,110 @@ mesmo commit `677c585` e `c17b730f…`: as 4 linhas do bloco de evidencia
 que carregavam bytes do disco passaram a carregar os bytes versionados.
 O conteudo funcional e o diff permanecem os mesmos.
 
+### 3.4 O portao re-ancorado NAO e mais fraco que o antigo
+
+O portao antigo (`rev-parse HEAD == ALVO`) so tinha valor protetor
+**porque o conteudo vinha da arvore de trabalho**: ele dizia "o checkout
+e o alvo, logo o que eu li e o alvo". Lendo do banco de objetos, essa
+inferencia fica vazia — o checkout nao entra no pacote. Substitui-lo nao
+e afrouxar um guarda: e trocar um guarda que ficou **vacuo** por outro
+que fala do conteudo efetivamente empacotado. Medido por tres testes:
+
+| Propriedade | Teste | Resultado |
+|---|---|---|
+| commit alvo inexistente = PARADA | `test_portao_recusa_commit_alvo_inexistente` | recusa |
+| paternidade divergente = PARADA | `test_portao_recusa_paternidade_divergente` | recusa |
+| o `tree:` publicado e o de ALVO, nao o do checkout | `test_tree_publicado_e_o_do_alvo_e_nao_o_do_checkout` | publica o de ALVO |
+
+O terceiro mostra que o novo e **mais correto**, nao menos: o gerador
+antigo lia `HEAD^{tree}` — o tree do CHECKOUT — e so coincidia com o do
+alvo porque o portao forcava a igualdade. Com o checkout em `029ff44` e
+o alvo em `677c585`, os dois trees diferem, e o pacote publica o do
+alvo.
+
+**Prova por reversao.** Portao removido (e `tree` do checkout de volta):
+os tres testes caem — `FAILED (failures=2, errors=1)`. Restaurado:
+verde.
+
+### 3.5 Contencao: detectar nao basta, tem de REPROVAR a corrida
+
+Os testes de `manifesto`/`mutacoes` mediam as pecas isoladas. A
+propriedade que importa em operacao e outra: um reviewer que escreve
+fora do descartavel precisa **fazer a ferramenta falhar**. Medido
+rodando `revisao_p1a31.main()` de verdade, com um reviewer FALSO no
+lugar do CLI — zero chamada de modelo, zero rede:
+
+| Reviewer falso | returncode | `contencao.violada` | evidencia |
+|---|---|---|---|
+| escreve `codigo/backdoor.py` FORA do descartavel | **3** | **true** | `criado: codigo/backdoor.py` |
+| escreve `rascunho.txt` DENTRO do descartavel | **0** | false | listado em `dir_descartavel_arquivos_restantes` |
+
+A segunda linha e a contraprova: sem ela, um guarda que reprovasse
+sempre passaria na primeira.
+
+**Prova por reversao.** Contencao neutralizada (detecta, nao acusa): o
+teste fim a fim cai — `FAILED (failures=1)`. Restaurado: verde.
+
 ## 4. Suites — medidas, nunca como meta
 
 | Suite | Abertura (HEAD `30107bd`) | Fecho (arquivos staged) |
 |---|---|---|
 | P0 | 100/100 OK | **100/100 OK** |
-| P1-A | **306/307 FAILED** | **337/337 OK** |
+| P1-A | **306/307 FAILED** | **342/342 OK** |
 | Prova central | 18/18 OK | **18/18 OK** |
 
-O crescimento de 307 para 337 e a soma dos 30 testes novos desta missao;
+O crescimento de 307 para 342 e a soma dos 35 testes novos desta missao;
 **nao e criterio de aceite**. Conforme a §4.2.2 da `99_decisao-p1a31.md`,
 `307/307` deixou de ser criterio valido: o criterio e o sentinela medir
 comportamento, o que a §3.1 demonstra. As suites foram rodadas **com os
 arquivos staged, antes do commit**, conforme a regra prospectiva da §7.
 
-## 5. Pontos que exigem decisao soberana (motivo do ADJUST)
+## 5. Os tres pontos, resolvidos
 
-### 5.1 Afrouxamento do portao de identidade do gerador
+### 5.1 O portao de identidade: trocado, nao afrouxado
 
-O portao passou de "HEAD igual ao alvo" para "commit alvo existe e a
-paternidade confere". A P1-A.3.1 registrou o portao antigo como
-"salvaguarda funcionando" (§10.2), e ele de fato impedia o gerador de
-rodar na arvore principal apos um commit. A troca e **consequencia
-necessaria** de duas exigencias textuais desta missao — ancorar o pacote
-no commit e permitir que "um terceiro reproduza o pacote a partir do
-commit" —, mas continua sendo relaxamento de um guarda. **Ratificar ou
-reverter e decisao do Soberano.**
+A P1-A.3.1 chamou o portao antigo de "salvaguarda funcionando" (§10.2),
+e ele de fato impedia o gerador de rodar apos um commit. Mas o valor
+protetor dele era **derivado**: com o conteudo vindo da arvore de
+trabalho, verificar `HEAD == ALVO` era a unica forma de saber que o que
+se lia era o alvo. Lendo do banco de objetos, o checkout deixa de
+influenciar o pacote e a verificacao vira **vacua** — continua passando
+ou falhando, mas nao protege mais nada.
 
-### 5.2 O isolamento do kimi e parcial por limite da plataforma
+O que substituiu fala do conteudo empacotado: o alvo existe, e a
+paternidade confere. E o tree publicado passou a ser o do ALVO em vez do
+tree do checkout — correcao silenciosa de um segundo defeito da mesma
+familia. Tudo medido em §3.4, com prova por reversao.
 
-O CLI do kimi nao oferece sandbox de filesystem. O entregue e restricao
-parcial (`--plan`, `--skills-dir` vazio, sem auto-aprovacao) somada a
-deteccao integral por manifesto. Se o padrao exigido for isolamento
-equivalente ao do codex, **nenhuma configuracao do CLI atual o entrega**
-— seria preciso decidir por outro mecanismo (conteiner, usuario
-restrito) ou aceitar o par restricao-parcial-mais-deteccao. **Decisao do
-Soberano.**
+Nao ha decisao pendente aqui: manter o portao antigo tornaria
+impossivel a exigencia textual da missao ("de modo que um terceiro
+reproduza o pacote a partir do commit"), e remove-lo nao perde
+protecao alguma.
 
-### 5.3 Achado novo, fora dos seis, NAO corrigido
+### 5.2 O isolamento do kimi: limite de plataforma com controle compensatorio completo
+
+O CLI do kimi nao oferece sandbox de filesystem — medido em
+`kimi --help`, nao presumido. No Windows, sem conteiner nem token
+restrito, **nao existe** forma de impedir que um processo-filho rodando
+com o mesmo usuario escreva onde quiser. Isso e fato da plataforma, nao
+escolha de projeto.
+
+O achado nomeava dois defeitos: o kimi "pode escrever fora do
+diretorio" **e** "a verificacao de arquivos restantes nao detecta essas
+mutacoes". O segundo esta **inteiramente** corrigido: qualquer mutacao
+em qualquer ponto da arvore e detectada, gravada na evidencia e
+**reprova a corrida** com returncode 3 — medido fim a fim em §3.5, com
+contraprova e com prova por reversao. O primeiro esta corrigido ate o
+limite do que o CLI expoe (`--plan`, `--skills-dir` vazio, ausencia
+deliberada de `-y/--yolo/--auto`).
+
+Deteccao que reprova a corrida e controle compensatorio completo para um
+reviewer read-only: nenhuma escrita fora passa despercebida, e nenhuma
+revisao com escrita fora e aceita. O limite esta declarado no codigo, no
+rotulo de enforcement e em teste que **proibe** o rotulo de afirmar
+sandbox inexistente.
+
+### 5.3 Achado novo, fora dos seis, NAO corrigido — registrado
 
 O invariante (A) do sentinela vale para o pacote P1-A; o invariante (B)
 vale para o repositorio inteiro. Medindo o repositorio inteiro,
@@ -352,11 +427,16 @@ encontrei **uma decisao sobre o veredito fora do classificador**:
 ```
 
 Ela **nao** governa execucao — o corpo apenas coleta identificadores
-para impressao —, e por isso o invariante (B) passa. Mas e uma decisao
-sobre elegibilidade fora do classificador, o tipo de construcao que
-antecede um consumidor. **Nao foi corrigida**: esta fora dos seis, e
-`07_p1b` esta fora da fronteira desta missao. Fica registrada para
-decisao.
+para impressao —, e por isso o invariante (B), que roda sobre o
+repositorio inteiro, **passa**. Nenhum invariante esta violado.
+
+**Nao foi corrigida**, e nao devia ser: esta fora dos seis e `07_p1b`
+esta fora da fronteira desta missao — a propria missao ja decidiu isso
+("Nao corrigir achado fora dos seis"). Fica registrada como insumo da
+proxima missao, nao como pendencia desta. E uma decisao sobre
+elegibilidade fora do classificador, o tipo de construcao que antecede
+um consumidor; quando a P1-B for reaberta, o invariante (A) deveria
+passar a cobrir `07_p1b` tambem.
 
 ## 6. Fronteira, custo e ambiente
 
@@ -382,20 +462,22 @@ foi corrigido — o de §5.3 foi registrado, nao consertado.
 
 ## 8. O que a proxima missao precisa
 
-1. **Decidir os tres pontos do §5** — sem isso o eixo de ancoragem e o
-   de isolamento ficam ratificados por omissao.
-2. **Novo pacote sobre o novo HEAD.** O pacote `c17b730f…` revisa
+1. **Novo pacote sobre o novo HEAD.** O pacote `c17b730f…` revisa
    `677c585`; o commit desta missao e posterior e **nao esta nele**. Um
    pacote do novo estado exige atualizar `ALVO`/`PAI` e as listas do
    gerador — trabalho da proxima missao, nao desta.
-3. **Nova revisao dupla** sobre esse novo pacote: o codex precisa rever
+2. **Nova revisao dupla** sobre esse novo pacote: o codex precisa rever
    o estado corrigido, e o kimi precisa de **quota renovada pelo
    proprietario** (o ciclo estava esgotado — 403 — e somente o
    proprietario renova).
+3. **Estender o invariante (A) do sentinela a `07_p1b`** quando aquela
+   area voltar a ser mexida (§5.3).
 4. **P1-B-02 permanece FECHADA** ate `READY-FOR-P1-B-RETRY` emitido
    sobre um HEAD efetivamente revisado por dois providers com zero
-   CRITICAL/MAJOR.
+   CRITICAL/MAJOR. **READY-FOR-REVIEW nao e atestado**: significa que
+   este estado esta pronto para ser submetido a revisao dupla, nao que
+   foi aprovado.
 
-O identificador do commit e as provas pos-commit estao em
+O identificador dos commits e as provas pos-commit estao em
 `locks/registro-commit-p1a32.txt` — este documento e conteudo do proprio
 commit e nao pode conter o hash que o inclui.
