@@ -1,0 +1,40 @@
+{
+  "provider": "kimi",
+  "ts_utc": "20260731T110318Z",
+  "tipo": "revisao-p1a31",
+  "chamadas_de_modelo": 1,
+  "custo_variavel": 0,
+  "rotulo": "assinatura-oauth; UMA chamada; enforcement read-only",
+  "enforcement_read_only": "sem modo read-only headless no CLI; cwd descartavel vazio + instrucao de somente leitura; `-p` aplica a politica auto com regras estaticas de deny (docs oficiais)",
+  "tier_declarado_no_instante": {
+    "provider_id": "kimi",
+    "tier": "Allegretto",
+    "declarado_em_utc": "2026-07-31T01:31:00Z",
+    "expira_em_utc": "2026-08-01T01:31:00Z",
+    "valido_no_instante": true
+  },
+  "lock_escritor_unico": {
+    "sessao": "p1a31-ops",
+    "pid_titular": 70536
+  },
+  "argv_publico": [
+    "C:\\Users\\<USUARIO>/.kimi-code/bin/kimi",
+    "-p",
+    "<PROMPT>"
+  ],
+  "prompt_sha256": "3c4d864dfbdbb95458114fded1ef8e810f175c09ff473b49e7636d1692753a55",
+  "pacote_sha256": "c3b5c54a2520f21196f182dc8cb3d1c94efba3b9740e2c84614096281e4bfc7e",
+  "pacote_bytes_entregues": 447693,
+  "dir_descartavel": "C:\\Users\\<USUARIO>\\AppData\\Local\\Temp\\p1a31-revisao-kimi-9zz8c87d",
+  "dir_descartavel_arquivos_restantes": [
+    "pacote-revisao.txt"
+  ],
+  "env_vars_removidas_nomes": [
+    "NVIDIA_API_KEY"
+  ],
+  "returncode": 1,
+  "duracao_s": 3.844,
+  "resposta": "",
+  "stderr_resumo": "error: failed to run prompt: provider.api_error: 403 You've reached your usage limit for this billing cycle. Your quota will be refreshed in the next cycle. To continue now, purchase extra usage or upgrade your plan: https://www.kimi.com/code/#pricing\nSee log: C:/Users/<USUARIO>/.kimi-code/logs/kimi-code.log",
+  "quota_observavel": "nao-exposta-pelo-cli"
+}

@@ -1,0 +1,46 @@
+{
+  "provider": "codex",
+  "ts_utc": "20260731T105702Z",
+  "tipo": "revisao-p1a31",
+  "chamadas_de_modelo": 1,
+  "custo_variavel": 0,
+  "rotulo": "assinatura-oauth; UMA chamada; enforcement read-only",
+  "enforcement_read_only": "--sandbox read-only --ephemeral (CLI)",
+  "tier_declarado_no_instante": {
+    "provider_id": "codex",
+    "tier": "ChatGPT Pro 5x",
+    "declarado_em_utc": "2026-07-31T01:31:00Z",
+    "expira_em_utc": "2026-08-01T01:31:00Z",
+    "valido_no_instante": true
+  },
+  "lock_escritor_unico": {
+    "sessao": "p1a31-ops",
+    "pid_titular": 70536
+  },
+  "argv_publico": [
+    "codex",
+    "exec",
+    "--sandbox",
+    "read-only",
+    "--cd",
+    "C:\\Users\\<USUARIO>\\AppData\\Local\\Temp\\p1a31-revisao-codex-f3lcxi1m",
+    "--skip-git-repo-check",
+    "--ephemeral",
+    "<PROMPT>"
+  ],
+  "prompt_sha256": "3c4d864dfbdbb95458114fded1ef8e810f175c09ff473b49e7636d1692753a55",
+  "pacote_sha256": "c3b5c54a2520f21196f182dc8cb3d1c94efba3b9740e2c84614096281e4bfc7e",
+  "pacote_bytes_entregues": 447693,
+  "dir_descartavel": "C:\\Users\\<USUARIO>\\AppData\\Local\\Temp\\p1a31-revisao-codex-f3lcxi1m",
+  "dir_descartavel_arquivos_restantes": [
+    "pacote-revisao.txt"
+  ],
+  "env_vars_removidas_nomes": [
+    "NVIDIA_API_KEY"
+  ],
+  "returncode": 0,
+  "duracao_s": 256.253,
+  "resposta": "PROVIDER: OpenAI\nMODELO-OBSERVADO: GPT-5 (Codex; identificador exato não exposto)\nCANAL: API\nPACOTE-SHA256: c3b5c54a2520f21196f182dc8cb3d1c94efba3b9740e2c84614096281e4bfc7e\nESCOPO: pacote integral; identidade declarada do commit/tree, diff, arquivos completos, suites, threat review, hashes de evidências e perguntas 1–6\nMAJOR 06_p1a/preflight_capsula.py:google-grok-PAYG — o atalho manual para Google/Grok não chama `executar_preflight` nem `_config_persistida`; chave, endpoint PAYG ou auto-topup persistidos podem resultar em SUPERVISED, contrariando os bloqueios econômicos.\nMAJOR 06_p1a/preflight/adaptadores.py:quota-esgotada — formatos como `0.0 tokens available` ou `0% quota available` escapam das regexes de esgotamento e casam `available`, classificando quota zero como disponível.\nMAJOR 06_p1a/evidencias/revisao_p1a3.py:isolamento-kimi — cwd descartável e instrução textual não restringem o filesystem; o Kimi pode escrever fora do diretório, e a verificação de arquivos restantes não detecta essas mutações.\nMAJOR 06_p1a/preflight_capsula.py+06_p1a/evidencias/revisao_p1a3.py:lease-fencing — ambos verificam o lease somente antes do trabalho, não imediatamente antes da persistência; após chamadas superiores aos 120 s do lease, podem gravar com lease expirado ou titular substituído.\nMINOR 06_p1a/tests/test_emendas_p1a3.py:anti-P2 — não-bloqueante: o teste limita-se a `06_p1a` e a duas grafias literais, não detectando consumidores externos ou variantes com aspas simples/enum; o changeset apresentado não contém consumidor efetivo.\nVEREDITO: REPROVADO",
+  "stderr_resumo": "Reading additional input from stdin...\nOpenAI Codex v0.145.0\n--------\nworkdir: C:\\Users\\<USUARIO>\\AppData\\Local\\Temp\\p1a31-revisao-codex-f3lcxi1m\nmodel: gpt-5.6-sol\nprovider: openai\napproval: never\nsandbox: read-only\nreasoning effort: high\nreasoning summaries: none\nsession id: 019fb7d2-0825-7981-8d40-56f709b9e571\n--------\nuser\nRevise em modo SOMENTE LEITURA o pacote SSC+ P1-A.3.1. O pacote completo (identidade do commit/tree, diff integral, arquivos completos, suites, threat review, hashes de evidencias e as perguntas 1-6) esta em ./pacote-revisao.txt no diretorio atual: leia-o POR INTEIRO antes de avaliar. Voce NAO pode escrever nada: responda apenas com a revisao em texto.\n\nDeclare obrigatoriamente, uma linha cada, ANTES dos achados:\nPROVIDER: <seu provider>\nMODELO-OBSERVADO: <o modelo que voce observa ser>\nCANAL: <canal de acesso, ex.: assinatura OAuth>\nPACOTE-SHA256: <SHA-256 de ./pacote-revisao.txt — compute, ex.: `sha256sum pacote-revisao.txt` ou `python -c \"import hashlib;print(hashlib.sha256(open('pacote-revisao.txt','rb').read()).hexdigest())\"`>\nESCOPO: <o que voce revisou>\n\nDepois: um achado por linha, prefixado por severidade CRITICAL | MAJOR | MINOR | OBS, seguida de arquivo:tema e descricao curta. Para cada MINOR, classifique como bloqueante ou nao-bloqueante, com motivo. Se nao houver achado num nivel, nao o invente. Termine com VEREDITO: APROVADO | APROVADO-COM-RESSALVAS | REPROVADO.\ncodex\nVou ler o pacote integralmente e conferir seu SHA-256, mantendo a revisão estritamente em somente leitura. Depois avalio o diff, arquivos, testes, threat review, evidências e respostas 1–6 no formato exigido.\nexec\n\"C:\\\\Program Files\\\\WindowsApps\\\\Microsoft.PowerShell_7.6.4.0_x64__8wekyb3d8bbwe\\\\pwsh.exe\" -Command \"Get-Item -LiteralPath .\\\\pacote-revisao.txt | Select-Object FullName,Length; Get-FileHash -Algorithm SHA256 -LiteralPath .\\\\pacote-revisao.txt | Select-Object Algorithm,Hash\" in C:\\Users\\<USUARIO>\\AppData\\Local\\Temp\\p1a31-revisao-codex-f3lcxi1m\n2026-07-31T10",
+  "quota_observavel": "nao-exposta-pelo-cli"
+}
