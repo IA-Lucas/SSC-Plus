@@ -14,6 +14,14 @@ for desfeita. Os seis alvos, na numeracao de 99_decisao-p1a31.md:
 
 Nenhum teste invoca CLI real, rede ou modelo: sensores falsos, locks de
 mentira em diretorio temporario e o proprio banco de objetos do git.
+
+RESSALVA ADICIONADA PELA P1-A.3.4 — esta propriedade do arquivo e
+tambem o seu limite. A frase acima descreve com exatidao por que o
+MAJOR #3 passou quebrado: dois testes de argv aqui ficaram VERDES,
+atravessando duas missoes, enquanto o CLI do kimi recusava o comando que
+eles aprovavam.
+O que se afirma contra uma interface externa precisa ser exercido contra
+ela; ver `test_cli_real_p1a34.py`.
 """
 
 import io
@@ -269,8 +277,14 @@ class ContencaoDoReviewer(unittest.TestCase):
             self.assertIn("a.py", manifesto)
 
     def test_argv_do_kimi_usa_a_restricao_que_o_cli_oferece(self):
+        # CORRIGIDO na P1-A.3.4. Este teste exigia `--plan` no argv e
+        # ficou VERDE enquanto o CLI recusava o comando inteiro: ele media
+        # a forma da lista, nunca a interface. A propriedade que importa —
+        # o CLI ACEITA este argv — nao e verificavel aqui, e por isso vive
+        # em `test_cli_real_p1a34.py`, que invoca o CLI de verdade. O que
+        # resta a este teste e a forma, e ele agora declara isso.
         argv = contencao.argv_kimi("/bin/kimi", "revise", "/tmp/skills-vazio")
-        self.assertIn("--plan", argv)
+        self.assertNotIn("--plan", argv)  # recusado com -p pelo kimi 0.30.0
         self.assertIn("--skills-dir", argv)
         self.assertEqual(argv[argv.index("--skills-dir") + 1],
                          "/tmp/skills-vazio")

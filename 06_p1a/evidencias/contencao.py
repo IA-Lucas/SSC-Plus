@@ -17,6 +17,27 @@ aparece em lugar nenhum. As duas metades do conserto vivem aqui:
   `mutacoes`): SHA-256 de cada arquivo da arvore antes e depois da
   chamada. O que a instrucao textual nao impede, o manifesto acusa.
 
+CORRECAO P1-A.3.4 — a primeira metade acima estava INEXECUTAVEL. A
+P1-A.3.3 (§4) mediu, invocando o CLI de verdade, que o kimi 0.30.0
+recusa `--plan` junto com `-p/--prompt`:
+
+    error: Cannot combine --prompt with --plan.
+
+`--plan` era, portanto, restricao NENHUMA: ele nao restringia a corrida,
+ele a IMPEDIA por inteiro — desde a P1-A.3.2 nenhuma chamada headless ao
+kimi era possivel por esta ferramenta. `argv_kimi` deixa de emiti-lo.
+
+Por que `kimi --help` nao bastou para pegar isso: `--help` lista as
+flags ISOLADAMENTE e as duas existem de fato; a incompatibilidade so
+aparece na COMBINACAO, que so a invocacao revela. Medir o cardapio nao e
+exercer a interface — e a mesma classe do achado #6.
+
+Plan mode nao tem substituto headless em 0.30.0: `--plan` e eixo de
+sessao interativa. O que resta de restricao REAL pelo CLI e o modo de
+permissao — o binario declara `Use one of: yolo / manual / auto` —, do
+qual `-y/--yolo` e `--auto` sao justamente os dois nao-restritivos. Nao
+passa-los e a restricao que sobra, e ela e verificada por teste.
+
 A honestidade do rotulo faz parte do conserto: o kimi NAO tem sandbox de
 filesystem como o `--sandbox read-only` do codex. O que se afirma aqui e
 o que se mede — restricao parcial pelo CLI mais deteccao integral por
@@ -39,9 +60,9 @@ import os
 # e nao silenciosa: tudo mais da arvore entra, inclusive `.git`.
 EXCLUIDOS_DO_MANIFESTO = ("locks",)
 
-# Restricoes REAIS que o CLI do kimi oferece, medidas em `kimi --help`
-# (0.30.x): NAO existe `--sandbox read-only` como no codex.
-#   --plan            modo de plano — o modo mais restritivo do CLI;
+# Restricoes REAIS que o CLI do kimi oferece em modo headless (`-p`),
+# medidas EXERCENDO o CLI 0.30.0, nao lendo `--help`: NAO existe
+# `--sandbox read-only` como no codex.
 #   --skills-dir DIR  carrega skills SOMENTE de DIR; apontado para um
 #                     diretorio vazio, impede que skills do usuario ou do
 #                     projeto sejam carregadas e ajam.
@@ -49,6 +70,21 @@ EXCLUIDOS_DO_MANIFESTO = ("locks",)
 # auto-aprovariam chamadas de ferramenta sem perguntar. A ausencia deles
 # e deliberada e verificada por teste.
 FLAGS_DE_AUTO_APROVACAO = ("-y", "--yolo", "--auto")
+
+# Flags que o CLI RECUSA em combinacao com `-p/--prompt` — medido, nao
+# presumido (P1-A.3.3 §4; reexercido pelo teste de CLI real da P1-A.3.4).
+# Emitir qualquer uma delas aborta a corrida na validacao de argumentos,
+# antes da rede: o efeito e impedir a chamada, nunca restringi-la.
+FLAGS_INCOMPATIVEIS_COM_PROMPT = ("--plan",)
+
+# Marcador do erro de validacao de argumentos do kimi 0.30.0. O CLI
+# distingue duas classes de falha, e so a segunda prova que o argv foi
+# ACEITO: `error: <problema de argumento>` acontece ANTES de qualquer
+# trabalho; `error: failed to run prompt: ...` so acontece DEPOIS de o
+# parser aprovar o comando. O teste de CLI real usa exatamente essa
+# fronteira para provar aceitacao sem gastar chamada de modelo.
+PREFIXO_ERRO_DE_ARGUMENTO = "error: "
+MARCADOR_ARGV_ACEITO = "failed to run prompt"
 
 
 def manifesto(raiz, excluir=EXCLUIDOS_DO_MANIFESTO) -> dict:
@@ -93,18 +129,21 @@ def mutacoes(antes: dict, depois: dict) -> list:
 
 
 def argv_kimi(executavel: str, prompt: str, dir_skills: str) -> list:
-    """Comando do kimi com a restricao maxima que o CLI oferece.
+    """Comando do kimi com a restricao maxima que o CLI oferece — e que ELE ACEITA.
 
     Sem `-y`, sem `--yolo` e sem `--auto` — ver FLAGS_DE_AUTO_APROVACAO.
+    Sem `--plan` — ver FLAGS_INCOMPATIVEIS_COM_PROMPT: o CLI o recusa em
+    combinacao com `-p`, e o comando inteiro morre na validacao.
     """
-    return [executavel, "--plan", "--skills-dir", dir_skills, "-p", prompt]
+    return [executavel, "--skills-dir", dir_skills, "-p", prompt]
 
 
 def enforcement_kimi() -> str:
     """Rotulo do enforcement do kimi — o que se mede, nao o que se quer."""
     return ("sem sandbox de filesystem no CLI (nao ha equivalente ao "
-            "`--sandbox read-only` do codex): restricao PARCIAL por "
-            "`--plan` + `--skills-dir` vazio, sem `-y/--yolo/--auto`; "
+            "`--sandbox read-only` do codex) e sem plan mode em headless "
+            "(o CLI recusa `--plan` com `-p`): restricao PARCIAL por "
+            "`--skills-dir` vazio, sem `-y/--yolo/--auto`; "
             "cwd descartavel; e DETECCAO INTEGRAL por manifesto SHA-256 "
             "da arvore inteira antes/depois da chamada (mutacao fora do "
             "descartavel e registrada e reprova a corrida)")
