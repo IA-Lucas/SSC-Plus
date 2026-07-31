@@ -490,3 +490,128 @@ Exigir o portao fechado antes de encerrar tornaria `BLOCKED`
 inalcancavel e obrigaria a missao a fabricar um veredito para poder
 terminar — o oposto do que o ato protege. O portao fica **em aberto e
 registrado como tal**, que e a unica forma honesta de deixa-lo.
+
+## 10. Verificacao independente pos-fechamento — e um achado no escritor unico
+
+Secao aditiva, escrita sob a **terceira** aquisicao do escritor desta
+missao (**fence 5**), depois de o fechamento ter liberado o lock em
+fence 4. Nao reabre a decisao e nao produz veredito: registra fatos
+medidos DEPOIS do fechamento que tocam o eixo "escritor unico", um dos
+que o ato manda o revisor avaliar. Precedente da forma: `ba10be2`
+emendou o registro criado por `3b91868`.
+
+O motivo de existir: as §§1.1 e 5 afirmam coisas sobre locks e sobre
+suites que sao **verdadeiras e incompletas**. A verificacao abaixo
+completa-as, e o que ela revelou nao estava em lugar nenhum do acervo.
+
+### 10.1 O que foi remedido — e conferiu
+
+Nada aqui foi herdado do registro; tudo foi medido de novo, com HEAD em
+`ba10be2`:
+
+| Medida | Resultado |
+|---|---|
+| Suite P0 | **100/100 OK** |
+| Suite P1-A | **342/342 OK** |
+| Pacote, duas geracoes em descartaveis independentes | `87f41503…b87c2`, **318.389 bytes** nas duas |
+| Locks pelo protocolo | 8 leases; dois manifestos a **105 s** de intervalo com `expira_em` inalterado em todos; nenhum `renovador_lock.py` — **nenhuma sessao viva** |
+| Kimi | **0.30.0**; `-p/--prompt` e `--plan` existem e sao mutuamente exclusivos |
+| Codex | limite de ciclo; reset declarado pelo provedor em **5/8/2026 09:29** |
+
+A reproducao do pacote saiu **mais forte que a da §2.1**. La o hash foi
+reproduzido de checkouts limpos de `ac03f3a` e de `30107bd` e de uma
+arvore deliberadamente mutada. Aqui ele foi reproduzido com o HEAD em
+`ba10be2`, cuja arvore contem **seis arquivos que nao existem em
+`ac03f3a`** — e o hash nao se moveu. E a forma mais forte da propriedade:
+um terceiro reproduz o pacote **depois de commits posteriores**, que e
+exatamente o que o docstring do gerador afirma e o que o MAJOR #5 pedia.
+Nenhuma mutacao deliberada foi necessaria: a divergencia entre a arvore
+e `ac03f3a` ja e o contraexemplo.
+
+### 10.2 ACHADO — a suite P1-A escreve no `locks/` REAL, e `liberar()` nao limpa o lease
+
+Dois fatos, ambos verificaveis por leitura direta:
+
+```
+06_p1a/tests/test_estabilizacao_p1a1.py:359
+    locks = os.path.join(os.path.dirname(DIR_P1A), "locks")
+    titular = EscritorP1(locks, sessao="p1-ops")
+
+06_p1a/escritor.py:82
+    def liberar(self) -> None:
+        self._lock.liberar()          # so o lock do SO; o .lease fica
+```
+
+O primeiro: o teste adquire o escritor unico sobre o `locks/` **do
+proprio repositorio**, nao sobre um `tmpdir`. O segundo: `liberar()`
+solta o lock do sistema operacional e **nao toca o arquivo de lease**,
+que sobrevive com `expira_em = aquisicao + 900 s` (`LEASE_PADRAO_S`).
+
+Consequencia: **toda corrida da suite P1-A deixa um `p1-ops` que le como
+"nao vencido, titular morto" por ate 15 minutos.** Medido nesta
+verificacao: `p1-ops` pid **122000**, token **58**, gravado as
+**16:27:52Z** pela execucao da suite acima — pid ja morto na leitura
+seguinte.
+
+### 10.3 O que isso completa na §1.1
+
+A §1.1 registrou `p1-ops` com pid **121600** como "titular morto com
+lease ainda na janela" e tratou os dois leases nao vencidos como
+residuo de sessoes anteriores. **A leitura estava certa e o protocolo
+estava certo** — dois manifestos e ausencia de renovador provaram que
+nenhuma sessao estava viva, e nada do que a §1.1 conclui muda.
+
+O que faltava era a **causa**. Aquele lease nao era residuo generico: a
+§1.1 mediu na abertura, as ~12:53, antes das suites desta missao, de
+modo que o pid 121600 veio da corrida de suite da missao anterior
+(P1-A.3.2 commitou as 12:27 e 12:41, com suites antes). A atribuicao por
+horario e inferencia, nao prova direta; o **mecanismo**, esse, esta
+provado, porque foi reproduzido aqui com pid novo. O artefato e
+fabricado pela suite que o proprio ato manda rodar.
+
+A armadilha que isso arma: a pre-condicao *"Outra sessao viva: BLOCKED"*,
+se avaliada por vencimento de lease, da **falso positivo por ate 900 s
+depois de qualquer corrida da suite P1-A** — e a suite roda em toda
+missao, por ordem do ato, minutos antes da medicao dos locks. E irma da
+armadilha do `p1b-ops` ja registrada na §1.1 (pid reciclado como
+`svchost`): uma engana quem checa so o pid, a outra engana quem checa so
+o vencimento. **So o protocolo dos dois manifestos derrota as duas.**
+
+Nao ha bloqueio real: o lock do SO fica livre e o sucessor adquire
+normalmente — esta secao foi escrita sob fence 5, adquirido sem disputa.
+
+### 10.4 Impacto e decisao explicita
+
+**Impacto:** contamina o *sinal* da pre-condicao, nao o *controle*. O
+fail-closed de `verificar_lock` continua intacto: ele exige lease vivo
+E fence igual, e o fence e monotonico. O risco e uma missao futura parar
+em `BLOCKED` por uma sessao que nao existe, ou — pior — um operador
+concluir que o lease "vivo" com titular morto e normal e passar a
+ignorar o sinal.
+
+**Decisao: NAO corrigido.** Exige alteracao de codigo — `liberar()`
+expirar o lease que concedeu, ou o teste usar `tmpdir` — e o ato e
+explicito: *"Achado que exija alteracao de codigo ou politica encerra em
+ADJUST; nao corrigir dentro desta missao."* Fica como insumo da proxima,
+ao lado de `argv_kimi` (§4), com o mesmo tratamento que a P1-A.3.2 deu
+ao achado de `07_p1b/preflight_atual.py:172`.
+
+**Classe.** E a mesma do achado #6 e da §4: um guarda cujo sinal e
+medido no lugar errado. Na §4 um teste media a forma de uma lista em vez
+de exercer o CLI; aqui um teste exerce o estado de lock **de producao**
+em vez de um isolado. Nos dois casos a leitura do codigo aprovava e so o
+**exercicio** reprovou — a §4 apareceu ao chamar o kimi de verdade, esta
+apareceu ao rodar a suite de verdade e depois olhar os locks.
+
+### 10.5 A decisao nao muda, e o proprio escritor desta secao ilustra o achado
+
+**BLOCKED.** Nenhum veredito foi obtido; esta secao nao produz nenhum.
+Os dois bloqueadores foram remedidos agora e continuam de pe (§10.1).
+`P1-B-02` permanece **FECHADA**. Nenhum dos seis MAJOR fechou.
+
+Registro final, porque omiti-lo seria esconder o achado dentro da
+propria secao que o denuncia: o renovador que sustentou esta escrita
+chama `liberar()` no encerramento e, pelo mesmo defeito da §10.2,
+deixara `p1a33-ops` lendo como "vivo" por ate 120 s apos a liberacao.
+**Registrado, nao escondido** — e e por isso que o fechamento desta
+secao mede o lock pelo protocolo, nunca pelo vencimento.
