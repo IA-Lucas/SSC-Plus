@@ -427,3 +427,66 @@ que a divergencia de round-trip nao torna afirmacao alguma irreproduzivel
    sobre um HEAD efetivamente revisado por dois providers com zero
    CRITICAL/MAJOR. Esta missao nao produziu veredito algum: nao houve
    aprovacao **nem** reprovacao do estado corrigido.
+
+## 9. Alcance — o que esta missao estabelece e o que NAO estabelece
+
+O ato manda registrar o **alcance**. Sem ele, um leitor futuro tende a
+ler "suites verdes + ancoragem provada" como se fosse aprovacao. Nao e.
+
+### 9.1 Estabelecido — medido, e independente de qualquer revisor
+
+Estes fatos nao dependem de veredito e sobrevivem a esta missao:
+
+| Fato | Como foi estabelecido | Reproduzivel por terceiro? |
+|---|---|---|
+| O pacote e funcao dos commits, nao do checkout | 5 geracoes identicas, incluindo worktree limpa em **outro** commit e arvore deliberadamente mutada | sim — `git cat-file blob` + o gerador |
+| As suites passam no HEAD revisado e no HEAD desta missao | 100/100, 342/342, 18/18 em checkout limpo | sim |
+| O sentinela anti-P2 mede comportamento, nao lista | dois `.py` novos sob `06_p1a` **nao** o acionaram; sob o sentinela antigo teriam acionado | sim |
+| A metade "deteccao" do MAJOR #3 funciona | exercida nas duas corridas: manifesto de 2.841 e 2.842 arquivos, zero mutacao fora do descartavel | sim |
+| A verificacao de lease do MAJOR #4 funciona | exercida de verdade antes das duas persistencias, com fence conferido | sim |
+| **A metade "restricao pelo CLI" do MAJOR #3 esta QUEBRADA** | o CLI recusou o argv que o codigo monta (§4) | sim — basta invocar |
+
+### 9.2 NAO estabelecido — e nao se presume
+
+- **Nenhum dos seis MAJOR esta fechado.** Fechamento, no sentido do ato,
+  e pronunciamento de revisor independente. Nenhum revisor falou. Os
+  cinco MAJOR restantes (#1, #2, #4, #5, #6) tem correcao e teste de
+  falha registrados — o que os torna **candidatos a fechamento**, nunca
+  fechados.
+- **O estado corrigido nao foi aprovado nem reprovado.** A ausencia de
+  reprovacao nao e aprovacao, e a ausencia de veredito nao e ressalva.
+- **A quota do kimi nao foi medida.** Nao se afirma disponivel nem
+  esgotada; a chamada morreu antes da rede.
+- **Nada foi estabelecido sobre autorizacao de P1-B em modo sombra.** O
+  eixo (12) das perguntas nunca foi respondido por ninguem.
+- **O alcance do proprio achado da §4 e limitado ao que foi exercido:**
+  o kimi recusa `--plan` junto com `-p` na versao 0.30.0 instalada.
+  Nao se afirma nada sobre outras versoes do CLI.
+
+### 9.3 A assimetria entre abrir e fechar um defeito
+
+Vale registrar, porque governa a leitura do achado da §4: **abrir** um
+defeito e **fechar** um defeito nao exigem a mesma autoridade.
+
+Abrir e afirmacao de existencia, e um contraexemplo basta: o CLI recusou
+o comando, e isso e fato verificavel por quem repetir a invocacao — nao
+importa quem descobriu. Por isso o achado da §4 vale integralmente
+embora tenha sido produzido pela propria missao.
+
+Fechar e afirmacao universal — "nao ha mais defeito aqui" — e nenhuma
+execucao a demonstra. Por isso o ato exige revisor independente e por
+isso *"quem corrigiu nao certifica"*. Esta missao, que nao corrigiu
+nada, pode abrir; nao pode fechar.
+
+### 9.4 Por que BLOCKED encerra, com o portao em aberto
+
+O portao ("zero CRITICAL e zero MAJOR nos **dois vereditos**") e a
+condicao de `READY-FOR-P1-B-RETRY`, nao condicao de encerrar. Ele e
+inalcancavel quando nao existe veredito — e e exatamente para esse caso
+que o ato oferece `BLOCKED` no conjunto de decisao e manda *"commitar o
+registro qualquer que seja o veredito, inclusive ADJUST e BLOCKED"*.
+
+Exigir o portao fechado antes de encerrar tornaria `BLOCKED`
+inalcancavel e obrigaria a missao a fabricar um veredito para poder
+terminar — o oposto do que o ato protege. O portao fica **em aberto e
+registrado como tal**, que e a unica forma honesta de deixa-lo.
