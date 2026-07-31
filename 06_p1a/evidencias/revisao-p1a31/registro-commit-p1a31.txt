@@ -1,0 +1,108 @@
+REGISTRO DE COMMIT — SSC+ P1-A.3.1 (micro-commit probatorio)
+=============================================================
+
+commit:  dc19e8caf0af1b36ccb6e4cdcd9645912acbd6b8
+pai:     677c5853cf3d504696e7d2e326287cc1a8a37f38
+sessao:  p1a31-ops, fence 1, lease vivo em toda a mutacao Git
+sem tag, sem remoto, sem push
+
+CONTEUDO: 8 arquivos novos, 9440 insercoes, ZERO arquivo rastreado
+modificado/removido/renomeado. Conteudo funcional de 677c585 verificado
+byte a byte intacto (diff vazio em 05_p0, 06_p1a/preflight,
+preflight_capsula.py, 06_p1a/tests, tiers_declarados.json, capsula.py,
+escritor.py). 99_decisao-p1a3.md intocada.
+
+PORTOES PRE-COMMIT
+------------------
+[OK]  git hash-object filtrado == --no-filters nos 8 caminhos
+      (2 JSONs divergiram na 1a passagem -> .gitattributes escopado)
+[OK]  round-trip via git checkout-index + cmp: 8/8 identicos
+      (3 caminhos divergiram na 1a passagem -> escopo estendido com
+       06_p1a/.gitattributes; 1 divergencia auto-referente do proprio
+       .gitattributes corrigida com a entrada /.gitattributes -text)
+[OK]  diff metadata-only; nenhuma credencial no staged
+
+PORTOES POS-COMMIT
+------------------
+[OK]      arvore limpa apos o commit
+[OK]      recheckout em worktree destacada em dc19e8c: 8/8 arquivos
+          byte a byte identicos ao commitado
+[OK]      P0            -> Ran 100 tests, OK (100/100)
+[OK]      prova central -> 18 assercoes, 20 eventos, OK (18/18)
+[REPROVA] P1-A          -> Ran 307 tests, FAILED (failures=1) = 306/307
+
+FALHA (ACHADO NOVO #6 — sentinela anti-P2 e lista exata)
+--------------------------------------------------------
+teste: test_emendas_p1a3.RevisaoRodada4
+       .test_shadow_eligible_nao_tem_consumidor_de_execucao
+       (06_p1a/tests/test_emendas_p1a3.py:642)
+
+O teste faz `os.walk` no diretorio 06_p1a — varre o FILESYSTEM, nao o
+git — e exige igualdade EXATA entre a lista de arquivos .py que contem
+o literal SHADOW_ELIGIBLE e uma allowlist fixa de 6 caminhos. O arquivo
+novo 06_p1a/evidencias/pacote_p1a31.py contem esse literal no texto das
+perguntas de revisao (pergunta 2), sem qualquer logica sobre o valor.
+Resultado: a lista passa a ter 7 elementos e a assercao falha.
+
+Medicao em checkouts limpos (worktrees destacadas), que separa
+contaminacao de copia de trabalho de regressao commitada:
+
+  677c585 (checkout limpo) -> P1-A 307/307 OK
+  dc19e8c (checkout limpo) -> P1-A 306/307 FAILED
+
+Conclusao: a falha NAO e artefato da copia de trabalho. O micro-commit
+converteu uma contaminacao latente (o arquivo ja existia em disco desde
+que a ferramenta foi escrita, e por isso a falha ja ocorria localmente
+antes do commit) em REGRESSAO COMMITADA do sentinela.
+
+Nao e regressao funcional: nenhum codigo, teste ou politica foi alterado
+e nenhum consumidor de execucao foi introduzido. E falso-positivo do
+sentinela — mas o sentinela e um portao verde/vermelho e esta vermelho.
+
+RECLASSIFICACAO DO MINOR DO CODEX
+---------------------------------
+O codex classificou este teste como MINOR NAO BLOQUEANTE, com o motivo
+"o changeset apresentado nao contem consumidor efetivo". O motivo estava
+correto e a classificacao ficou incompleta: o defeito relevante nao e
+so a cobertura estreita (limitada a 06_p1a e a duas grafias literais),
+e sim a FRAGILIDADE DA LISTA EXATA — qualquer arquivo aditivo sob
+06_p1a que mencione o literal, inclusive documentacao e ferramenta de
+missao, reprova a suite. Passa a BLOQUEANTE de fato.
+
+A analise completa do achado #6 — falso positivo E falso negativo, o
+nome do teste versus o que o corpo verifica, e as consequencias
+normativas — esta em 06_p1a/99_decisao-p1a31.md secao 4.2.
+
+DECISAO DO PROPRIETARIO SOBRE dc19e8c
+-------------------------------------
+MANTER o commit. Nao reverter, nao resetar, nao alterar o teste. A
+regressao fica registrada nas duas metades (mecanicamente real,
+semanticamente falso positivo) e o conserto do sentinela e
+PRE-CONDICAO da P1-A.3.2.
+
+SEGUNDO MICRO-COMMIT (movimentacao deste registro)
+--------------------------------------------------
+Este arquivo estava nao rastreado em locks/, diretorio transitorio. Foi
+movido para 06_p1a/evidencias/revisao-p1a31/ e commitado, junto com a
+ampliacao do achado #6 no atestado, sob os mesmos portoes do primeiro
+micro-commit.
+
+Suites executadas COM OS ARQUIVOS STAGED, antes de persistir (regra nova
+do §7, decorrente do §4.2.2 item 3):
+
+  P0            -> Ran 100 tests, OK (100/100)
+  P1-A          -> Ran 307 tests, FAILED (failures=1) = 306/307
+  prova central -> 18 assercoes, OK (18/18)
+
+Resultado esperado e confirmado: P1-A permanece 306/307 pelo MESMO
+sentinela e pela MESMA unica ocorrencia
+(evidencias/pacote_p1a31.py). Os arquivos deste segundo commit sao .txt
+e .md; o sentinela varre apenas .py, portanto nao alteram a contagem.
+Qualquer numero diferente de 306/307 seria achado novo — nao houve.
+
+Nota de colisao no despacho: "zero arquivo rastreado modificado" e
+"ampliar o achado #6 no atestado" nao podem valer simultaneamente ao pe
+da letra, porque o atestado ja e rastreado. Prevaleceu a ordem explicita
+de ampliar; o "zero modificado" foi aplicado a tudo que nao seja
+artefato probatorio desta missao, e isso foi verificado no diff: o unico
+arquivo rastreado modificado e 06_p1a/99_decisao-p1a31.md.

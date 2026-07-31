@@ -41,6 +41,15 @@ cada um suficiente por si:
    copia de trabalho local, nao do conteudo versionado. Corrigi-lo e
    trabalho da proxima missao — corrigir aqui criaria novo estado nao
    revisado, exatamente o que esta missao existe para impedir.
+4. **Achado novo MAJOR desta missao: o sentinela anti-P2 mede lista de
+   caminhos, nao comportamento** (§4.2). Revelado pelo micro-commit
+   `dc19e8c`: falha por falso positivo diante de qualquer arquivo
+   aditivo que mencione o literal, e por falso negativo diante de um
+   consumidor real escrito dentro da allowlist. Consertar o sentinela e
+   **pre-condicao** da P1-A.3.2.
+
+**Total: 6 MAJOR** — 4 do codex, 2 desta missao — e 1 MINOR, cuja
+classificacao de nao bloqueante foi superada pelos fatos (§4.2).
 
 O conteudo funcional em revisao e, e continua sendo, o commit `677c585`.
 Esta missao nao alterou codigo, teste, configuracao nem documento
@@ -188,6 +197,79 @@ Correcao devida (proxima missao, nao aqui): ler as evidencias por
 `git show HEAD:<path>` — ou declarar explicitamente que sao hashes da
 copia de trabalho — e alinhar o docstring a implementacao.
 
+## 4.2 Achado #6 — o sentinela anti-P2 mede lista de caminhos, nao comportamento
+
+**MAJOR — `06_p1a/tests/test_emendas_p1a3.py:642`,
+`test_shadow_eligible_nao_tem_consumidor_de_execucao`.** Revelado pelo
+micro-commit probatorio `dc19e8c`.
+
+O teste faz `os.walk` sobre `06_p1a` — varre o **filesystem**, nao o git —
+coleta os arquivos `.py` que contem o literal `SHADOW_ELIGIBLE` e exige
+**igualdade exata** com uma allowlist fixa de 6 caminhos.
+
+**O nome do teste afirma ausencia de consumidor de execucao; o corpo
+verifica uma lista de arquivos. Sao propriedades diferentes**, e a
+segunda nao implica a primeira.
+
+Por medir conjunto de caminhos em vez de comportamento, o guarda falha
+**nos dois sentidos**:
+
+- **Falso positivo.** Qualquer arquivo aditivo sob `06_p1a` que apenas
+  *mencione* o literal — documentacao, ferramenta de missao, texto de
+  pergunta de revisao — reprova a suite inteira, sem introduzir consumo
+  algum. Foi o que ocorreu: `evidencias/pacote_p1a31.py` contem o literal
+  no enunciado da pergunta 2.
+- **Falso negativo, mais grave.** Um consumidor de execucao real escrito
+  **dentro de um dos 6 arquivos ja na allowlist** passa sem deteccao: a
+  lista continua identica e o teste segue verde. **O guarda anti-P2 e
+  contornavel escrevendo no lugar certo.**
+
+### 4.2.1 A regressao e real e o alarme e falso — as duas metades
+
+Medicao em checkouts limpos (worktrees destacadas), que separa
+contaminacao de copia de trabalho de regressao commitada:
+
+| Commit | P1-A em checkout limpo |
+|---|---|
+| `677c585` | **307/307 OK** |
+| `dc19e8c` | **306/307 FAILED** |
+
+Ambas as metades valem, e nenhuma cancela a outra:
+
+- **Mecanicamente real.** O commit `dc19e8c` reprova a suite em checkout
+  limpo. Nao e artefato da copia de trabalho, nao e flake, e nao depende
+  de estado local. Um portao verde/vermelho esta vermelho por causa deste
+  commit.
+- **Semanticamente falso positivo.** Nenhum codigo, teste ou politica foi
+  alterado; nenhum consumidor de execucao foi introduzido; a mencao esta
+  num texto de pergunta. A propriedade que o teste diz proteger —
+  ausencia de consumidor — nao foi violada.
+
+Registrar so a primeira metade transformaria uma ferramenta de missao em
+regressao funcional inexistente; registrar so a segunda dispensaria um
+vermelho legitimo. Ficam as duas.
+
+### 4.2.2 Consequencias normativas
+
+1. **`P1-A 307/307` deixa de ser criterio de aceite valido** em Goal
+   futuro enquanto o sentinela medir lista de arquivos em vez de
+   comportamento. O numero passou a depender de quantos artefatos
+   probatorios existem sob `06_p1a`, nao da integridade do invariante.
+   Um Goal que exija 307/307 exige, na pratica, que a missao nao escreva
+   evidencia — o oposto do que este laboratorio pede.
+2. **Consertar o sentinela e PRE-CONDICAO da P1-A.3.2, nao item dela.**
+   A P1-A.3.2 escreve evidencia sob `06_p1a` e **colide na primeira
+   escrita**: qualquer arquivo `.py` seu que mencione o literal reprova a
+   suite antes de a missao comecar. O conserto precisa preceder a
+   abertura, sob pena de a missao nascer vermelha.
+3. **Ordem de verificacao.** O despacho que autorizou `dc19e8c` ordenou a
+   conferencia das suites em **pos-commit**, quando a falha ja era
+   observavel em **pre-commit** (os arquivos estavam staged e em disco, e
+   o sentinela varre o filesystem). Rodar as suites com os arquivos
+   staged, antes de persistir, teria exibido 306/307 e evitado commitar
+   um vermelho. Fica a regra prospectiva: **suites com os arquivos
+   staged, antes do commit** — nao apenas depois.
+
 ## 5. Revisao — kimi (nao obtida)
 
 | Campo | Valor |
@@ -224,6 +306,11 @@ disso, e por forca do MAJOR #4: a verificacao do lease deve ocorrer
 trabalho — especialmente quando a operacao intermediaria (chamada de
 provider) pode exceder a janela do lease.
 
+**Suites com os arquivos staged, ANTES do commit.** Verificacao apenas
+em pos-commit persiste um vermelho que era observavel antes — foi o que
+ocorreu com `dc19e8c` (§4.2.2, item 3). Portao de suite roda sobre o
+conjunto que sera commitado, nao sobre o que ja foi.
+
 ## 8. Evidencias desta missao (hashes SHA-256)
 
 ```
@@ -240,7 +327,7 @@ c3b5c54a2520f21196f182dc8cb3d1c94efba3b9740e2c84614096281e4bfc7e  06_p1a/evidenc
 |---|---|
 | Mesmo pacote/hash nos dois revisores | **parcial** — mesmos bytes preparados e entregues; o kimi nao produziu revisao (403) |
 | Zero CRITICAL/MAJOR | **NAO** — 4 MAJOR remanescentes (codex) |
-| Suites verdes | OK — 100/100, 307/307, 18/18 |
+| Suites verdes | **parcial** — na abertura (HEAD `677c585`): 100/100, 307/307, 18/18. Apos o micro-commit `dc19e8c`: P0 100/100 e prova 18/18 verdes, **P1-A 306/307** pelo sentinela do §4.2 (falso positivo mecanicamente real) |
 | Micro-commit exclusivamente probatorio | OK — §10: staging explicito, apenas caminhos novos, zero arquivo rastreado tocado, escopo `-text` declarado em §10.0 |
 | Zero escrita canonica | OK |
 | Zero PAYG / zero custo variavel | OK — 2 chamadas por assinatura, custo 0 |
@@ -378,13 +465,19 @@ A correcao do gerador e a **P1-A.3.2**, nao esta missao. Cabe a ela
 tambem julgar o alcance dos vereditos sobre o eixo evidencia (§4.1), sem
 presuncao de sobrevivencia.
 
-1. **Corrigir os 5 MAJOR** (missao propria, com lock e copia datada):
+0. **PRE-CONDICAO — corrigir o sentinela anti-P2 (§4.2) antes de abrir a
+   P1-A.3.2.** Sem isso a missao colide na primeira escrita de evidencia
+   sob `06_p1a` e nasce vermelha. O teste deve verificar **comportamento**
+   (ausencia de consumidor de execucao), nao igualdade de lista de
+   caminhos.
+1. **Corrigir os 6 MAJOR** (missao propria, com lock e copia datada):
    atalho google/grok fora do preflight; regexes de quota esgotada
    (`0.0 tokens available`, `0% quota available`); isolamento real do
    kimi no filesystem; verificacao de lease imediatamente antes de cada
    persistencia (incluindo as ferramentas `revisao_p1a3*.py`); e a
    ancoragem do pacote no commit (§4.1) — sem ela, nenhum pacote futuro
-   e verificavel por terceiros a partir do repositorio.
+   e verificavel por terceiros a partir do repositorio; e o sentinela
+   anti-P2 (§4.2), que hoje e contornavel por dentro da allowlist.
 2. **Novo commit** com as correcoes → **novo HEAD, novo tree, novo
    pacote** (o pacote `c3b5c5…` deixa de representar o estado).
 3. **Nova revisao dupla** sobre o novo pacote: o codex precisa rever o
