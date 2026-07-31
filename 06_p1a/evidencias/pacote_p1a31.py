@@ -4,10 +4,10 @@
 A P1-A.3.1 fecha a unica lacuna da P1-A.3: o commit final (HEAD 677c585)
 contem correcoes POSTERIORES ao ultimo pacote revisado (SHA-256 2c8061c0...
 nas evidencias codex-20260731T031305Z e kimi-20260731T031551Z). Este
-script monta, a partir do HEAD e SOMENTE de conteudo versionado, um unico
-pacote de revisao com:
+script monta, a partir do commit ALVO e SOMENTE de conteudo versionado,
+um unico pacote de revisao com:
 
-- identidade do commit/tree (HEAD, pai, tree);
+- identidade do commit/tree (alvo, pai, tree);
 - diff integral contra o pai;
 - conteudo completo de todos os arquivos funcionais/politicos/testes
   alterados no commit;
@@ -15,10 +15,32 @@ pacote de revisao com:
 - threat review da P1-A.3.1 (texto estatico);
 - hashes SHA-256 das evidencias relevantes da P1-A.3.
 
+ANCORAGEM NO COMMIT (revisao P1-A.3.1, MAJOR #5 — §4.1). O docstring
+anterior afirmava que "toda a leitura e via `git show`/`git diff`" e
+isso era FALSO para o bloco de hashes de evidencia: aquele bloco usava
+`(RAIZ / rel).read_bytes()`, os bytes da ARVORE DE TRABALHO. Com
+`core.autocrlf=true`, os bytes em disco de um arquivo rastreado sao
+funcao do historico de checkout, nao do commit — e 4 dos 11 hashes
+divergiam entre a copia de trabalho e um checkout novo. A prova de
+ancoragem executada na P1-A.3.1 falhou por essa causa.
+
+Agora TODA leitura vem do banco de objetos do git, por `git cat-file
+blob <ALVO>:<path>` (bytes exatos do blob, sem passar por filtro de EOL
+e sem tocar o disco). Consequencia: o pacote e funcao do commit e de
+mais nada. Alterar a arvore de trabalho nao muda um byte da saida, e um
+terceiro regenera o mesmo SHA-256 a partir de um checkout limpo.
+
+Pela mesma razao, o portao de identidade deixou de exigir
+`rev-parse HEAD == ALVO`: essa condicao amarrava o gerador ao ESTADO DO
+CHECKOUT, exatamente o que a ancoragem elimina — e impedia qualquer
+terceiro de reproduzir o pacote depois de um commit posterior. O portao
+agora exige que o par ALVO/PAI EXISTA no repositorio e que a relacao de
+paternidade entre eles se confirme; o HEAD corrente e irrelevante.
+
 DETERMINISMO: nenhum timestamp, nenhum caminho absoluto, nenhum dado de
-ambiente entra no pacote; toda a leitura e via `git show`/`git diff`
-(conteudo versionado, LF) e as listas sao ordenadas. Duas geracoes
-devem produzir SHA-256 identico. O usuario local (forma longa e 8.3) e
+ambiente entra no pacote; as listas sao ordenadas. Duas geracoes devem
+produzir SHA-256 identico, e a igualdade vale tambem entre arvore de
+trabalho e checkout limpo. O usuario local (forma longa e 8.3) e
 redigido. Nenhum segredo ou valor de ambiente entra no pacote: a fonte
 e exclusivamente o conteudo git (ja varrido pela ZeroPii na P1-A.3) e
 hashes de evidencias.
@@ -33,7 +55,10 @@ from pathlib import Path
 
 RAIZ = Path(__file__).resolve().parents[2]
 
-HEAD = "677c5853cf3d504696e7d2e326287cc1a8a37f38"
+# Commit ALVO do pacote. Nome deliberado: nao e "HEAD". O pacote e funcao
+# DESTE commit, e nao do checkout corrente — chama-lo de HEAD foi parte do
+# equivoco que produziu o §4.1.
+ALVO = "677c5853cf3d504696e7d2e326287cc1a8a37f38"
 PAI = "c4fa5a0615d834ee33561a5ec9c93b2b8d95430f"
 PACOTE_ANTERIOR_SHA256 = (
     "2c8061c0a5aaa52e23a6710e42b1384433135e9a30579cafee7033a188316016")
@@ -43,7 +68,8 @@ USUARIO_CURTO = ("".join(c for c in USUARIO.upper() if c.isalnum())[:6]
                  + "~1")
 
 # Arquivos funcionais/politicos/testes alterados no commit 677c585,
-# embutidos POR INTEIRO no pacote (conteudo do HEAD, via git show).
+# embutidos POR INTEIRO no pacote (conteudo do blob em ALVO, via
+# `git cat-file blob` — nunca o arquivo do disco; ver §4.1).
 ARQUIVOS_COMPLETOS = [
     "06_p1a/preflight/__init__.py",
     "06_p1a/preflight/adaptadores.py",
@@ -151,19 +177,46 @@ def _git(*args: str) -> str:
         encoding="utf-8", errors="replace", check=True).stdout
 
 
-def _conteudo_head(rel: str) -> str:
-    return _git("show", f"{HEAD}:{rel}")
+def _blob(rel: str) -> bytes:
+    """Bytes EXATOS do blob versionado em ALVO — nunca o disco.
+
+    `git cat-file blob` devolve o objeto cru: nao passa pelo filtro de
+    EOL do checkout e nao depende de `core.autocrlf`. Esta funcao e a
+    ancoragem do pacote (§4.1); trocar por leitura de arquivo reintroduz
+    o defeito.
+    """
+    return subprocess.run(
+        ["git", "cat-file", "blob", f"{ALVO}:{rel}"], cwd=RAIZ,
+        capture_output=True, check=True).stdout
+
+
+def _conteudo_alvo(rel: str) -> str:
+    """Conteudo textual do blob em ALVO, com fins de linha normalizados.
+
+    O blob e LF por construcao; `newline=""` nao se aplica aqui porque a
+    fonte ja e o objeto git, nao o arquivo do disco.
+    """
+    return _blob(rel).decode("utf-8", errors="replace")
 
 
 def montar_pacote() -> str:
-    head = _git("rev-parse", "HEAD").strip()
-    pai = _git("rev-parse", "HEAD^").strip()
-    tree = _git("rev-parse", "HEAD^{tree}").strip()
-    if head != HEAD or pai != PAI:
+    # Portao de identidade ANCORADO NO COMMIT, nao no checkout: o par
+    # ALVO/PAI precisa existir no repositorio e a paternidade precisa se
+    # confirmar. O HEAD corrente nao entra — e justamente o que permite a
+    # um terceiro reproduzir o pacote depois de commits posteriores.
+    try:
+        pai_de_alvo = _git("rev-parse", f"{ALVO}^").strip()
+        tree = _git("rev-parse", f"{ALVO}^{{tree}}").strip()
+    except subprocess.CalledProcessError as exc:
         raise SystemExit(
-            f"PARADA: HEAD/pai inesperados: {head} / {pai}")
-    sujeito = _git("log", "-1", "--format=%s", HEAD).strip()
-    diff = _git("diff", PAI, HEAD)
+            f"PARADA: commit alvo {ALVO} ausente do repositorio") from exc
+    if pai_de_alvo != PAI:
+        raise SystemExit(
+            f"PARADA: pai inesperado de {ALVO}: {pai_de_alvo} != {PAI}")
+    head = ALVO
+    pai = PAI
+    sujeito = _git("log", "-1", "--format=%s", ALVO).strip()
+    diff = _git("diff", PAI, ALVO)
     partes = [
         "PACOTE DE REVISAO — SSC+ P1-A.3.1 (laboratorio experimental, "
         "sem autoridade)\n",
@@ -190,15 +243,17 @@ def montar_pacote() -> str:
         "\n=== Hashes SHA-256 das evidencias relevantes (P1-A.3) ===\n",
     ]
     for rel in sorted(EVIDENCIAS_HASHEADAS):
-        dados = (RAIZ / rel).read_bytes()
-        partes.append(f"{hashlib.sha256(dados).hexdigest()}  {rel}\n")
+        # ANCORAGEM (§4.1): o hash e do BLOB versionado em ALVO, nao dos
+        # bytes do disco. Com core.autocrlf=true os dois divergem, e era
+        # essa divergencia que quebrava a reproducao a partir do commit.
+        partes.append(f"{hashlib.sha256(_blob(rel)).hexdigest()}  {rel}\n")
     partes.append("\n=== Diff integral contra o pai ===\n")
     partes.append(diff)
     partes.append("\n=== Arquivos funcionais/politicos/testes "
                   "(conteudo completo no HEAD) ===\n")
     for rel in ARQUIVOS_COMPLETOS:
         partes.append(f"\n--- {rel} ---\n")
-        partes.append(_conteudo_head(rel))
+        partes.append(_conteudo_alvo(rel))
     return _redigir("".join(partes))
 
 

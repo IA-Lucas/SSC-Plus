@@ -70,9 +70,24 @@ def _carregar_tiers() -> dict:
         return {}
 
 
-def _verificar_lock_vivo() -> dict:
+def _verificar_lock_vivo(fence_esperado: int | None = None,
+                         raiz: str | None = None) -> dict:
+    """Lease vivo + fence do titular do escritor unico.
+
+    Revisao P1-A.3.1, MAJOR #4: chamar IMEDIATAMENTE ANTES DE CADA
+    PERSISTENCIA, nao apenas na abertura do trabalho. Entre a abertura e
+    a gravacao correm as sondas reais dos CLIs, que podem exceder a
+    janela do lease (120 s na operacao) — verificar so no inicio permite
+    gravar com lease ja expirado.
+
+    Com `fence_esperado`, exige tambem que o titular NAO tenha sido
+    substituido: fence diferente significa que outra sessao adquiriu o
+    escritor no intervalo, e esta gravacao seria escrita de escritor
+    obsoleto. Fail-closed nos dois casos: PARADA antes de escrever.
+    """
     from escritor import EscritorP1
-    caminho = os.path.join(_RAIZ, "locks", f"{_SESSAO_LOCK}.lease")
+    base = os.path.join(raiz or _RAIZ, "locks")
+    caminho = os.path.join(base, f"{_SESSAO_LOCK}.lease")
     try:
         with open(caminho, encoding="utf-8") as f:
             lease = json.load(f)
@@ -81,9 +96,16 @@ def _verificar_lock_vivo() -> dict:
     if lease.get("sessao") != _SESSAO_LOCK or \
             EscritorP1.lease_expirado(caminho):
         raise SystemExit("PARADA: lease da sessao operacional morto")
-    with open(os.path.join(_RAIZ, "locks", f"{_SESSAO_LOCK}.fence"),
-              encoding="ascii") as f:
-        fence = int(f.read().strip())
+    try:
+        with open(os.path.join(base, f"{_SESSAO_LOCK}.fence"),
+                  encoding="ascii") as f:
+            fence = int(f.read().strip())
+    except (OSError, ValueError) as exc:
+        raise SystemExit(f"PARADA: fence ilegivel/ausente: {exc}")
+    if fence_esperado is not None and fence != fence_esperado:
+        raise SystemExit(
+            f"PARADA: titular do escritor substituido (fence {fence} != "
+            f"{fence_esperado}); escritor obsoleto NAO grava")
     return {"sessao": lease["sessao"], "fence": fence}
 
 
@@ -136,37 +158,49 @@ def _config_persistida(provider_id: str) -> dict:
     return {}  # grok: nenhuma config parseavel localizada na P1-A
 
 
+def classificar_frota(env: dict, tiers: dict, config_de=None,
+                      sensor_de=None) -> list:
+    """Classifica a frota INTEIRA pelo pipeline — sem atalho por provedor.
+
+    Revisao P1-A.3.1, MAJOR #1: o atalho manual de google/grok montava o
+    relatorio SUPERVISED a mao, sem passar por `executar_preflight` nem
+    por `_config_persistida`. Chave PAYG do provedor no ambiente,
+    endpoint pago ou auto top-up persistido resultavam em SUPERVISED —
+    os bloqueios economicos nao eram sequer consultados.
+
+    A ZERO-sonda que motivava o atalho nao depende dele: e propriedade
+    declarada na especificacao (`sondas_automaticas=False`) e o pipeline
+    a respeita — classifica no teto sem invocar sensor algum, e por isso
+    nao ha risco de as sondas via Git Bash pendurarem. O que o pipeline
+    acrescenta e justamente o que faltava: auditoria de ambiente e de
+    config ANTES do teto, com BLOCKED quando a economia e violada.
+
+    `config_de`/`sensor_de` sao injetaveis SOMENTE para teste; em
+    operacao valem os leitores reais.
+    """
+    ler_config = config_de or _config_persistida
+    escolher_sensor = sensor_de or _sensor_de
+    return [executar_preflight(
+                espec, sensores=escolher_sensor(espec.provider_id),
+                env=env,
+                config_persistida=ler_config(espec.provider_id),
+                tiers_declarados=tiers)
+            for espec in frota_real()]
+
+
 def main() -> int:
     exigir_capsula_limpa()  # politica estrita: chave visivel = aborta
     lock = _verificar_lock_vivo()
     tiers = _carregar_tiers()
     agora = datetime.now(timezone.utc)
-    relatorios = []
-    for espec in frota_real():
-        if espec.provider_id in _VIA_GITBASH:
-            # google/grok: SUPERVISED por regra da missao (emenda P1-A.3,
-            # item 5: ZERO sondas automaticas). Sondas reais via Git Bash
-            # penduram (netos node/npm seguram o pipe e o timeout do
-            # subprocess nao mata a arvore) — observado em duas corridas
-            # abortadas. Classificacao estatica, sem sonda.
-            relatorios.append({
-                "provider_id": espec.provider_id,
-                "resultado": "SUPERVISED",
-                "caminho": espec.executavel, "versao": None,
-                "plano": None,
-                "origem_credencial": "nao-sondada",
-                "quota": "desconhecida", "modelos": [], "sombra": None,
-                "erros": [],
-                "nota": "SUPERVISED por regra da missao; zero sondas "
-                        "automaticas (emenda P1-A.3, item 5); plano/origem "
-                        "declarados NAO sao evidencia observada"})
-            continue
-        rel = executar_preflight(
-            espec, sensores=_sensor_de(espec.provider_id),
-            env=dict(os.environ),
-            config_persistida=_config_persistida(espec.provider_id),
-            tiers_declarados=tiers)
-        relatorios.append(rel.to_dict())
+    relatorios = [rel.to_dict()
+                  for rel in classificar_frota(dict(os.environ), tiers)]
+
+    # Revisao P1-A.3.1 (MAJOR #4): as sondas acima podem exceder a janela
+    # do lease. O escritor e reverificado AQUI, imediatamente antes da
+    # persistencia, e o fence precisa ser o MESMO da abertura — lease
+    # morto ou titular substituido = PARADA sem gravar.
+    lock_persistencia = _verificar_lock_vivo(fence_esperado=lock["fence"])
 
     documento = {
         "tipo": "preflight-diagnostico-p1a3-capsula",
@@ -183,7 +217,8 @@ def main() -> int:
             "politica": "subscription-only; qualquer credencial de modelo "
                         "visivel dentro da capsula = bloqueio",
         },
-        "lock_escritor_unico": lock,
+        "lock_escritor_unico": lock_persistencia,
+        "lock_verificado_antes_da_persistencia": True,
         "custo_variavel": 0,
         "chamadas_de_modelo": 0,
         "nota": "somente sondas oficiais de diagnostico "

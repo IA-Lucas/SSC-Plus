@@ -6,9 +6,10 @@ vez por `pacote_p1a31.py` (deterministico, 2 geracoes com SHA-256
 identico) e os MESMOS BYTES sao copiados para o diretorio descartavel
 de cada reviewer — nenhuma reconstrucao entre revisores. UMA unica
 chamada por provider, via assinatura, custo variavel = 0. Enforcement
-read-only: codex `--sandbox read-only --ephemeral`; kimi sem modo
-read-only headless: cwd descartavel vazio + instrucao explicita +
-politica `auto` com regras estaticas de deny; restantes registrados.
+read-only: codex `--sandbox read-only --ephemeral`; kimi sem sandbox de
+filesystem no CLI — restricao parcial (`--plan`, `--skills-dir` vazio,
+sem `-y/--yolo/--auto`) mais DETECCAO integral por manifesto SHA-256 da
+arvore antes/depois (revisao P1-A.3.1, MAJOR #3).
 
 O tier declarado do provider (`tiers_declarados.json`) precisa estar
 VALIDO no instante da chamada; expirado = PARADA (somente o proprietario
@@ -35,7 +36,11 @@ SAIDA = RAIZ / "06_p1a" / "evidencias" / "revisao-p1a31"
 sys.path.insert(0, str(RAIZ / "06_p1a"))
 sys.path.insert(0, str(RAIZ / "05_p0"))
 
+sys.path.insert(0, str(RAIZ / "06_p1a" / "evidencias"))
+
 from capsula import ambiente_capsula  # noqa: E402
+from contencao import (argv_kimi, enforcement_kimi,  # noqa: E402
+                       manifesto, mutacoes, verificar_lock)
 
 SESSAO_LOCK = os.environ.get("SSC_LOCK_SESSAO", "p1a31-ops")
 USUARIO = os.path.basename(os.path.expanduser("~"))
@@ -50,32 +55,24 @@ def _redigir(texto: str) -> str:
         USUARIO_CURTO, "<USUARIO>")
 
 
+# Revisao P1-A.3.1 (MAJOR #3): o kimi deixa de rodar so com `-p` e
+# instrucao textual. `dir_skills` e um diretorio VAZIO criado ao lado do
+# descartavel — ver contencao.argv_kimi.
 COMANDOS = {
-    "codex": lambda tmp, prompt: [
+    "codex": lambda tmp, skills, prompt: [
         "codex", "exec", "--sandbox", "read-only", "--cd", tmp,
         "--skip-git-repo-check", "--ephemeral", prompt],
-    "kimi": lambda tmp, prompt: [_KIMI_EXE, "-p", prompt],
+    "kimi": lambda tmp, skills, prompt: argv_kimi(_KIMI_EXE, prompt, skills),
 }
 
 ENFORCEMENT = {
     "codex": "--sandbox read-only --ephemeral (CLI)",
-    "kimi": "sem modo read-only headless no CLI; cwd descartavel vazio + "
-            "instrucao de somente leitura; `-p` aplica a politica auto "
-            "com regras estaticas de deny (docs oficiais)",
+    "kimi": enforcement_kimi(),
 }
 
 
-def _verificar_lock() -> dict:
-    from escritor import EscritorP1
-    caminho = RAIZ / "locks" / f"{SESSAO_LOCK}.lease"
-    try:
-        lease = json.loads(caminho.read_text(encoding="utf-8"))
-    except (OSError, ValueError) as exc:
-        raise SystemExit(f"PARADA: lease ilegivel/ausente: {exc}")
-    if lease.get("sessao") != SESSAO_LOCK or \
-            EscritorP1.lease_expirado(str(caminho)):
-        raise SystemExit("PARADA: lease da sessao operacional morto")
-    return {"sessao": lease["sessao"], "pid_titular": lease["pid"]}
+def _verificar_lock(fence_esperado: int | None = None) -> dict:
+    return verificar_lock(RAIZ, SESSAO_LOCK, fence_esperado)
 
 
 def _verificar_tier(provider: str) -> dict:
@@ -153,12 +150,17 @@ def main() -> int:
     env = ambiente_capsula()
     removidas = sorted(set(os.environ) - set(env))
     tmp = tempfile.mkdtemp(prefix=f"p1a31-revisao-{provider}-")
+    skills = tempfile.mkdtemp(prefix=f"p1a31-skills-vazio-{provider}-")
     # MESMOS BYTES para os dois revisores: copia verbatim, sem remontagem.
     with open(os.path.join(tmp, "pacote-revisao.txt"), "wb") as f:
         f.write(dados_pacote)
     prompt = montar_prompt()
-    argv = COMANDOS[provider](tmp, prompt)
+    argv = COMANDOS[provider](tmp, skills, prompt)
     ts = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    # Revisao P1-A.3.1 (MAJOR #3): manifesto SHA-256 da arvore INTEIRA
+    # antes e depois da chamada. A lista de restantes so olha dentro do
+    # descartavel; e a escrita FORA dele que precisava de deteccao.
+    antes = manifesto(RAIZ)
     inicio = time.monotonic()
     try:
         proc = subprocess.run(
@@ -169,8 +171,13 @@ def main() -> int:
         rc, out = "TIMEOUT", (e.stdout or "")
         err = (e.stderr or "") + "\nTIMEOUT apos 900s"
     duracao = round(time.monotonic() - inicio, 3)
+    fora_do_descartavel = mutacoes(antes, manifesto(RAIZ))
     restantes = [str(p.relative_to(tmp)) for p in Path(tmp).rglob("*")
                  if p.is_file()]
+    # Revisao P1-A.3.1 (MAJOR #4): o lease e reverificado AQUI, depois da
+    # chamada e imediatamente antes de persistir, com o MESMO fence da
+    # abertura — a chamada pode ter excedido a janela do lease.
+    lock = _verificar_lock(fence_esperado=lock["fence"])
     meta = {
         "provider": provider, "ts_utc": ts, "tipo": "revisao-p1a31",
         "chamadas_de_modelo": 1, "custo_variavel": 0,
@@ -184,6 +191,14 @@ def main() -> int:
         "pacote_bytes_entregues": len(dados_pacote),
         "dir_descartavel": _redigir(tmp),
         "dir_descartavel_arquivos_restantes": restantes,
+        "contencao": {
+            "medida": "manifesto SHA-256 da arvore inteira antes/depois",
+            "arquivos_no_manifesto": len(antes),
+            "excluido_e_declarado": ["locks"],
+            "mutacoes_fora_do_descartavel": fora_do_descartavel,
+            "violada": bool(fora_do_descartavel),
+        },
+        "lock_verificado_antes_da_persistencia": True,
         "env_vars_removidas_nomes": removidas,
         "returncode": rc, "duracao_s": duracao,
         "resposta": _redigir((out or "").strip()),
@@ -199,8 +214,15 @@ def main() -> int:
     print(json.dumps({"provider": provider, "returncode": rc,
                       "duracao_s": duracao,
                       "pacote_sha256": pacote_sha256,
+                      "contencao_violada": bool(fora_do_descartavel),
                       "resposta_inicio": meta["resposta"][:400]},
                      ensure_ascii=False, indent=2))
+    if fora_do_descartavel:
+        # A evidencia da violacao ja foi persistida acima; a corrida,
+        # porem, nao pode ser dada por valida.
+        print("PARADA: contencao violada — mutacao fora do descartavel: "
+              + "; ".join(fora_do_descartavel[:20]), file=sys.stderr)
+        return 3
     return 0 if rc == 0 else 1
 
 

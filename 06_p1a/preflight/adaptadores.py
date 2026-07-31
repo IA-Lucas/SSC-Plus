@@ -26,18 +26,37 @@ _MARCADORES_QUOTA_ESGOTADA = (
     "quota exhausted", "quota esgotada", "esgotada", "0 remaining",
     "rate_limit_exceeded", "usage limit reached",
 )
+# Zero como NUMERO, nao como digito solto (revisao P1-A.3.1, MAJOR #2).
+# Cobre "0", "0.0" e "0,0"; recusa o zero que e parte de outro numero.
+# As duas ancoras sao necessarias e nao simetricas:
+#   - sem a de tras, "10.0 tokens available" casaria pelo "0" depois do
+#     ponto e bloquearia franquia DISPONIVEL (fail-closed indevido);
+#   - sem a da frente, "0.5 calls left" casaria pelo "0" e bloquearia
+#     meia franquia.
+_ZERO = r"(?<![\d.,])0(?:[.,]0+)?(?![\d.,])"
+
 # Esgotamento em grafias alternativas (regex): zero-quota e negacao.
 # Sem isto, "0 requests remaining" ou "no calls left" escapavam dos
 # marcadores literais e caiam no sinal positivo "remaining"/"left" —
 # quota REALMENTE esgotada classificada como disponivel (fail-open).
+#
+# Revisao P1-A.3.1, MAJOR #2: o zero literal `\b0\s+` exigia digito nu
+# seguido de espaco, de modo que "0.0 tokens available" (zero decimal) e
+# "0% quota available" (zero percentual) escapavam de TODAS as regexes e
+# caiam no sinal positivo `\bavailable\b` — quota zerada classificada
+# como disponivel, o fail-open exato do achado. `_ZERO` e o sinal de
+# porcentagem opcional fecham as duas grafias.
 _RX_QUOTA_ESGOTADA = tuple(re.compile(p) for p in (
-    r"\b0\s+(?:of\s+\d+\s+)?\w+\s+(?:remaining|left|available)\b",
-                                                # "0 requests remaining";
-                                                # "0 of 100 requests
-                                                #  remaining";
-                                                # "0 tokens available"
-    r"\b(?:remaining|left)\s*[:=]?\s*0\b",    # "requests remaining: 0"
-    r"\b0\s*/\s*\d+\b",                       # "0/100 requests remaining"
+    # "0 requests remaining"; "0 of 100 requests remaining";
+    # "0.0 tokens available"; "0% quota available"; "0 remaining".
+    _ZERO + r"\s*%?\s*(?:of\s+[\d.,]+\s+)?(?:\w+\s+)?"
+            r"(?:remaining|left|available)\b",
+    # "requests remaining: 0"; "available: 0.0"; "quota available = 0%".
+    r"\b(?:remaining|left|available)\s*[:=]?\s*" + _ZERO + r"\s*%?",
+    # "quota: 0"; "credits = 0"; "tokens: 0.0"; "balance: 0%".
+    r"\b(?:quota|credits?|tokens?|requests?|calls?|balance)\s*[:=]\s*"
+    + _ZERO + r"\s*%?",
+    _ZERO + r"\s*/\s*[\d.,]+",                # "0/100 requests remaining"
     # Negacao com ou sem palavra intermediaria (revisoes P1-A.3):
     # "no calls left", "no requests remaining", "no remaining quota",
     # "none left", "no quota available" — qualquer uma vence o sinal
