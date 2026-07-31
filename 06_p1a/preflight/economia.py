@@ -157,10 +157,20 @@ class ConflitoAmbienteLogin(ErroPreflight):
     codigo = "P1A-CONFLITO-ENV-LOGIN"
 
 
+class DeclaracaoExpirada(ErroPreflight):
+    """Declaracao de tier do proprietario ilegivel, futura ou fora das 24h.
+
+    A trilha SHADOW_ELIGIBLE (emenda P1-A.3, item 1) exige declaracao
+    valida; fora da janela, o provedor volta ao bloqueio estatico.
+    """
+    codigo = "P1A-DECLARACAO-EXPIRADA"
+
+
 _TIPOS_ERRO = {c.__name__: c for c in (
     ChavePaygDetectada, ConfigPaygPersistida, OAuthAusente,
     PlanoNaoReconhecido, QuotaEsgotada, BillingDesconhecido,
-    CliIndisponivel, ModeloRemovido, ConflitoAmbienteLogin)}
+    CliIndisponivel, ModeloRemovido, ConflitoAmbienteLogin,
+    DeclaracaoExpirada)}
 
 
 # --- Auditorias ---------------------------------------------------------------
@@ -252,9 +262,13 @@ def _achatar(persistido, prefixo: str = "", chave_pai: str | None = None):
 
 
 def _host_de(url: str) -> str:
-    """Somente o host da URL — caminho/query podem carregar segredos."""
+    """Somente o host da URL — caminho/query podem carregar segredos.
+
+    Sem hostname parseavel, devolve marcador generico (revisao P1-A.3):
+    a URL integral malformada NUNCA vai para o detalhe do erro.
+    """
     texto = url if "://" in url else f"https://{url}"
-    return urlparse(texto).hostname or url
+    return urlparse(texto).hostname or "<host-ilegivel>"
 
 
 def _verdadeiro(valor) -> bool:

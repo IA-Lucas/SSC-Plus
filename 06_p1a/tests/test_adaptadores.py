@@ -76,9 +76,11 @@ class DeteccaoDeVersao(unittest.TestCase):
 class ConsultaDeLogin(unittest.TestCase):
 
     def test_login_verde_dos_cinco_provedores(self):
+        # grok: "SuperGrok" sem rotulo de plano na saida — com a regra
+        # fail-closed da P1-A.3, plano NAO e reconhecido (None).
         esperado = {"codex": "chatgpt pro 5x", "claude": "max",
                     "kimi": "allegretto", "google": "google ai pro",
-                    "grok": "supergrok"}
+                    "grok": None}
         for provider_id, plano in esperado.items():
             with self.subTest(provedor=provider_id):
                 login = _adaptador(provider_id).consultar_login()
@@ -112,7 +114,8 @@ class ConsultaDeLogin(unittest.TestCase):
 
     def test_claude_json_invalido_cai_no_parser_de_texto(self):
         login = _adaptador(
-            "claude", login="Logged in via OAuth (claude max)").consultar_login()
+            "claude",
+            login="Logged in via OAuth (plan: claude max)").consultar_login()
         self.assertTrue(login["logado"])
         self.assertEqual(login["plano"], "claude max")
 
@@ -133,7 +136,8 @@ class ConsultaDeLogin(unittest.TestCase):
         # "chatgpt pro 5x" e "chatgpt pro" ambos casam: o maior ganha.
         login = _adaptador(
             "codex",
-            login="Logged in using ChatGPT (ChatGPT Pro 5x)").consultar_login()
+            login="Logged in using ChatGPT (plan: ChatGPT Pro 5x)"
+        ).consultar_login()
         self.assertEqual(login["plano"], "chatgpt pro 5x")
 
 
@@ -165,6 +169,10 @@ class DescobertaDeModelos(unittest.TestCase):
     def test_modelos_dos_cinco_provedores_contem_o_esperado(self):
         for provider_id, espec in ESPECIFICACOES.items():
             with self.subTest(provedor=provider_id):
+                if espec.comandos["modelos"] is None:
+                    # Emenda P1-A.3, item 4 (claude): sem fonte oficial
+                    # nao interativa, a descoberta esta desativada.
+                    continue
                 modelos = _adaptador(provider_id).descobrir_modelos()
                 self.assertTrue(
                     any(esperado in m for m in modelos
@@ -187,10 +195,12 @@ class DescobertaDeModelos(unittest.TestCase):
                                        sensor_modelos=sensor_modelos, env={})
         adaptador.descobrir_modelos()
         self.assertEqual(sensor_exec.n, 0)
-        self.assertEqual(sensor_modelos.chamadas, [("models",)])
+        # Emenda P1-A.3, item 2: a descoberta do codex e `doctor`.
+        self.assertEqual(sensor_modelos.chamadas, [("doctor",)])
 
     def test_sensor_de_modelos_default_e_o_de_execucao(self):
-        sensor = SensorFalso({("models",): (0, "gpt-5", "")})
+        sensor = SensorFalso({("doctor",): (
+            0, "model gpt-5\nstored auth mode chatgpt", "")})
         adaptador = AdaptadorPreflight(espec_de("codex"), sensor_exec=sensor,
                                        env={})
         self.assertEqual(adaptador.descobrir_modelos(), ["gpt-5"])
@@ -260,13 +270,18 @@ class ComandosSaoSomenteDiagnostico(unittest.TestCase):
 
     PERMITIDOS = frozenset({
         "--version", "--list-models", "login", "status", "auth", "models",
-        "provider", "list",
+        "provider", "list", "doctor",
     })
 
     def test_apenas_verbos_de_diagnostico_declarados(self):
         for provider_id, espec in ESPECIFICACOES.items():
             for sonda, comando in espec.comandos.items():
                 with self.subTest(provedor=provider_id, sonda=sonda):
+                    if comando is None:
+                        # Descoberta desativada (emenda P1-A.3, item 4):
+                        # somente a sonda "modelos" pode ser None.
+                        self.assertEqual(sonda, "modelos")
+                        continue
                     self.assertTrue(set(comando) <= self.PERMITIDOS,
                                     f"{provider_id}/{sonda}: {comando}")
 
@@ -281,6 +296,8 @@ class ComandosSaoSomenteDiagnostico(unittest.TestCase):
             with self.subTest(provedor=provider_id):
                 self.assertTrue(espec.headless)
                 for comando in espec.comandos.values():
+                    if comando is None:  # descoberta desativada (P1-A.3)
+                        continue
                     self.assertNotIn(espec.headless[0], comando)
 
     def test_nenhuma_sonda_aprova_automaticamente(self):
@@ -289,6 +306,8 @@ class ComandosSaoSomenteDiagnostico(unittest.TestCase):
                      "-p", "--print", "--api-key", "--batch-api")
         for provider_id, espec in ESPECIFICACOES.items():
             for comando in espec.comandos.values():
+                if comando is None:  # descoberta desativada (P1-A.3)
+                    continue
                 with self.subTest(provedor=provider_id, comando=comando):
                     for proibido in proibidos:
                         self.assertNotIn(proibido, comando)

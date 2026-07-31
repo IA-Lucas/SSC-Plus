@@ -233,9 +233,10 @@ class ErrosTipados(unittest.TestCase):
         self.assertIsInstance(volta, ChavePaygDetectada)
         self.assertEqual(volta.to_dict(), original.to_dict())
 
-    def test_round_trip_de_todos_os_nove_tipos(self):
+    def test_round_trip_de_todos_os_tipos(self):
         from preflight.economia import _TIPOS_ERRO
-        self.assertEqual(len(_TIPOS_ERRO), 9)
+        # 9 tipos originais + DeclaracaoExpirada (emenda P1-A.3, item 1).
+        self.assertEqual(len(_TIPOS_ERRO), 10)
         for nome, cls in _TIPOS_ERRO.items():
             with self.subTest(tipo=nome):
                 erro = cls(detalhe="d", alvo="a")

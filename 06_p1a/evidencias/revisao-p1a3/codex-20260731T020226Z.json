@@ -1,0 +1,36 @@
+{
+  "provider": "codex",
+  "ts_utc": "20260731T020226Z",
+  "tipo": "revisao-p1a3",
+  "chamadas_de_modelo": 1,
+  "custo_variavel": 0,
+  "rotulo": "assinatura-oauth; UMA chamada; enforcement read-only",
+  "enforcement_read_only": "--sandbox read-only --ephemeral (CLI)",
+  "lock_escritor_unico": {
+    "sessao": "p1a3-ops",
+    "pid_titular": 78412
+  },
+  "argv_publico": [
+    "codex",
+    "exec",
+    "--sandbox",
+    "read-only",
+    "--cd",
+    "C:\\Users\\<USUARIO>\\AppData\\Local\\Temp\\p1a3-revisao-codex-u9jnqi56",
+    "--skip-git-repo-check",
+    "--ephemeral",
+    "<PROMPT>"
+  ],
+  "prompt_sha256": "6a49245358988612ae6823834293fa81830718436c87bae68f365cea7ba38b52",
+  "pacote_sha256": "318f5ef08bc275d816a3d156d074df6af4e6e59cdad16d7f9333d7d6ca655a02",
+  "dir_descartavel": "C:\\Users\\<USUARIO>\\AppData\\Local\\Temp\\p1a3-revisao-codex-u9jnqi56",
+  "dir_descartavel_arquivos_restantes": [
+    "pacote-revisao.txt"
+  ],
+  "env_vars_removidas_nomes": [],
+  "returncode": 0,
+  "duracao_s": 184.656,
+  "resposta": "CRITICAL 06_p1a/preflight/adaptadores.py:codex-doctor — `_modelos_codex_doctor` termina em `retur`: lança `NameError` para rc≠0 e retorna `None` para rc=0, inutilizando o parser e os testes.\nCRITICAL 06_p1a/preflight/economia.py:DeclaracaoExpirada — `codigo =` está sem valor, causando `SyntaxError` e impedindo a importação do pipeline.\nMAJOR 06_p1a/preflight/pipeline.py:sondas-supervised — Google e Grok ainda possuem `comandos[\"modelos\"]` e o pipeline executa descoberta antes de aplicar o teto `SUPERVISED`, contrariando “zero sondas automáticas”.\nMAJOR 06_p1a/preflight/frota_real.py:caminho-local — o executável Codex incorpora o diretório home expandido e `RelatorioPreflight.to_dict()` o serializa em `caminho`, vazando caminho local/identificador da estação em artefatos.\nMINOR 06_p1a/preflight/sombra.py:validacao-declaracao — somente timestamp e duração são validados; tier vazio/arbitrário e `declarado_por` vazio ainda habilitam `SHADOW_ELIGIBLE`.\nMINOR 06_p1a/preflight/sombra.py:fail-closed — timestamp ISO válido próximo de `datetime.max` causa `OverflowError` em `expira_em`, em vez de retornar declaração inválida/BLOCKED.\nMAJOR 06_p1a/tests/test_emendas_p1a3.py:cobertura — não há teste de zero sondas para Google/Grok; o cenário Google não verifica o contador e Grok não é exercitado.\nREPROVADO",
+  "stderr_resumo": "Reading additional input from stdin...\nOpenAI Codex v0.145.0\n--------\nworkdir: C:\\Users\\<USUARIO>\\AppData\\Local\\Temp\\p1a3-revisao-codex-u9jnqi56\nmodel: gpt-5.6-sol\nprovider: openai\napproval: never\nsandbox: read-only\nreasoning effort: high\nreasoning summaries: none\nsession id: 019fb5e8-9b84-7323-bdc6-dd50d8b1ff81\n--------\nuser\nRevise em modo SOMENTE LEITURA o changeset SSC+ P1-A.3. O pacote completo (contexto, perguntas 1-6 e todos os arquivos do changeset) esta em ./pacote-revisao.txt no diretorio atual: leia-o POR INTEIRO antes de avaliar. Voce NAO pode escrever nada: responda apenas com a revisao em texto.\n\nFormato de resposta: um achado por linha, prefixado por severidade CRITICAL | MAJOR | MINOR | OBS, seguida de arquivo:tema e descricao curta. Se nao houver achado num nivel, nao o invente. Termine com um veredito: APROVADO | APROVADO-COM-RESSALVAS | REPROVADO.\ncodex\nVou ler o pacote integralmente e depois confrontar o changeset com as perguntas 1–6, mantendo tudo estritamente em somente leitura.\nexec\n\"C:\\\\Program Files\\\\WindowsApps\\\\Microsoft.PowerShell_7.6.4.0_x64__8wekyb3d8bbwe\\\\pwsh.exe\" -Command '$p = Resolve-Path -LiteralPath '\"'.\\\\pacote-revisao.txt'; \"'$i = Get-Item -LiteralPath $p; [pscustomobject]@{Path=$p.Path; Bytes=$i.Length; Lines=(Get-Content -LiteralPath $p | Measure-Object -Line).Lines} | Format-List; Get-Content -LiteralPath $p -Raw' in C:\\Users\\<USUARIO>\\AppData\\Local\\Temp\\p1a3-revisao-codex-u9jnqi56\n2026-07-31T02:02:35.994207Z ERROR codex_core::exec: exec error: windows sandbox: orchestrator_helper_launch_failed: setup refresh failed to launch helper: helper=codex-windows-sandbox-setup.exe, cwd=C:\\Users\\<USUARIO>\\AppData\\Local\\Temp\\p1a3-revisao-codex-u9jnqi56, log=C:\\Users\\<USUARIO>\\.codex\\.sandbox\\sandbox.2026-07-31.log, error=program not found\n2026-07-31T02:02:35.994602Z ERROR codex_core::tools::router: error=execution error: Io(Custom { kind: Other, error: \"windows sandbox: orchestrator_helper_launch_failed: setup refresh failed to launch help",
+  "quota_observavel": "nao-exposta-pelo-cli"
+}

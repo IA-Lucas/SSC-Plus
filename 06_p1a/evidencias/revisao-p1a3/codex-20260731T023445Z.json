@@ -1,0 +1,36 @@
+{
+  "provider": "codex",
+  "ts_utc": "20260731T023445Z",
+  "tipo": "revisao-p1a3",
+  "chamadas_de_modelo": 1,
+  "custo_variavel": 0,
+  "rotulo": "assinatura-oauth; UMA chamada; enforcement read-only",
+  "enforcement_read_only": "--sandbox read-only --ephemeral (CLI)",
+  "lock_escritor_unico": {
+    "sessao": "p1a3-ops",
+    "pid_titular": 78412
+  },
+  "argv_publico": [
+    "codex",
+    "exec",
+    "--sandbox",
+    "read-only",
+    "--cd",
+    "C:\\Users\\<USUARIO>\\AppData\\Local\\Temp\\p1a3-revisao-codex-wulgdi2a",
+    "--skip-git-repo-check",
+    "--ephemeral",
+    "<PROMPT>"
+  ],
+  "prompt_sha256": "6a49245358988612ae6823834293fa81830718436c87bae68f365cea7ba38b52",
+  "pacote_sha256": "e36583daeffb4c8aa0905589b0754ff8da46c7ed2d8570cd844f0bdcb9bfa937",
+  "dir_descartavel": "C:\\Users\\<USUARIO>\\AppData\\Local\\Temp\\p1a3-revisao-codex-wulgdi2a",
+  "dir_descartavel_arquivos_restantes": [
+    "pacote-revisao.txt"
+  ],
+  "env_vars_removidas_nomes": [],
+  "returncode": 0,
+  "duracao_s": 217.605,
+  "resposta": "MAJOR | 06_p1a/preflight/adaptadores.py:plano-incidental `_plano_de` varre toda a saída; uma mensagem como “Upgrade to Pro” comprova falsamente o plano e permite `ELIGIBLE`, contornando a trilha sombra.\nMAJOR | 06_p1a/preflight/adaptadores.py:validacao-do-tier `plano_reconhecido` faz comparação recíproca; tiers não permitidos como `\"chatgpt\"` ou `\"5x\"` casam com `\"chatgpt pro 5x\"` e habilitam `SHADOW_ELIGIBLE`.\nMAJOR | 06_p1a/preflight/adaptadores.py:quota-esgotada Formatos plausíveis como `\"0 of 100 requests remaining\"` escapam das regexes e ainda casam o marcador positivo `remaining`, permitindo classificação apesar da quota zero.\nMAJOR | 06_p1a/preflight/adaptadores.py:codex-doctor O parser aceita a primeira linha de auth encontrada; saída conflitante contendo `auth mode chatgpt` e `auth mode apikey` pode comprovar autenticação indevidamente.\nMAJOR | 06_p1a/preflight/sombra.py:propriedade-da-declaracao Qualquer `declarado_por` não vazio é aceito, inclusive `null` convertido em `\"None\"`; a condição “declarado pelo proprietário” não é validada.\nMAJOR | 06_p1a/preflight/adaptadores.py:pii-local `CliIndisponivel` incorpora o executável Codex já expandido com o diretório do usuário, e `pipeline.py:to_dict` também serializa `caminho`; há vazamento direto em exceção/relatório antes de eventual redação externa.\nMINOR | 06_p1a/preflight/economia.py:segredo-em-erro `_host_de` devolve a URL integral quando não encontra hostname; endpoint PAYG malformado com query secreta é incluído em `detalhe` e serializado.\nMINOR | 06_p1a/preflight/pipeline.py:evidencia-estatica Google/Grok recebem `plano` e `origem_credencial` preenchidos com valores esperados apesar de zero sondas, fazendo dados declarados parecerem observados.\nOBS | 06_p1a/tests/test_emendas_p1a3.py:cobertura `test_shadow_nunca_sobe_o_teto_supervised` usa Google, que retorna antes de construir `sombra`; portanto não exercita realmente o teto com `sombra != None`, nem cobre os bypasses acima.\n\nREPROVADO",
+  "stderr_resumo": "Reading additional input from stdin...\nOpenAI Codex v0.145.0\n--------\nworkdir: C:\\Users\\<USUARIO>\\AppData\\Local\\Temp\\p1a3-revisao-codex-wulgdi2a\nmodel: gpt-5.6-sol\nprovider: openai\napproval: never\nsandbox: read-only\nreasoning effort: high\nreasoning summaries: none\nsession id: 019fb606-2bcf-7b93-bb13-bada5ce7ea29\n--------\nuser\nRevise em modo SOMENTE LEITURA o changeset SSC+ P1-A.3. O pacote completo (contexto, perguntas 1-6 e todos os arquivos do changeset) esta em ./pacote-revisao.txt no diretorio atual: leia-o POR INTEIRO antes de avaliar. Voce NAO pode escrever nada: responda apenas com a revisao em texto.\n\nFormato de resposta: um achado por linha, prefixado por severidade CRITICAL | MAJOR | MINOR | OBS, seguida de arquivo:tema e descricao curta. Se nao houver achado num nivel, nao o invente. Termine com um veredito: APROVADO | APROVADO-COM-RESSALVAS | REPROVADO.\ncodex\nVou ler o pacote integralmente e, em seguida, confrontar contexto, perguntas e todos os arquivos sem modificar nada. A resposta seguirá exatamente o formato solicitado.\nexec\n\"C:\\\\Program Files\\\\WindowsApps\\\\Microsoft.PowerShell_7.6.4.0_x64__8wekyb3d8bbwe\\\\pwsh.exe\" -Command '$p = Resolve-Path -LiteralPath '\"'.\\\\pacote-revisao.txt'; \"'$f = Get-Item -LiteralPath $p; $lines = (Get-Content -LiteralPath $p).Count; [pscustomobject]@{Path=$p.Path; Bytes=$f.Length; Lines=$lines} | Format-List' in C:\\Users\\<USUARIO>\\AppData\\Local\\Temp\\p1a3-revisao-codex-wulgdi2a\n2026-07-31T02:34:52.749944Z ERROR codex_core::exec: exec error: windows sandbox: orchestrator_helper_launch_failed: setup refresh failed to launch helper: helper=codex-windows-sandbox-setup.exe, cwd=C:\\Users\\<USUARIO>\\AppData\\Local\\Temp\\p1a3-revisao-codex-wulgdi2a, log=C:\\Users\\<USUARIO>\\.codex\\.sandbox\\sandbox.2026-07-31.log, error=program not found\n2026-07-31T02:34:52.750316Z ERROR codex_core::tools::router: error=execution error: Io(Custom { kind: Other, error: \"windows sandbox: orchestrator_helper_launch_failed: setup refresh failed to launch helper:",
+  "quota_observavel": "nao-exposta-pelo-cli"
+}

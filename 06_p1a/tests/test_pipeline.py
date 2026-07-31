@@ -20,7 +20,9 @@ class FrotaVerde(unittest.TestCase):
     """Com tudo verde, cada provedor chega ao seu teto — nunca acima."""
 
     def test_classificacao_dos_cinco_provedores(self):
-        esperado = {"codex": "ELIGIBLE", "claude": "ELIGIBLE",
+        # Emenda P1-A.3 item 4: claude tem teto SUPERVISED enquanto nao
+        # houver modelo exato observado por fonte oficial nao interativa.
+        esperado = {"codex": "ELIGIBLE", "claude": "SUPERVISED",
                     "kimi": "ELIGIBLE", "google": "SUPERVISED",
                     "grok": "SUPERVISED"}
         for provider_id, resultado in esperado.items():
@@ -32,10 +34,25 @@ class FrotaVerde(unittest.TestCase):
                 self.assertEqual(relatorio.erros, [])
                 # Sem sinal positivo de quota nas saidas verdes: unknown.
                 self.assertEqual(relatorio.quota, "desconhecida")
+                if not espec_de(provider_id).sondas_automaticas:
+                    # ZERO sondas (google/grok): campos de evidencia NAO
+                    # observados — plano/origem declarados nao podem
+                    # parecer prova de login.
+                    self.assertIsNone(relatorio.versao)
+                    self.assertIsNone(relatorio.plano)
+                    self.assertEqual(relatorio.origem_credencial,
+                                     "nao-sondada")
+                    self.assertEqual(relatorio.modelos, [])
+                    continue
                 self.assertEqual(relatorio.origem_credencial,
                                  espec_de(provider_id).auth_esperada)
-                self.assertTrue(relatorio.modelos)
-                self.assertTrue(relatorio.versao)
+                if espec_de(provider_id).comandos["modelos"] is None:
+                    # Descoberta desativada pela especificacao (claude).
+                    self.assertEqual(relatorio.modelos, [])
+                    self.assertTrue(relatorio.versao)
+                else:
+                    self.assertTrue(relatorio.modelos)
+                    self.assertTrue(relatorio.versao)
 
     def test_google_e_grok_nunca_sobem_para_eligible(self):
         for provider_id in ("google", "grok"):
@@ -120,7 +137,9 @@ class RoundTripDoRelatorio(unittest.TestCase):
             RelatorioPreflight(provider_id="x", resultado="OK")
 
     def test_enum_de_resultados_e_exatamente_o_da_missao(self):
-        self.assertEqual(RESULTADOS, ("ELIGIBLE", "SUPERVISED", "BLOCKED"))
+        # Emenda P1-A.3, item 1: SHADOW_ELIGIBLE entra no enum.
+        self.assertEqual(RESULTADOS, ("ELIGIBLE", "SHADOW_ELIGIBLE",
+                                      "SUPERVISED", "BLOCKED"))
 
     def test_relatorios_diferentes_nao_sao_iguais(self):
         sens_a, _, _ = sensores_dict("codex")
@@ -137,8 +156,8 @@ class NormalizacaoDeSensores(unittest.TestCase):
         sensor = SensorFalso({
             ("--version",): (0, "0.145.0", ""),
             ("login", "status"): (0, "Logged in using ChatGPT "
-                                     "(ChatGPT Pro 5x)", ""),
-            ("models",): (0, "gpt-5", "")})
+                                     "(plan: ChatGPT Pro 5x)", ""),
+            ("doctor",): (0, "model gpt-5\nstored auth mode chatgpt", "")})
         relatorio = executar_preflight(espec_de("codex"), sensor, env={})
         self.assertEqual(relatorio.resultado, "ELIGIBLE")
         self.assertEqual(sensor.n, 3)
@@ -237,10 +256,11 @@ class EspecificacaoDaFrota(unittest.TestCase):
             sens, _, _ = sensores_dict(espec.provider_id)
             relatorios.append(executar_preflight(espec, sens, env={}))
         self.assertEqual(len(relatorios), 5)
+        # Emenda P1-A.3: claude desce do grupo ELIGIBLE para SUPERVISED.
         self.assertEqual(sum(1 for r in relatorios
-                             if r.resultado == "ELIGIBLE"), 3)
+                             if r.resultado == "ELIGIBLE"), 2)
         self.assertEqual(sum(1 for r in relatorios
-                             if r.resultado == "SUPERVISED"), 2)
+                             if r.resultado == "SUPERVISED"), 3)
         self.assertEqual([r for r in relatorios if r.erros], [])
 
 

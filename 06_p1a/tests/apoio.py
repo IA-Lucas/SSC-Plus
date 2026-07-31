@@ -27,16 +27,21 @@ SENTINELA = "SENTINELA-VALOR-FICTICIO-NAO-E-CREDENCIAL"
 
 # Saidas verdes por provedor: (versao, login, modelos). Refletem o formato
 # real observado em 01_inventario-real.md, sem qualquer dado sensivel.
+# codex: saida no formato `codex doctor` (emenda P1-A.3, item 2) — modelo
+# efetivo + auth mode, NAO catalogo. claude: sem sonda de modelos desde a
+# emenda P1-A.3 item 4 (comandos["modelos"] = None); o texto e mantido
+# somente para testes que injetam uma espec com descoberta reativada.
 VERDES = {
     "codex": ("codex-cli 0.145.0",
               "Logged in using ChatGPT (plan: ChatGPT Pro 5x)",
-              "gpt-5\ngpt-5-codex"),
+              "model gpt-5.6-sol\nstored auth mode chatgpt"),
     "claude": ("2.1.220",
                '{"loggedIn": true, "subscriptionType": "max"}',
                "claude-opus-5\nclaude-sonnet-5"),
     "kimi": ("0.30.0",
              "managed:kimi-code type=kimi source=oauth plan=Allegretto",
-             "kimi-k2-thinking\nkimi-k2-turbo"),
+             "Default model: kimi-code/k3\n"
+             "managed:kimi-code type=kimi source=oauth"),
     "google": ("0.52.0",
                "oauth-personal; plan: Google AI Pro",
                "gemini-3-pro\ngemini-3-flash"),
@@ -82,7 +87,10 @@ def sensores_verdes(provider_id, versao=None, login=None, modelos=None):
     """Par de sensores (exec, modelos) com as saidas verdes do provedor.
 
     Qualquer um dos tres textos pode ser sobrescrito para injetar uma
-    falha especifica sem mexer nas outras sondas.
+    falha especifica sem mexer nas outras sondas. Provedor sem comando de
+    descoberta (comandos["modelos"] = None — claude desde a P1-A.3)
+    recebe um sensor de modelos vazio: qualquer sonda de modelos nele e
+    regressao (a descoberta foi desativada pela especificacao).
     """
     espec = espec_de(provider_id)
     v, lg, md = VERDES[provider_id]
@@ -93,7 +101,9 @@ def sensores_verdes(provider_id, versao=None, login=None, modelos=None):
         espec.comandos["versao"]: (0, v, ""),
         espec.comandos["login"]: (0, lg, ""),
     })
-    sensor_modelos = SensorFalso({espec.comandos["modelos"]: (0, md, "")})
+    comando_modelos = espec.comandos.get("modelos")
+    sensor_modelos = SensorFalso(
+        {} if comando_modelos is None else {comando_modelos: (0, md, "")})
     return sensor_exec, sensor_modelos
 
 

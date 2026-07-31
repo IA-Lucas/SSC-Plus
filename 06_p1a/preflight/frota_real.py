@@ -9,17 +9,20 @@ Regras da missao:
   NAO reutilizar OAuth em cliente nao autorizado.
 - grok: permanece SUPERVISED; somente cached token da assinatura, NUNCA
   XAI_API_KEY, nunca api.x.ai PAYG; unattended = TERMS_REVIEW_REQUIRED.
+- claude (emenda P1-A.3, item 4): permanece SUPERVISED enquanto nao
+  houver modelo exato observado por fonte oficial nao interativa; o plano
+  Max, isoladamente, nao basta.
 
-Nenhum caminho local e embutido no fonte: o executavel do Codex deriva do
-home da estacao em tempo de importacao (os.path.expanduser).
+Nenhum caminho local e embutido no fonte: o executavel do Codex usa a
+forma com `~`, expandida SOMENTE no momento da sonda
+(`AdaptadorPreflight._argv`) — assim nem a especificacao, nem os
+relatorios, nem as excecoes carregam o diretorio do usuario local
+(revisao P1-A.3, rodada 3).
 """
 
-import os
 from dataclasses import dataclass
 
-_CODEX_EXE = os.path.join(
-    os.path.expanduser("~"), "AppData", "Local", "Programs", "OpenAI",
-    "Codex", "bin", "codex.exe")
+_CODEX_EXE = "~/AppData/Local/Programs/OpenAI/Codex/bin/codex.exe"
 
 
 @dataclass(frozen=True)
@@ -38,11 +41,17 @@ class EspecProvedor:
     modelos_esperados: tuple        # minimo que a descoberta deve conter
     auth_esperada: str              # subscription-oauth | cached-token
     chaves_payg_relacionadas: tuple # variaveis PAYG deste provedor
-    comandos: dict                  # versao/login/modelos: argv de diagnostico
+    comandos: dict                  # versao/login/modelos: argv de
+                                    # diagnostico; modelos=None desativa
+                                    # a descoberta (teto SUPERVISED)
     billing_mode: str = "subscription"
     variable_cost: float = 0.0
-    teto_resultado: str = "ELIGIBLE"  # google/grok: "SUPERVISED"
+    teto_resultado: str = "ELIGIBLE"  # google/grok/claude: "SUPERVISED"
     automacao: str = "allow-supervised"
+    # ZERO sondas automaticas (emenda P1-A.3, item 5): google/grok sao
+    # classificados estaticamente no teto, sem nenhum sensor — nem
+    # versao, nem login, nem modelos.
+    sondas_automaticas: bool = True
     observacoes: str = ""
 
 
@@ -60,7 +69,11 @@ ESPECIFICACOES: dict[str, EspecProvedor] = {
         chaves_payg_relacionadas=("OPENAI_API_KEY", "CODEX_API_KEY"),
         comandos={"versao": ("--version",),
                   "login": ("login", "status"),
-                  "modelos": ("models",)},
+                  # Emenda P1-A.3, item 2 (APROVADA): `codex doctor`
+                  # comprova o modelo efetivo atual e o auth mode — NAO
+                  # equivale a catalogo completo (`codex models` e
+                  # TTY-only, bloqueio factual da P1-A.2).
+                  "modelos": ("doctor",)},
         observacoes="automacao: allow (supervised headless); billing "
                     "subscription; variable_cost 0"),
     "claude": EspecProvedor(
@@ -77,8 +90,18 @@ ESPECIFICACOES: dict[str, EspecProvedor] = {
                                   "ANTHROPIC_AUTH_TOKEN"),
         comandos={"versao": ("--version",),
                   "login": ("auth", "status"),
-                  "modelos": ("models",)},
-        observacoes="headless `claude -p`; billing subscription"),
+                  # Emenda P1-A.3, item 4 (NAO APROVADA POR DECLARACAO):
+                  # claude permanece SUPERVISED enquanto nao houver modelo
+                  # exato observado por fonte oficial NAO INTERATIVA —
+                  # `claude models` e interativo (bloqueio factual da
+                  # P1-A.2) e o plano Max, isoladamente, nao basta. Sem
+                  # sonda de modelos (None desativa a descoberta).
+                  "modelos": None},
+        teto_resultado="SUPERVISED",
+        automacao="supervised-only",
+        observacoes="headless `claude -p`; billing subscription; emenda "
+                    "P1-A.3: SUPERVISED ate modelo exato observado por "
+                    "fonte oficial nao interativa"),
     "kimi": EspecProvedor(
         provider_id="kimi", cli="kimi", versao_esperada="0.30.0",
         executavel="~/.kimi-code/bin/kimi",
@@ -108,9 +131,13 @@ ESPECIFICACOES: dict[str, EspecProvedor] = {
         chaves_payg_relacionadas=("GEMINI_API_KEY", "GOOGLE_API_KEY"),
         comandos={"versao": ("--version",),
                   "login": ("auth", "status"),
-                  "modelos": ("--list-models",)},
+                  # Emenda P1-A.3, item 5: ZERO sondas automaticas de
+                  # modelos para google (classificacao estatica; as
+                  # sondas via Git Bash penduram — P1-A.2 §5).
+                  "modelos": None},
         teto_resultado="SUPERVISED",
         automacao="supervised-only",
+        sondas_automaticas=False,
         observacoes="regra da missao: permanece SUPERVISED (automacao "
                     "condicional ate prova do canal); NAO reutilizar OAuth "
                     "em cliente nao autorizado"),
@@ -126,9 +153,12 @@ ESPECIFICACOES: dict[str, EspecProvedor] = {
         chaves_payg_relacionadas=("XAI_API_KEY",),
         comandos={"versao": ("--version",),
                   "login": ("auth", "status"),
-                  "modelos": ("models",)},
+                  # Emenda P1-A.3, item 5: ZERO sondas automaticas de
+                  # modelos para grok (idem google).
+                  "modelos": None},
         teto_resultado="SUPERVISED",
         automacao="supervised-only",
+        sondas_automaticas=False,
         observacoes="regra da missao: SUPERVISED; somente cached token da "
                     "assinatura, NUNCA XAI_API_KEY, nunca api.x.ai PAYG; "
                     "unattended = TERMS_REVIEW_REQUIRED"),

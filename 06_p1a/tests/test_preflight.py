@@ -45,9 +45,11 @@ _LOGIN_VERDE = {
     "grok": (0, "logged in (cached token)\nPlano: SuperGrok", ""),
 }
 _MODELOS_VERDE = {
-    "codex": (0, "gpt-5-codex\ngpt-5", ""),
+    # codex: formato `codex doctor` (emenda P1-A.3, item 2).
+    "codex": (0, "model gpt-5-codex\nstored auth mode chatgpt", ""),
     "claude": (0, "claude-opus-4-5\nclaude-sonnet-4-5", ""),
-    "kimi": (0, "kimi-k2\nkimi-k2-thinking", ""),
+    "kimi": (0, "Default model: kimi-code/k3\n"
+                "managed:kimi-code  type=kimi  source=oauth", ""),
     "google": (0, "gemini-2.5-pro\ngemini-2.5-flash", ""),
     "grok": (0, "grok-4\ngrok-code-fast-1", ""),
 }
@@ -244,14 +246,16 @@ class TestFalhasObrigatorias(unittest.TestCase):
     # -- 8. Modelo removido -----------------------------------------------------------------------
 
     def test_falha_8_modelo_removido_bloqueia(self):
+        # Provider com descoberta ativa (kimi; claude tem a descoberta
+        # desativada desde a emenda P1-A.3, item 4).
         for nome, resposta in (("sem-esperado",
                                 (0, "modelo-desconhecido-9\noutro-1", "")),
                                ("vazia", (0, "", ""))):
             with self.subTest(descoberta=nome):
                 rel = executar_preflight(
-                    espec_de("claude"),
-                    {"exec": SensorFalso(_VERSAO_VERDE["claude"],
-                                         _LOGIN_VERDE["claude"]),
+                    espec_de("kimi"),
+                    {"exec": SensorFalso(_VERSAO_VERDE["kimi"],
+                                         _LOGIN_VERDE["kimi"]),
                      "modelos": SensorModelos(resposta)},
                     env={}, config_persistida={})
                 self.assertEqual(rel.resultado, "BLOCKED")
@@ -280,38 +284,55 @@ class TestFalhasObrigatorias(unittest.TestCase):
 
 class TestCaminhoFeliz(unittest.TestCase):
 
-    def test_codex_claude_kimi_eligible_com_sensores_verdes(self):
-        for provider_id in ("codex", "claude", "kimi"):
+    def test_codex_claude_kimi_ate_o_teto_com_sensores_verdes(self):
+        # Emenda P1-A.3: claude tem teto SUPERVISED e descoberta de
+        # modelos desativada (sem fonte oficial nao interativa).
+        esperado = {"codex": "ELIGIBLE", "claude": "SUPERVISED",
+                    "kimi": "ELIGIBLE"}
+        for provider_id, resultado in esperado.items():
             with self.subTest(provider=provider_id):
                 sensores = _sensores_verdes(provider_id)
                 rel = executar_preflight(espec_de(provider_id), sensores,
                                          env={}, config_persistida={})
-                self.assertEqual(rel.resultado, "ELIGIBLE")
+                self.assertEqual(rel.resultado, resultado)
                 self.assertEqual(rel.erros, [])
                 # Fail-closed (P1-A.1): sem sinal positivo, quota e unknown.
                 self.assertEqual(rel.quota, "desconhecida")
                 self.assertEqual(rel.origem_credencial,
                                  "subscription-oauth")
                 self.assertTrue(rel.versao)
-                self.assertTrue(rel.modelos)
-                # Sensor de modelos foi chamado (ordem: economia -> modelos).
-                self.assertEqual(len(sensores["modelos"].chamadas), 1)
+                if espec_de(provider_id).comandos["modelos"] is None:
+                    self.assertEqual(rel.modelos, [])
+                    # Nenhuma sonda de modelos (descoberta desativada).
+                    self.assertEqual(len(sensores["modelos"].chamadas), 0)
+                else:
+                    self.assertTrue(rel.modelos)
+                    # Sensor de modelos foi chamado (ordem: economia ->
+                    # modelos).
+                    self.assertEqual(len(sensores["modelos"].chamadas), 1)
 
     def test_google_grok_supervised_mesmo_com_tudo_verde(self):
         for provider_id in ("google", "grok"):
             with self.subTest(provider=provider_id):
-                rel = executar_preflight(espec_de(provider_id),
-                                         _sensores_verdes(provider_id),
+                sensores = _sensores_verdes(provider_id)
+                rel = executar_preflight(espec_de(provider_id), sensores,
                                          env={}, config_persistida={})
                 self.assertEqual(rel.resultado, "SUPERVISED")
                 self.assertEqual(rel.erros, [])
-                self.assertTrue(rel.modelos)
+                # Emenda P1-A.3, item 5: ZERO sondas automaticas — nem
+                # versao/login, nem modelos.
+                self.assertEqual(rel.modelos, [])
+                self.assertEqual(len(sensores["modelos"].chamadas), 0)
+                self.assertEqual(len(sensores["exec"].chamadas), 0)
 
-    def test_grok_origem_cached_token(self):
+    def test_grok_origem_nao_sondada(self):
+        # Emenda P1-A.3, item 5: grok tem ZERO sondas automaticas — a
+        # origem cached-token NAO pode ser observada; o relatorio marca
+        # "nao-sondada" em vez de simular evidencia.
         rel = executar_preflight(espec_de("grok"),
                                  _sensores_verdes("grok"),
                                  env={}, config_persistida={})
-        self.assertEqual(rel.origem_credencial, "cached-token")
+        self.assertEqual(rel.origem_credencial, "nao-sondada")
 
     def test_relatorio_roundtrip(self):
         for rel in (executar_preflight(espec_de("codex"),

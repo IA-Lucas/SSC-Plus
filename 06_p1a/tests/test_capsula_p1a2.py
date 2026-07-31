@@ -181,12 +181,14 @@ class F1ExpansaoDoExecutavel(unittest.TestCase):
         # do SO, nao de um til cru)
         self.assertEqual(sensor.chamadas, [("--version",)])
 
-    def test_pipeline_claude_kimi_eligible_com_til(self):
-        for pid in ("claude", "kimi"):
+    def test_pipeline_claude_kimi_ate_o_teto_com_til(self):
+        # Emenda P1-A.3: claude tem teto SUPERVISED; kimi segue ELIGIBLE.
+        esperado = {"claude": "SUPERVISED", "kimi": "ELIGIBLE"}
+        for pid, resultado in esperado.items():
             sens, sensor_exec, _ = sensores_dict(pid)
             rel = executar_preflight(espec_com(pid), sensores=sens,
                                      env={"PATH": "x"})
-            self.assertEqual(rel.resultado, "ELIGIBLE", pid)
+            self.assertEqual(rel.resultado, resultado, pid)
             # a 1a sonda (versao) recebeu o executavel sem til cru
             self.assertTrue(sensor_exec.n >= 1)
 

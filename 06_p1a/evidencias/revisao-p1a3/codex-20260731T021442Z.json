@@ -1,0 +1,36 @@
+{
+  "provider": "codex",
+  "ts_utc": "20260731T021442Z",
+  "tipo": "revisao-p1a3",
+  "chamadas_de_modelo": 1,
+  "custo_variavel": 0,
+  "rotulo": "assinatura-oauth; UMA chamada; enforcement read-only",
+  "enforcement_read_only": "--sandbox read-only --ephemeral (CLI)",
+  "lock_escritor_unico": {
+    "sessao": "p1a3-ops",
+    "pid_titular": 78412
+  },
+  "argv_publico": [
+    "codex",
+    "exec",
+    "--sandbox",
+    "read-only",
+    "--cd",
+    "C:\\Users\\<USUARIO>\\AppData\\Local\\Temp\\p1a3-revisao-codex-h9zldjgz",
+    "--skip-git-repo-check",
+    "--ephemeral",
+    "<PROMPT>"
+  ],
+  "prompt_sha256": "6a49245358988612ae6823834293fa81830718436c87bae68f365cea7ba38b52",
+  "pacote_sha256": "9d4ec5a5854b8285c6a67dec9db59d24cc98482b4241be9ec442eae2a2342df1",
+  "dir_descartavel": "C:\\Users\\<USUARIO>\\AppData\\Local\\Temp\\p1a3-revisao-codex-h9zldjgz",
+  "dir_descartavel_arquivos_restantes": [
+    "pacote-revisao.txt"
+  ],
+  "env_vars_removidas_nomes": [],
+  "returncode": 0,
+  "duracao_s": 155.722,
+  "resposta": "MAJOR 06_p1a/preflight/adaptadores.py:Kimi — `descobrir_modelos` ignora `rc` nos parsers genéricos e aceita `managed:kimi-code` como modelo esperado; OAuth sem modelo efetivo já pode produzir SHADOW_ELIGIBLE.\nMAJOR 06_p1a/preflight/adaptadores.py:codex-doctor — regexes não ancoradas aceitam texto incidental como “expected auth mode chatgpt” e qualquer “model …”; uma saída com autenticação real divergente pode comprovar falsamente auth/modelo.\nMAJOR 06_p1a/preflight/frota_real.py:google-grok — `modelos=None` elimina apenas a descoberta; o pipeline ainda executa automaticamente `--version` e `auth status`, contrariando a decisão de zero sondas automáticas, e o teste verifica somente `sensor_modelos.n`.\nMAJOR 06_p1a/preflight/adaptadores.py:quota — “no requests remaining” não casa os padrões de esgotamento e casa o sinal positivo `remaining`, sendo classificado como `disponivel`; a trilha sombra pode vencer uma quota explicitamente esgotada.\nMAJOR 06_p1a/preflight/sombra.py:validacao-tier — qualquer `tier` não vazio é aceito, sem confronto com `planos_aceitos`; uma declaração “free” ou arbitrária satisfaz o portão comercial e habilita SHADOW_ELIGIBLE.\nMAJOR 06_p1a/preflight/sombra.py:timestamp — `_parse_utc` deixa `astimezone()` fora do `try`; valores como `0001-01-01T00:00:00+14:00` podem gerar `OverflowError` em vez de falhar fechado.\nMINOR 06_p1a/preflight/pipeline.py:PII — `caminho` contém o executável Codex expandido com o perfil local e é emitido cru por `to_dict`; `CliIndisponivel` também o inclui no detalhe, deixando a proteção dependente de redação externa.\nMINOR 06_p1a/tests/test_emendas_p1a3.py:cobertura — não há regressões para rc não zero do Kimi, ausência de modelo efetivo, tier declarado incompatível, formulações alternativas de quota esgotada, overflow por offset nem proibição ponta a ponta de P2 para SHADOW_ELIGIBLE.\nREPROVADO",
+  "stderr_resumo": "Reading additional input from stdin...\nOpenAI Codex v0.145.0\n--------\nworkdir: C:\\Users\\<USUARIO>\\AppData\\Local\\Temp\\p1a3-revisao-codex-h9zldjgz\nmodel: gpt-5.6-sol\nprovider: openai\napproval: never\nsandbox: read-only\nreasoning effort: high\nreasoning summaries: none\nsession id: 019fb5f3-d2ba-7f90-bb1c-88f450c30f43\n--------\nuser\nRevise em modo SOMENTE LEITURA o changeset SSC+ P1-A.3. O pacote completo (contexto, perguntas 1-6 e todos os arquivos do changeset) esta em ./pacote-revisao.txt no diretorio atual: leia-o POR INTEIRO antes de avaliar. Voce NAO pode escrever nada: responda apenas com a revisao em texto.\n\nFormato de resposta: um achado por linha, prefixado por severidade CRITICAL | MAJOR | MINOR | OBS, seguida de arquivo:tema e descricao curta. Se nao houver achado num nivel, nao o invente. Termine com um veredito: APROVADO | APROVADO-COM-RESSALVAS | REPROVADO.\ncodex\nVou ler o pacote completo em modo somente leitura, conferir as perguntas e cada arquivo do changeset, e então devolver apenas os achados no formato solicitado.\nexec\n\"C:\\\\Program Files\\\\WindowsApps\\\\Microsoft.PowerShell_7.6.4.0_x64__8wekyb3d8bbwe\\\\pwsh.exe\" -Command '$p = Resolve-Path -LiteralPath '\"'.\\\\pacote-revisao.txt'; Get-Item -LiteralPath \"'$p | Select-Object FullName,Length; (Get-Content -LiteralPath $p).Count' in C:\\Users\\<USUARIO>\\AppData\\Local\\Temp\\p1a3-revisao-codex-h9zldjgz\n2026-07-31T02:14:51.332601Z ERROR codex_core::exec: exec error: windows sandbox: orchestrator_helper_launch_failed: setup refresh failed to launch helper: helper=codex-windows-sandbox-setup.exe, cwd=C:\\Users\\<USUARIO>\\AppData\\Local\\Temp\\p1a3-revisao-codex-h9zldjgz, log=C:\\Users\\<USUARIO>\\.codex\\.sandbox\\sandbox.2026-07-31.log, error=program not found\n2026-07-31T02:14:51.332895Z ERROR codex_core::tools::router: error=execution error: Io(Custom { kind: Other, error: \"windows sandbox: orchestrator_helper_launch_failed: setup refresh failed to launch helper: helper=codex-windows-sandbox-setup.exe, cwd=C:\\\\Users\\\\<USUARIO>\\\\App",
+  "quota_observavel": "nao-exposta-pelo-cli"
+}

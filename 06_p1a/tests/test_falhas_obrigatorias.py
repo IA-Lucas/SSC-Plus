@@ -175,8 +175,11 @@ class Falha03OAuthAusente(FalhaObrigatoriaBase):
 
     def test_origem_divergente_da_esperada_bloqueia(self):
         # Grok espera cached-token; um login que se anuncia OAuth de outro
-        # canal nao serve — origem diferente da esperada e bloqueio.
-        espec = espec_com("grok", auth_esperada="subscription-oauth")
+        # canal nao serve — origem diferente da esperada e bloqueio. O
+        # grok real tem ZERO sondas (emenda P1-A.3); para exercitar o
+        # portao de origem, a espec de teste reabilita as sondas.
+        espec = espec_com("grok", auth_esperada="subscription-oauth",
+                          sondas_automaticas=True)
         sens, _, sensor_modelos = sensores_dict(
             "grok", login="Using cached token (SuperGrok)")
         relatorio = executar_preflight(espec, sens, env={})
@@ -306,17 +309,19 @@ class Falha07CliIndisponivel(FalhaObrigatoriaBase):
         self.assertIsNone(relatorio.versao)
 
     def test_erro_de_os_tambem_e_cli_indisponivel(self):
+        # kimi: provider com sondas automaticas (grok/google tem zero
+        # sondas desde a emenda P1-A.3 e nao exercitam este caminho).
         sensor_exec = SensorFalso(erro=OSError("acesso negado"))
         relatorio = executar_preflight(
-            espec_de("grok"), {"exec": sensor_exec, "modelos": SensorFalso()},
+            espec_de("kimi"), {"exec": sensor_exec, "modelos": SensorFalso()},
             env={})
         self.afirmar_bloqueio(relatorio, "P1A-CLI-INDISPONIVEL")
 
     def test_versao_com_rc_diferente_de_zero_bloqueia(self):
-        sens, _, sensor_modelos = sensores_dict("google")
-        sens["exec"].respostas[espec_de("google").comandos["versao"]] = \
+        sens, _, sensor_modelos = sensores_dict("claude")
+        sens["exec"].respostas[espec_de("claude").comandos["versao"]] = \
             (127, "", "command not found")
-        relatorio = executar_preflight(espec_de("google"), sens, env={})
+        relatorio = executar_preflight(espec_de("claude"), sens, env={})
         self.afirmar_bloqueio(relatorio, "P1A-CLI-INDISPONIVEL",
                               sensor_modelos)
 
@@ -335,8 +340,11 @@ class Falha08ModeloRemovido(FalhaObrigatoriaBase):
     """8. Modelo removido: descoberta sem nenhum modelo esperado."""
 
     def test_descoberta_sem_modelo_esperado_bloqueia(self):
+        # codex (emenda P1-A.3, item 2): `doctor` com auth comprovado,
+        # mas modelo efetivo fora dos esperados da assinatura.
         sens, _, sensor_modelos = sensores_dict(
-            "codex", modelos="text-embedding-3-small\nwhisper-1")
+            "codex", modelos="model text-embedding-3-small\n"
+                             "stored auth mode chatgpt")
         relatorio = executar_preflight(espec_de("codex"), sens, env={})
         # A descoberta E o ponto de falha: uma unica sonda de modelos.
         self.afirmar_bloqueio(relatorio, "P1A-MODELO-REMOVIDO",
@@ -346,8 +354,8 @@ class Falha08ModeloRemovido(FalhaObrigatoriaBase):
         self.assertNotIn("gpt-5", relatorio.modelos)
 
     def test_descoberta_vazia_bloqueia(self):
-        sens, _, sensor_modelos = sensores_dict("claude", modelos="")
-        relatorio = executar_preflight(espec_de("claude"), sens, env={})
+        sens, _, sensor_modelos = sensores_dict("kimi", modelos="")
+        relatorio = executar_preflight(espec_de("kimi"), sens, env={})
         self.afirmar_bloqueio(relatorio, "P1A-MODELO-REMOVIDO",
                               sensor_modelos, chamadas_modelos=1)
         self.assertEqual(relatorio.modelos, [])
@@ -387,13 +395,16 @@ class Falha09ConflitoAmbienteLogin(FalhaObrigatoriaBase):
         self.afirmar_bloqueio(relatorio, "P1A-PAYG-ENV", sensor_modelos)
         self.assertIn("P1A-OAUTH-AUSENTE", codigos(relatorio))
 
-    def test_xai_api_key_nunca_vence_cached_token_do_grok(self):
-        sens, _, sensor_modelos = sensores_dict("grok")
+    def test_xai_api_key_no_ambiente_bloqueia_o_grok(self):
+        # Grok tem ZERO sondas automaticas (emenda P1-A.3, item 5): sem
+        # sonda de login nao ha como evidenciar conflito OAuth x chave —
+        # a chave e violacao economica simples, fail-closed.
+        sens, sensor_exec, sensor_modelos = sensores_dict("grok")
         relatorio = executar_preflight(
             espec_de("grok"), sens, env={"XAI_API_KEY": SENTINELA})
-        self.afirmar_bloqueio(relatorio, "P1A-CONFLITO-ENV-LOGIN",
-                              sensor_modelos)
+        self.afirmar_bloqueio(relatorio, "P1A-PAYG-ENV", sensor_modelos)
         self.assertEqual(relatorio.erros[0].alvo, "XAI_API_KEY")
+        self.assertEqual(sensor_exec.n, 0)
 
     def test_conflito_com_multiplas_chaves_lista_todos_os_nomes(self):
         sens, _, sensor_modelos = sensores_dict("claude")

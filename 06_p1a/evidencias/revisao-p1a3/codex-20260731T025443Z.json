@@ -1,0 +1,36 @@
+{
+  "provider": "codex",
+  "ts_utc": "20260731T025443Z",
+  "tipo": "revisao-p1a3",
+  "chamadas_de_modelo": 1,
+  "custo_variavel": 0,
+  "rotulo": "assinatura-oauth; UMA chamada; enforcement read-only",
+  "enforcement_read_only": "--sandbox read-only --ephemeral (CLI)",
+  "lock_escritor_unico": {
+    "sessao": "p1a3-ops",
+    "pid_titular": 78412
+  },
+  "argv_publico": [
+    "codex",
+    "exec",
+    "--sandbox",
+    "read-only",
+    "--cd",
+    "C:\\Users\\<USUARIO>\\AppData\\Local\\Temp\\p1a3-revisao-codex-1f6pfy0t",
+    "--skip-git-repo-check",
+    "--ephemeral",
+    "<PROMPT>"
+  ],
+  "prompt_sha256": "6a49245358988612ae6823834293fa81830718436c87bae68f365cea7ba38b52",
+  "pacote_sha256": "45985aed350494e7e8591979d4dda15d0834776e014afe85c88b001c147f9883",
+  "dir_descartavel": "C:\\Users\\<USUARIO>\\AppData\\Local\\Temp\\p1a3-revisao-codex-1f6pfy0t",
+  "dir_descartavel_arquivos_restantes": [
+    "pacote-revisao.txt"
+  ],
+  "env_vars_removidas_nomes": [],
+  "returncode": 0,
+  "duracao_s": 230.423,
+  "resposta": "MAJOR | 06_p1a/preflight/adaptadores.py:plano | `_plano_de` aceita planos longos em qualquer contexto; “Logged in using ChatGPT\\nUpgrade to ChatGPT Pro” pode produzir `ELIGIBLE`, contornando a trilha sombra.\nMAJOR | 06_p1a/preflight/adaptadores.py:OAuth-Kimi | `_login_kimi` considera `managed:kimi-code` isoladamente prova de login e ignora `stderr`; OAuth ausente ou contraditório pode resultar em `SHADOW_ELIGIBLE`.\nMAJOR | 06_p1a/preflight/adaptadores.py:modelo-Kimi | O parser escolhe a primeira linha `Default model` sem vinculá-la ao provider OAuth; evidências de providers distintos podem ser combinadas.\nMAJOR | 06_p1a/preflight/pipeline.py:declaracao | O portão não revalida `declarado_por` nem `decl.provider_id`; uma `DeclaracaoTier` fornecida diretamente, sem passar por `carregar_declaracoes`, habilita sombra mesmo sem declaração do proprietário.\nMAJOR | 06_p1a/preflight/adaptadores.py:quota | Esgotamentos como “0 tokens available” ou “no quota available” casam o sinal positivo `available` e não os padrões de esgotamento, permitindo que quota zero avance.\nMAJOR | 06_p1a/tests/test_emendas_p1a3.py:autorizacao | Não há teste de integração provando que cápsula/P2/consumidores legados rejeitam `SHADOW_ELIGIBLE`; a restrição está apenas no texto do relatório.\nMINOR | 06_p1a/preflight/pipeline.py:falha-login | `CliIndisponivel` é capturada na versão e nos modelos, mas não em `consultar_login`; uma falha de execução nessa etapa propaga exceção em vez de retornar `BLOCKED`.\nMINOR | 06_p1a/preflight/pipeline.py:zero-sondas | `_normalizar_sensores` exige sensor de modelos mesmo quando `comandos[\"modelos\"] = None`, podendo abortar Claude/Google/Grok antes da classificação estática.\n\nVEREDITO: REPROVADO",
+  "stderr_resumo": "Reading additional input from stdin...\nOpenAI Codex v0.145.0\n--------\nworkdir: C:\\Users\\<USUARIO>\\AppData\\Local\\Temp\\p1a3-revisao-codex-1f6pfy0t\nmodel: gpt-5.6-sol\nprovider: openai\napproval: never\nsandbox: read-only\nreasoning effort: high\nreasoning summaries: none\nsession id: 019fb618-736b-72e0-b67c-f9d98b74b986\n--------\nuser\nRevise em modo SOMENTE LEITURA o changeset SSC+ P1-A.3. O pacote completo (contexto, perguntas 1-6 e todos os arquivos do changeset) esta em ./pacote-revisao.txt no diretorio atual: leia-o POR INTEIRO antes de avaliar. Voce NAO pode escrever nada: responda apenas com a revisao em texto.\n\nFormato de resposta: um achado por linha, prefixado por severidade CRITICAL | MAJOR | MINOR | OBS, seguida de arquivo:tema e descricao curta. Se nao houver achado num nivel, nao o invente. Termine com um veredito: APROVADO | APROVADO-COM-RESSALVAS | REPROVADO.\ncodex\nVou ler o pacote integralmente e, depois, confrontar contexto, perguntas e arquivos sem fazer nenhuma alteração no workspace.\nexec\n\"C:\\\\Program Files\\\\WindowsApps\\\\Microsoft.PowerShell_7.6.4.0_x64__8wekyb3d8bbwe\\\\pwsh.exe\" -Command '$p = Resolve-Path -LiteralPath '\"'.\\\\pacote-revisao.txt'; \"'$f = Get-Item -LiteralPath $p; $lines = (Get-Content -LiteralPath $p | Measure-Object -Line).Lines; [pscustomobject]@{Path=$p.Path; Bytes=$f.Length; Lines=$lines} | Format-List' in C:\\Users\\<USUARIO>\\AppData\\Local\\Temp\\p1a3-revisao-codex-1f6pfy0t\n2026-07-31T02:54:51.750214Z ERROR codex_core::exec: exec error: windows sandbox: orchestrator_helper_launch_failed: setup refresh failed to launch helper: helper=codex-windows-sandbox-setup.exe, cwd=C:\\Users\\<USUARIO>\\AppData\\Local\\Temp\\p1a3-revisao-codex-1f6pfy0t, log=C:\\Users\\<USUARIO>\\.codex\\.sandbox\\sandbox.2026-07-31.log, error=program not found\n2026-07-31T02:54:51.750567Z ERROR codex_core::tools::router: error=execution error: Io(Custom { kind: Other, error: \"windows sandbox: orchestrator_helper_launch_failed: setup refresh failed to launch helper: helper=codex-window",
+  "quota_observavel": "nao-exposta-pelo-cli"
+}

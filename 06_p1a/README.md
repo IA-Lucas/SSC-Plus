@@ -22,7 +22,8 @@ operacao real, com ambiente sanitizado, timeout e captura de saida.
    desconhecida = DENY (nunca ELIGIBLE por inferencia).
 4. Deteccao do CLI + versao + status de login via sensores.
 5. Descoberta de modelos — **somente** com economia/auth verdes.
-6. Classificacao: `ELIGIBLE` | `SUPERVISED` | `BLOCKED` com erros tipados.
+6. Classificacao: `ELIGIBLE` | `SHADOW_ELIGIBLE` | `SUPERVISED` |
+   `BLOCKED` com erros tipados.
 
 Qualquer violacao economica ou de auth bloqueia **antes** de qualquer
 sensor de modelo. Google e Grok nunca passam de `SUPERVISED`
@@ -35,7 +36,8 @@ Erros tipados (todos derivam de `ErroPreflight`, com `codigo` estavel):
 `PlanoNaoReconhecido` (P1A-PLANO-DESCONHECIDO), `QuotaEsgotada`
 (P1A-QUOTA-ESGOTADA), `BillingDesconhecido` (P1A-BILLING-DESCONHECIDO),
 `CliIndisponivel` (P1A-CLI-INDISPONIVEL), `ModeloRemovido`
-(P1A-MODELO-REMOVIDO), `ConflitoAmbienteLogin` (P1A-CONFLITO-ENV-LOGIN).
+(P1A-MODELO-REMOVIDO), `ConflitoAmbienteLogin` (P1A-CONFLITO-ENV-LOGIN),
+`DeclaracaoExpirada` (P1A-DECLARACAO-EXPIRADA — P1-A.3).
 
 ## Rodar os testes
 
@@ -58,3 +60,16 @@ nenhuma credencial de modelo; o ambiente global/HKCU nunca e modificado),
 uma chamada). Adendo de politica: `06_adendo-capsula-p1a2.md`; decisao:
 `99_decisao-p1a2.md` (ADJUST — bloqueios factuais de especificacao nos
 portoes de plano/descoberta headless).
+
+P1-A.3 (emendas decididas pelo Soberano sobre a P1-A.2): trilha
+`SHADOW_ELIGIBLE` — tier declarado pelo proprietario
+(`tiers_declarados.json`, validade maxima 24 h) + OAuth observado; NAO
+autoriza P2 nem execucao autonoma (`preflight/sombra.py`). Descoberta
+codex via `codex doctor` (modelo efetivo + auth mode; nao catalogo).
+Kimi comprova OAuth e modelo efetivo via `provider list`, nao o plano
+(trilha sombra). Claude permanece SUPERVISED, sem sonda de modelos, ate
+modelo exato observado por fonte oficial nao interativa. Google e Grok
+SUPERVISED, zero sondas automaticas. Capsula, politica NVIDIA e
+bloqueios PAYG inalterados. Revisao independente por 2 providers:
+`evidencias/revisao_p1a3.py`. Adendo: `07_adendo-emendas-p1a3.md`;
+decisao: `99_decisao-p1a3.md`.

@@ -113,7 +113,9 @@ class QuotaFailClosed(unittest.TestCase):
             login='{"loggedIn": true, "subscriptionType": "max", '
                   '"quota": "120 requests remaining"}')
         relatorio = executar_preflight(espec_de("claude"), sens, env={})
-        self.assertEqual(relatorio.resultado, "ELIGIBLE")
+        # Emenda P1-A.3 item 4: claude tem teto SUPERVISED; a quota
+        # observada continua propagada no diagnostico.
+        self.assertEqual(relatorio.resultado, "SUPERVISED")
         self.assertEqual(relatorio.quota, "disponivel")
 
     def test_pipeline_quota_esgotada_segue_bloqueando(self):
@@ -205,9 +207,10 @@ class ConfigRecursivaENormalizada(unittest.TestCase):
         self.assertEqual(sensor_exec.n, 0)
         self.assertEqual(sensor_modelos.n, 0)
 
-    def test_nove_tipos_de_erro_preservados(self):
-        # O fail-closed de auth reutiliza tipo existente: nenhum 10o tipo.
-        self.assertEqual(len(_TIPOS_ERRO), 9)
+    def test_dez_tipos_de_erro_preservados(self):
+        # 9 tipos originais + DeclaracaoExpirada (emenda P1-A.3, item 1:
+        # declaracao de tier fora da validade de 24 h e erro tipado).
+        self.assertEqual(len(_TIPOS_ERRO), 10)
 
 
 class SanitizacaoUnica(unittest.TestCase):
