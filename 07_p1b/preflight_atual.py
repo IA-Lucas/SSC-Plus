@@ -1,5 +1,9 @@
 """Preflight ATUAL da frota real — SSC+ P1-B (experimental, sem autoridade).
 
+Executar SOMENTE via entry point da capsula (P1-B.01, ordem 1):
+
+    python 06_p1a/capsula.py python 07_p1b/preflight_atual.py
+
 Executa o pipeline de preflight da P1-A (`06_p1a/preflight`) contra os 5
 CLIs de assinatura DESTA estacao, AGORA, e persiste o relatorio em JSON.
 Somente sondas de DIAGNOSTICO (versao/login/modelos): NENHUMA chamada de
@@ -7,9 +11,30 @@ modelo e feita; custo variavel = 0 por construcao (billing subscription).
 
 Portoes herdados da P1-A/P1-A.1 (nao reimplementados aqui):
 - toda sonda passa por `sensor_subprocess` com `ambiente_sanitizado`
-  (credenciais PAYG nunca entram no subprocesso);
+  (credenciais PAYG nunca entram no subprocesso — `adaptadores.py:86`);
 - violacao economica/auth bloqueia ANTES de qualquer sonda de modelo;
 - google e grok tem teto SUPERVISED; ausencia de evidencia = unknown.
+
+CAPSULA (P1-B.01, ordem 1). Ate aqui a garantia acima alcancava SOMENTE
+as sondas-filho: o processo pai auditava e classificava `dict(os.environ)`
+CRU, e `06_p1a/capsula.py` — ratificada na P1-A.2 — nunca era importada.
+Uma chave PAYG de outro provedor visivel na estacao entrava em
+`env_outras` (`pipeline.py:126-127`) e o runner degradava em silencio.
+Passam a valer as duas metades da capsula, como no runner ratificado da
+P1-A (`06_p1a/preflight_capsula.py:161`):
+
+- ENTRADA: `exigir_capsula_limpa()` na primeira linha util de `main()` —
+  fora da capsula o processo ABORTA antes do lease, antes de qualquer
+  sonda e antes de qualquer escrita (`capsula.py:71`);
+- AMBIENTE: o que o pipeline audita e classifica e `ambiente_capsula()`
+  (`capsula.py:52`), nao `os.environ` cru — nenhum nome reprovado por
+  `_nome_payg` chega a `env_outras`, por construcao e nao por confianca
+  no portao de entrada.
+
+O ambiente global/HKCU do usuario nunca e lido para alteracao, alterado
+ou persistido: a decisao da P1-A.2 (`capsula.py:3-6`) continua valendo —
+credencial de terceiro PODE existir no ambiente global; o SSC+ nao a
+remove, apenas nao a deixa entrar na capsula.
 
 Escritor unico: antes de escrever a evidencia, este script VERIFICA o
 lease `locks/p1b-ops.lease` (sessao p1b-ops viva e nao expirada). O lock
@@ -37,13 +62,19 @@ sys.path.insert(0, os.path.join(_RAIZ, "06_p1a"))
 sys.path.insert(0, os.path.join(_RAIZ, "06_p1a", "evidencias"))
 
 import leitores_config  # noqa: E402
+from capsula import (ambiente_capsula, exigir_capsula_limpa,  # noqa: E402
+                     verificar_capsula)
 from preflight.adaptadores import sensor_subprocess  # noqa: E402
 from preflight.economia import ambiente_sanitizado, auditar_ambiente  # noqa: E402
 from preflight.frota_real import frota_real  # noqa: E402
 from preflight.pipeline import executar_preflight  # noqa: E402
 
 _GITBASH = r"E:\LucasIA\Git\bin\bash.exe"
-_SESSAO_LOCK = "p1b-ops"
+# Cada missao opera sob lease de NOME PROPRIO (condicao operativa do
+# ACHADO 4): reusar o `.lease`/`.fence` da missao anterior confunde o
+# titular. O default historico permanece para nao mudar o comportamento
+# de quem nao declara sessao.
+_SESSAO_LOCK = os.environ.get("SSC_LOCK_SESSAO", "p1b-ops")
 # CLIs npm sem executavel Windows direto: a sonda vai pelo Git Bash.
 _VIA_GITBASH = ("google", "grok")
 
@@ -111,14 +142,25 @@ def _sensor_de(provider_id: str):
 _config_persistida = leitores_config.config_persistida
 
 def main() -> int:
+    # ORDEM 1(b): PRIMEIRA linha util. Fora da capsula o runner aborta
+    # aqui — antes do lease, antes da primeira sonda e antes de qualquer
+    # escrita —, em vez de degradar em silencio. Politica estrita da
+    # P1-A.2: credencial de modelo visivel DENTRO da capsula = bloqueio.
+    exigir_capsula_limpa()
     lock = _verificar_lock_vivo()
     agora = datetime.now(timezone.utc)
-    viol_ambiente = auditar_ambiente(dict(os.environ))
+    # ORDEM 1(a): ambiente de CAPSULA, derivado uma unica vez e usado
+    # tanto na auditoria do relatorio quanto na classificacao de cada
+    # provedor. `ambiente_capsula` reaudita o proprio resultado
+    # (fail-closed): nenhum nome reprovado por `_nome_payg` sobrevive, e
+    # portanto nenhum chega a `env_outras` no pipeline.
+    ambiente = ambiente_capsula(os.environ)
+    viol_ambiente = auditar_ambiente(ambiente)
     relatorios = []
     for espec in frota_real():
         rel = executar_preflight(
             espec, sensores=_sensor_de(espec.provider_id),
-            env=dict(os.environ),
+            env=ambiente,
             config_persistida=_config_persistida(espec.provider_id))
         relatorios.append(rel.to_dict())
 
@@ -139,10 +181,23 @@ def main() -> int:
         "nota": "somente sondas de diagnostico (versao/login/modelos); "
                 "nenhuma invocacao de modelo; env das sondas sanitizado "
                 "pela canonica preflight.economia.ambiente_sanitizado",
+        "capsula": {
+            "mecanismo": "entrada por capsula.iniciar_em_capsula + guarda "
+                         "exigir_capsula_limpa no processo + ambiente "
+                         "derivado por capsula.ambiente_capsula",
+            "violacoes_no_env_do_processo": verificar_capsula(dict(os.environ)),
+            "violacoes_no_env_classificado": verificar_capsula(ambiente),
+            "politica": "subscription-only; qualquer credencial de modelo "
+                        "visivel dentro da capsula = bloqueio",
+        },
         "violacoes_ambiente_nomes": sorted(
             {v.alvo for v in viol_ambiente if v.alvo}),
+        # Medido sobre o ambiente da CAPSULA (o que o pipeline recebe), e
+        # nao sobre `os.environ` cru: dentro da capsula a sanitizacao das
+        # sondas-filho nao tem mais nada a remover, e a lista vazia e o
+        # resultado correto — nao um campo que deixou de ser medido.
         "env_sanitizado_remove_nomes": sorted(
-            set(os.environ) - set(ambiente_sanitizado())),
+            set(ambiente) - set(ambiente_sanitizado(ambiente))),
         "frota": relatorios,
     }
     texto = _redigir(json.dumps(documento, indent=2, ensure_ascii=False,
