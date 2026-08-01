@@ -167,6 +167,109 @@ class LeitorRealDeConfig(unittest.TestCase):
             f.write(b"SQLite format 3\x00")
         self.assertEqual(preflight_capsula._config_persistida("grok"), {})
 
+    # --- achado A: o leitor real dos CINCO, nao so do grok -------------
+
+    FONTES_REAIS = {
+        "codex": ".codex/auth.json",
+        "claude": ".claude/settings.json",
+        "kimi": ".kimi-code/config.toml",
+        "google": ".gemini/settings.json",
+        "grok": ".grok/user-settings.json",
+    }
+
+    def _escrever_config(self, pid: str, dados: dict) -> None:
+        """Escreve a config no formato REAL da fonte de cada provedor."""
+        rel = self.FONTES_REAIS[pid]
+        if rel.endswith(".toml"):
+            caminho = os.path.join(self.lar, *rel.split("/"))
+            os.makedirs(os.path.dirname(caminho), exist_ok=True)
+            linhas = []
+            for chave, valor in dados.items():
+                literal = (str(valor).lower() if isinstance(valor, bool)
+                           else f'"{valor}"')
+                linhas.append(f"{chave} = {literal}")
+            with open(caminho, "w", encoding="utf-8") as f:
+                f.write("\n".join(linhas) + "\n")
+        else:
+            self._escrever(rel, dados)
+
+    def test_todo_provedor_e_lido_do_disco_pelo_binding_padrao(self):
+        # Achado A na sua forma geral: ate aqui NENHUM teste executava
+        # `_config_persistida` — a varredura mediu zero linha. Cada
+        # provedor recebe auto top-up na sua fonte REAL e precisa
+        # BLOQUEAR sem que `config_de` seja injetado.
+        for pid in _PROVEDORES:
+            with self.subTest(provedor=pid):
+                with tempfile.TemporaryDirectory(prefix="p1a35-cinco-") as lar:
+                    self.lar = lar
+                    self._no_lar_descartavel()
+                    self._escrever_config(pid, {"auto_topup": True})
+                    rels = self._classificar_sem_injetar_config()
+                    self.assertEqual(rels[pid].resultado, "BLOCKED")
+                    self.assertIn("P1A-PAYG-CONFIG", codigos(rels[pid]))
+
+    def test_chave_de_api_persistida_bloqueia_em_todo_provedor(self):
+        for pid in _PROVEDORES:
+            with self.subTest(provedor=pid):
+                with tempfile.TemporaryDirectory(prefix="p1a35-chave-") as lar:
+                    self.lar = lar
+                    self._no_lar_descartavel()
+                    self._escrever_config(pid, {"api_key": apoio.SENTINELA})
+                    rels = self._classificar_sem_injetar_config()
+                    self.assertEqual(rels[pid].resultado, "BLOCKED")
+                    self.assertIn("P1A-PAYG-CONFIG", codigos(rels[pid]))
+
+    def test_lar_limpo_nao_produz_violacao_de_config_em_ninguem(self):
+        # Contraprova dos dois testes acima: sem ela, um leitor que
+        # devolvesse violacao sempre passaria em ambos.
+        self._no_lar_descartavel()
+        rels = self._classificar_sem_injetar_config()
+        for pid in _PROVEDORES:
+            with self.subTest(provedor=pid):
+                self.assertNotIn("P1A-PAYG-CONFIG", codigos(rels[pid]))
+
+    def test_credencial_oauth_do_codex_nao_e_falso_positivo(self):
+        # Escopo ratificado na auditoria P1-A (02_auditoria-economica §2):
+        # `tokens.*` de `auth.json` SAO a credencial OAuth do ChatGPT, nao
+        # chave de API. Alimenta-las a auditoria acusaria PAYG em toda
+        # estacao logada — o guarda bloquearia justamente quem esta no
+        # canal certo. Este teste fixa a exclusao.
+        self._no_lar_descartavel()
+        self._escrever(".codex/auth.json", {
+            "auth_mode": "subscription-oauth",
+            "tokens": {"access_token": apoio.SENTINELA,
+                       "refresh_token": apoio.SENTINELA,
+                       "id_token": apoio.SENTINELA}})
+        cfg = preflight_capsula._config_persistida("codex")
+        self.assertEqual(cfg, {"auth_mode": "subscription-oauth"})
+        self.assertNotIn("tokens", cfg)
+        rels = self._classificar_sem_injetar_config()
+        self.assertNotIn("P1A-PAYG-CONFIG", codigos(rels["codex"]))
+
+    def test_codex_soma_auth_json_e_config_toml(self):
+        # O leitor do codex tem DUAS fontes; ler so uma deixaria a outra
+        # fora da auditoria sem que nada acusasse.
+        self._no_lar_descartavel()
+        self._escrever(".codex/auth.json", {"auth_mode": "subscription-oauth"})
+        caminho = os.path.join(self.lar, ".codex", "config.toml")
+        with open(caminho, "w", encoding="utf-8") as f:
+            f.write('base_url = "https://api.openai.com/v1"\n')
+        cfg = preflight_capsula._config_persistida("codex")
+        self.assertEqual(cfg["auth_mode"], "subscription-oauth")
+        self.assertEqual(cfg["base_url"], "https://api.openai.com/v1")
+        rels = self._classificar_sem_injetar_config()
+        self.assertEqual(rels["codex"].resultado, "BLOCKED")
+        self.assertIn("P1A-PAYG-CONFIG", codigos(rels["codex"]))
+
+    def test_config_ausente_ou_ilegivel_e_vazio_em_todo_provedor(self):
+        # Fail-safe simetrico: fonte ausente nao pode virar excecao, e
+        # tampouco pode inventar violacao.
+        self._no_lar_descartavel()
+        for pid in _PROVEDORES:
+            with self.subTest(provedor=pid):
+                self.assertEqual(preflight_capsula._config_persistida(pid),
+                                 {})
+
     def test_json_ilegivel_nao_derruba_o_leitor(self):
         # Fail-safe do leitor: um JSON corrompido nao pode transformar a
         # auditoria inteira numa excecao — os demais arquivos continuam

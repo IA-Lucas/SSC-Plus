@@ -166,8 +166,25 @@ def _config_persistida(provider_id: str) -> dict:
     """
     if provider_id == "codex":
         auth = _ler_json("~/.codex/auth.json")
-        cfg = {k: auth[k] for k in ("auth_mode", "OPENAI_API_KEY")
-               if k in auth}
+        # ACHADO 14 da P1-A.3.5, encontrado ao EXERCER o leitor. Ate aqui
+        # esta linha era uma ALLOWLIST de duas chaves:
+        #     {k: auth[k] for k in ("auth_mode", "OPENAI_API_KEY") ...}
+        # A justificativa escrita ao lado dela fala de UMA exclusao — os
+        # campos `tokens.*`, que SAO a credencial OAuth do ChatGPT e nao
+        # chave de API (escopo ratificado na auditoria P1-A,
+        # 02_auditoria-economica §2); audita-los acusaria PAYG em toda
+        # estacao logada. Mas a allowlist excluia MUITO mais do que a sua
+        # propria justificativa pedia: `auto_topup`, `api_key` ou um
+        # endpoint escritos em `auth.json` ficavam INVISIVEIS a
+        # `auditar_config`. Denylist da subarvore `tokens` implementa a
+        # razao declarada com exatidao, e audita todo o resto.
+        #
+        # Medido nesta estacao antes da troca (somente NOMES de campo):
+        # `auth.json` tem `auth_mode`, `OPENAI_API_KEY` (nula),
+        # `tokens.{id,access,refresh}_token`, `tokens.account_id` e
+        # `last_refresh` — nenhum deles produz violacao nova. A troca
+        # amplia o que e auditado sem mudar o veredito de hoje.
+        cfg = {k: v for k, v in auth.items() if k != "tokens"}
         cfg.update(_ler_toml("~/.codex/config.toml"))
         return cfg
     if provider_id == "claude":
