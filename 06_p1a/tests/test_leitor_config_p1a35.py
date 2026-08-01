@@ -286,5 +286,47 @@ class LeitorRealDeConfig(unittest.TestCase):
                                "quebrado.json": {}})
 
 
+class LeitorUnicoParaOsDoisRunners(unittest.TestCase):
+    """Um leitor so, e nao dois que derivam em silencio.
+
+    As correcoes 1 e 3 desta missao fecharam dois defeitos em
+    `preflight_capsula`: a cegueira incondicional para grok e a allowlist
+    de duas chaves no codex. A copia de `07_p1b/preflight_atual.py`
+    carregava os DOIS, porque a correcao alcancou so a copia que a suite
+    exercita — mesmo mecanismo do ACHADO 7 e do achado 10. Agora os dois
+    runners apontam para a MESMA funcao, e este teste e o que impede que
+    voltem a divergir.
+    """
+
+    def _runner_p1b(self):
+        caminho = os.path.join(os.path.dirname(_DIR_P1A), "07_p1b",
+                               "preflight_atual.py")
+        if not os.path.isfile(caminho):
+            self.skipTest("runner da P1-B ausente")
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("p1b_leitor", caminho)
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        return mod
+
+    def test_os_dois_runners_usam_a_mesma_funcao(self):
+        import leitores_config
+        p1b = self._runner_p1b()
+        self.assertIs(preflight_capsula._config_persistida,
+                      leitores_config.config_persistida)
+        self.assertIs(p1b._config_persistida,
+                      leitores_config.config_persistida)
+
+    def test_toda_a_frota_tem_fonte_declarada(self):
+        # Um provedor sem fonte declarada devolveria `{}` silencioso —
+        # que e exatamente o defeito do MAJOR #1. A lista e explicita.
+        import leitores_config
+        self.assertEqual(sorted(leitores_config.FONTES), sorted(_PROVEDORES))
+
+    def test_provider_fora_da_frota_devolve_vazio_sem_inventar(self):
+        import leitores_config
+        self.assertEqual(leitores_config.config_persistida("inexistente"), {})
+
+
 if __name__ == "__main__":
     unittest.main()

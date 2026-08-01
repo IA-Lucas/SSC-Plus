@@ -26,7 +26,6 @@ import json
 import os
 import shlex
 import sys
-import tomllib
 from datetime import datetime, timezone
 
 _RAIZ = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -37,6 +36,7 @@ sys.path.insert(0, os.path.join(_RAIZ, "06_p1a"))
 # copia propria — ver `_verificar_lock_vivo`.
 sys.path.insert(0, os.path.join(_RAIZ, "06_p1a", "evidencias"))
 
+import leitores_config  # noqa: E402
 from preflight.adaptadores import sensor_subprocess  # noqa: E402
 from preflight.economia import ambiente_sanitizado, auditar_ambiente  # noqa: E402
 from preflight.frota_real import frota_real  # noqa: E402
@@ -102,46 +102,13 @@ def _sensor_de(provider_id: str):
     return sensor_gitbash
 
 
-def _ler_json(caminho: str) -> dict:
-    try:
-        with open(os.path.expanduser(caminho), encoding="utf-8") as f:
-            dado = json.load(f)
-        return dado if isinstance(dado, dict) else {}
-    except (OSError, ValueError):
-        return {}
-
-
-def _ler_toml(caminho: str) -> dict:
-    try:
-        with open(os.path.expanduser(caminho), "rb") as f:
-            return tomllib.load(f)
-    except (OSError, ValueError):
-        return {}
-
-
-def _config_persistida(provider_id: str) -> dict:
-    """Config/auth persistida do provedor, parseada em MEMORIA (nunca
-    gravada). Fontes: as mesmas auditadas na coleta P1-A (20_configs.txt).
-    """
-    if provider_id == "codex":
-        # Escopo ratificado pela auditoria P1-A (02_auditoria-economica §2):
-        # auth_mode + OPENAI_API_KEY (a chave que substituiria o OAuth).
-        # tokens.access_token/refresh_token/id_token SAO a propria
-        # credencial OAuth chatgpt — nao sao chave de API e ficam FORA da
-        # auditoria de config (alimenta-los seria falso positivo).
-        auth = _ler_json("~/.codex/auth.json")
-        cfg = {k: auth[k] for k in ("auth_mode", "OPENAI_API_KEY")
-               if k in auth}
-        cfg.update(_ler_toml("~/.codex/config.toml"))
-        return cfg
-    if provider_id == "claude":
-        return _ler_json("~/.claude/settings.json")
-    if provider_id == "kimi":
-        return _ler_toml("~/.kimi-code/config.toml")
-    if provider_id == "google":
-        return _ler_json("~/.gemini/settings.json")
-    return {}  # grok: nenhuma config parseavel localizada na P1-A
-
+# Leitores de config: implementacao UNICA em `leitores_config`, a mesma
+# do runner da P1-A. Esta copia carregava OS DOIS defeitos que as
+# correcoes 1 e 3 da P1-A.3.5 fecharam do outro lado — cegueira
+# incondicional para grok e a allowlist de duas chaves no codex — porque
+# a correcao alcancou so a copia que a suite exercita. Mesmo mecanismo
+# do ACHADO 7 e do achado 10.
+_config_persistida = leitores_config.config_persistida
 
 def main() -> int:
     lock = _verificar_lock_vivo()

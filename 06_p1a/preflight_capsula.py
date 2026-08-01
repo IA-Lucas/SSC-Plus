@@ -38,7 +38,6 @@ import json
 import os
 import shlex
 import sys
-import tomllib
 from datetime import datetime, timezone
 
 _RAIZ = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -46,6 +45,7 @@ sys.path.insert(0, os.path.join(_RAIZ, "05_p0"))
 sys.path.insert(0, os.path.join(_RAIZ, "06_p1a"))
 sys.path.insert(0, os.path.join(_RAIZ, "06_p1a", "evidencias"))
 
+import leitores_config  # noqa: E402
 from capsula import exigir_capsula_limpa, verificar_capsula  # noqa: E402
 from preflight.adaptadores import sensor_subprocess  # noqa: E402
 from preflight.economia import ambiente_sanitizado, auditar_ambiente  # noqa: E402
@@ -120,103 +120,12 @@ def _sensor_de(provider_id: str):
     return sensor_gitbash
 
 
-def _ler_json(caminho: str) -> dict:
-    try:
-        with open(os.path.expanduser(caminho), encoding="utf-8") as f:
-            dado = json.load(f)
-        return dado if isinstance(dado, dict) else {}
-    except (OSError, ValueError):
-        return {}
-
-
-def _ler_toml(caminho: str) -> dict:
-    try:
-        with open(os.path.expanduser(caminho), "rb") as f:
-            return tomllib.load(f)
-    except (OSError, ValueError):
-        return {}
-
-
-def _ler_jsons_do_diretorio(caminho: str) -> dict:
-    """Todo JSON de TOPO de um diretorio de config, sob a chave do arquivo.
-
-    Diretorio ausente, ilegivel ou sem JSON devolve `{}` — porem por
-    MEDICAO do disco, nunca por cegueira escrita no fonte. Cada arquivo
-    entra sob o proprio nome, de modo que o `alvo` da violacao nomeie o
-    arquivo que a carrega (`user-settings.json.auto_topup`), e nao um
-    campo solto sem procedencia.
-
-    Le o DIRETORIO em vez de um nome de arquivo fixo de proposito: um
-    nome fixo seria invencao — nenhuma evidencia do acervo diz como o
-    arquivo se chama —, enquanto o diretorio foi observado.
-    """
-    base = os.path.expanduser(caminho)
-    try:
-        nomes = sorted(n for n in os.listdir(base) if n.endswith(".json"))
-    except OSError:
-        return {}
-    return {n: _ler_json(os.path.join(base, n)) for n in nomes}
-
-
-def _config_persistida(provider_id: str) -> dict:
-    """Config/auth persistida, parseada em MEMORIA (valores nunca gravados).
-    Codex: somente auth_mode + OPENAI_API_KEY + config.toml — os campos
-    tokens.* SAO a propria credencial OAuth, nao chave de API (escopo
-    ratificado na auditoria P1-A, 02_auditoria-economica §2).
-    """
-    if provider_id == "codex":
-        auth = _ler_json("~/.codex/auth.json")
-        # ACHADO 14 da P1-A.3.5, encontrado ao EXERCER o leitor. Ate aqui
-        # esta linha era uma ALLOWLIST de duas chaves:
-        #     {k: auth[k] for k in ("auth_mode", "OPENAI_API_KEY") ...}
-        # A justificativa escrita ao lado dela fala de UMA exclusao — os
-        # campos `tokens.*`, que SAO a credencial OAuth do ChatGPT e nao
-        # chave de API (escopo ratificado na auditoria P1-A,
-        # 02_auditoria-economica §2); audita-los acusaria PAYG em toda
-        # estacao logada. Mas a allowlist excluia MUITO mais do que a sua
-        # propria justificativa pedia: `auto_topup`, `api_key` ou um
-        # endpoint escritos em `auth.json` ficavam INVISIVEIS a
-        # `auditar_config`. Denylist da subarvore `tokens` implementa a
-        # razao declarada com exatidao, e audita todo o resto.
-        #
-        # Medido nesta estacao antes da troca (somente NOMES de campo):
-        # `auth.json` tem `auth_mode`, `OPENAI_API_KEY` (nula),
-        # `tokens.{id,access,refresh}_token`, `tokens.account_id` e
-        # `last_refresh` — nenhum deles produz violacao nova. A troca
-        # amplia o que e auditado sem mudar o veredito de hoje.
-        cfg = {k: v for k, v in auth.items() if k != "tokens"}
-        cfg.update(_ler_toml("~/.codex/config.toml"))
-        return cfg
-    if provider_id == "claude":
-        return _ler_json("~/.claude/settings.json")
-    if provider_id == "kimi":
-        return _ler_toml("~/.kimi-code/config.toml")
-    if provider_id == "google":
-        return _ler_json("~/.gemini/settings.json")
-    if provider_id == "grok":
-        # MAJOR #1, correcao da P1-A.3.5. Antes: `return {}`
-        # INCONDICIONAL, com o comentario "nenhuma config parseavel
-        # localizada na P1-A". A varredura de guardas mediu duas coisas
-        # que desfazem esse fundamento:
-        #
-        # 1. a coleta da P1-A auditou config de TRES provedores apenas
-        #    (codex, kimi, claude — `coleta-.../20_configs.txt`), de modo
-        #    que "nao localizada" descrevia o que NAO foi procurado;
-        # 2. `~/.grok/` EXISTE nesta estacao; o estado do grok vive em
-        #    SQLite (`grok.db`), e por isso nao ha JSON de topo hoje.
-        #
-        # O resultado de hoje continua sendo `{}` — mas agora porque o
-        # disco foi lido e nada havia, e nao porque o leitor se recusa a
-        # olhar. A diferenca e o que torna o guarda exercivel: com um
-        # JSON de config presente, `auditar_config` passa a ve-lo.
-        #
-        # LIMITE DECLARADO: se o grok passar a guardar config fora de
-        # `~/.grok/` ou somente no SQLite, esta leitura nao a alcanca.
-        # Auditar o SQLite exigiria abrir banco de credencial e esta
-        # fora do escopo — registrado, nao presumido resolvido.
-        return _ler_jsons_do_diretorio("~/.grok")
-    return {}  # provider fora da frota declarada
-
+# Leitores de config: implementacao UNICA em `leitores_config`, partilhada
+# com o runner da P1-B. Ate a P1-A.3.5 havia duas copias, e as correcoes
+# 1 e 3 desta missao alcancaram so esta — a copia da P1-B ficou com os
+# dois defeitos que elas fecharam. O alias abaixo preserva o nome
+# historico usado pelos testes e pelo binding padrao.
+_config_persistida = leitores_config.config_persistida
 
 def classificar_frota(env: dict, tiers: dict, config_de=None,
                       sensor_de=None) -> list:
