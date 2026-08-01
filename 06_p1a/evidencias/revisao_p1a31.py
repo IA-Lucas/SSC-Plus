@@ -43,16 +43,18 @@ from contencao import (argv_kimi, enforcement_kimi,  # noqa: E402
                        manifesto, mutacoes, verificar_lock)
 
 SESSAO_LOCK = os.environ.get("SSC_LOCK_SESSAO", "p1a31-ops")
-USUARIO = os.path.basename(os.path.expanduser("~"))
-USUARIO_CURTO = ("".join(c for c in USUARIO.upper() if c.isalnum())[:6]
-                 + "~1")
 _KIMI_EXE = os.path.expanduser("~/.kimi-code/bin/kimi")
 
 
 def _redigir(texto: str) -> str:
-    """Redige usuario local (forma longa e 8.3) de qualquer saida."""
-    return (texto or "").replace(USUARIO, "<USUARIO>").replace(
-        USUARIO_CURTO, "<USUARIO>")
+    """Redige usuario local e caminho local — implementacao CANONICA.
+
+    ACHADO 10 da P1-A.3.5: havia nove copias desta redacao em tres
+    forcas, nenhuma com teste. Esta delega a unica, que acrescenta o
+    prefixo de caminho local ao que ja era feito aqui.
+    """
+    from contencao import redigir
+    return redigir(texto)
 
 
 # Revisao P1-A.3.1 (MAJOR #3): o kimi deixa de rodar so com `-p` e

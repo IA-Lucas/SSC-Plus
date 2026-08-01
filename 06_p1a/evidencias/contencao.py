@@ -54,6 +54,8 @@ persistencia, nunca so na abertura.
 import hashlib
 import os
 
+_USUARIO_LOCAL = os.path.basename(os.path.expanduser("~"))
+
 # `locks/` e runtime do escritor unico: o renovador dedicado reescreve o
 # lease a cada 30 s por construcao. Incluir esse diretorio no manifesto
 # produziria alarme falso em toda corrida. Exclusao DECLARADA — a unica —
@@ -85,6 +87,45 @@ FLAGS_INCOMPATIVEIS_COM_PROMPT = ("--plan",)
 # fronteira para provar aceitacao sem gastar chamada de modelo.
 PREFIXO_ERRO_DE_ARGUMENTO = "error: "
 MARCADOR_ARGV_ACEITO = "failed to run prompt"
+
+
+# Prefixos de caminho local que nunca podem vazar para um revisor ou
+# para uma evidencia publicada. Redigidos junto com o usuario porque
+# `preflight_capsula` carrega um caminho local no proprio fonte.
+PREFIXOS_DE_CAMINHO_LOCAL = ("E:\\LucasIA", "E:/LucasIA")
+
+
+def forma_8_3(usuario: str) -> str:
+    """Forma curta (8.3) do nome de usuario, como o Windows a produz."""
+    return "".join(c for c in usuario.upper() if c.isalnum())[:6] + "~1"
+
+
+def redigir(texto, usuario: str | None = None) -> str:
+    """Redacao CANONICA de PII e de caminho local — SSC+ P1-A.3.5.
+
+    ACHADO 10. A varredura de guardas contou **nove** copias desta
+    redacao espalhadas pelos runners, em **tres forcas diferentes**, e
+    mediu que **nenhuma** tinha teste: zero ocorrencia de `_redigir`,
+    `USUARIO_CURTO`, `<USUARIO>` ou `CAMINHO-LOCAL` em qualquer arquivo
+    de teste das duas suites.
+
+    As tres mais fracas — `preflight_capsula`, `preflight_atual` e
+    `revisao_p1a2` — redigiam **somente a forma longa** do usuario, e
+    deixavam passar a forma 8.3: exatamente a forma que
+    `ZeroPiiNosArtefatos` procura. Nenhum artefato versionado a carrega
+    hoje (medido: zero arquivos), de modo que nao havia violacao viva; o
+    que havia era um guarda que so pegaria o caso **depois** de gravado.
+
+    Esta e a implementacao unica, e a mais forte das tres: forma longa,
+    forma 8.3 e prefixo de caminho local. `usuario` e injetavel SOMENTE
+    para teste — em operacao vale o usuario real da estacao.
+    """
+    longo = _USUARIO_LOCAL if usuario is None else usuario
+    saida = (texto or "").replace(longo, "<USUARIO>")
+    saida = saida.replace(forma_8_3(longo), "<USUARIO>")
+    for prefixo in PREFIXOS_DE_CAMINHO_LOCAL:
+        saida = saida.replace(prefixo, "<CAMINHO-LOCAL>")
+    return saida
 
 
 def manifesto(raiz, excluir=EXCLUIDOS_DO_MANIFESTO) -> dict:

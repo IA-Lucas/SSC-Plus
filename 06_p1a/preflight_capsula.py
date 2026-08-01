@@ -44,6 +44,7 @@ from datetime import datetime, timezone
 _RAIZ = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(_RAIZ, "05_p0"))
 sys.path.insert(0, os.path.join(_RAIZ, "06_p1a"))
+sys.path.insert(0, os.path.join(_RAIZ, "06_p1a", "evidencias"))
 
 from capsula import exigir_capsula_limpa, verificar_capsula  # noqa: E402
 from preflight.adaptadores import sensor_subprocess  # noqa: E402
@@ -53,7 +54,6 @@ from preflight.pipeline import executar_preflight  # noqa: E402
 from preflight.sombra import carregar_declaracoes  # noqa: E402
 
 _GITBASH = r"E:\LucasIA\Git\bin\bash.exe"
-_USUARIO = os.path.basename(os.path.expanduser("~"))
 _SESSAO_LOCK = os.environ.get("SSC_LOCK_SESSAO", "p1a3-ops")
 _VIA_GITBASH = ("google", "grok")  # CLIs npm sem executavel Windows direto
 _TIERS_JSON = os.path.join(_RAIZ, "06_p1a", "tiers_declarados.json")
@@ -290,8 +290,14 @@ def main() -> int:
             set(os.environ) - set(ambiente_sanitizado())),
         "frota": relatorios,
     }
-    texto = json.dumps(documento, indent=2, ensure_ascii=False,
-                       default=str).replace(_USUARIO, "<USUARIO>")
+    # ACHADO 10: esta redacao era uma das TRES mais fracas do acervo —
+    # redigia so a forma longa do usuario e deixava passar a forma 8.3,
+    # que e justamente a que `ZeroPiiNosArtefatos` procura. Passa a usar
+    # a redacao CANONICA, que cobre tambem o prefixo de caminho local
+    # (este proprio arquivo carrega um em `_GITBASH`).
+    from contencao import redigir
+    texto = redigir(json.dumps(documento, indent=2, ensure_ascii=False,
+                               default=str))
     dir_saida = os.path.join(_RAIZ, "06_p1a", "evidencias")
     os.makedirs(dir_saida, exist_ok=True)
     nome = f"p1a3-preflight-{agora.strftime('%Y%m%dT%H%M%SZ')}.json"

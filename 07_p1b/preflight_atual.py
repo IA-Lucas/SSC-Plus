@@ -43,14 +43,17 @@ from preflight.frota_real import frota_real  # noqa: E402
 from preflight.pipeline import executar_preflight  # noqa: E402
 
 _GITBASH = r"E:\LucasIA\Git\bin\bash.exe"
-_USUARIO = os.path.basename(os.path.expanduser("~"))
 _SESSAO_LOCK = "p1b-ops"
 # CLIs npm sem executavel Windows direto: a sonda vai pelo Git Bash.
 _VIA_GITBASH = ("google", "grok")
 
 
 def _redigir(texto: str) -> str:
-    return texto.replace(_USUARIO, "<USUARIO>")
+    """ACHADO 10: era uma das TRES redacoes mais fracas do acervo —
+    redigia so a forma longa do usuario e deixava passar a forma 8.3,
+    que e a que `ZeroPiiNosArtefatos` procura. Delega a canonica."""
+    from contencao import redigir
+    return redigir(texto)
 
 
 def _verificar_lock_vivo(fence_esperado: int | None = None) -> dict:

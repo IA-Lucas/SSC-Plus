@@ -35,7 +35,6 @@ sys.path.insert(0, str(RAIZ / "05_p0"))
 from capsula import ambiente_capsula  # noqa: E402
 
 SESSAO_LOCK = os.environ.get("SSC_LOCK_SESSAO", "p1a2-ops")
-USUARIO = os.path.basename(os.path.expanduser("~"))
 
 COMANDOS = {
     "codex": lambda tmp, prompt: [
@@ -46,9 +45,16 @@ COMANDOS = {
 }
 
 
+def _redigir(texto: str) -> str:
+    """ACHADO 10: esta era a redacao mais fraca do acervo — inline, so a
+    forma longa do usuario, sem a forma 8.3 e sem o caminho local.
+    Delega a canonica."""
+    from contencao import redigir
+    return redigir(texto)
+
+
 def _ler(rel: str) -> str:
-    return (RAIZ / rel).read_text(encoding="utf-8").replace(
-        USUARIO, "<USUARIO>")
+    return _redigir((RAIZ / rel).read_text(encoding="utf-8"))
 
 
 def _verificar_lock() -> dict:
@@ -166,8 +172,8 @@ def main() -> int:
         "dir_descartavel_arquivos_restantes": restantes,
         "env_vars_removidas_nomes": removidas,
         "returncode": rc, "duracao_s": duracao,
-        "resposta": out.strip().replace(USUARIO, "<USUARIO>"),
-        "stderr_resumo": err.strip()[:2000].replace(USUARIO, "<USUARIO>"),
+        "resposta": _redigir(out.strip()),
+        "stderr_resumo": _redigir(err.strip()[:2000]),
         "quota_observavel": "nao-exposta-pelo-cli",
     }
     SAIDA.mkdir(parents=True, exist_ok=True)
