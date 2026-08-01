@@ -67,7 +67,7 @@ from capsula import (ambiente_capsula, exigir_capsula_limpa,  # noqa: E402
 from preflight.adaptadores import sensor_subprocess  # noqa: E402
 from preflight.economia import ambiente_sanitizado, auditar_ambiente  # noqa: E402
 from preflight.frota_real import frota_real  # noqa: E402
-from preflight.pipeline import executar_preflight  # noqa: E402
+from preflight.pipeline import RESULTADOS, executar_preflight  # noqa: E402
 
 _GITBASH = r"E:\LucasIA\Git\bin\bash.exe"
 # Cada missao opera sob lease de NOME PROPRIO (condicao operativa do
@@ -214,12 +214,35 @@ def main() -> int:
     print(f"evidencia: 07_p1b/evidencias/{nome}")
     for rel in relatorios:
         erros = ",".join(e["codigo"] for e in rel["erros"]) or "-"
-        print(f"  {rel['provider_id']:7s} {rel['resultado']:10s} "
+        sombra = f" sombra={rel['sombra']['tier_declarado']}" \
+            if rel.get("sombra") else ""
+        # Largura 15: "SHADOW_ELIGIBLE" nao cabia em 10 e a coluna
+        # seguinte saia desalinhada exatamente na trilha que a emenda
+        # P1-A.3 item 1 criou.
+        print(f"  {rel['provider_id']:7s} {rel['resultado']:15s} "
               f"plano={rel['plano'] or '-'} quota={rel['quota']} "
-              f"modelos={len(rel['modelos'])} erros={erros}")
-    elegiveis = [r["provider_id"] for r in relatorios
-                 if r["resultado"] == "ELIGIBLE"]
-    print(f"ELIGIBLE: {elegiveis}")
+              f"modelos={len(rel['modelos'])} erros={erros}{sombra}")
+
+    # ORDEM 2: o sumario engolia tres dos quatro resultados. A ultima
+    # linha impressa era `ELIGIBLE: []` — que com google e grok saindo
+    # SUPERVISED (emenda P1-A.3 item 5) se le como "nenhum provedor
+    # passou", quando o medido e outro. Os QUATRO resultados do enum
+    # (`pipeline.RESULTADOS`) saem sempre, inclusive vazios: ausencia de
+    # linha nao pode ser confundida com ausencia de provedor.
+    por_resultado = {resultado: [] for resultado in RESULTADOS}
+    fora_do_enum = []
+    for rel in relatorios:
+        por_resultado.get(rel["resultado"], fora_do_enum).append(
+            rel["provider_id"])
+    for resultado in RESULTADOS:
+        print(f"{resultado}: {por_resultado[resultado]}")
+    # A dataclass ja recusa resultado fora do enum; se um relatorio
+    # chegar aqui por outro caminho, ele aparece — nunca desaparece na
+    # particao.
+    if fora_do_enum:
+        print(f"FORA-DO-ENUM: {fora_do_enum}")
+    print(f"total classificado: {sum(len(v) for v in por_resultado.values())}"
+          f"+{len(fora_do_enum)} de {len(relatorios)} provedor(es)")
     return 0
 
 

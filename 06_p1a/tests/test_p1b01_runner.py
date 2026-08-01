@@ -27,7 +27,7 @@ um descartavel, de modo que nenhuma config real do usuario e lida.
 
 NOMES, NUNCA VALORES. Os ambientes de teste carregam um valor fabricado
 e evidente (`_VALOR_FALSO`); nenhuma variavel real do usuario e lida ou
-registrada, e as asserções falam sempre de NOMES.
+registrada, e as asercoes falam sempre de NOMES.
 """
 
 import importlib.util
@@ -42,7 +42,7 @@ from unittest import mock
 import apoio  # noqa: F401  (ajusta sys.path da suite)
 
 from capsula import ViolacaoCapsula  # noqa: E402
-from preflight.pipeline import RelatorioPreflight  # noqa: E402
+from preflight.pipeline import RESULTADOS, RelatorioPreflight  # noqa: E402
 
 _DIR_P1A = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 _RAIZ_REPO = os.path.dirname(_DIR_P1A)
@@ -83,19 +83,23 @@ def _escrever_lock(dir_locks, sessao, fence, expira_em):
 class _EspiaoPreflight:
     """Substitui `executar_preflight`: conta chamadas e guarda o env."""
 
-    def __init__(self, resultado="SUPERVISED"):
+    def __init__(self, resultado="SUPERVISED", por_pid=None, sombra=None):
         self.n = 0
         self.envs = []
         self.tiers = []
         self.resultado = resultado
+        self.por_pid = dict(por_pid or {})
+        self.sombra = sombra
 
     def __call__(self, espec, sensores=None, env=None, config_persistida=None,
                  tiers_declarados=None, agora=None):
         self.n += 1
         self.envs.append(dict(env or {}))
         self.tiers.append(tiers_declarados)
-        return RelatorioPreflight(provider_id=espec.provider_id,
-                                  resultado=self.resultado)
+        resultado = self.por_pid.get(espec.provider_id, self.resultado)
+        return RelatorioPreflight(
+            provider_id=espec.provider_id, resultado=resultado,
+            sombra=self.sombra if resultado == "SHADOW_ELIGIBLE" else None)
 
 
 class BaseRunnerP1B(unittest.TestCase):
@@ -226,6 +230,68 @@ class Ordem1CapsulaDoRunner(BaseRunnerP1B):
         self.assertIs(self.mod.ambiente_capsula, capsula.ambiente_capsula)
         self.assertIs(self.mod.exigir_capsula_limpa,
                       capsula.exigir_capsula_limpa)
+
+
+class Ordem2SumarioDosQuatroResultados(BaseRunnerP1B):
+    """O sumario deixa de engolir tres dos quatro resultados do enum."""
+
+    def _sumario(self, espiao) -> str:
+        saida = _SaidaMuda()
+        self.assertEqual(self._rodar_main(espiao, saida=saida), 0)
+        return saida.getvalue()
+
+    def test_os_quatro_resultados_saem_no_sumario(self):
+        # O defeito: com google e grok em SUPERVISED, a ultima linha
+        # impressa era "ELIGIBLE: []" — que se le como "nenhum provedor
+        # passou". Os outros tres resultados nao existiam na saida.
+        texto = self._sumario(_EspiaoPreflight(
+            por_pid={"codex": "ELIGIBLE", "kimi": "SHADOW_ELIGIBLE",
+                     "claude": "BLOCKED"},
+            sombra={"tier_declarado": "Allegretto"}))
+        for resultado in RESULTADOS:
+            self.assertIn(f"{resultado}:", texto,
+                          f"{resultado} sumiu do sumario")
+        self.assertIn("ELIGIBLE: ['codex']", texto)
+        self.assertIn("SHADOW_ELIGIBLE: ['kimi']", texto)
+        self.assertIn("BLOCKED: ['claude']", texto)
+        self.assertIn("SUPERVISED: ['google', 'grok']", texto)
+
+    def test_resultado_vazio_aparece_como_linha_e_nao_como_ausencia(self):
+        # Contraprova do formato: sem esta, um sumario que imprimisse
+        # apenas os resultados nao vazios passaria no teste acima.
+        texto = self._sumario(_EspiaoPreflight(resultado="SUPERVISED"))
+        self.assertIn("ELIGIBLE: []", texto)
+        self.assertIn("SHADOW_ELIGIBLE: []", texto)
+        self.assertIn("BLOCKED: []", texto)
+        self.assertIn("SUPERVISED: ['codex', 'claude', 'kimi', 'google', "
+                      "'grok']", texto)
+
+    def test_nenhum_provedor_desaparece_na_particao(self):
+        espiao = _EspiaoPreflight(por_pid={"codex": "ELIGIBLE",
+                                           "claude": "BLOCKED"})
+        texto = self._sumario(espiao)
+        self.assertIn(f"total classificado: {espiao.n}+0 de {espiao.n} "
+                      "provedor(es)", texto)
+        for pid in ("codex", "claude", "kimi", "google", "grok"):
+            # Cada provedor aparece na linha por-provedor E em exatamente
+            # uma das quatro listas do sumario.
+            listas = [linha for linha in texto.splitlines()
+                      if linha.startswith(tuple(f"{r}:" for r in RESULTADOS))
+                      and f"'{pid}'" in linha]
+            self.assertEqual(len(listas), 1, f"{pid} em {len(listas)} listas")
+
+    def test_shadow_eligible_cabe_na_coluna_do_relatorio(self):
+        # "SHADOW_ELIGIBLE" tem 15 caracteres e a coluna tinha 10: a
+        # trilha criada pela emenda P1-A.3 item 1 era justamente a que
+        # saia desalinhada.
+        texto = self._sumario(_EspiaoPreflight(
+            por_pid={"kimi": "SHADOW_ELIGIBLE"},
+            sombra={"tier_declarado": "Allegretto"}))
+        linha = next(ln for ln in texto.splitlines()
+                     if ln.startswith("  kimi"))
+        self.assertIn("SHADOW_ELIGIBLE ", linha)
+        self.assertIn("plano=", linha)
+        self.assertIn("sombra=Allegretto", linha)
 
 
 if __name__ == "__main__":
