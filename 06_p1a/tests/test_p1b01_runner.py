@@ -457,5 +457,43 @@ class Ordem4DeclaracoesDeTierNoRunner(BaseRunnerP1B):
             self.assertIn("leitor_tiers", f.read())
 
 
+class Ordem5ContagemMedidaDeSondas(BaseRunnerP1B):
+    """A evidencia diz quantas sondas correram — medidas, nao esperadas."""
+
+    def test_conta_invocacoes_reais_do_sensor_por_provedor(self):
+        contador = self.mod._ContadorDeSondas(["codex", "grok"])
+        chamadas = []
+        sensor = contador.envolver("codex", lambda *a, **k: chamadas.append(a))
+        sensor(["codex", "--version"], env={})
+        sensor(["codex", "login", "status"], env={})
+        self.assertEqual(contador.por_provedor["codex"], 2)
+        self.assertEqual(contador.por_provedor["grok"], 0,
+                         "provedor sem sonda aparece como 0, nao ausente")
+        self.assertEqual(len(chamadas), 2, "o sensor real segue sendo o real")
+
+    def test_a_evidencia_traz_a_contagem_de_todos_os_provedores(self):
+        # Com `executar_preflight` substituido, nenhuma sonda ocorre: a
+        # contagem medida tem de ser zero para os cinco — e ESTAR la.
+        self.assertEqual(self._rodar_main(_EspiaoPreflight()), 0)
+        with open(os.path.join(self.raiz, "07_p1b", "evidencias",
+                               self._gravados()[0]), encoding="utf-8") as f:
+            doc = json.load(f)
+        self.assertEqual(doc["sondas_medidas"],
+                         {"claude": 0, "codex": 0, "google": 0, "grok": 0,
+                          "kimi": 0})
+
+    def test_o_contador_nao_registra_argv_ambiente_nem_saida(self):
+        # A proibicao vale tambem para o instrumento: contagem e numero,
+        # nunca conteudo.
+        contador = self.mod._ContadorDeSondas(["codex"])
+        sensor = contador.envolver("codex", lambda *a, **k: (0, "saida", ""))
+        sensor(["codex", "--version"], {"SEGREDO_API_KEY": apoio.SENTINELA})
+        estado = json.dumps(contador.__dict__, default=str)
+        self.assertNotIn(apoio.SENTINELA, estado)
+        self.assertNotIn("SEGREDO_API_KEY", estado)
+        self.assertNotIn("saida", estado)
+        self.assertEqual(contador.por_provedor, {"codex": 1})
+
+
 if __name__ == "__main__":
     unittest.main()

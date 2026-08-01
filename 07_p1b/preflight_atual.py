@@ -130,6 +130,28 @@ def _verificar_lock_vivo(fence_esperado: int | None = None) -> dict:
     return estado
 
 
+class _ContadorDeSondas:
+    """Conta as sondas REAIS disparadas, por provedor (ordem 5).
+
+    A evidencia precisa dizer quantas sondas correram, e sonda esperada
+    nao substitui sonda medida: "google e grok tem zero sondas
+    automaticas" e propriedade da especificacao, nao observacao desta
+    corrida. O contador envolve o sensor real e conta invocacoes — o que
+    o pipeline de fato executou. Nao le, nao guarda e nao registra argv,
+    ambiente nem saida: somente a contagem.
+    """
+
+    def __init__(self, provedores=()):
+        self.por_provedor = {pid: 0 for pid in provedores}
+
+    def envolver(self, provider_id: str, sensor):
+        def contado(*args, **kwargs):
+            self.por_provedor[provider_id] = \
+                self.por_provedor.get(provider_id, 0) + 1
+            return sensor(*args, **kwargs)
+        return contado
+
+
 def _sensor_de(provider_id: str):
     """Sensor real; google/grok (npm) rodam via Git Bash na estacao."""
     if provider_id not in _VIA_GITBASH:
@@ -177,10 +199,14 @@ def main() -> int:
     # portanto nenhum chega a `env_outras` no pipeline.
     ambiente = ambiente_capsula(os.environ)
     viol_ambiente = auditar_ambiente(ambiente)
+    especs = list(frota_real())
+    contador = _ContadorDeSondas(e.provider_id for e in especs)
     relatorios = []
-    for espec in frota_real():
+    for espec in especs:
         rel = executar_preflight(
-            espec, sensores=_sensor_de(espec.provider_id),
+            espec,
+            sensores=contador.envolver(espec.provider_id,
+                                       _sensor_de(espec.provider_id)),
             env=ambiente,
             config_persistida=_config_persistida(espec.provider_id),
             tiers_declarados=tiers)
@@ -220,6 +246,9 @@ def main() -> int:
             "politica": "subscription-only; qualquer credencial de modelo "
                         "visivel dentro da capsula = bloqueio",
         },
+        # Ordem 5: contagem MEDIDA de sondas por provedor nesta corrida —
+        # nao a contagem que a especificacao faz esperar.
+        "sondas_medidas": dict(sorted(contador.por_provedor.items())),
         "violacoes_ambiente_nomes": sorted(
             {v.alvo for v in viol_ambiente if v.alvo}),
         # Medido sobre o ambiente da CAPSULA (o que o pipeline recebe), e
@@ -251,6 +280,7 @@ def main() -> int:
         # P1-A.3 item 1 criou.
         print(f"  {rel['provider_id']:7s} {rel['resultado']:15s} "
               f"plano={rel['plano'] or '-'} quota={rel['quota']} "
+              f"sondas={contador.por_provedor.get(rel['provider_id'], 0)} "
               f"modelos={len(rel['modelos'])} erros={erros}{sombra}")
 
     # ORDEM 2: o sumario engolia tres dos quatro resultados. A ultima
