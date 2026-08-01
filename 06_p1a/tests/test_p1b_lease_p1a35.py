@@ -166,6 +166,81 @@ class EscritorUnicoDaP1B(unittest.TestCase):
                 self.mod._verificar_lock_vivo()
         self.assertIn("fence ilegivel/ausente", str(ctx.exception))
 
+    def test_capsula_para_com_lease_ilegivel_ou_ausente(self):
+        # Ramo fail-closed que a varredura mediu como NUNCA alcancado
+        # (`preflight_capsula.py:95`). O runner principal da P1-A tinha
+        # os outros tres ramos cobertos e este nao.
+        import preflight_capsula
+        with self.assertRaises(SystemExit) as ctx:
+            preflight_capsula._verificar_lock_vivo(raiz=self.raiz)
+        self.assertIn("lease ilegivel/ausente", str(ctx.exception))
+
+    def test_capsula_para_com_fence_ilegivel(self):
+        # O outro ramo nunca alcancado (`preflight_capsula.py:104`).
+        import preflight_capsula
+        sessao = preflight_capsula._SESSAO_LOCK
+        _escrever_lock(os.path.join(self.raiz, "locks"), sessao, 3,
+                       time.time() + 600)
+        with open(os.path.join(self.raiz, "locks", f"{sessao}.fence"), "w",
+                  encoding="ascii") as f:
+            f.write("nao-e-inteiro")
+        with self.assertRaises(SystemExit) as ctx:
+            preflight_capsula._verificar_lock_vivo(raiz=self.raiz)
+        self.assertIn("fence ilegivel/ausente", str(ctx.exception))
+
+    def test_capsula_aceita_lease_vivo(self):
+        # Contraprova dos dois acima: sem ela, um verificador que
+        # parasse SEMPRE passaria nos dois.
+        import preflight_capsula
+        sessao = preflight_capsula._SESSAO_LOCK
+        _escrever_lock(os.path.join(self.raiz, "locks"), sessao, 3,
+                       time.time() + 600)
+        estado = preflight_capsula._verificar_lock_vivo(raiz=self.raiz)
+        self.assertEqual(estado["fence"], 3)
+
+    def test_o_runner_da_p1a2_usa_a_verificacao_canonica(self):
+        # Quarta e ultima copia local do guarda de escritor unico. A
+        # varredura contou quatro implementacoes; com esta, restam a
+        # canonica e a do proprio `preflight_capsula`.
+        import importlib.util
+        import contencao
+        caminho = os.path.join(_DIR_P1A, "evidencias", "revisao_p1a2.py")
+        spec = importlib.util.spec_from_file_location("p1a2_lock", caminho)
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        _escrever_lock(os.path.join(self.raiz, "locks"), mod.SESSAO_LOCK, 5,
+                       time.time() + 600)
+        from pathlib import Path
+        with mock.patch.object(mod, "RAIZ", Path(self.raiz)):
+            estado = mod._verificar_lock(fence_esperado=5)
+            self.assertEqual(estado["fence"], 5)
+            with self.assertRaises(SystemExit) as ctx:
+                mod._verificar_lock(fence_esperado=6)
+        self.assertIn("titular do escritor substituido", str(ctx.exception))
+        self.assertTrue(callable(contencao.verificar_lock))
+
+    def test_lease_que_some_entre_as_duas_leituras_nao_vira_sucesso(self):
+        # Ramo acrescentado pela PROPRIA correcao 4: entre a verificacao
+        # canonica e a leitura do `expira_em` ha uma janela, e um lease
+        # que desapareca nela nao pode ser tratado como sucesso
+        # silencioso. Sem este teste o ramo ficaria como todos os outros
+        # que esta missao acusa — escrito e nunca exercido.
+        import contencao
+        caminho = os.path.join(self.raiz, "locks",
+                               f"{self.mod._SESSAO_LOCK}.lease")
+        _escrever_lock(os.path.join(self.raiz, "locks"),
+                       self.mod._SESSAO_LOCK, 7, time.time() + 600)
+
+        def some_o_lease(raiz, sessao, fence_esperado=None):
+            os.remove(caminho)
+            return {"sessao": sessao, "pid_titular": 0, "fence": 7}
+
+        with mock.patch.object(self.mod, "_RAIZ", self.raiz), \
+                mock.patch.object(contencao, "verificar_lock", some_o_lease):
+            with self.assertRaises(SystemExit) as ctx:
+                self.mod._verificar_lock_vivo()
+        self.assertIn("lease desapareceu", str(ctx.exception))
+
     def test_a_verificacao_da_p1b_e_a_canonica_e_nao_uma_quarta_copia(self):
         # A varredura contou QUATRO implementacoes do mesmo guarda, e a
         # da P1-B era a unica sem o conserto do MAJOR #4. Este teste

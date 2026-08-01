@@ -57,18 +57,17 @@ def _ler(rel: str) -> str:
     return _redigir((RAIZ / rel).read_text(encoding="utf-8"))
 
 
-def _verificar_lock() -> dict:
-    sys.path.insert(0, str(RAIZ / "06_p1a"))
-    from escritor import EscritorP1
-    caminho = RAIZ / "locks" / f"{SESSAO_LOCK}.lease"
-    try:
-        lease = json.loads(caminho.read_text(encoding="utf-8"))
-    except (OSError, ValueError) as exc:
-        raise SystemExit(f"PARADA: lease ilegivel/ausente: {exc}")
-    if lease.get("sessao") != SESSAO_LOCK or \
-            EscritorP1.lease_expirado(str(caminho)):
-        raise SystemExit("PARADA: lease da sessao operacional morto")
-    return {"sessao": lease["sessao"], "pid_titular": lease["pid"]}
+def _verificar_lock(fence_esperado: int | None = None) -> dict:
+    """Escritor unico — verificacao CANONICA.
+
+    Era a QUARTA copia local do mesmo guarda, e a unica do lado da P1-A
+    que ainda nao delegava: sem `fence_esperado`, ela nao detectava
+    troca de titular, e a varredura da P1-A.3.5 mediu que nenhuma das
+    suas linhas de recusa era alcancada por teste. Delega a canonica,
+    que ganha tambem o fence no retorno (acrescimo aditivo).
+    """
+    from contencao import verificar_lock
+    return verificar_lock(RAIZ, SESSAO_LOCK, fence_esperado)
 
 
 def _ultimo_preflight() -> str:
