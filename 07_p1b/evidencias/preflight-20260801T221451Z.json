@@ -1,0 +1,113 @@
+{
+  "tipo": "preflight-atual-p1b",
+  "gerado_em_utc": "2026-08-01T22:14:51Z",
+  "lock_escritor_unico": {
+    "sessao": "p1b01-ops",
+    "pid_titular": 109072,
+    "fence": 1,
+    "expira_em": 1785622586.2038877
+  },
+  "lock_verificado_antes_da_persistencia": true,
+  "custo_variavel": 0,
+  "chamadas_de_modelo": 0,
+  "nota": "somente sondas de diagnostico (versao/login/modelos); nenhuma invocacao de modelo; env das sondas sanitizado pela canonica preflight.economia.ambiente_sanitizado",
+  "emenda_p1a3_item_1": {
+    "tiers_declarados": {
+      "codex": "ChatGPT Pro 5x",
+      "kimi": "Allegretto"
+    },
+    "limite": "SHADOW_ELIGIBLE somente; validade maxima 24 h; NAO autoriza P2 nem execucao autonoma",
+    "nota": "declaracao vencida e reportada como esta (DeclaracaoExpirada); renovar e ato do proprietario"
+  },
+  "capsula": {
+    "mecanismo": "entrada por capsula.iniciar_em_capsula + guarda exigir_capsula_limpa no processo + ambiente derivado por capsula.ambiente_capsula",
+    "violacoes_no_env_do_processo": [],
+    "violacoes_no_env_classificado": [],
+    "politica": "subscription-only; qualquer credencial de modelo visivel dentro da capsula = bloqueio"
+  },
+  "sondas_medidas": {
+    "claude": 2,
+    "codex": 2,
+    "google": 0,
+    "grok": 0,
+    "kimi": 2
+  },
+  "violacoes_ambiente_nomes": [],
+  "env_sanitizado_remove_nomes": [],
+  "frota": [
+    {
+      "provider_id": "codex",
+      "resultado": "BLOCKED",
+      "caminho": "~/AppData/Local/Programs/OpenAI/Codex/bin/codex.exe",
+      "versao": "0.145.0",
+      "plano": null,
+      "origem_credencial": "subscription-oauth",
+      "quota": "desconhecida",
+      "modelos": [],
+      "sombra": null,
+      "erros": [
+        {
+          "tipo": "DeclaracaoExpirada",
+          "codigo": "P1A-DECLARACAO-EXPIRADA",
+          "detalhe": "declaracao de tier 'ChatGPT Pro 5x' (2026-07-31T01:31:00Z) ilegivel, futura ou fora da validade maxima de 24 h",
+          "alvo": null
+        }
+      ]
+    },
+    {
+      "provider_id": "claude",
+      "resultado": "SUPERVISED",
+      "caminho": "~/.local/bin/claude",
+      "versao": "2.1.220",
+      "plano": "max",
+      "origem_credencial": "subscription-oauth",
+      "quota": "desconhecida",
+      "modelos": [],
+      "sombra": null,
+      "erros": []
+    },
+    {
+      "provider_id": "kimi",
+      "resultado": "BLOCKED",
+      "caminho": "~/.kimi-code/bin/kimi",
+      "versao": "0.30.0",
+      "plano": null,
+      "origem_credencial": "subscription-oauth",
+      "quota": "desconhecida",
+      "modelos": [],
+      "sombra": null,
+      "erros": [
+        {
+          "tipo": "DeclaracaoExpirada",
+          "codigo": "P1A-DECLARACAO-EXPIRADA",
+          "detalhe": "declaracao de tier 'Allegretto' (2026-07-31T01:31:00Z) ilegivel, futura ou fora da validade maxima de 24 h",
+          "alvo": null
+        }
+      ]
+    },
+    {
+      "provider_id": "google",
+      "resultado": "SUPERVISED",
+      "caminho": "gemini",
+      "versao": null,
+      "plano": null,
+      "origem_credencial": "nao-sondada",
+      "quota": "desconhecida",
+      "modelos": [],
+      "sombra": null,
+      "erros": []
+    },
+    {
+      "provider_id": "grok",
+      "resultado": "SUPERVISED",
+      "caminho": "grok",
+      "versao": null,
+      "plano": null,
+      "origem_credencial": "nao-sondada",
+      "quota": "desconhecida",
+      "modelos": [],
+      "sombra": null,
+      "erros": []
+    }
+  ]
+}
