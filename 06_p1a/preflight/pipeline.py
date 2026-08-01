@@ -137,7 +137,17 @@ def executar_preflight(provider_spec, sensores, env=None,
     # (chaves PAYG de outros provedores, config PAYG, billing/custo/auth).
     bloqueio_imediato = env_outras + viol_cfg + viol_status
     if bloqueio_imediato:
-        return relatorio("BLOCKED", bloqueio_imediato + env_relacionadas)
+        # P1-B.01, ordem 3: aqui NENHUMA sonda correu — nem versao, nem
+        # login. Sem os campos explicitos, `origem_credencial` caia no
+        # default da dataclass ("ausente") e `quota` em "desconhecida",
+        # que se leem como OBSERVACAO ("consultamos o login e nao havia
+        # credencial"; "consultamos e a franquia e incerta") sobre algo
+        # que ninguem olhou. Mesmo tratamento ja dado ao caminho vizinho
+        # de zero sondas: campo nao observado sai marcado como nao
+        # observado, nunca com cara de evidencia.
+        return relatorio("BLOCKED", bloqueio_imediato + env_relacionadas,
+                         origem_credencial="nao-sondada",
+                         quota="nao-sondada")
 
     # Emenda P1-A.3, item 5 (google/grok): ZERO sondas automaticas. A
     # classificacao e estatica no teto SUPERVISED — somente as auditorias

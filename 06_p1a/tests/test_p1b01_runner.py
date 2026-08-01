@@ -42,7 +42,8 @@ from unittest import mock
 import apoio  # noqa: F401  (ajusta sys.path da suite)
 
 from capsula import ViolacaoCapsula  # noqa: E402
-from preflight.pipeline import RESULTADOS, RelatorioPreflight  # noqa: E402
+from preflight.pipeline import (RESULTADOS, RelatorioPreflight,  # noqa: E402
+                                executar_preflight)
 
 _DIR_P1A = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 _RAIZ_REPO = os.path.dirname(_DIR_P1A)
@@ -292,6 +293,65 @@ class Ordem2SumarioDosQuatroResultados(BaseRunnerP1B):
         self.assertIn("SHADOW_ELIGIBLE ", linha)
         self.assertIn("plano=", linha)
         self.assertIn("sombra=Allegretto", linha)
+
+
+class Ordem3CampoNaoObservadoNoBloqueioImediato(unittest.TestCase):
+    """O relatorio para de afirmar credencial que ninguem olhou."""
+
+    def _bloqueio_imediato(self, provider_id="codex"):
+        # Chave PAYG de OUTRO provedor: cai em `env_outras` e bloqueia
+        # ANTES de qualquer sonda (`pipeline.py:139-140`).
+        sens, sensor_exec, sensor_modelos = apoio.sensores_dict(provider_id)
+        rel = executar_preflight(
+            apoio.espec_de(provider_id), sensores=sens,
+            env={"NVIDIA_API_KEY": apoio.SENTINELA, "PATH": "x"},
+            config_persistida={})
+        self.assertEqual(rel.resultado, "BLOCKED")
+        self.assertEqual(sensor_exec.n, 0, "bloqueio e ANTES da sonda")
+        self.assertEqual(sensor_modelos.n, 0)
+        return rel
+
+    def test_origem_e_quota_saem_marcadas_como_nao_sondadas(self):
+        # O defeito: sem sonda alguma, o relatorio saia com
+        # origem_credencial="ausente" e quota="desconhecida" — os mesmos
+        # valores que o pipeline usa para dizer "consultamos o login e
+        # nao havia credencial" / "a franquia e incerta".
+        for provider_id in ("codex", "claude", "kimi", "google", "grok"):
+            with self.subTest(provedor=provider_id):
+                rel = self._bloqueio_imediato(provider_id)
+                self.assertEqual(rel.origem_credencial, "nao-sondada")
+                self.assertEqual(rel.quota, "nao-sondada")
+
+    def test_o_marcador_e_o_mesmo_do_caminho_vizinho_de_zero_sondas(self):
+        # O caminho de zero sondas (`pipeline.py:154`) ja resolvia isso;
+        # o de bloqueio imediato ficara para tras. Mesmo vocabulario,
+        # senao quem le a evidencia precisa saber de qual ramo veio.
+        zero_sondas = executar_preflight(
+            apoio.espec_de("grok"), sensores=apoio.sensores_dict("grok")[0],
+            env={}, config_persistida={})
+        self.assertEqual(zero_sondas.origem_credencial,
+                         self._bloqueio_imediato("grok").origem_credencial)
+
+    def test_o_campo_observado_continua_observado(self):
+        # Contraprova: sem ela, marcar TUDO como "nao-sondada" passaria.
+        # Com o login realmente consultado, a origem observada permanece.
+        sens, sensor_exec, _ = apoio.sensores_dict("codex")
+        rel = executar_preflight(apoio.espec_de("codex"), sensores=sens,
+                                 env={}, config_persistida={})
+        self.assertGreater(sensor_exec.n, 0)
+        self.assertEqual(rel.origem_credencial, "subscription-oauth")
+        self.assertEqual(rel.quota, "desconhecida")
+        self.assertNotEqual(rel.origem_credencial, "nao-sondada")
+
+    def test_o_marcador_atravessa_o_roundtrip_do_relatorio(self):
+        # O campo so serve se sobreviver ate a evidencia em disco.
+        rel = self._bloqueio_imediato("kimi")
+        dados = rel.to_dict()
+        self.assertEqual(dados["origem_credencial"], "nao-sondada")
+        self.assertEqual(dados["quota"], "nao-sondada")
+        self.assertEqual(RelatorioPreflight.from_dict(dados), rel)
+        self.assertNotIn(apoio.SENTINELA, json.dumps(dados),
+                         "erro carrega NOME, jamais valor")
 
 
 if __name__ == "__main__":
