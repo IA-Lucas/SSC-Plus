@@ -37,10 +37,12 @@ import os
 import tempfile
 import time
 import unittest
+from datetime import datetime, timedelta, timezone
 from unittest import mock
 
 import apoio  # noqa: F401  (ajusta sys.path da suite)
 
+import leitor_tiers  # noqa: E402
 from capsula import ViolacaoCapsula  # noqa: E402
 from preflight.pipeline import (RESULTADOS, RelatorioPreflight,  # noqa: E402
                                 executar_preflight)
@@ -352,6 +354,107 @@ class Ordem3CampoNaoObservadoNoBloqueioImediato(unittest.TestCase):
         self.assertEqual(RelatorioPreflight.from_dict(dados), rel)
         self.assertNotIn(apoio.SENTINELA, json.dumps(dados),
                          "erro carrega NOME, jamais valor")
+
+
+class Ordem4DeclaracoesDeTierNoRunner(BaseRunnerP1B):
+    """O runner passa a carregar e repassar as declaracoes de tier."""
+
+    def _declaracao(self, provider_id="kimi", tier="Allegretto",
+                    horas_atras=1, declarado_por="proprietario") -> dict:
+        instante = datetime.now(timezone.utc) - timedelta(hours=horas_atras)
+        return {"declaracoes": [{
+            "provider_id": provider_id, "tier": tier,
+            "declarado_por": declarado_por,
+            "declarado_em_utc": instante.strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "validade_horas": 24}]}
+
+    def _arquivo(self, conteudo) -> str:
+        caminho = os.path.join(self.raiz, "tiers.json")
+        with open(caminho, "w", encoding="utf-8") as f:
+            json.dump(conteudo, f)
+        return caminho
+
+    def test_o_pipeline_recebe_as_declaracoes_carregadas(self):
+        # O defeito: `tiers_declarados` era omitido e valia None
+        # (`pipeline.py:97`) — a trilha SHADOW_ELIGIBLE era inalcancavel
+        # a partir deste runner mesmo com declaracao valida em disco.
+        caminho = self._arquivo(self._declaracao())
+        espiao = _EspiaoPreflight()
+        with mock.patch.object(self.mod, "carregar_tiers",
+                               lambda: leitor_tiers.carregar_tiers(caminho)):
+            self.assertEqual(self._rodar_main(espiao), 0)
+        self.assertEqual(espiao.n, 5)
+        for tiers in espiao.tiers:
+            self.assertIsNotNone(tiers, "tiers_declarados chegou como None")
+            self.assertIn("kimi", tiers)
+            self.assertEqual(tiers["kimi"].tier, "Allegretto")
+
+    def test_a_trilha_sombra_fica_alcancavel_de_ponta_a_ponta(self):
+        # Prova de alcance real, sem espiao no pipeline: com OAuth
+        # observado, plano nao observavel no CLI e declaracao valida do
+        # proprietario, o resultado e SHADOW_ELIGIBLE.
+        tiers = leitor_tiers.carregar_tiers(self._arquivo(self._declaracao()))
+        rel = executar_preflight(
+            apoio.espec_de("kimi"), sensores=apoio.sensores_dict(
+                "kimi", login="managed:kimi-code type=kimi source=oauth")[0],
+            env={}, config_persistida={}, tiers_declarados=tiers)
+        self.assertEqual(rel.resultado, "SHADOW_ELIGIBLE")
+        self.assertEqual(rel.sombra["tier_declarado"], "Allegretto")
+        # Contraprova: sem as declaracoes, o mesmo cenario e BLOCKED —
+        # que e exatamente o que o runner produzia ao omitir o parametro.
+        sem = executar_preflight(
+            apoio.espec_de("kimi"), sensores=apoio.sensores_dict(
+                "kimi", login="managed:kimi-code type=kimi source=oauth")[0],
+            env={}, config_persistida={}, tiers_declarados=None)
+        self.assertEqual(sem.resultado, "BLOCKED")
+        self.assertIn("P1A-PLANO-DESCONHECIDO", apoio.codigos(sem))
+
+    def test_declaracao_vencida_e_reportada_como_esta_e_nao_renovada(self):
+        # A missao proibe renovar declaracao (ato do proprietario). O
+        # vencido tem de SAIR no relatorio, nao ser silenciado.
+        tiers = leitor_tiers.carregar_tiers(
+            self._arquivo(self._declaracao(horas_atras=48)))
+        self.assertIn("kimi", tiers, "o leitor nao filtra o vencido")
+        rel = executar_preflight(
+            apoio.espec_de("kimi"), sensores=apoio.sensores_dict(
+                "kimi", login="managed:kimi-code type=kimi source=oauth")[0],
+            env={}, config_persistida={}, tiers_declarados=tiers)
+        self.assertEqual(rel.resultado, "BLOCKED")
+        self.assertIn("P1A-DECLARACAO-EXPIRADA", apoio.codigos(rel))
+
+    def test_fonte_ausente_ou_ilegivel_e_fail_closed(self):
+        self.assertEqual(
+            leitor_tiers.carregar_tiers(os.path.join(self.raiz, "nao-existe")),
+            {})
+        caminho = os.path.join(self.raiz, "lixo.json")
+        with open(caminho, "w", encoding="utf-8") as f:
+            f.write("{isto nao e json")
+        self.assertEqual(leitor_tiers.carregar_tiers(caminho), {})
+
+    def test_a_evidencia_registra_o_tier_e_o_limite_da_emenda(self):
+        caminho = self._arquivo(self._declaracao())
+        with mock.patch.object(self.mod, "carregar_tiers",
+                               lambda: leitor_tiers.carregar_tiers(caminho)):
+            self.assertEqual(self._rodar_main(_EspiaoPreflight()), 0)
+        with open(os.path.join(self.raiz, "07_p1b", "evidencias",
+                               self._gravados()[0]), encoding="utf-8") as f:
+            doc = json.load(f)
+        emenda = doc["emenda_p1a3_item_1"]
+        self.assertEqual(emenda["tiers_declarados"], {"kimi": "Allegretto"})
+        self.assertIn("SHADOW_ELIGIBLE somente", emenda["limite"])
+        self.assertIn("NAO autoriza P2", emenda["limite"])
+
+    def test_o_leitor_de_tiers_e_unico_nos_dois_runners(self):
+        # Achados 7, 10 e 14, mesmo mecanismo: copiar o leitor para o
+        # segundo runner deixaria uma das copias para tras na proxima
+        # correcao. Se alguem reintroduzir uma copia local, isto reprova.
+        import preflight_capsula
+        self.assertIs(self.mod.carregar_tiers, leitor_tiers.carregar_tiers)
+        self.assertIs(preflight_capsula._carregar_tiers,
+                      leitor_tiers.carregar_tiers)
+        with open(os.path.join(_RAIZ_REPO, "07_p1b", "preflight_atual.py"),
+                  encoding="utf-8") as f:
+            self.assertIn("leitor_tiers", f.read())
 
 
 if __name__ == "__main__":

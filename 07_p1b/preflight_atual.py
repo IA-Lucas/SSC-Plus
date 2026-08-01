@@ -36,10 +36,18 @@ ou persistido: a decisao da P1-A.2 (`capsula.py:3-6`) continua valendo —
 credencial de terceiro PODE existir no ambiente global; o SSC+ nao a
 remove, apenas nao a deixa entrar na capsula.
 
+TIERS DECLARADOS (P1-B.01, ordem 4). As declaracoes de tier do
+proprietario (`06_p1a/tiers_declarados.json`) sao carregadas e repassadas
+ao pipeline. Sem isso a trilha SHADOW_ELIGIBLE da emenda P1-A.3 item 1
+era inalcancavel a partir daqui. Declaracao VENCIDA e reportada como
+esta (`DeclaracaoExpirada`); renovar e ato do proprietario, nunca do
+runner.
+
 Escritor unico: antes de escrever a evidencia, este script VERIFICA o
-lease `locks/p1b-ops.lease` (sessao p1b-ops viva e nao expirada). O lock
-e detido pelo processo titular da sessao P1-B; se o lease estiver morto,
-o script aborta SEM escrever (parada: lock perdido).
+lease `locks/<sessao>.lease` — a sessao vem de `SSC_LOCK_SESSAO`, com o
+default historico `p1b-ops`. O lock e detido pelo processo titular da
+sessao operacional; se o lease estiver morto ou o titular tiver sido
+substituido, o script aborta SEM escrever (parada: lock perdido).
 
 Redacao: o nome do usuario local nunca persiste — caminhos do home sao
 gravados como <USUARIO>. Nenhum valor de config persistida e gravado:
@@ -61,6 +69,7 @@ sys.path.insert(0, os.path.join(_RAIZ, "06_p1a"))
 # copia propria — ver `_verificar_lock_vivo`.
 sys.path.insert(0, os.path.join(_RAIZ, "06_p1a", "evidencias"))
 
+import leitor_tiers  # noqa: E402
 import leitores_config  # noqa: E402
 from capsula import (ambiente_capsula, exigir_capsula_limpa,  # noqa: E402
                      verificar_capsula)
@@ -141,6 +150,14 @@ def _sensor_de(provider_id: str):
 # do ACHADO 7 e do achado 10.
 _config_persistida = leitores_config.config_persistida
 
+# ORDEM 4: este runner tinha ZERO ocorrencia de `carregar_declaracoes` e
+# omitia `tiers_declarados` na chamada ao pipeline, onde o parametro vale
+# None (`pipeline.py:97`). Efeito medido: a trilha SHADOW_ELIGIBLE
+# inteira — ratificada na emenda P1-A.3 item 1 — era inalcancavel a
+# partir daqui MESMO com declaracao valida no disco. O leitor e o UNICO
+# do acervo (`06_p1a/leitor_tiers.py`), partilhado com o runner da P1-A.
+carregar_tiers = leitor_tiers.carregar_tiers
+
 def main() -> int:
     # ORDEM 1(b): PRIMEIRA linha util. Fora da capsula o runner aborta
     # aqui — antes do lease, antes da primeira sonda e antes de qualquer
@@ -148,6 +165,10 @@ def main() -> int:
     # P1-A.2: credencial de modelo visivel DENTRO da capsula = bloqueio.
     exigir_capsula_limpa()
     lock = _verificar_lock_vivo()
+    # Declaracao VENCIDA nao e filtrada nem renovada aqui: ela chega ao
+    # pipeline e sai como DeclaracaoExpirada no relatorio. Renovar e ato
+    # do proprietario, nunca do runner.
+    tiers = carregar_tiers()
     agora = datetime.now(timezone.utc)
     # ORDEM 1(a): ambiente de CAPSULA, derivado uma unica vez e usado
     # tanto na auditoria do relatorio quanto na classificacao de cada
@@ -161,7 +182,8 @@ def main() -> int:
         rel = executar_preflight(
             espec, sensores=_sensor_de(espec.provider_id),
             env=ambiente,
-            config_persistida=_config_persistida(espec.provider_id))
+            config_persistida=_config_persistida(espec.provider_id),
+            tiers_declarados=tiers)
         relatorios.append(rel.to_dict())
 
     # ACHADO 7 / MAJOR #4: as sondas acima invocam os CLIs reais e podem
@@ -181,6 +203,14 @@ def main() -> int:
         "nota": "somente sondas de diagnostico (versao/login/modelos); "
                 "nenhuma invocacao de modelo; env das sondas sanitizado "
                 "pela canonica preflight.economia.ambiente_sanitizado",
+        "emenda_p1a3_item_1": {
+            "tiers_declarados": {pid: d.tier
+                                 for pid, d in sorted(tiers.items())},
+            "limite": "SHADOW_ELIGIBLE somente; validade maxima 24 h; "
+                      "NAO autoriza P2 nem execucao autonoma",
+            "nota": "declaracao vencida e reportada como esta "
+                    "(DeclaracaoExpirada); renovar e ato do proprietario",
+        },
         "capsula": {
             "mecanismo": "entrada por capsula.iniciar_em_capsula + guarda "
                          "exigir_capsula_limpa no processo + ambiente "

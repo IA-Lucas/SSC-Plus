@@ -45,29 +45,24 @@ sys.path.insert(0, os.path.join(_RAIZ, "05_p0"))
 sys.path.insert(0, os.path.join(_RAIZ, "06_p1a"))
 sys.path.insert(0, os.path.join(_RAIZ, "06_p1a", "evidencias"))
 
+import leitor_tiers  # noqa: E402
 import leitores_config  # noqa: E402
 from capsula import exigir_capsula_limpa, verificar_capsula  # noqa: E402
 from preflight.adaptadores import sensor_subprocess  # noqa: E402
 from preflight.economia import ambiente_sanitizado, auditar_ambiente  # noqa: E402
 from preflight.frota_real import frota_real  # noqa: E402
 from preflight.pipeline import executar_preflight  # noqa: E402
-from preflight.sombra import carregar_declaracoes  # noqa: E402
 
 _GITBASH = r"E:\LucasIA\Git\bin\bash.exe"
 _SESSAO_LOCK = os.environ.get("SSC_LOCK_SESSAO", "p1a3-ops")
 _VIA_GITBASH = ("google", "grok")  # CLIs npm sem executavel Windows direto
-_TIERS_JSON = os.path.join(_RAIZ, "06_p1a", "tiers_declarados.json")
 
-
-def _carregar_tiers() -> dict:
-    """Tiers declarados pelo proprietario (JSON do disco lido AQUI — os
-    modulos do pacote preflight nunca abrem arquivos). Arquivo ausente ou
-    ilegivel = trilha sombra indisponivel (fail-closed)."""
-    try:
-        with open(_TIERS_JSON, encoding="utf-8") as f:
-            return carregar_declaracoes(json.load(f))
-    except (OSError, ValueError):
-        return {}
+# Leitor de tiers: implementacao UNICA em `leitor_tiers`, partilhada com
+# o runner da P1-B. Estava aqui dentro, e a ordem 4 da P1-B.01 ia
+# duplica-la do outro lado — o mecanismo dos achados 7, 10 e 14 (a copia
+# que ninguem exercita fica para tras). Mesmo desenho que
+# `leitores_config` recebeu na correcao 7 da P1-A.3.5.
+_carregar_tiers = leitor_tiers.carregar_tiers
 
 
 def _verificar_lock_vivo(fence_esperado: int | None = None,
