@@ -100,7 +100,15 @@ def _verificar_tier(provider: str) -> dict:
             raise SystemExit(
                 f"PARADA: tier declarado de {provider} EXPIRADO em "
                 f"{expira_iso} — somente o proprietario renova")
+        # ACHADO 15 da P1-A.3.5, encontrado ao exercer o portao nos DOIS
+        # runners de uma vez: esta copia omitia `declarado_por`, e a de
+        # `revisao_p1a33.py` o registrava. E o campo que diz QUEM
+        # declarou o tier — e o portao do pipeline exige que seja o
+        # proprietario (`preflight/pipeline.py`). A evidencia gravada
+        # aqui nao permitia a um revisor conferir isso. Acrescimo
+        # ADITIVO: as evidencias ja gravadas seguem validas.
         return {"provider_id": provider, "tier": decl["tier"],
+                "declarado_por": decl["declarado_por"],
                 "declarado_em_utc": decl["declarado_em_utc"],
                 "expira_em_utc": datetime.fromtimestamp(
                     expira, timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
