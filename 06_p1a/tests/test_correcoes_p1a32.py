@@ -81,6 +81,21 @@ class AtalhoPaygGoogleGrok(unittest.TestCase):
     `executar_preflight` nem `_config_persistida`. Restaurar o atalho faz
     todos os testes desta classe falharem: eles exigem BLOCKED onde o
     atalho devolvia SUPERVISED.
+
+    RESSALVA ACRESCENTADA PELA P1-A.3.5 — o alcance desta classe, e o
+    seu limite. Todo teste aqui injeta `config_de=` (`:90`): o que se
+    exerce e o PIPELINE, nunca o leitor de disco. A varredura de guardas
+    mediu que `_config_persistida` tinha **zero linha executada** pelas
+    duas suites.
+    Consequencia concreta em `test_grok_com_auto_topup_persistido_e_blocked`:
+    enquanto `preflight_capsula` devolveu `{}` INCONDICIONAL para grok,
+    aquele teste afirmava BLOCKED contra um dicionario que o leitor real
+    **nao podia produzir** — caminho inalcancavel em operacao, e verde
+    mesmo assim. O leitor foi corrigido na P1-A.3.5 e o caminho passou a
+    ser alcancavel; a prova de que o LEITOR o produz vive em
+    `test_leitor_config_p1a35.py`, que chama `classificar_frota` sem
+    injetar `config_de`. Nenhum teste desta classe foi removido: o
+    pipeline continua precisando de lastro proprio.
     """
 
     def _classificar(self, env, configs=None, sens=None):

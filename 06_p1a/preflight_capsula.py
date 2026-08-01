@@ -137,6 +137,27 @@ def _ler_toml(caminho: str) -> dict:
         return {}
 
 
+def _ler_jsons_do_diretorio(caminho: str) -> dict:
+    """Todo JSON de TOPO de um diretorio de config, sob a chave do arquivo.
+
+    Diretorio ausente, ilegivel ou sem JSON devolve `{}` — porem por
+    MEDICAO do disco, nunca por cegueira escrita no fonte. Cada arquivo
+    entra sob o proprio nome, de modo que o `alvo` da violacao nomeie o
+    arquivo que a carrega (`user-settings.json.auto_topup`), e nao um
+    campo solto sem procedencia.
+
+    Le o DIRETORIO em vez de um nome de arquivo fixo de proposito: um
+    nome fixo seria invencao — nenhuma evidencia do acervo diz como o
+    arquivo se chama —, enquanto o diretorio foi observado.
+    """
+    base = os.path.expanduser(caminho)
+    try:
+        nomes = sorted(n for n in os.listdir(base) if n.endswith(".json"))
+    except OSError:
+        return {}
+    return {n: _ler_json(os.path.join(base, n)) for n in nomes}
+
+
 def _config_persistida(provider_id: str) -> dict:
     """Config/auth persistida, parseada em MEMORIA (valores nunca gravados).
     Codex: somente auth_mode + OPENAI_API_KEY + config.toml — os campos
@@ -155,7 +176,29 @@ def _config_persistida(provider_id: str) -> dict:
         return _ler_toml("~/.kimi-code/config.toml")
     if provider_id == "google":
         return _ler_json("~/.gemini/settings.json")
-    return {}  # grok: nenhuma config parseavel localizada na P1-A
+    if provider_id == "grok":
+        # MAJOR #1, correcao da P1-A.3.5. Antes: `return {}`
+        # INCONDICIONAL, com o comentario "nenhuma config parseavel
+        # localizada na P1-A". A varredura de guardas mediu duas coisas
+        # que desfazem esse fundamento:
+        #
+        # 1. a coleta da P1-A auditou config de TRES provedores apenas
+        #    (codex, kimi, claude — `coleta-.../20_configs.txt`), de modo
+        #    que "nao localizada" descrevia o que NAO foi procurado;
+        # 2. `~/.grok/` EXISTE nesta estacao; o estado do grok vive em
+        #    SQLite (`grok.db`), e por isso nao ha JSON de topo hoje.
+        #
+        # O resultado de hoje continua sendo `{}` — mas agora porque o
+        # disco foi lido e nada havia, e nao porque o leitor se recusa a
+        # olhar. A diferenca e o que torna o guarda exercivel: com um
+        # JSON de config presente, `auditar_config` passa a ve-lo.
+        #
+        # LIMITE DECLARADO: se o grok passar a guardar config fora de
+        # `~/.grok/` ou somente no SQLite, esta leitura nao a alcanca.
+        # Auditar o SQLite exigiria abrir banco de credencial e esta
+        # fora do escopo — registrado, nao presumido resolvido.
+        return _ler_jsons_do_diretorio("~/.grok")
+    return {}  # provider fora da frota declarada
 
 
 def classificar_frota(env: dict, tiers: dict, config_de=None,
