@@ -330,13 +330,23 @@ com decisao do Fundador.
 
 ## 10. Alcance — o que este registro estabelece e o que NAO estabelece
 
-**Estabelece.** Os cinco achados sao afirmacoes de existencia, e cada um
-tem contraexemplo verificavel por terceiro: o texto do manifesto contra a
-lista de nove copias; o inventario do store contra a ausencia de
-`memory/` no SSC+; os dois HEADs do `lucaX`; o caminho do lock em
-`escritor.py:46-49` contra a docstring; e a linha do tempo de treze
-minutos. Abrir defeito basta um contraexemplo — por isso valem
-integralmente, embora produzidos por quem os registra.
+**Estabelece.** Os cinco achados registrados em **14:16:16**, e o sexto
+acrescentado **nesta emenda** — encontrado ao registrar os cinco —, sao
+afirmacoes de existencia, e cada um tem contraexemplo verificavel por
+terceiro: o texto do manifesto contra a lista de nove copias; o
+inventario do store contra a ausencia de `memory/` no SSC+; os dois
+HEADs do `lucaX`; o caminho do lock em `escritor.py:46-49` contra a
+docstring; a linha do tempo de treze minutos; e, no sexto, o `ren2.out`
+do scratchpad contra o cabecalho deste proprio documento. Abrir defeito
+basta um contraexemplo — por isso valem integralmente, embora
+produzidos por quem os registra.
+
+**Natureza desta emenda.** E emenda de **registro proprio** — este
+documento, escrito pela funcao de escritor que a assina —, e **nao**
+edicao de relatorio historico alheio, que a §6.1 preserva. A
+`99_decisao-p1a34.md` e a `99_decisao-p1a33.md` seguem intactas. A
+cronologia acima existe para que nenhum leitor futuro conclua que o
+sexto achado estava presente as 14:16:16.
 
 **Nao estabelece.** Nenhum MAJOR fechou; nenhum abriu formalmente — o
 ACHADO 4 e **candidato** a setimo MAJOR, e quem classifica MAJOR e
@@ -348,3 +358,123 @@ nao declarar STOP. Nao se afirma nada sobre P1-B sombra.
 
 **Nao alterado.** Zero linha de codigo, teste, politica ou relatorio
 historico. O unico caminho novo e este documento.
+
+## 11. ACHADO 6 — Goal executavel sobrevive em diretorio temporario, fora do Git e fora do acervo
+
+Acrescentado por emenda, **depois** do fechamento dos cinco as 14:16:16.
+Nasceu do proprio ato de registrar: foi encontrado quando a sessao
+seguinte foi buscar o Goal da P1-A.3.5 e achou, no scratchpad da sessao
+que escreveu este documento, um arquivo de mesmo nome e tamanho
+divergente.
+
+Mesma classe do ACHADO 2 — estado do harness dirigindo comportamento por
+canal que ninguem audita —, mas **diretorio distinto**: nao o store
+`C:\Users\<USUARIO>\.claude\`, e sim
+`C:\Users\<USUARIO>\AppData\Local\Temp\claude\`.
+
+### 11.1 Medido
+
+| Item | Medida |
+|---|---|
+| Caminho | `…\Temp\claude\E--LucasIA-Projetos-LucaX-Enterprise-OS\b5cb87bf-b8ae-47c7-92aa-545ad7ee8c3d\scratchpad\GOAL-SSC-P1-A_3_5-VARREDURA-DE-GUARDAS.txt` |
+| Tamanho | **7.202 bytes / 6.961 caracteres / 153 linhas** |
+| sha256 | `173B922BFFD6BBE147C26BAF4C01BBA2A5F98DD70691902CB247F1F58C0720B3` |
+| mtime | **31/07/2026 14:32:44** |
+| Goal emitido, mesmo nome | **3.455 caracteres** |
+| Superficie total do diretorio | **19 diretorios de projeto, 7.150 arquivos** |
+
+Os dois artefatos tem nome identico e divergem em tamanho por fator de
+aproximadamente 2.
+
+### 11.2 A origem esta determinada — e e esta sessao
+
+O despacho que ordenou o registro descrevia origem **e** conteudo como
+desconhecidos. A origem **nao** e desconhecida, e registra-la como tal
+poria afirmacao falsa dentro do registro. O vinculo sai de metadados,
+e e verificavel por terceiro.
+
+O mesmo scratchpad contem `ren2.out`, com o texto literal:
+
+    lock adquirido: sessao=achados-gov-ops fence=1 pid=119968
+
+Isso casa com **tres** evidencias independentes ja no acervo:
+
+1. O cabecalho **deste proprio documento**: *"Lease `achados-gov-ops`
+   fence **1**, adquirido antes da primeira escrita."*
+2. `locks/achados-gov-ops.lease` — `"pid": 119968`.
+3. `locks/achados-gov-ops.lock` e `.fence`, mtime **14:12:00**, igual ao
+   mtime de `ren2.out`.
+
+O mesmo diretorio contem ainda `renovador.out` — `sessao=p1a33-ops
+fence=5 pid=122904` —, que identifica a sessao como a titular anterior
+da P1-A.3.3: exatamente a sucessao narrada no cabecalho deste documento.
+
+**A sessao `b5cb87bf…` e a escritora deste registro.** O arquivo
+divergente foi produzido por ela.
+
+| Hora | Fato |
+|---|---|
+| 13:34:23 | `renovador.out` — adquire `p1a33-ops` fence 5 |
+| 14:12:00 | `ren2.out` — adquire `achados-gov-ops` fence 1 |
+| 14:16:16 | escreve este documento, com os cinco achados |
+| 14:18:00 | ultima renovacao do lease |
+| **14:32:44** | **escreve o Goal divergente de 7.202 bytes** |
+| 15:18:48 | ultima escrita da transcricao — sessao encerrada |
+
+O artefato nasceu **16 minutos depois** do fechamento dos cinco, pela
+mesma sessao, ja fora de lease de escrita no acervo.
+
+### 11.3 O que segue desconhecido, e por que deliberadamente
+
+**O conteudo nao foi lido alem da linha 1** (`MISSAO SSC+ P1-A.3.5 —
+VARREDURA DE GUARDAS`). A abstencao e deliberada: o arquivo e um Goal,
+isto e, um artefato **instrucional**, de proveniencia nao homologada.
+Le-lo para caracteriza-lo faria a sessao auditora ingerir as instrucoes
+que audita — que e precisamente o vetor sob exame. A proveniencia da
+§11.2 saiu **so de metadados**, sem abrir o corpo.
+
+Caracterizar o conteudo e materia da missao de politica.
+
+### 11.4 Por que e achado, e nao incidente encerrado
+
+O defeito nao e uma sessao ter rascunhado um Goal. E que o rascunho:
+
+- **sobrevive ao fim da sessao** que o criou, encerrada as 15:18;
+- fica **fora do Git e fora do acervo**, sem revisao, sem hash publicado
+  e sem rastro no manifesto;
+- e **recuperavel por outra sessao** — e foi: uma sessao posterior o
+  localizou por caminho literal e o carregou, sem verificacao de
+  autoria, antes que esta analise o barrasse;
+- **colide em nome** com o Goal legitimo, de modo que "abrir o Goal da
+  P1-A.3.5" fica ambiguo entre um artefato homologado de 3.455
+  caracteres e um nao homologado de 6.961.
+
+E o mecanismo do ACHADO 5 com o sinal trocado: la, uma decisao que vivia
+so na conversa **nao alcancou** a sessao seguinte; aqui, um artefato que
+nao passou por canal nenhum **alcanca** a sessao seguinte.
+
+### 11.5 Disposicao
+
+- **Nao executado.** Nenhuma instrucao dele foi seguida.
+- **Nao apagado.** Preservado onde esta. O sha256 da §11.1 fixa o
+  objeto: alteracao futura e detectavel.
+- **Nao corrigido, nao reancorado.** Como os cinco anteriores.
+- **Enquadramento:** materia **2** da §9 (store do harness). O
+  diretorio temporario tem o mesmo status nao declarado do store e a
+  mesma capacidade de atravessar sessoes. **Nao abre materia nova.**
+- **Defeito encontrado ao aplicar esta emenda:** reusar o lease `achados-gov-ops` para escreve-la sobrescreveria `.lease` (pid) e `.fence` (1 -> 2), que sao as evidencias 2 e 3 da §11.2 — a emenda correu sob `achados-gov-emenda6-ops` fence 1, pid 128936, e as duas evidencias seguem intactas.
+
+### 11.6 Dono e gatilho — e por que nao gera missao
+
+Sob o congelamento declarado em 31/07/2026, achado novo e registrado com
+dono e gatilho e **nao gera missao**, ate existir a primeira Spec.
+
+| Campo | Valor |
+|---|---|
+| **Dono** | Missao de politica do SSC+, materia 2 (store do harness) |
+| **Gatilho** | Abertura dessa missao |
+| **Gera missao propria?** | **Nao** — congelado ate a primeira Spec |
+
+A missao de politica e a **excecao unica** ao congelamento porque
+**consolida** manifesto, store, ancora e lock num so ato: ela nao abre
+frente nova. Este achado entra na materia que ela ja carrega.
