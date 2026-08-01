@@ -32,6 +32,10 @@ from datetime import datetime, timezone
 _RAIZ = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(_RAIZ, "05_p0"))
 sys.path.insert(0, os.path.join(_RAIZ, "06_p1a"))
+# `evidencias/` entra no path para que o escritor unico use a
+# verificacao CANONICA (`contencao.verificar_lock`) em vez de uma quarta
+# copia propria — ver `_verificar_lock_vivo`.
+sys.path.insert(0, os.path.join(_RAIZ, "06_p1a", "evidencias"))
 
 from preflight.adaptadores import sensor_subprocess  # noqa: E402
 from preflight.economia import ambiente_sanitizado, auditar_ambiente  # noqa: E402
@@ -49,26 +53,38 @@ def _redigir(texto: str) -> str:
     return texto.replace(_USUARIO, "<USUARIO>")
 
 
-def _verificar_lock_vivo() -> dict:
-    """Le o lease da sessao P1-B; aborta se ausente/expirado/outra sessao."""
-    from escritor import EscritorP1
+def _verificar_lock_vivo(fence_esperado: int | None = None) -> dict:
+    """Lease vivo + fence do titular; aborta antes de gravar um byte.
+
+    ACHADO 7 da P1-A.3.5 — o MAJOR #4 nunca alcancou esta copia. Esta
+    funcao tinha TRES defeitos que a irma da P1-A ja nao tinha:
+
+    1. nao aceitava `fence_esperado`, de modo que troca de titular entre
+       a sonda e a gravacao passava despercebida;
+    2. `main()` a chamava UMA unica vez, na abertura, e gravava depois
+       das sondas reais — que e o defeito exato descrito pelo MAJOR #4
+       (256 s de sonda observados contra 120 s de lease);
+    3. a leitura do fence nao estava protegida, de modo que fence
+       ilegivel virava excecao crua em vez de PARADA tipada.
+
+    A verificacao passa a ser a CANONICA (`contencao.verificar_lock`),
+    em vez de uma quarta copia divergente: a varredura de guardas contou
+    quatro implementacoes do mesmo guarda, e esta era a unica sem o
+    conserto. `expira_em` continua no retorno para nao mudar a forma das
+    evidencias ja gravadas em `07_p1b/evidencias/`.
+    """
+    from contencao import verificar_lock
+    estado = verificar_lock(_RAIZ, _SESSAO_LOCK, fence_esperado)
     caminho = os.path.join(_RAIZ, "locks", f"{_SESSAO_LOCK}.lease")
     try:
         with open(caminho, encoding="utf-8") as f:
-            lease = json.load(f)
-    except (OSError, ValueError) as exc:
-        raise SystemExit(
-            f"PARADA: lease do escritor unico ilegivel/ausente: {exc}")
-    if lease.get("sessao") != _SESSAO_LOCK:
-        raise SystemExit(
-            f"PARADA: lease de outra sessao: {lease.get('sessao')!r}")
-    if EscritorP1.lease_expirado(caminho):
-        raise SystemExit("PARADA: lease do escritor unico EXPIRADO")
-    with open(os.path.join(_RAIZ, "locks", f"{_SESSAO_LOCK}.fence"),
-              encoding="ascii") as f:
-        fence = int(f.read().strip())
-    return {"sessao": lease["sessao"], "pid_titular": lease["pid"],
-            "fence": fence, "expira_em": lease["expira_em"]}
+            estado["expira_em"] = json.load(f)["expira_em"]
+    except (OSError, ValueError, KeyError):
+        # O lease acabou de ser validado; se sumiu entre uma leitura e
+        # outra, a ausencia do campo informativo nao pode ser tratada
+        # como sucesso silencioso.
+        raise SystemExit("PARADA: lease desapareceu durante a verificacao")
+    return estado
 
 
 def _sensor_de(provider_id: str):
@@ -136,10 +152,18 @@ def main() -> int:
             config_persistida=_config_persistida(espec.provider_id))
         relatorios.append(rel.to_dict())
 
+    # ACHADO 7 / MAJOR #4: as sondas acima invocam os CLIs reais e podem
+    # exceder a janela do lease (120 s). O escritor e reverificado AQUI,
+    # imediatamente antes da persistencia, e o fence precisa ser o MESMO
+    # da abertura — lease morto ou titular substituido = PARADA sem
+    # gravar. Verificar so na abertura permitia gravar com lease morto.
+    lock_persistencia = _verificar_lock_vivo(fence_esperado=lock["fence"])
+
     documento = {
         "tipo": "preflight-atual-p1b",
         "gerado_em_utc": agora.strftime("%Y-%m-%dT%H:%M:%SZ"),
-        "lock_escritor_unico": lock,
+        "lock_escritor_unico": lock_persistencia,
+        "lock_verificado_antes_da_persistencia": True,
         "custo_variavel": 0,
         "chamadas_de_modelo": 0,
         "nota": "somente sondas de diagnostico (versao/login/modelos); "
