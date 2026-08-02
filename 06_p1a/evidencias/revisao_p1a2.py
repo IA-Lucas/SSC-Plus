@@ -159,11 +159,23 @@ def main() -> int:
     duracao = round(time.monotonic() - inicio, 3)
     restantes = [str(p.relative_to(tmp)) for p in Path(tmp).rglob("*")
                  if p.is_file()]
+    # MAJOR #4, a copia que ficou para tras. O revisor independente
+    # mediu, para NAO fechar o achado: *"`revisao_p1a2.main` verifica o
+    # lock so antes da chamada e grava em SAIDA sem reverificacao com o
+    # fence original; o teste novo exercita apenas a funcao canonica,
+    # nao esse caminho de persistencia"*.
+    # A chamada acima pode levar ate 900 s — mais que a janela do lease
+    # (120 s em operacao). Reverificar AQUI, com o MESMO fence da
+    # abertura, e o que separa "escritor vivo quando comecou" de
+    # "escritor vivo agora": lease morto ou titular substituido = PARADA
+    # antes de gravar um byte. Os outros quatro runners ja faziam isto.
+    lock = _verificar_lock(fence_esperado=lock["fence"])
     meta = {
         "provider": provider, "ts_utc": ts, "tipo": "revisao-p1a2",
         "chamadas_de_modelo": 1, "custo_variavel": 0,
         "rotulo": "assinatura-oauth; UMA chamada; enforcement read-only",
         "lock_escritor_unico": lock,
+        "lock_verificado_antes_da_persistencia": True,
         "argv_publico": ["<PROMPT>" if a == prompt else a for a in argv],
         "prompt_sha256": __import__("hashlib").sha256(
             prompt.encode()).hexdigest(),
