@@ -1,0 +1,61 @@
+{
+  "provider": "codex",
+  "ts_utc": "20260802T001922Z",
+  "tipo": "revisao-p1a36",
+  "chamadas_de_modelo": 1,
+  "custo_variavel": 0,
+  "rotulo": "assinatura-oauth; UMA chamada; enforcement read-only",
+  "enforcement_read_only": "--sandbox read-only --ephemeral (CLI)",
+  "tier_declarado_no_instante": {
+    "provider_id": "codex",
+    "tier": "ChatGPT Pro 5x",
+    "declarado_por": "proprietario",
+    "declarado_em_utc": "2026-08-01T23:54:41Z",
+    "expira_em_utc": "2026-08-02T23:54:41Z",
+    "valido_no_instante": true
+  },
+  "lock_escritor_unico": {
+    "sessao": "p1a36-ops",
+    "pid_titular": 136168,
+    "fence": 1
+  },
+  "argv_publico": [
+    "codex",
+    "exec",
+    "--sandbox",
+    "read-only",
+    "--cd",
+    "C:\\Users\\<USUARIO>\\AppData\\Local\\Temp\\p1a36-revisao-codex-_nxudees",
+    "--skip-git-repo-check",
+    "--ephemeral",
+    "<PROMPT>"
+  ],
+  "prompt_sha256": "ebc63fe49b2f31a70e4e0726a38eaed02dc0c4f9b5d7ad9189d35226e3a58b28",
+  "pacote_sha256": "5ab35a6c13c67ba9f0b03893263467d0cf7afdc7565a5d1fc8e3ee6d417f96c2",
+  "pacote_bytes_entregues": 445056,
+  "dir_descartavel": "C:\\Users\\<USUARIO>\\AppData\\Local\\Temp\\p1a36-revisao-codex-_nxudees",
+  "dir_descartavel_arquivos_restantes": [
+    "pacote-revisao.txt"
+  ],
+  "contencao": {
+    "medida": "manifesto SHA-256 da arvore inteira antes/depois",
+    "arquivos_no_manifesto": 3326,
+    "excluido_e_declarado": [
+      "locks"
+    ],
+    "mutacoes_fora_do_descartavel": [
+      "criado: 06_p1a/99_decisao-p1a36.md"
+    ],
+    "violada": true
+  },
+  "lock_verificado_antes_da_persistencia": true,
+  "env_vars_removidas_nomes": [
+    "NVIDIA_API_KEY"
+  ],
+  "returncode": 0,
+  "duracao_s": 238.975,
+  "modelo_efetivo_no_banner": "gpt-5.6-sol",
+  "resposta": "PROVIDER: OpenAI\nMODELO-OBSERVADO: GPT-5\nCANAL: API\nPACOTE-SHA256: 5ab35a6c13c67ba9f0b03893263467d0cf7afdc7565a5d1fc8e3ee6d417f96c2\nESCOPO: pacote-revisao.txt integral (9.519 linhas), incluindo declarações obrigatórias, diff, 29 arquivos completos, suites, threat review, hashes e perguntas; análise estática somente leitura\nMAJOR-1: NAO-FECHADO — `preflight_capsula.classificar_frota` eliminou o atalho, mas `leitores_config.py:config_persistida` lê para grok somente JSONs de topo e admite não alcançar o SQLite observado; PAYG/auto-topup persistido nessa fonte ainda não chega à auditoria.\nMAJOR-2: NAO-FECHADO — `adaptadores.py:_ZERO` aceita somente um zero inicial; formas numericamente nulas como `.0 tokens available` e `00 tokens available` escapam das regexes de esgotamento e ainda casam `available`, mantendo o fail-open.\nMAJOR-3: NAO-FECHADO — `contencao.py:manifesto` cobre apenas `RAIZ` e exclui todo `locks/`; o kimi continua capaz de alterar arquivos fora do repositório, ou locks não verificados, sem aparecer em `mutacoes`.\nMAJOR-4: NAO-FECHADO — `revisao_p1a2.py:main` verifica o lock somente antes da chamada e grava em `SAIDA` sem reverificação com o fence original; o teste novo exercita apenas a função canônica, não esse caminho de persistência.\nMAJOR-5: NAO-FECHADO — `pacote_p1a31.py` foi corretamente ancorado em `git cat-file blob`, e retirar a dependência do HEAD é substituição válida; porém o gerador deste pacote, expressamente incluído no julgamento, não está entre os conteúdos completos, deixando sua construção e seu portão inauditáveis.\nMAJOR-6: NAO-FECHADO — `test_emendas_p1a3.py` só reconhece literais exatos e aliases atribuídos no mesmo arquivo; concatenação, constante importada (`RESULTADOS`) ou propagação por booleano contornam `_portoes_de_execucao`, e a metade (A) continua sem cobrir `07_p1b`.\nDEFEITO-NOVO: SIM — `preflight/pipeline.py`: a alteração do bloqueio imediato passou a emitir `quota=\"nao-sondada\"`, mas o caminho vizinho de zero sondas preservou o default `\"desconhecida\"`, criando a assimetria registrada na Declaração 3.\nMAJOR 05_p0/ssc_p0/writelock.py:escritor-unico — `LockSessao` é chaveado por `locks/{sessao}.lock`; nomes distintos permitem escritores concorrentes entre missões, e a ordem manual do Fundador não substitui exclusão mútua.\nMAJOR 06_p1a/leitores_config.py:falha-fechada — fonte ausente, ilegível ou JSON inválido vira `{}`, indistinguível de configuração limpa, permitindo classificação sem prova de que PAYG persistido foi auditado.\nMAJOR 06_p1a/evidencias/contencao.py:isolamento — o rótulo “detecção integral” excede o mecanismo, que fotografa somente a árvore do repositório e possui exclusão ampla de `locks/`.\nMAJOR 06_p1a/evidencias/revisao_p1a2.py:credenciais-e-PII — `dir_descartavel` e `argv_publico` recebem o caminho temporário bruto e o JSON não passa por redação integral; caminho local e nome do usuário podem persistir.\nMAJOR 06_p1a/tests/test_emendas_p1a3.py:anti-P2 — o sentinela AST é explorável e não protege integralmente consumidores introduzidos em P1-B.\nMAJOR pacote-revisao.txt:ancoragem — falta o código completo do gerador P1-A.3.6 necessário para verificar a afirmação de que este pacote herdou a construção ancorada.\nMINOR 06_p1a/preflight/pipeline.py:quota — não-bloqueante isoladamente, pois a assimetria `\"nao-sondada\"`/`\"desconhecida\"` prejudica a fidelidade da evidência, mas não promove um provedor.\nMINOR 07_p1b/preflight_atual.py:duplicacao — não-bloqueante no estado presente, pois o laço duplicado classifica corretamente, mas mantém o mecanismo de deriva que já deixou correções fora da cópia não exercitada.\nMINOR 06_p1a/preflight_capsula.py:capsula — não-bloqueante no fluxo atual, pois `exigir_capsula_limpa` precede a auditoria de `dict(os.environ)`; ainda assim, a propriedade depende do guarda, não da derivação por construção usada em P1-B.\nOBS 07_p1b:autorizacao-sombra — este estado não autoriza reabrir P1-B em observação-sombra enquanto permanecerem abertos isolamento, escritor único, fencing e anti-P2.\nVEREDITO: REPROVADO",
+  "stderr_resumo": "Reading additional input from stdin...\nOpenAI Codex v0.145.0\n--------\nworkdir: C:\\Users\\<USUARIO>\\AppData\\Local\\Temp\\p1a36-revisao-codex-_nxudees\nmodel: gpt-5.6-sol\nprovider: openai\napproval: never\nsandbox: read-only\nreasoning effort: high\nreasoning summaries: none\nsession id: 019fbfd7-3c04-7af2-b1ac-c7039a9c0648\n--------\nuser\nRevise em modo SOMENTE LEITURA o pacote SSC+ P1-A.3.6. O pacote completo esta em ./pacote-revisao.txt no diretorio atual: leia-o POR INTEIRO antes de avaliar. Ele contem a identidade dos commits, o historico de revisao, as DECLARACOES OBRIGATORIAS, o diff, os arquivos completos, as suites, o threat review, os hashes de registros e evidencias e a secao 'Perguntas de revisao' — siga aquela secao a risca, inclusive o formato de resposta. Voce NAO pode escrever nada: responda apenas com a revisao em texto.\n\nContexto: a revisao da P1-A.3.1 REPROVOU este trabalho com SEIS MAJOR, e as duas tentativas de revisao seguintes nao produziram veredito nenhum. Este pacote e o estado DEPOIS das correcoes. Quem corrigiu nao certifica: e voce quem diz se cada MAJOR fechou. Uma correcao nao fecha por ter sido feita.\n\nLeia as 'Declaracoes obrigatorias' antes de julgar: sao quatro fatos que o autor do pacote e obrigado a lhe transmitir, dois deles contra o proprio interesse. Julgar 'escritor unico' sem a Declaracao 1 seria julgar contra premissa falsa.\n\nSua resposta precisa conter, nesta ordem: as linhas PROVIDER, MODELO-OBSERVADO, CANAL, PACOTE-SHA256 (compute o SHA-256 de ./pacote-revisao.txt) e ESCOPO; as SEIS linhas 'MAJOR-<n>: FECHADO | NAO-FECHADO — <justificativa>'; a linha 'DEFEITO-NOVO: SIM | NAO — <o que, onde>'; os achados, um por linha, prefixados por CRITICAL | MAJOR | MINOR | OBS com arquivo:tema e descricao curta (para cada MINOR, classifique bloqueante ou nao-bloqueante, com motivo; se nao houver achado num nivel, nao o invente); e a linha final 'VEREDITO: APROVADO | APROVADO-COM-RESSALVAS | REPROVADO'.\ncodex\nVou ler o pacote integralmente, conferir",
+  "quota_observavel": "nao-exposta-pelo-cli"
+}

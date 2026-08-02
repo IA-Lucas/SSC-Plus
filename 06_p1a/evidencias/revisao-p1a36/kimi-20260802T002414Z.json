@@ -1,0 +1,55 @@
+{
+  "provider": "kimi",
+  "ts_utc": "20260802T002414Z",
+  "tipo": "revisao-p1a36",
+  "chamadas_de_modelo": 1,
+  "custo_variavel": 0,
+  "rotulo": "assinatura-oauth; UMA chamada; enforcement read-only",
+  "enforcement_read_only": "sem sandbox de filesystem no CLI (nao ha equivalente ao `--sandbox read-only` do codex) e sem plan mode em headless (o CLI recusa `--plan` com `-p`): restricao PARCIAL por `--skills-dir` vazio, sem `-y/--yolo/--auto`; cwd descartavel; e DETECCAO INTEGRAL por manifesto SHA-256 da arvore inteira antes/depois da chamada (mutacao fora do descartavel e registrada e reprova a corrida)",
+  "tier_declarado_no_instante": {
+    "provider_id": "kimi",
+    "tier": "Allegretto",
+    "declarado_por": "proprietario",
+    "declarado_em_utc": "2026-08-01T23:54:41Z",
+    "expira_em_utc": "2026-08-02T23:54:41Z",
+    "valido_no_instante": true
+  },
+  "lock_escritor_unico": {
+    "sessao": "p1a36-ops",
+    "pid_titular": 136168,
+    "fence": 1
+  },
+  "argv_publico": [
+    "C:\\Users\\<USUARIO>/.kimi-code/bin/kimi",
+    "--skills-dir",
+    "C:\\Users\\<USUARIO>\\AppData\\Local\\Temp\\p1a36-skills-vazio-kimi-3oztgbqk",
+    "-p",
+    "<PROMPT>"
+  ],
+  "prompt_sha256": "ebc63fe49b2f31a70e4e0726a38eaed02dc0c4f9b5d7ad9189d35226e3a58b28",
+  "pacote_sha256": "5ab35a6c13c67ba9f0b03893263467d0cf7afdc7565a5d1fc8e3ee6d417f96c2",
+  "pacote_bytes_entregues": 445056,
+  "dir_descartavel": "C:\\Users\\<USUARIO>\\AppData\\Local\\Temp\\p1a36-revisao-kimi-_poqv5kw",
+  "dir_descartavel_arquivos_restantes": [
+    "pacote-revisao.txt"
+  ],
+  "contencao": {
+    "medida": "manifesto SHA-256 da arvore inteira antes/depois",
+    "arquivos_no_manifesto": 3328,
+    "excluido_e_declarado": [
+      "locks"
+    ],
+    "mutacoes_fora_do_descartavel": [],
+    "violada": false
+  },
+  "lock_verificado_antes_da_persistencia": true,
+  "env_vars_removidas_nomes": [
+    "NVIDIA_API_KEY"
+  ],
+  "returncode": 1,
+  "duracao_s": 6.751,
+  "modelo_efetivo_no_banner": "DESCONHECIDO (nao exposto pelo CLI)",
+  "resposta": "",
+  "stderr_resumo": "error: failed to run prompt: provider.api_error: 403 You've reached your usage limit for this billing cycle. Your quota will be refreshed in the next cycle. To continue now, purchase extra usage or upgrade your plan: https://www.kimi.com/code/#pricing\nSee log: C:/Users/<USUARIO>/.kimi-code/logs/kimi-code.log",
+  "quota_observavel": "nao-exposta-pelo-cli"
+}
