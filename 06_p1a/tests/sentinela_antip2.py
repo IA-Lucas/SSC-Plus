@@ -59,42 +59,198 @@ def fontes_py(raiz):
                 yield os.path.join(base, nome)
 
 
-def tem_literal_do_veredito(no) -> bool:
-    """Subarvore contem um literal EXATAMENTE igual a um termo do enum."""
-    return any(isinstance(f, ast.Constant) and isinstance(f.value, str)
-               and f.value in VOCABULARIO_VEREDITO
-               for f in ast.walk(no))
+# Profundidade maxima ao seguir imports entre modulos do repositorio.
+# Nao e economia: e o corte que impede ciclo de import virar recursao
+# infinita. Cadeia mais longa que isto conta como NAO RESOLVIDA — e o
+# sentinela NEGA, em vez de declarar limpo o que nao conseguiu seguir.
+PROFUNDIDADE_MAXIMA_DE_IMPORT = 12
 
 
-def apelidos_do_veredito(arvore) -> set:
-    """Nomes ligados, NO PROPRIO ARQUIVO, a um termo do vocabulario.
+def dobrar_constante(no):
+    """Valor textual de uma expressao CONSTANTE, ou None.
 
-    Cobre `resultado = "SHADOW_ELIGIBLE"` e tambem
-    `RESULTADOS = ("ELIGIBLE", ...)`. Sem isto, a comparacao indireta
-    (`alvo = "SHADOW_ELIGIBLE"` ... `if r == alvo:`) escaparia do
-    detector — o consumidor so precisaria de uma variavel.
+    ACHADO N5. O detector so reconhecia `ast.Constant` exato, de modo que
+    `"SHADOW" + "_ELIGIBLE"` — concatenacao de duas constantes — nao era
+    igual a nenhum termo do vocabulario e passava batido. O revisor
+    independente nomeou a concatenacao como uma das tres formas de
+    contornar o sentinela DE PROPOSITO.
+
+    Dobra o que o proprio interpretador dobraria: constante textual,
+    soma de constantes textuais e f-string sem interpolacao. NAO dobra
+    `%`, `.format`, `str.join` nem valor vindo de chamada — e o que nao
+    se consegue dobrar entra na lista de NAO RESOLVIDOS de `varrer`, em
+    vez de sumir em silencio.
     """
-    apelidos = set()
-    for no in ast.walk(arvore):
-        if not isinstance(no, (ast.Assign, ast.AnnAssign)):
+    if isinstance(no, ast.Constant):
+        return no.value if isinstance(no.value, str) else None
+    if isinstance(no, ast.BinOp) and isinstance(no.op, ast.Add):
+        esquerda = dobrar_constante(no.left)
+        direita = dobrar_constante(no.right)
+        if esquerda is not None and direita is not None:
+            return esquerda + direita
+        return None
+    if isinstance(no, ast.JoinedStr):
+        partes = []
+        for parte in no.values:
+            valor = dobrar_constante(parte)
+            if valor is None:
+                return None
+            partes.append(valor)
+        return "".join(partes)
+    return None
+
+
+def tem_literal_do_veredito(no) -> bool:
+    """Subarvore contem um literal — DOBRADO — igual a um termo do enum."""
+    for f in ast.walk(no):
+        valor = dobrar_constante(f)
+        if valor is not None and valor in VOCABULARIO_VEREDITO:
+            return True
+    return False
+
+
+def _nomes_atribuidos(no) -> set:
+    alvos = no.targets if isinstance(no, ast.Assign) else [no.target]
+    nomes = set()
+    for alvo in alvos:
+        for parte in ast.walk(alvo):
+            if isinstance(parte, ast.Name):
+                nomes.add(parte.id)
+            elif isinstance(parte, ast.Attribute):
+                nomes.add(parte.attr)
+    return nomes
+
+
+def indice_de_modulos(raiz_repo) -> dict:
+    """`preflight.pipeline` -> caminho do arquivo, para os .py da raiz.
+
+    A resolucao e por SUFIXO de caminho: um modulo importado como
+    `preflight.pipeline` casa qualquer `.../preflight/pipeline.py` sob a
+    raiz. Nao reproduz o `sys.path` do interpretador — reproduzi-lo
+    exigiria executar os arquivos, que e justamente o que um sentinela
+    estatico nao faz. Sufixo que casa MAIS DE UM arquivo devolve TODOS
+    os candidatos, e `_apelidos_de_modulo` os une — escolher um exigiria
+    o `sys.path`; unir erra para o lado de reconhecer apelidos demais, o
+    que produz achado a mais e nunca ponto cego.
+    """
+    indice = {}
+    for caminho in fontes_py(raiz_repo):
+        rel = os.path.relpath(caminho, raiz_repo).replace(os.sep, "/")
+        partes = rel[:-3].split("/")
+        for corte in range(len(partes)):
+            dotted = ".".join(partes[corte:])
+            indice.setdefault(dotted, [])
+            if caminho not in indice[dotted]:
+                indice[dotted].append(caminho)
+    return {k: tuple(v) for k, v in indice.items()}
+
+
+def _apelidos_de_modulo(caminhos, indice, profundidade, visitados):
+    """Apelidos exportados por um modulo, seguindo os imports dele.
+
+    Quando o sufixo casa MAIS DE UM arquivo (`kernel` existe em
+    `ssc_p0/` e numa fixture), a saida e a UNIAO dos candidatos, nunca a
+    escolha de um. Escolher exigiria reproduzir o `sys.path` do
+    interpretador, que um sentinela estatico nao faz; a uniao erra para
+    o lado de reconhecer apelidos DEMAIS, que produz achado a mais e
+    nunca ponto cego.
+    """
+    apelidos, nao_resolvidos = set(), []
+    for caminho in caminhos:
+        if caminho in visitados:
+            continue                      # ciclo de import ja percorrido
+        if profundidade <= 0:
+            nao_resolvidos.append(
+                f"{caminho}: cadeia de import acima do limite")
             continue
-        if no.value is None or not tem_literal_do_veredito(no.value):
+        try:
+            with open(caminho, encoding="utf-8") as f:
+                arvore = ast.parse(f.read(), filename=caminho)
+        except (OSError, UnicodeDecodeError, SyntaxError) as exc:
+            nao_resolvidos.append(f"{caminho}: {type(exc).__name__}")
             continue
-        alvos = no.targets if isinstance(no, ast.Assign) else [no.target]
-        for alvo in alvos:
-            for parte in ast.walk(alvo):
-                if isinstance(parte, ast.Name):
-                    apelidos.add(parte.id)
-                elif isinstance(parte, ast.Attribute):
-                    apelidos.add(parte.attr)
-    return apelidos
+        de_la, faltou = apelidos_do_veredito(
+            arvore, indice, profundidade - 1, visitados | {caminho})
+        apelidos |= de_la
+        nao_resolvidos.extend(faltou)
+    return apelidos, nao_resolvidos
+
+
+def apelidos_do_veredito(arvore, indice=None, profundidade=None,
+                         visitados=frozenset()):
+    """Nomes ligados a um termo do vocabulario — no arquivo E por import.
+
+    Devolve `(apelidos, nao_resolvidos)`.
+
+    Tres formas de contorno, todas nomeadas pelo revisor independente, e
+    todas fechadas aqui:
+
+    1. ALIAS local — `alvo = "SHADOW_ELIGIBLE"` ... `if r == alvo:`. Ja
+       estava coberto;
+    2. CONSTANTE IMPORTADA — `from preflight.pipeline import RESULTADOS`.
+       O nome nao e atribuido no arquivo, e o detector antigo nao o via.
+       Agora o modulo de origem e localizado sob a raiz, parseado, e os
+       seus proprios apelidos entram. `import X` tambem conta, porque a
+       referencia por ATRIBUTO (`X.RESULTADOS`) casa pelo nome do
+       atributo;
+    3. PROPAGACAO POR BOOLEANO — `apto = (r == "SHADOW_ELIGIBLE")` ...
+       `if apto:`. O nome nao recebe o literal, recebe a DECISAO. O laco
+       de ponto fixo abaixo o alcanca, e alcanca tambem a cadeia
+       (`ok = apto`), que uma passada unica deixaria escapar.
+
+    NEGA QUANDO NAO CONSEGUE RESOLVER: import de modulo do repositorio
+    que nao parseia, `import *` de modulo irresolvivel, modulo ambiguo e
+    cadeia acima da profundidade maxima entram em `nao_resolvidos`, e
+    `varrer` os reporta como achado. Declarar limpo o que nao se
+    conseguiu seguir seria o defeito, nao a economia.
+    """
+    profundidade = (PROFUNDIDADE_MAXIMA_DE_IMPORT if profundidade is None
+                    else profundidade)
+    apelidos, nao_resolvidos = set(), []
+
+    # (2) constantes vindas de outro modulo do repositorio.
+    if indice is not None:
+        for no in ast.walk(arvore):
+            if isinstance(no, ast.ImportFrom):
+                modulo = no.module or ""
+                if modulo not in indice:
+                    continue           # stdlib ou pacote externo: fora
+                de_la, faltou = _apelidos_de_modulo(
+                    indice[modulo], indice, profundidade, visitados)
+                nao_resolvidos.extend(faltou)
+                for alias in no.names:
+                    if alias.name == "*":
+                        apelidos |= de_la
+                    elif alias.name in de_la:
+                        apelidos.add(alias.asname or alias.name)
+            elif isinstance(no, ast.Import):
+                for alias in no.names:
+                    if alias.name not in indice:
+                        continue
+                    de_la, faltou = _apelidos_de_modulo(
+                        indice[alias.name], indice, profundidade, visitados)
+                    nao_resolvidos.extend(faltou)
+                    apelidos |= de_la
+
+    # (1) e (3): ponto fixo sobre as atribuicoes do proprio arquivo.
+    atribuicoes = [no for no in ast.walk(arvore)
+                   if isinstance(no, (ast.Assign, ast.AnnAssign))
+                   and no.value is not None]
+    while True:
+        antes = len(apelidos)
+        for no in atribuicoes:
+            if tem_literal_do_veredito(no.value) \
+                    or referencia_veredito(no.value, apelidos):
+                apelidos |= _nomes_atribuidos(no)
+        if len(apelidos) == antes:
+            return apelidos, nao_resolvidos
 
 
 def referencia_veredito(no, apelidos) -> bool:
     """Subarvore toca o veredito: literal exato, nome ou atributo ligado."""
     for f in ast.walk(no):
-        if isinstance(f, ast.Constant) and isinstance(f.value, str) \
-                and f.value in VOCABULARIO_VEREDITO:
+        valor = dobrar_constante(f)
+        if valor is not None and valor in VOCABULARIO_VEREDITO:
             return True
         if isinstance(f, ast.Name) and f.id in apelidos:
             return True
@@ -182,7 +338,8 @@ def varrer(raiz_repo, classificador) -> dict:
     """
     raiz_repo = os.path.abspath(str(raiz_repo))
     classificador = os.path.realpath(str(classificador))
-    ilegiveis, decisoes_fora, portoes = [], [], []
+    indice = indice_de_modulos(raiz_repo)
+    ilegiveis, decisoes_fora, portoes, nao_resolvidos = [], [], [], []
     for caminho in fontes_py(raiz_repo):
         try:
             with open(caminho, encoding="utf-8") as f:
@@ -192,12 +349,17 @@ def varrer(raiz_repo, classificador) -> dict:
             # ser declarado limpo por omissao.
             ilegiveis.append(f"{caminho}: {type(exc).__name__}")
             continue
-        apelidos = apelidos_do_veredito(arvore)
         rel = os.path.relpath(caminho, raiz_repo)
+        apelidos, faltou = apelidos_do_veredito(arvore, indice)
+        # NEGA quando nao consegue resolver (achado N5): import que o
+        # sentinela nao conseguiu seguir e ponto cego, e ponto cego nao
+        # pode sair como arquivo limpo.
+        nao_resolvidos.extend(f"{rel}: {m}" for m in faltou)
         for linha, primitiva in portoes_de_execucao(arvore, apelidos):
             portoes.append(f"{rel}:{linha} -> {primitiva}()")
         if os.path.realpath(caminho) != classificador:
             for linha in decisoes_sobre_veredito(arvore, apelidos):
                 decisoes_fora.append(f"{rel}:{linha}")
     return {"ilegiveis": ilegiveis, "portoes": portoes,
-            "decisoes_fora": decisoes_fora}
+            "decisoes_fora": decisoes_fora,
+            "nao_resolvidos": sorted(set(nao_resolvidos))}

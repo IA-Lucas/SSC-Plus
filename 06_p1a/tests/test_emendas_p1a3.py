@@ -677,6 +677,10 @@ class RevisaoRodada4(unittest.TestCase):
             "decisao sobre o veredito fora do classificador "
             "(06_p1a/preflight/pipeline.py) — a raiz e o REPOSITORIO, "
             "inclusive 07_p1b")
+        self.assertEqual(
+            achados["nao_resolvidos"], [],
+            "import que o sentinela NAO conseguiu seguir (achado N5): "
+            "ponto cego nao pode sair como arquivo limpo")
 
 
 class RevisaoRodada5(unittest.TestCase):

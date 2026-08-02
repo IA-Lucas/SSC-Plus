@@ -139,7 +139,8 @@ class MetadeAAlcanca07P1B(_ArvoreSintetica):
                       '        print(r)\n')
         achados = self.varrer()
         self.assertEqual(achados, {"ilegiveis": [], "portoes": [],
-                                   "decisoes_fora": []})
+                                   "decisoes_fora": [],
+                                   "nao_resolvidos": []})
 
 
 class MetadeBGovernoDeExecucao(_ArvoreSintetica):
