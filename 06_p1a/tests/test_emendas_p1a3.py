@@ -541,165 +541,22 @@ class RevisaoRodada3(unittest.TestCase):
         self.assertIsNone(rel.sombra)
 
 
-# --- Sentinela anti-P2: maquinaria de deteccao por AST ------------------
+# --- Sentinela anti-P2 ---------------------------------------------------
+#
+# A maquinaria vive agora em `sentinela_antip2.py`, e a mudanca nao e
+# cosmetica. Enquanto ela era codigo DENTRO deste arquivo, a unica forma
+# de exerce-la era varrer o repositorio real e esperar que estivesse
+# limpo: o guarda nunca era exercido contra um violador, so podia falhar
+# em producao e nao tinha controle positivo. Extraida, a varredura vira
+# uma funcao que recebe a raiz — e `test_sentinela_antip2_p1a37.py` a
+# chama contra arvores sinteticas que CONTEM o consumidor.
 #
 # O sentinela anterior comparava o CONJUNTO DE CAMINHOS que contem o
 # literal com uma allowlist fixa de 6 arquivos. Nome e corpo divergiam:
 # o nome afirma ausencia de CONSUMIDOR DE EXECUCAO; o corpo verificava
-# uma LISTA. Sao propriedades diferentes, e a segunda nao implica a
-# primeira — dai falhar nos dois sentidos (achado #6, §4.2 da
-# 99_decisao-p1a31.md): falso positivo diante de qualquer arquivo
-# aditivo que apenas MENCIONE o literal, e falso negativo, mais grave,
-# diante de um consumidor real escrito DENTRO de um dos 6 arquivos ja
-# listados — o guarda era contornavel escrevendo no lugar certo.
-#
-# O que segue mede comportamento, nao lista. Mencao documental deixa de
-# contar por construcao: so conta o `Constant` cujo valor e EXATAMENTE
-# um termo do vocabulario, ou um nome ligado a um deles no proprio
-# arquivo. Um docstring, um comentario ou um texto de prompt que cite
-# "SHADOW_ELIGIBLE" no meio de uma frase nunca e igual ao termo e nao
-# dispara nada.
-#
-# Limite declarado: a analise e estatica e por arquivo — nao segue
-# dataflow entre modulos. Ela cobre o consumidor escrito no fonte, que
-# e a forma pela qual o invariante seria burlado.
+# uma LISTA (achado #6, §4.2 da 99_decisao-p1a31.md).
 
-VOCABULARIO_VEREDITO = frozenset(
-    {"ELIGIBLE", "SHADOW_ELIGIBLE", "SUPERVISED", "BLOCKED"})
-
-# Primitivas que EXECUTAM algo: subprocesso, interpretacao dinamica e as
-# juntas de sonda do proprio pacote. Um consumidor nao precisa chamar
-# `subprocess.run` — basta acionar a sonda do adaptador.
-PRIMITIVAS_EXECUCAO = frozenset({
-    "run", "Popen", "call", "check_call", "check_output",
-    "system", "popen", "startfile",
-    "execv", "execve", "execl", "execlp", "execvp",
-    "spawnv", "spawnve", "spawnl",
-    "eval", "exec", "run_path", "run_module",
-    "sonda", "detectar_versao", "consultar_login", "descobrir_modelos",
-    "executar_preflight", "sensor_subprocess", "iniciar_em_capsula",
-})
-
-_DIRS_IGNORADOS = ("__pycache__", "tests", ".git", "node_modules", ".venv")
-
-
-def _tem_literal_do_veredito(no) -> bool:
-    """Subarvore contem um literal EXATAMENTE igual a um termo do enum."""
-    return any(isinstance(f, ast.Constant) and isinstance(f.value, str)
-               and f.value in VOCABULARIO_VEREDITO
-               for f in ast.walk(no))
-
-
-def _apelidos_do_veredito(arvore) -> set:
-    """Nomes ligados, NO PROPRIO ARQUIVO, a um termo do vocabulario.
-
-    Cobre `resultado = "SHADOW_ELIGIBLE"` e tambem
-    `RESULTADOS = ("ELIGIBLE", ...)`. Sem isto, a comparacao indireta
-    (`alvo = "SHADOW_ELIGIBLE"` ... `if r == alvo:`) escaparia do
-    detector — o consumidor so precisaria de uma variavel.
-    """
-    apelidos = set()
-    for no in ast.walk(arvore):
-        if not isinstance(no, (ast.Assign, ast.AnnAssign)):
-            continue
-        if no.value is None or not _tem_literal_do_veredito(no.value):
-            continue
-        alvos = no.targets if isinstance(no, ast.Assign) else [no.target]
-        for alvo in alvos:
-            for parte in ast.walk(alvo):
-                if isinstance(parte, ast.Name):
-                    apelidos.add(parte.id)
-                elif isinstance(parte, ast.Attribute):
-                    apelidos.add(parte.attr)
-    return apelidos
-
-
-def _referencia_veredito(no, apelidos) -> bool:
-    """Subarvore toca o veredito: literal exato, nome ou atributo ligado."""
-    for f in ast.walk(no):
-        if isinstance(f, ast.Constant) and isinstance(f.value, str) \
-                and f.value in VOCABULARIO_VEREDITO:
-            return True
-        if isinstance(f, ast.Name) and f.id in apelidos:
-            return True
-        if isinstance(f, ast.Attribute) and f.attr in apelidos:
-            return True
-    return False
-
-
-def _decisoes_sobre_veredito(arvore, apelidos) -> list:
-    """Linhas onde o fonte DECIDE sobre o veredito.
-
-    Decidir e comparar (`==`, `!=`, `in`, `not in`) ou casar um `case`.
-    Produzir o veredito (atribuir, devolver, declarar no enum) nao e
-    decidir — e o trabalho legitimo do classificador.
-    """
-    linhas = []
-    for no in ast.walk(arvore):
-        if isinstance(no, ast.Compare) \
-                and _referencia_veredito(no, apelidos):
-            linhas.append(no.lineno)
-        elif isinstance(no, ast.match_case) \
-                and _referencia_veredito(no.pattern, apelidos):
-            linhas.append(no.pattern.lineno)
-    return sorted(set(linhas))
-
-
-def _execucoes_em(no) -> list:
-    """Chamadas a primitiva de execucao dentro da subarvore."""
-    achadas = []
-    for f in ast.walk(no):
-        if not isinstance(f, ast.Call):
-            continue
-        alvo = f.func
-        nome = alvo.attr if isinstance(alvo, ast.Attribute) else (
-            alvo.id if isinstance(alvo, ast.Name) else None)
-        if nome in PRIMITIVAS_EXECUCAO:
-            achadas.append((f.lineno, nome))
-    return achadas
-
-
-def _portoes_de_execucao(arvore, apelidos) -> list:
-    """Decisoes sobre o veredito que GOVERNAM execucao.
-
-    Esta e a propriedade que o nome do teste afirma. Para cada ramo cujo
-    TESTE toca o veredito, procura primitiva de execucao no corpo — e no
-    `else`, igualmente governado pela mesma decisao. Cobre `if`, `while`,
-    expressao condicional, `match`/`case` e o `if` de compreensao.
-    """
-    portoes = []
-    for no in ast.walk(arvore):
-        if isinstance(no, (ast.If, ast.While, ast.IfExp)):
-            if not _referencia_veredito(no.test, apelidos):
-                continue
-            ramos = [no.body, no.orelse]
-        elif isinstance(no, ast.match_case):
-            if not _referencia_veredito(no.pattern, apelidos):
-                continue
-            ramos = [no.body]
-        elif isinstance(no, (ast.ListComp, ast.SetComp, ast.GeneratorExp,
-                             ast.DictComp)):
-            if not any(_referencia_veredito(condicao, apelidos)
-                       for gerador in no.generators
-                       for condicao in gerador.ifs):
-                continue
-            ramos = [[no.key, no.value]] if isinstance(no, ast.DictComp) \
-                else [no.elt]
-        else:
-            continue
-        for ramo in ramos:
-            for parte in (ramo if isinstance(ramo, list) else [ramo]):
-                portoes.extend(_execucoes_em(parte))
-    return sorted(set(portoes))
-
-
-def _fontes_py(raiz):
-    """Arquivos .py sob `raiz`, fora de runtime, testes e do .git."""
-    for base, dirs, arquivos in os.walk(raiz):
-        dirs[:] = sorted(d for d in dirs if d not in _DIRS_IGNORADOS)
-        for nome in sorted(arquivos):
-            if nome.endswith(".py"):
-                yield os.path.join(base, nome)
+import sentinela_antip2  # noqa: E402
 
 
 class RevisaoRodada4(unittest.TestCase):
@@ -792,50 +649,34 @@ class RevisaoRodada4(unittest.TestCase):
         caminhos com allowlist fixa):
 
         (A) fora do CLASSIFICADOR (`preflight/pipeline.py`), nenhum
-            arquivo do pacote P1-A decide sobre o veredito. Produzir a
+            arquivo DO REPOSITORIO decide sobre o veredito. Produzir a
             classificacao e trabalho do classificador; decidir sobre ela
             fora dele e o primeiro passo de um consumidor.
         (B) em NENHUM arquivo do repositorio uma decisao sobre o veredito
-            governa execucao — nem dentro do proprio classificador. Esta
-            e a metade que o sentinela antigo nao tinha: ela acusa o
-            consumidor escrito DENTRO de qualquer arquivo, inclusive os 6
-            que a allowlist liberava.
+            governa execucao — nem dentro do proprio classificador.
+
+        MAJOR #6 / achado 13 (P1-A.3.7): a metade (A) cobria SOMENTE
+        `06_p1a/`, e o revisor independente a manteve aberta por isso —
+        um consumidor escrito em `07_p1b` ficava invisivel. As duas
+        metades passam a ter a MESMA raiz: o repositorio.
         """
         dir_p1a = os.path.dirname(os.path.dirname(apoio.__file__))
         raiz_repo = os.path.dirname(dir_p1a)
-        classificador = os.path.realpath(
-            os.path.join(dir_p1a, "preflight", "pipeline.py"))
-
-        ilegiveis, decisoes_fora, portoes = [], [], []
-        for caminho in _fontes_py(raiz_repo):
-            try:
-                with open(caminho, encoding="utf-8") as f:
-                    arvore = ast.parse(f.read(), filename=caminho)
-            except (OSError, UnicodeDecodeError, SyntaxError) as exc:
-                # Fail-closed: fonte que o detector nao consegue ler nao
-                # pode ser declarado limpo por omissao.
-                ilegiveis.append(f"{caminho}: {type(exc).__name__}")
-                continue
-            apelidos = _apelidos_do_veredito(arvore)
-            rel = os.path.relpath(caminho, raiz_repo)
-            for linha, primitiva in _portoes_de_execucao(arvore, apelidos):
-                portoes.append(f"{rel}:{linha} -> {primitiva}()")
-            if caminho.startswith(dir_p1a + os.sep) \
-                    and os.path.realpath(caminho) != classificador:
-                for linha in _decisoes_sobre_veredito(arvore, apelidos):
-                    decisoes_fora.append(f"{rel}:{linha}")
+        achados = sentinela_antip2.varrer(
+            raiz_repo, os.path.join(dir_p1a, "preflight", "pipeline.py"))
 
         self.assertEqual(
-            ilegiveis, [],
+            achados["ilegiveis"], [],
             "fonte .py ilegivel para o sentinela (fail-closed)")
         self.assertEqual(
-            portoes, [],
+            achados["portoes"], [],
             "CONSUMIDOR DE EXECUCAO: decisao sobre o veredito governando "
             "execucao — a classificacao nao pode autorizar nada")
         self.assertEqual(
-            decisoes_fora, [],
+            achados["decisoes_fora"], [],
             "decisao sobre o veredito fora do classificador "
-            "(06_p1a/preflight/pipeline.py)")
+            "(06_p1a/preflight/pipeline.py) — a raiz e o REPOSITORIO, "
+            "inclusive 07_p1b")
 
 
 class RevisaoRodada5(unittest.TestCase):
