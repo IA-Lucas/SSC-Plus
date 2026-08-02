@@ -85,7 +85,24 @@ def _obrigatorio(valor: Any, caminho: str) -> None:
 
 
 def _tipo(valor: Any, tipos, caminho: str) -> None:
-    if not isinstance(valor, tipos):
+    """Tipo do campo, com `bool` separado de `int` — SSC+ P1-A.3.7.
+
+    ACHADO DESTA MISSAO, encontrado ao EXERCER o guarda (P0-13 era
+    SEM-TESTE): `isinstance(True, int)` e verdadeiro em Python, de modo
+    que `Evento(seq=True)` atravessava `_tipo(self.seq, int, ...)` e
+    virava seq 1 no EventLog. Dois eventos com a mesma ordem, e a cadeia
+    deixa de ser total — a seq e a AUTORIDADE DE ORDEM da P0, e o
+    relogio nao e. O mesmo valia para `variable_cost=True`, que passaria
+    por custo 1.
+
+    `bool` so satisfaz um campo que o declare EXPLICITAMENTE (e ha um:
+    `frota.canal_oficial`). Onde o contrato pede numero, booleano e
+    tipo invalido — como sempre foi a intencao escrita.
+    """
+    esperados = tipos if isinstance(tipos, tuple) else (tipos,)
+    if isinstance(valor, bool) and bool not in esperados:
+        raise FalhaContrato(f"{caminho}: tipo invalido (bool)")
+    if not isinstance(valor, esperados):
         raise FalhaContrato(f"{caminho}: tipo invalido ({type(valor).__name__})")
 
 
