@@ -41,6 +41,11 @@ locks/
 # EventLogs brutos (JSONL) onde quer que aparecam como runtime
 *.jsonl
 
+# Registro de mutante ativo da reversao vermelha (CLAUDE.md): estado de
+# instrumento, como locks/. O README do diretorio E versionado, porque a
+# convencao precisa sobreviver a limpeza.
+scratchpad/MUTANTE-ATIVO.txt
+
 # Sistema operacional
 Thumbs.db
 Desktop.ini

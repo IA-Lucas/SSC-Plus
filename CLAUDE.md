@@ -63,6 +63,35 @@ achado real:
 - **escopo nao cobre explorabilidade** (achado N5: o guarda era
   contornavel de proposito).
 
+### Mutante ativo — o registro obrigatorio (P1-A.3.9)
+
+**Reversao vermelha muta codigo de producao.** Antes de aplicar mutante,
+registrar em `scratchpad/MUTANTE-ATIVO.txt` qual arquivo, qual linha e o
+valor original. Apagar o registro so depois de reverter e a suite voltar
+verde. Toda retomada apos queda le esse arquivo ANTES de qualquer
+medicao — arvore alterada pode ser mutante esquecido, nao trabalho
+incompleto.
+
+O caminho e **relativo a raiz deste repositorio**, nunca o scratchpad da
+sessao: quem retoma nao e quem caiu, e o scratchpad de sessao fica sob um
+id que a sessao seguinte nao adivinha. Convencao em
+[`scratchpad/README.md`](scratchpad/README.md).
+
+**Por que a regra existe, medido e nao suposto:** uma queda de energia no
+meio da P1-A.3.9 deixou DOIS mutantes aplicados na arvore viva —
+`contratos.AUTH_MODES` sem `desconhecido` e `estados.TERMINAIS_WORK_UNIT`
+sem `cancelada`. O primeiro degradava o enum **fail-closed** da frota: o
+canal nao identificado deixava de ser valor aceito, e com ele o ramo
+`auth_mode desconhecido = DENY` ficava inalcancavel. A arvore alterada
+parecia correcao incompleta e era o oposto — restos de instrumento.
+
+**Corolario da varredura de listas.** *"Remover o ultimo item e a suite
+fica verde"* prova que **AQUELE item** nao prende, jamais que a lista
+esta solta. Lista se classifica mutando **CADA membro isoladamente**:
+**PRESA** (todos prendem), **MEIO SOLTA** (alguns prendem) ou **SOLTA**
+(nenhum prende). `TERMINAIS_WORK_UNIT` era meio solta e foi lida como
+solta porque so o ultimo membro havia sido mutado.
+
 ## QUEM CORRIGE NAO CERTIFICA
 
 Nenhuma missao fecha o proprio conserto. Um achado so fecha quando um
