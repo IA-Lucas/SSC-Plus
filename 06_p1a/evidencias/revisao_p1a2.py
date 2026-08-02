@@ -179,7 +179,11 @@ def main() -> int:
         "argv_publico": ["<PROMPT>" if a == prompt else a for a in argv],
         "prompt_sha256": __import__("hashlib").sha256(
             prompt.encode()).hexdigest(),
-        "dir_descartavel": tmp,
+        # ACHADO N4: este campo gravava o caminho temporario CRU, e o
+        # temp da estacao carrega o nome do usuario na forma 8.3
+        # (`C:\\Users\\<USUARIO>\\AppData\\Local\\Temp\\...`) — que e
+        # justamente a forma que `ZeroPiiNosArtefatos` procura.
+        "dir_descartavel": _redigir(tmp),
         "dir_descartavel_arquivos_restantes": restantes,
         "env_vars_removidas_nomes": removidas,
         "returncode": rc, "duracao_s": duracao,
@@ -188,9 +192,14 @@ def main() -> int:
         "quota_observavel": "nao-exposta-pelo-cli",
     }
     SAIDA.mkdir(parents=True, exist_ok=True)
-    (SAIDA / f"{provider}-{ts}.json").write_text(
-        json.dumps(meta, ensure_ascii=False, indent=2) + "\n",
-        encoding="utf-8")
+    # ACHADO N4, a segunda metade: o JSON saia para o disco SEM redacao
+    # integral — campo novo acrescentado ao `meta` escapava por completo.
+    # Os outros quatro runners ja redigiam o documento inteiro; este era
+    # o unico que confiava em redigir campo a campo. Redacao no documento
+    # e defesa em profundidade: cobre tambem o que ninguem lembrou.
+    texto = _redigir(json.dumps(meta, ensure_ascii=False, indent=2))
+    (SAIDA / f"{provider}-{ts}.json").write_text(texto + "\n",
+                                                 encoding="utf-8")
     print(json.dumps({"provider": provider, "returncode": rc,
                       "duracao_s": duracao,
                       "resposta_inicio": meta["resposta"][:400]},
