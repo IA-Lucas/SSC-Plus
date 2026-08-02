@@ -1,0 +1,2928 @@
+[
+ {
+  "arquivo": "05_p0/ssc_p0/catalogo.py",
+  "nome": "_ORDEM_NIVEL",
+  "classe": "MEIO SOLTA",
+  "n": 3,
+  "prendem": [
+   "L1",
+   "L2"
+  ],
+  "soltos": [
+   "L3"
+  ],
+  "detalhe": [
+   {
+    "valor": "L1",
+    "vermelhos": 2,
+    "por_suite": {
+     "05_p0/tests": 2,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "L2",
+    "vermelhos": 106,
+    "por_suite": {
+     "05_p0/tests": 106,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "L3",
+    "vermelhos": 0,
+    "por_suite": {
+     "05_p0/tests": 0,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   }
+  ]
+ },
+ {
+  "arquivo": "05_p0/ssc_p0/contratos.py",
+  "nome": "ESTADOS_SESSAO",
+  "classe": "MEIO SOLTA",
+  "n": 4,
+  "prendem": [
+   "ativa"
+  ],
+  "soltos": [
+   "suspensa",
+   "retomada",
+   "encerrada"
+  ],
+  "detalhe": [
+   {
+    "valor": "ativa",
+    "vermelhos": 176,
+    "por_suite": {
+     "05_p0/tests": 176,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "suspensa",
+    "vermelhos": 0,
+    "por_suite": {
+     "05_p0/tests": 0,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "retomada",
+    "vermelhos": 0,
+    "por_suite": {
+     "05_p0/tests": 0,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "encerrada",
+    "vermelhos": 0,
+    "por_suite": {
+     "05_p0/tests": 0,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   }
+  ]
+ },
+ {
+  "arquivo": "05_p0/ssc_p0/contratos.py",
+  "nome": "ESTADOS_WORK_UNIT",
+  "classe": "MEIO SOLTA",
+  "n": 8,
+  "prendem": [
+   "proposta",
+   "aprovada",
+   "em-execucao",
+   "aguardando-validacao",
+   "concluida",
+   "reprovada",
+   "cancelada"
+  ],
+  "soltos": [
+   "aguardando-aprovacao"
+  ],
+  "detalhe": [
+   {
+    "valor": "proposta",
+    "vermelhos": 141,
+    "por_suite": {
+     "05_p0/tests": 141,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "aguardando-aprovacao",
+    "vermelhos": 0,
+    "por_suite": {
+     "05_p0/tests": 0,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "aprovada",
+    "vermelhos": 2,
+    "por_suite": {
+     "05_p0/tests": 2,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "em-execucao",
+    "vermelhos": 2,
+    "por_suite": {
+     "05_p0/tests": 2,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "aguardando-validacao",
+    "vermelhos": 1,
+    "por_suite": {
+     "05_p0/tests": 1,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "concluida",
+    "vermelhos": 3,
+    "por_suite": {
+     "05_p0/tests": 3,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "reprovada",
+    "vermelhos": 1,
+    "por_suite": {
+     "05_p0/tests": 1,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "cancelada",
+    "vermelhos": 2,
+    "por_suite": {
+     "05_p0/tests": 2,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   }
+  ]
+ },
+ {
+  "arquivo": "05_p0/ssc_p0/contratos.py",
+  "nome": "ESTADOS_ATTEMPT",
+  "classe": "SOLTA",
+  "n": 4,
+  "prendem": [],
+  "soltos": [
+   "criado",
+   "despachado",
+   "concluido",
+   "orfao"
+  ],
+  "detalhe": [
+   {
+    "valor": "criado",
+    "vermelhos": 0,
+    "por_suite": {
+     "05_p0/tests": 0,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "despachado",
+    "vermelhos": 0,
+    "por_suite": {
+     "05_p0/tests": 0,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "concluido",
+    "vermelhos": 0,
+    "por_suite": {
+     "05_p0/tests": 0,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "orfao",
+    "vermelhos": 0,
+    "por_suite": {
+     "05_p0/tests": 0,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   }
+  ]
+ },
+ {
+  "arquivo": "05_p0/ssc_p0/contratos.py",
+  "nome": "RESULTADOS_ATTEMPT",
+  "classe": "MEIO SOLTA",
+  "n": 7,
+  "prendem": [
+   "sucesso",
+   "falha-transitoria",
+   "falha-contrato",
+   "falha-quota",
+   "indeterminado"
+  ],
+  "soltos": [
+   "falha-desconhecida",
+   "recusa"
+  ],
+  "detalhe": [
+   {
+    "valor": "sucesso",
+    "vermelhos": 77,
+    "por_suite": {
+     "05_p0/tests": 77,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "falha-transitoria",
+    "vermelhos": 7,
+    "por_suite": {
+     "05_p0/tests": 7,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "falha-contrato",
+    "vermelhos": 3,
+    "por_suite": {
+     "05_p0/tests": 3,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "falha-quota",
+    "vermelhos": 7,
+    "por_suite": {
+     "05_p0/tests": 7,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "falha-desconhecida",
+    "vermelhos": 0,
+    "por_suite": {
+     "05_p0/tests": 0,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "indeterminado",
+    "vermelhos": 4,
+    "por_suite": {
+     "05_p0/tests": 4,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "recusa",
+    "vermelhos": 0,
+    "por_suite": {
+     "05_p0/tests": 0,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   }
+  ]
+ },
+ {
+  "arquivo": "05_p0/ssc_p0/contratos.py",
+  "nome": "EFEITOS_EXTERNO",
+  "classe": "PRESA",
+  "n": 4,
+  "prendem": [
+   "nenhum",
+   "aplicado",
+   "nao-aplicado",
+   "incerto"
+  ],
+  "soltos": [],
+  "detalhe": [
+   {
+    "valor": "nenhum",
+    "vermelhos": 2,
+    "por_suite": {
+     "05_p0/tests": 2,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "aplicado",
+    "vermelhos": 76,
+    "por_suite": {
+     "05_p0/tests": 76,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "nao-aplicado",
+    "vermelhos": 15,
+    "por_suite": {
+     "05_p0/tests": 15,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "incerto",
+    "vermelhos": 4,
+    "por_suite": {
+     "05_p0/tests": 4,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   }
+  ]
+ },
+ {
+  "arquivo": "05_p0/ssc_p0/contratos.py",
+  "nome": "TIPOS_WORK_UNIT",
+  "classe": "MEIO SOLTA",
+  "n": 4,
+  "prendem": [
+   "ato",
+   "decomposicao",
+   "etapa"
+  ],
+  "soltos": [
+   "revisao"
+  ],
+  "detalhe": [
+   {
+    "valor": "ato",
+    "vermelhos": 139,
+    "por_suite": {
+     "05_p0/tests": 139,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "decomposicao",
+    "vermelhos": 4,
+    "por_suite": {
+     "05_p0/tests": 4,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "etapa",
+    "vermelhos": 5,
+    "por_suite": {
+     "05_p0/tests": 5,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "revisao",
+    "vermelhos": 0,
+    "por_suite": {
+     "05_p0/tests": 0,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   }
+  ]
+ },
+ {
+  "arquivo": "05_p0/ssc_p0/contratos.py",
+  "nome": "TIPOS_DECISAO",
+  "classe": "PRESA",
+  "n": 2,
+  "prendem": [
+   "tipo-1",
+   "tipo-2"
+  ],
+  "soltos": [],
+  "detalhe": [
+   {
+    "valor": "tipo-1",
+    "vermelhos": 1,
+    "por_suite": {
+     "05_p0/tests": 1,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "tipo-2",
+    "vermelhos": 142,
+    "por_suite": {
+     "05_p0/tests": 142,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   }
+  ]
+ },
+ {
+  "arquivo": "05_p0/ssc_p0/contratos.py",
+  "nome": "NIVEIS_CAPACIDADE",
+  "classe": "MEIO SOLTA",
+  "n": 3,
+  "prendem": [
+   "L1",
+   "L2"
+  ],
+  "soltos": [
+   "L3"
+  ],
+  "detalhe": [
+   {
+    "valor": "L1",
+    "vermelhos": 9,
+    "por_suite": {
+     "05_p0/tests": 9,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "L2",
+    "vermelhos": 139,
+    "por_suite": {
+     "05_p0/tests": 139,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "L3",
+    "vermelhos": 0,
+    "por_suite": {
+     "05_p0/tests": 0,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   }
+  ]
+ },
+ {
+  "arquivo": "05_p0/ssc_p0/contratos.py",
+  "nome": "CLASSES_GOVERNANCA",
+  "classe": "PRESA",
+  "n": 4,
+  "prendem": [
+   "C0",
+   "C1",
+   "C2",
+   "C3"
+  ],
+  "soltos": [],
+  "detalhe": [
+   {
+    "valor": "C0",
+    "vermelhos": 8,
+    "por_suite": {
+     "05_p0/tests": 8,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "C1",
+    "vermelhos": 131,
+    "por_suite": {
+     "05_p0/tests": 131,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "C2",
+    "vermelhos": 3,
+    "por_suite": {
+     "05_p0/tests": 3,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "C3",
+    "vermelhos": 1,
+    "por_suite": {
+     "05_p0/tests": 1,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   }
+  ]
+ },
+ {
+  "arquivo": "05_p0/ssc_p0/contratos.py",
+  "nome": "CAMADAS_VEREDITO",
+  "classe": "MEIO SOLTA",
+  "n": 3,
+  "prendem": [
+   "deterministica",
+   "juiz-llm"
+  ],
+  "soltos": [
+   "humana"
+  ],
+  "detalhe": [
+   {
+    "valor": "deterministica",
+    "vermelhos": 49,
+    "por_suite": {
+     "05_p0/tests": 49,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "juiz-llm",
+    "vermelhos": 7,
+    "por_suite": {
+     "05_p0/tests": 7,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "humana",
+    "vermelhos": 0,
+    "por_suite": {
+     "05_p0/tests": 0,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   }
+  ]
+ },
+ {
+  "arquivo": "05_p0/ssc_p0/contratos.py",
+  "nome": "RESULTADOS_VEREDITO",
+  "classe": "MEIO SOLTA",
+  "n": 3,
+  "prendem": [
+   "aprovado",
+   "reprovado"
+  ],
+  "soltos": [
+   "inconclusivo"
+  ],
+  "detalhe": [
+   {
+    "valor": "aprovado",
+    "vermelhos": 45,
+    "por_suite": {
+     "05_p0/tests": 45,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "reprovado",
+    "vermelhos": 3,
+    "por_suite": {
+     "05_p0/tests": 3,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "inconclusivo",
+    "vermelhos": 0,
+    "por_suite": {
+     "05_p0/tests": 0,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   }
+  ]
+ },
+ {
+  "arquivo": "05_p0/ssc_p0/contratos.py",
+  "nome": "TIPOS_EVENTO",
+  "classe": "PRESA",
+  "n": 11,
+  "prendem": [
+   "sessao",
+   "work-unit",
+   "routing",
+   "attempt",
+   "retry",
+   "fallback",
+   "escalation",
+   "veredito",
+   "checkpoint",
+   "memoria",
+   "orcamento"
+  ],
+  "soltos": [],
+  "detalhe": [
+   {
+    "valor": "sessao",
+    "vermelhos": 188,
+    "por_suite": {
+     "05_p0/tests": 188,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "work-unit",
+    "vermelhos": 132,
+    "por_suite": {
+     "05_p0/tests": 132,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "routing",
+    "vermelhos": 107,
+    "por_suite": {
+     "05_p0/tests": 107,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "attempt",
+    "vermelhos": 92,
+    "por_suite": {
+     "05_p0/tests": 92,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "retry",
+    "vermelhos": 5,
+    "por_suite": {
+     "05_p0/tests": 5,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "fallback",
+    "vermelhos": 4,
+    "por_suite": {
+     "05_p0/tests": 4,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "escalation",
+    "vermelhos": 15,
+    "por_suite": {
+     "05_p0/tests": 15,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "veredito",
+    "vermelhos": 47,
+    "por_suite": {
+     "05_p0/tests": 47,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "checkpoint",
+    "vermelhos": 19,
+    "por_suite": {
+     "05_p0/tests": 19,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "memoria",
+    "vermelhos": 9,
+    "por_suite": {
+     "05_p0/tests": 9,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "orcamento",
+    "vermelhos": 84,
+    "por_suite": {
+     "05_p0/tests": 84,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   }
+  ]
+ },
+ {
+  "arquivo": "05_p0/ssc_p0/contratos.py",
+  "nome": "MOTIVOS_ESCALONAMENTO",
+  "classe": "MEIO SOLTA",
+  "n": 7,
+  "prendem": [
+   "sem-alternativa",
+   "orcamento",
+   "ambiguidade",
+   "indeterminado",
+   "divergencia-executor"
+  ],
+  "soltos": [
+   "aprovacao-humana",
+   "juiz-reprovou"
+  ],
+  "detalhe": [
+   {
+    "valor": "sem-alternativa",
+    "vermelhos": 8,
+    "por_suite": {
+     "05_p0/tests": 8,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "orcamento",
+    "vermelhos": 2,
+    "por_suite": {
+     "05_p0/tests": 2,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "ambiguidade",
+    "vermelhos": 1,
+    "por_suite": {
+     "05_p0/tests": 1,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "aprovacao-humana",
+    "vermelhos": 0,
+    "por_suite": {
+     "05_p0/tests": 0,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "juiz-reprovou",
+    "vermelhos": 0,
+    "por_suite": {
+     "05_p0/tests": 0,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "indeterminado",
+    "vermelhos": 3,
+    "por_suite": {
+     "05_p0/tests": 3,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "divergencia-executor",
+    "vermelhos": 2,
+    "por_suite": {
+     "05_p0/tests": 2,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   }
+  ]
+ },
+ {
+  "arquivo": "05_p0/ssc_p0/contratos.py",
+  "nome": "DESTINOS_ESCALONAMENTO",
+  "classe": "MEIO SOLTA",
+  "n": 3,
+  "prendem": [
+   "humano"
+  ],
+  "soltos": [
+   "decompor",
+   "abandonar"
+  ],
+  "detalhe": [
+   {
+    "valor": "humano",
+    "vermelhos": 16,
+    "por_suite": {
+     "05_p0/tests": 16,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "decompor",
+    "vermelhos": 0,
+    "por_suite": {
+     "05_p0/tests": 0,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "abandonar",
+    "vermelhos": 0,
+    "por_suite": {
+     "05_p0/tests": 0,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   }
+  ]
+ },
+ {
+  "arquivo": "05_p0/ssc_p0/contratos.py",
+  "nome": "MODOS",
+  "classe": "MEIO SOLTA",
+  "n": 3,
+  "prendem": [
+   "read-only"
+  ],
+  "soltos": [
+   "worktree",
+   "escrita-aprovada"
+  ],
+  "detalhe": [
+   {
+    "valor": "read-only",
+    "vermelhos": 177,
+    "por_suite": {
+     "05_p0/tests": 177,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "worktree",
+    "vermelhos": 0,
+    "por_suite": {
+     "05_p0/tests": 0,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "escrita-aprovada",
+    "vermelhos": 0,
+    "por_suite": {
+     "05_p0/tests": 0,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   }
+  ]
+ },
+ {
+  "arquivo": "05_p0/ssc_p0/contratos.py",
+  "nome": "CONTROLES",
+  "classe": "MEIO SOLTA",
+  "n": 3,
+  "prendem": [
+   "autonomo",
+   "confirma-no-gasto"
+  ],
+  "soltos": [
+   "humano-no-loop"
+  ],
+  "detalhe": [
+   {
+    "valor": "autonomo",
+    "vermelhos": 1,
+    "por_suite": {
+     "05_p0/tests": 1,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "confirma-no-gasto",
+    "vermelhos": 108,
+    "por_suite": {
+     "05_p0/tests": 108,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "humano-no-loop",
+    "vermelhos": 0,
+    "por_suite": {
+     "05_p0/tests": 0,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   }
+  ]
+ },
+ {
+  "arquivo": "05_p0/ssc_p0/contratos.py",
+  "nome": "CONFIANCAS",
+  "classe": "MEIO SOLTA",
+  "n": 2,
+  "prendem": [
+   "alta"
+  ],
+  "soltos": [
+   "baixa"
+  ],
+  "detalhe": [
+   {
+    "valor": "alta",
+    "vermelhos": 109,
+    "por_suite": {
+     "05_p0/tests": 109,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "baixa",
+    "vermelhos": 0,
+    "por_suite": {
+     "05_p0/tests": 0,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   }
+  ]
+ },
+ {
+  "arquivo": "05_p0/ssc_p0/contratos.py",
+  "nome": "METODOS_CLASSIFICACAO",
+  "classe": "MEIO SOLTA",
+  "n": 3,
+  "prendem": [
+   "declarado"
+  ],
+  "soltos": [
+   "sensor",
+   "llm"
+  ],
+  "detalhe": [
+   {
+    "valor": "declarado",
+    "vermelhos": 109,
+    "por_suite": {
+     "05_p0/tests": 109,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "sensor",
+    "vermelhos": 0,
+    "por_suite": {
+     "05_p0/tests": 0,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "llm",
+    "vermelhos": 0,
+    "por_suite": {
+     "05_p0/tests": 0,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   }
+  ]
+ },
+ {
+  "arquivo": "05_p0/ssc_p0/contratos.py",
+  "nome": "PAPEIS_ENTRADA",
+  "classe": "MEIO SOLTA",
+  "n": 5,
+  "prendem": [
+   "contrato",
+   "evidencia",
+   "artefato-anterior"
+  ],
+  "soltos": [
+   "memoria",
+   "norma-citada"
+  ],
+  "detalhe": [
+   {
+    "valor": "contrato",
+    "vermelhos": 1,
+    "por_suite": {
+     "05_p0/tests": 1,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "evidencia",
+    "vermelhos": 6,
+    "por_suite": {
+     "05_p0/tests": 6,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "memoria",
+    "vermelhos": 0,
+    "por_suite": {
+     "05_p0/tests": 0,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "artefato-anterior",
+    "vermelhos": 1,
+    "por_suite": {
+     "05_p0/tests": 1,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "norma-citada",
+    "vermelhos": 0,
+    "por_suite": {
+     "05_p0/tests": 0,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   }
+  ]
+ },
+ {
+  "arquivo": "05_p0/ssc_p0/contratos.py",
+  "nome": "INCLUSOES",
+  "classe": "MEIO SOLTA",
+  "n": 3,
+  "prendem": [
+   "verbatim",
+   "referencia"
+  ],
+  "soltos": [
+   "recorte"
+  ],
+  "detalhe": [
+   {
+    "valor": "verbatim",
+    "vermelhos": 5,
+    "por_suite": {
+     "05_p0/tests": 5,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "recorte",
+    "vermelhos": 0,
+    "por_suite": {
+     "05_p0/tests": 0,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "referencia",
+    "vermelhos": 3,
+    "por_suite": {
+     "05_p0/tests": 3,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   }
+  ]
+ },
+ {
+  "arquivo": "05_p0/ssc_p0/contratos.py",
+  "nome": "MODALIDADES",
+  "classe": "MEIO SOLTA",
+  "n": 4,
+  "prendem": [
+   "texto"
+  ],
+  "soltos": [
+   "codigo",
+   "dados",
+   "mista"
+  ],
+  "detalhe": [
+   {
+    "valor": "texto",
+    "vermelhos": 143,
+    "por_suite": {
+     "05_p0/tests": 143,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "codigo",
+    "vermelhos": 0,
+    "por_suite": {
+     "05_p0/tests": 0,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "dados",
+    "vermelhos": 0,
+    "por_suite": {
+     "05_p0/tests": 0,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "mista",
+    "vermelhos": 0,
+    "por_suite": {
+     "05_p0/tests": 0,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   }
+  ]
+ },
+ {
+  "arquivo": "05_p0/ssc_p0/contratos.py",
+  "nome": "FORMATOS_SAIDA",
+  "classe": "MEIO SOLTA",
+  "n": 3,
+  "prendem": [
+   "livre"
+  ],
+  "soltos": [
+   "json-schema",
+   "patch"
+  ],
+  "detalhe": [
+   {
+    "valor": "livre",
+    "vermelhos": 143,
+    "por_suite": {
+     "05_p0/tests": 143,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "json-schema",
+    "vermelhos": 0,
+    "por_suite": {
+     "05_p0/tests": 0,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "patch",
+    "vermelhos": 0,
+    "por_suite": {
+     "05_p0/tests": 0,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   }
+  ]
+ },
+ {
+  "arquivo": "05_p0/ssc_p0/contratos.py",
+  "nome": "PRIVACIDADES",
+  "classe": "PRESA",
+  "n": 2,
+  "prendem": [
+   "local-only",
+   "remoto-permitido"
+  ],
+  "soltos": [],
+  "detalhe": [
+   {
+    "valor": "local-only",
+    "vermelhos": 3,
+    "por_suite": {
+     "05_p0/tests": 3,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "remoto-permitido",
+    "vermelhos": 140,
+    "por_suite": {
+     "05_p0/tests": 140,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   }
+  ]
+ },
+ {
+  "arquivo": "05_p0/ssc_p0/contratos.py",
+  "nome": "AUTH_MODES",
+  "classe": "MEIO SOLTA",
+  "n": 6,
+  "prendem": [
+   "subscription-oauth",
+   "cached-token",
+   "payg-api",
+   "desconhecido"
+  ],
+  "soltos": [
+   "acp",
+   "local"
+  ],
+  "detalhe": [
+   {
+    "valor": "subscription-oauth",
+    "vermelhos": 26,
+    "por_suite": {
+     "05_p0/tests": 26,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "cached-token",
+    "vermelhos": 4,
+    "por_suite": {
+     "05_p0/tests": 4,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "acp",
+    "vermelhos": 0,
+    "por_suite": {
+     "05_p0/tests": 0,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "local",
+    "vermelhos": 0,
+    "por_suite": {
+     "05_p0/tests": 0,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "payg-api",
+    "vermelhos": 2,
+    "por_suite": {
+     "05_p0/tests": 2,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "desconhecido",
+    "vermelhos": 1,
+    "por_suite": {
+     "05_p0/tests": 1,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   }
+  ]
+ },
+ {
+  "arquivo": "05_p0/ssc_p0/contratos.py",
+  "nome": "BILLING_MODES",
+  "classe": "MEIO SOLTA",
+  "n": 6,
+  "prendem": [
+   "subscription",
+   "payg",
+   "prepaid",
+   "extra-usage",
+   "desconhecido"
+  ],
+  "soltos": [
+   "local-free"
+  ],
+  "detalhe": [
+   {
+    "valor": "subscription",
+    "vermelhos": 23,
+    "por_suite": {
+     "05_p0/tests": 23,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "local-free",
+    "vermelhos": 0,
+    "por_suite": {
+     "05_p0/tests": 0,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "payg",
+    "vermelhos": 3,
+    "por_suite": {
+     "05_p0/tests": 3,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "prepaid",
+    "vermelhos": 1,
+    "por_suite": {
+     "05_p0/tests": 1,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "extra-usage",
+    "vermelhos": 1,
+    "por_suite": {
+     "05_p0/tests": 1,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "desconhecido",
+    "vermelhos": 1,
+    "por_suite": {
+     "05_p0/tests": 1,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   }
+  ]
+ },
+ {
+  "arquivo": "05_p0/ssc_p0/contratos.py",
+  "nome": "QUOTA_STATES",
+  "classe": "MEIO SOLTA",
+  "n": 4,
+  "prendem": [
+   "disponivel",
+   "esgotada"
+  ],
+  "soltos": [
+   "limitada",
+   "desconhecida"
+  ],
+  "detalhe": [
+   {
+    "valor": "disponivel",
+    "vermelhos": 35,
+    "por_suite": {
+     "05_p0/tests": 35,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "limitada",
+    "vermelhos": 0,
+    "por_suite": {
+     "05_p0/tests": 0,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "esgotada",
+    "vermelhos": 1,
+    "por_suite": {
+     "05_p0/tests": 1,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "desconhecida",
+    "vermelhos": 0,
+    "por_suite": {
+     "05_p0/tests": 0,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   }
+  ]
+ },
+ {
+  "arquivo": "05_p0/ssc_p0/contratos.py",
+  "nome": "AUTOMATION_PERMISSIONS",
+  "classe": "MEIO SOLTA",
+  "n": 4,
+  "prendem": [
+   "allow",
+   "supervised",
+   "terms-review-required"
+  ],
+  "soltos": [
+   "deny"
+  ],
+  "detalhe": [
+   {
+    "valor": "allow",
+    "vermelhos": 22,
+    "por_suite": {
+     "05_p0/tests": 22,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "supervised",
+    "vermelhos": 11,
+    "por_suite": {
+     "05_p0/tests": 11,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "terms-review-required",
+    "vermelhos": 3,
+    "por_suite": {
+     "05_p0/tests": 3,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "deny",
+    "vermelhos": 0,
+    "por_suite": {
+     "05_p0/tests": 0,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   }
+  ]
+ },
+ {
+  "arquivo": "05_p0/ssc_p0/contratos.py",
+  "nome": "PAPEIS_FROTA",
+  "classe": "PRESA",
+  "n": 3,
+  "prendem": [
+   "autor",
+   "revisor",
+   "juiz"
+  ],
+  "soltos": [],
+  "detalhe": [
+   {
+    "valor": "autor",
+    "vermelhos": 18,
+    "por_suite": {
+     "05_p0/tests": 18,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "revisor",
+    "vermelhos": 12,
+    "por_suite": {
+     "05_p0/tests": 12,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "juiz",
+    "vermelhos": 12,
+    "por_suite": {
+     "05_p0/tests": 12,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   }
+  ]
+ },
+ {
+  "arquivo": "05_p0/ssc_p0/estados.py",
+  "nome": "TERMINAIS_WORK_UNIT",
+  "classe": "PRESA",
+  "n": 2,
+  "prendem": [
+   "concluida",
+   "cancelada"
+  ],
+  "soltos": [],
+  "detalhe": [
+   {
+    "valor": "concluida",
+    "vermelhos": 4,
+    "por_suite": {
+     "05_p0/tests": 4,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "cancelada",
+    "vermelhos": 3,
+    "por_suite": {
+     "05_p0/tests": 3,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   }
+  ]
+ },
+ {
+  "arquivo": "05_p0/ssc_p0/estados.py",
+  "nome": "_NOMES",
+  "classe": "SOLTA",
+  "n": 3,
+  "prendem": [],
+  "soltos": [
+   "sessao",
+   "workunit",
+   "attempt"
+  ],
+  "detalhe": [
+   {
+    "valor": "sessao",
+    "vermelhos": 0,
+    "por_suite": {
+     "05_p0/tests": 0,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "workunit",
+    "vermelhos": 0,
+    "por_suite": {
+     "05_p0/tests": 0,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "attempt",
+    "vermelhos": 0,
+    "por_suite": {
+     "05_p0/tests": 0,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   }
+  ]
+ },
+ {
+  "arquivo": "05_p0/ssc_p0/frota.py",
+  "nome": "CHAVES_PROIBIDAS",
+  "classe": "PRESA",
+  "n": 8,
+  "prendem": [
+   "OPENAI_API_KEY",
+   "CODEX_API_KEY",
+   "ANTHROPIC_API_KEY",
+   "ANTHROPIC_AUTH_TOKEN",
+   "GEMINI_API_KEY",
+   "GOOGLE_API_KEY",
+   "GOOGLE_APPLICATION_CREDENTIALS",
+   "XAI_API_KEY"
+  ],
+  "soltos": [],
+  "detalhe": [
+   {
+    "valor": "OPENAI_API_KEY",
+    "vermelhos": 4,
+    "por_suite": {
+     "05_p0/tests": 1,
+     "06_p1a/tests": 3
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "CODEX_API_KEY",
+    "vermelhos": 3,
+    "por_suite": {
+     "05_p0/tests": 0,
+     "06_p1a/tests": 3
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "ANTHROPIC_API_KEY",
+    "vermelhos": 3,
+    "por_suite": {
+     "05_p0/tests": 0,
+     "06_p1a/tests": 3
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "ANTHROPIC_AUTH_TOKEN",
+    "vermelhos": 3,
+    "por_suite": {
+     "05_p0/tests": 0,
+     "06_p1a/tests": 3
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "GEMINI_API_KEY",
+    "vermelhos": 3,
+    "por_suite": {
+     "05_p0/tests": 0,
+     "06_p1a/tests": 3
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "GOOGLE_API_KEY",
+    "vermelhos": 3,
+    "por_suite": {
+     "05_p0/tests": 0,
+     "06_p1a/tests": 3
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "GOOGLE_APPLICATION_CREDENTIALS",
+    "vermelhos": 7,
+    "por_suite": {
+     "05_p0/tests": 0,
+     "06_p1a/tests": 7
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "XAI_API_KEY",
+    "vermelhos": 3,
+    "por_suite": {
+     "05_p0/tests": 0,
+     "06_p1a/tests": 3
+    },
+    "total_mudou": null
+   }
+  ]
+ },
+ {
+  "arquivo": "05_p0/ssc_p0/providers.py",
+  "nome": "COMPORTAMENTOS",
+  "classe": "PRESA",
+  "n": 7,
+  "prendem": [
+   "sucesso",
+   "falha-transitoria",
+   "falha-contrato",
+   "falha-quota",
+   "timeout",
+   "saida-invalida",
+   "efeito-incerto"
+  ],
+  "soltos": [],
+  "detalhe": [
+   {
+    "valor": "sucesso",
+    "vermelhos": 181,
+    "por_suite": {
+     "05_p0/tests": 181,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "falha-transitoria",
+    "vermelhos": 6,
+    "por_suite": {
+     "05_p0/tests": 6,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "falha-contrato",
+    "vermelhos": 2,
+    "por_suite": {
+     "05_p0/tests": 2,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "falha-quota",
+    "vermelhos": 7,
+    "por_suite": {
+     "05_p0/tests": 7,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "timeout",
+    "vermelhos": 2,
+    "por_suite": {
+     "05_p0/tests": 2,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "saida-invalida",
+    "vermelhos": 1,
+    "por_suite": {
+     "05_p0/tests": 1,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "efeito-incerto",
+    "vermelhos": 1,
+    "por_suite": {
+     "05_p0/tests": 1,
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   }
+  ]
+ },
+ {
+  "arquivo": "06_p1a/leitores_config.py",
+  "nome": "EXTENSOES_SQLITE",
+  "classe": "MEIO SOLTA",
+  "n": 3,
+  "prendem": [
+   ".db"
+  ],
+  "soltos": [
+   ".sqlite",
+   ".sqlite3"
+  ],
+  "detalhe": [
+   {
+    "valor": ".db",
+    "vermelhos": 10,
+    "por_suite": {
+     "06_p1a/tests": 10
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": ".sqlite",
+    "vermelhos": 0,
+    "por_suite": {
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": ".sqlite3",
+    "vermelhos": 0,
+    "por_suite": {
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   }
+  ]
+ },
+ {
+  "arquivo": "06_p1a/leitores_config.py",
+  "nome": "FONTES",
+  "classe": "PRESA",
+  "n": 5,
+  "prendem": [
+   "codex",
+   "claude",
+   "kimi",
+   "google",
+   "grok"
+  ],
+  "soltos": [],
+  "detalhe": [
+   {
+    "valor": "codex",
+    "vermelhos": 10,
+    "por_suite": {
+     "06_p1a/tests": 10
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "claude",
+    "vermelhos": 10,
+    "por_suite": {
+     "06_p1a/tests": 10
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "kimi",
+    "vermelhos": 9,
+    "por_suite": {
+     "06_p1a/tests": 9
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "google",
+    "vermelhos": 11,
+    "por_suite": {
+     "06_p1a/tests": 11
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "grok",
+    "vermelhos": 26,
+    "por_suite": {
+     "06_p1a/tests": 26
+    },
+    "total_mudou": null
+   }
+  ]
+ },
+ {
+  "arquivo": "06_p1a/preflight_capsula.py",
+  "nome": "_VIA_GITBASH",
+  "classe": "SOLTA",
+  "n": 2,
+  "prendem": [],
+  "soltos": [
+   "google",
+   "grok"
+  ],
+  "detalhe": [
+   {
+    "valor": "google",
+    "vermelhos": 0,
+    "por_suite": {
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "grok",
+    "vermelhos": 0,
+    "por_suite": {
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   }
+  ]
+ },
+ {
+  "arquivo": "06_p1a/preflight/adaptadores.py",
+  "nome": "_MARCADORES_NAO_LOGADO",
+  "classe": "MEIO SOLTA",
+  "n": 7,
+  "prendem": [
+   "not logged"
+  ],
+  "soltos": [
+   "logged out",
+   "unauthenticated",
+   "nao autenticado",
+   "não autenticado",
+   "login required",
+   "no credentials"
+  ],
+  "detalhe": [
+   {
+    "valor": "not logged",
+    "vermelhos": 5,
+    "por_suite": {
+     "06_p1a/tests": 5
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "logged out",
+    "vermelhos": 0,
+    "por_suite": {
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "unauthenticated",
+    "vermelhos": 0,
+    "por_suite": {
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "nao autenticado",
+    "vermelhos": 0,
+    "por_suite": {
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "não autenticado",
+    "vermelhos": 0,
+    "por_suite": {
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "login required",
+    "vermelhos": 0,
+    "por_suite": {
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "no credentials",
+    "vermelhos": 0,
+    "por_suite": {
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   }
+  ]
+ },
+ {
+  "arquivo": "06_p1a/preflight/adaptadores.py",
+  "nome": "_MARCADORES_QUOTA_ESGOTADA",
+  "classe": "MEIO SOLTA",
+  "n": 6,
+  "prendem": [
+   "quota exhausted",
+   "rate_limit_exceeded",
+   "usage limit reached"
+  ],
+  "soltos": [
+   "quota esgotada",
+   "esgotada",
+   "0 remaining"
+  ],
+  "detalhe": [
+   {
+    "valor": "quota exhausted",
+    "vermelhos": 2,
+    "por_suite": {
+     "06_p1a/tests": 2
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "quota esgotada",
+    "vermelhos": 0,
+    "por_suite": {
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "esgotada",
+    "vermelhos": 0,
+    "por_suite": {
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "0 remaining",
+    "vermelhos": 0,
+    "por_suite": {
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "rate_limit_exceeded",
+    "vermelhos": 1,
+    "por_suite": {
+     "06_p1a/tests": 1
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "usage limit reached",
+    "vermelhos": 7,
+    "por_suite": {
+     "06_p1a/tests": 7
+    },
+    "total_mudou": null
+   }
+  ]
+ },
+ {
+  "arquivo": "06_p1a/preflight/adaptadores.py",
+  "nome": "_MARCADORES_NEGACAO",
+  "classe": "MEIO SOLTA",
+  "n": 6,
+  "prendem": [
+   "not ",
+   "no "
+  ],
+  "soltos": [
+   "non ",
+   "não ",
+   "nao ",
+   "never "
+  ],
+  "detalhe": [
+   {
+    "valor": "not ",
+    "vermelhos": 1,
+    "por_suite": {
+     "06_p1a/tests": 1
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "no ",
+    "vermelhos": 1,
+    "por_suite": {
+     "06_p1a/tests": 1
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "non ",
+    "vermelhos": 0,
+    "por_suite": {
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "não ",
+    "vermelhos": 0,
+    "por_suite": {
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "nao ",
+    "vermelhos": 0,
+    "por_suite": {
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "never ",
+    "vermelhos": 0,
+    "por_suite": {
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   }
+  ]
+ },
+ {
+  "arquivo": "06_p1a/preflight/adaptadores.py",
+  "nome": "_PARSERS_LOGIN",
+  "classe": "PRESA",
+  "n": 5,
+  "prendem": [
+   "codex",
+   "claude",
+   "kimi",
+   "google",
+   "grok"
+  ],
+  "soltos": [],
+  "detalhe": [
+   {
+    "valor": "codex",
+    "vermelhos": 103,
+    "por_suite": {
+     "06_p1a/tests": 103
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "claude",
+    "vermelhos": 43,
+    "por_suite": {
+     "06_p1a/tests": 43
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "kimi",
+    "vermelhos": 40,
+    "por_suite": {
+     "06_p1a/tests": 40
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "google",
+    "vermelhos": 2,
+    "por_suite": {
+     "06_p1a/tests": 2
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "grok",
+    "vermelhos": 4,
+    "por_suite": {
+     "06_p1a/tests": 4
+    },
+    "total_mudou": null
+   }
+  ]
+ },
+ {
+  "arquivo": "06_p1a/preflight/adaptadores.py",
+  "nome": "_PARSERS_MODELOS",
+  "classe": "PRESA",
+  "n": 2,
+  "prendem": [
+   "codex",
+   "kimi"
+  ],
+  "soltos": [],
+  "detalhe": [
+   {
+    "valor": "codex",
+    "vermelhos": 5,
+    "por_suite": {
+     "06_p1a/tests": 5
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "kimi",
+    "vermelhos": 2,
+    "por_suite": {
+     "06_p1a/tests": 2
+    },
+    "total_mudou": null
+   }
+  ]
+ },
+ {
+  "arquivo": "06_p1a/preflight/economia.py",
+  "nome": "CHAVES_PAYG_CONHECIDAS",
+  "classe": "PRESA",
+  "n": 8,
+  "prendem": [
+   "openai_api_key",
+   "codex_api_key",
+   "anthropic_api_key",
+   "anthropic_auth_token",
+   "gemini_api_key",
+   "google_api_key",
+   "google_application_credentials",
+   "xai_api_key"
+  ],
+  "soltos": [],
+  "detalhe": [
+   {
+    "valor": "openai_api_key",
+    "vermelhos": 2,
+    "por_suite": {
+     "06_p1a/tests": 2
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "codex_api_key",
+    "vermelhos": 2,
+    "por_suite": {
+     "06_p1a/tests": 2
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "anthropic_api_key",
+    "vermelhos": 2,
+    "por_suite": {
+     "06_p1a/tests": 2
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "anthropic_auth_token",
+    "vermelhos": 2,
+    "por_suite": {
+     "06_p1a/tests": 2
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "gemini_api_key",
+    "vermelhos": 2,
+    "por_suite": {
+     "06_p1a/tests": 2
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "google_api_key",
+    "vermelhos": 2,
+    "por_suite": {
+     "06_p1a/tests": 2
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "google_application_credentials",
+    "vermelhos": 13,
+    "por_suite": {
+     "06_p1a/tests": 13
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "xai_api_key",
+    "vermelhos": 2,
+    "por_suite": {
+     "06_p1a/tests": 2
+    },
+    "total_mudou": null
+   }
+  ]
+ },
+ {
+  "arquivo": "06_p1a/preflight/economia.py",
+  "nome": "_SUFIXOS_PAYG",
+  "classe": "MEIO SOLTA",
+  "n": 7,
+  "prendem": [
+   "apikey",
+   "apitoken",
+   "authtoken",
+   "accesstoken",
+   "apisecret",
+   "secretkey"
+  ],
+  "soltos": [
+   "bearertoken"
+  ],
+  "detalhe": [
+   {
+    "valor": "apikey",
+    "vermelhos": 40,
+    "por_suite": {
+     "06_p1a/tests": 40
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "apitoken",
+    "vermelhos": 1,
+    "por_suite": {
+     "06_p1a/tests": 1
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "authtoken",
+    "vermelhos": 7,
+    "por_suite": {
+     "06_p1a/tests": 7
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "accesstoken",
+    "vermelhos": 3,
+    "por_suite": {
+     "06_p1a/tests": 3
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "bearertoken",
+    "vermelhos": 0,
+    "por_suite": {
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "apisecret",
+    "vermelhos": 1,
+    "por_suite": {
+     "06_p1a/tests": 1
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "secretkey",
+    "vermelhos": 3,
+    "por_suite": {
+     "06_p1a/tests": 3
+    },
+    "total_mudou": null
+   }
+  ]
+ },
+ {
+  "arquivo": "06_p1a/preflight/economia.py",
+  "nome": "_FAMILIAS_PROVEDOR",
+  "classe": "MEIO SOLTA",
+  "n": 23,
+  "prendem": [
+   "openrouter",
+   "deepseek",
+   "mistral",
+   "groq",
+   "nvidia",
+   "together",
+   "huggingface"
+  ],
+  "soltos": [
+   "openai",
+   "codex",
+   "anthropic",
+   "claude",
+   "gemini",
+   "google",
+   "vertex",
+   "xai",
+   "grok",
+   "kimi",
+   "moonshot",
+   "azureopenai",
+   "cohere",
+   "fireworks",
+   "perplexity",
+   "replicate"
+  ],
+  "detalhe": [
+   {
+    "valor": "openai",
+    "vermelhos": 0,
+    "por_suite": {
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "codex",
+    "vermelhos": 0,
+    "por_suite": {
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "anthropic",
+    "vermelhos": 0,
+    "por_suite": {
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "claude",
+    "vermelhos": 0,
+    "por_suite": {
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "gemini",
+    "vermelhos": 0,
+    "por_suite": {
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "google",
+    "vermelhos": 0,
+    "por_suite": {
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "vertex",
+    "vermelhos": 0,
+    "por_suite": {
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "xai",
+    "vermelhos": 0,
+    "por_suite": {
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "grok",
+    "vermelhos": 0,
+    "por_suite": {
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "kimi",
+    "vermelhos": 0,
+    "por_suite": {
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "moonshot",
+    "vermelhos": 0,
+    "por_suite": {
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "openrouter",
+    "vermelhos": 2,
+    "por_suite": {
+     "06_p1a/tests": 2
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "azureopenai",
+    "vermelhos": 0,
+    "por_suite": {
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "deepseek",
+    "vermelhos": 2,
+    "por_suite": {
+     "06_p1a/tests": 2
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "mistral",
+    "vermelhos": 1,
+    "por_suite": {
+     "06_p1a/tests": 1
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "cohere",
+    "vermelhos": 0,
+    "por_suite": {
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "groq",
+    "vermelhos": 1,
+    "por_suite": {
+     "06_p1a/tests": 1
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "nvidia",
+    "vermelhos": 12,
+    "por_suite": {
+     "06_p1a/tests": 12
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "together",
+    "vermelhos": 1,
+    "por_suite": {
+     "06_p1a/tests": 1
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "fireworks",
+    "vermelhos": 0,
+    "por_suite": {
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "perplexity",
+    "vermelhos": 0,
+    "por_suite": {
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "replicate",
+    "vermelhos": 0,
+    "por_suite": {
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "huggingface",
+    "vermelhos": 1,
+    "por_suite": {
+     "06_p1a/tests": 1
+    },
+    "total_mudou": null
+   }
+  ]
+ },
+ {
+  "arquivo": "06_p1a/preflight/economia.py",
+  "nome": "_ENDPOINTS_PAYG",
+  "classe": "PRESA",
+  "n": 4,
+  "prendem": [
+   "api.openai.com",
+   "api.anthropic.com",
+   "api.x.ai",
+   "generativelanguage.googleapis.com"
+  ],
+  "soltos": [],
+  "detalhe": [
+   {
+    "valor": "api.openai.com",
+    "vermelhos": 65,
+    "por_suite": {
+     "06_p1a/tests": 65
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "api.anthropic.com",
+    "vermelhos": 9,
+    "por_suite": {
+     "06_p1a/tests": 9
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "api.x.ai",
+    "vermelhos": 3,
+    "por_suite": {
+     "06_p1a/tests": 3
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "generativelanguage.googleapis.com",
+    "vermelhos": 1,
+    "por_suite": {
+     "06_p1a/tests": 1
+    },
+    "total_mudou": null
+   }
+  ]
+ },
+ {
+  "arquivo": "06_p1a/preflight/economia.py",
+  "nome": "_CHAVES_ENDPOINT",
+  "classe": "MEIO SOLTA",
+  "n": 11,
+  "prendem": [
+   "api_base",
+   "api_base_url",
+   "endpoint",
+   "base_url_override",
+   "api_endpoint",
+   "url",
+   "api_url",
+   "server",
+   "host"
+  ],
+  "soltos": [
+   "base_url",
+   "baseurl"
+  ],
+  "detalhe": [
+   {
+    "valor": "base_url",
+    "vermelhos": 0,
+    "por_suite": {
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "baseurl",
+    "vermelhos": 0,
+    "por_suite": {
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "api_base",
+    "vermelhos": 1,
+    "por_suite": {
+     "06_p1a/tests": 1
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "api_base_url",
+    "vermelhos": 2,
+    "por_suite": {
+     "06_p1a/tests": 2
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "endpoint",
+    "vermelhos": 5,
+    "por_suite": {
+     "06_p1a/tests": 5
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "base_url_override",
+    "vermelhos": 1,
+    "por_suite": {
+     "06_p1a/tests": 1
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "api_endpoint",
+    "vermelhos": 1,
+    "por_suite": {
+     "06_p1a/tests": 1
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "url",
+    "vermelhos": 1,
+    "por_suite": {
+     "06_p1a/tests": 1
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "api_url",
+    "vermelhos": 2,
+    "por_suite": {
+     "06_p1a/tests": 2
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "server",
+    "vermelhos": 1,
+    "por_suite": {
+     "06_p1a/tests": 1
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "host",
+    "vermelhos": 1,
+    "por_suite": {
+     "06_p1a/tests": 1
+    },
+    "total_mudou": null
+   }
+  ]
+ },
+ {
+  "arquivo": "06_p1a/preflight/economia.py",
+  "nome": "_FLAGS_TOPUP",
+  "classe": "PRESA",
+  "n": 6,
+  "prendem": [
+   "autotopup",
+   "autotopupenabled",
+   "extrausage",
+   "extrausageenabled",
+   "allowextracharges",
+   "payasyougo"
+  ],
+  "soltos": [],
+  "detalhe": [
+   {
+    "valor": "autotopup",
+    "vermelhos": 28,
+    "por_suite": {
+     "06_p1a/tests": 28
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "autotopupenabled",
+    "vermelhos": 2,
+    "por_suite": {
+     "06_p1a/tests": 2
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "extrausage",
+    "vermelhos": 3,
+    "por_suite": {
+     "06_p1a/tests": 3
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "extrausageenabled",
+    "vermelhos": 1,
+    "por_suite": {
+     "06_p1a/tests": 1
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "allowextracharges",
+    "vermelhos": 2,
+    "por_suite": {
+     "06_p1a/tests": 2
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "payasyougo",
+    "vermelhos": 2,
+    "por_suite": {
+     "06_p1a/tests": 2
+    },
+    "total_mudou": null
+   }
+  ]
+ },
+ {
+  "arquivo": "06_p1a/preflight/economia.py",
+  "nome": "_AUTH_CONHECIDAS",
+  "classe": "MEIO SOLTA",
+  "n": 3,
+  "prendem": [
+   "subscription-oauth",
+   "cached-token"
+  ],
+  "soltos": [
+   "local"
+  ],
+  "detalhe": [
+   {
+    "valor": "subscription-oauth",
+    "vermelhos": 134,
+    "por_suite": {
+     "06_p1a/tests": 134
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "cached-token",
+    "vermelhos": 10,
+    "por_suite": {
+     "06_p1a/tests": 10
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "local",
+    "vermelhos": 0,
+    "por_suite": {
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   }
+  ]
+ },
+ {
+  "arquivo": "06_p1a/preflight/pipeline.py",
+  "nome": "RESULTADOS",
+  "classe": "PRESA",
+  "n": 4,
+  "prendem": [
+   "ELIGIBLE",
+   "SHADOW_ELIGIBLE",
+   "SUPERVISED",
+   "BLOCKED"
+  ],
+  "soltos": [],
+  "detalhe": [
+   {
+    "valor": "ELIGIBLE",
+    "vermelhos": 43,
+    "por_suite": {
+     "06_p1a/tests": 43
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "SHADOW_ELIGIBLE",
+    "vermelhos": 11,
+    "por_suite": {
+     "06_p1a/tests": 11
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "SUPERVISED",
+    "vermelhos": 56,
+    "por_suite": {
+     "06_p1a/tests": 56
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "BLOCKED",
+    "vermelhos": 165,
+    "por_suite": {
+     "06_p1a/tests": 165
+    },
+    "total_mudou": null
+   }
+  ]
+ },
+ {
+  "arquivo": "07_p1b/preflight_atual.py",
+  "nome": "_VIA_GITBASH",
+  "classe": "SOLTA",
+  "n": 2,
+  "prendem": [],
+  "soltos": [
+   "google",
+   "grok"
+  ],
+  "detalhe": [
+   {
+    "valor": "google",
+    "vermelhos": 0,
+    "por_suite": {
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   },
+   {
+    "valor": "grok",
+    "vermelhos": 0,
+    "por_suite": {
+     "06_p1a/tests": 0
+    },
+    "total_mudou": null
+   }
+  ]
+ }
+]
