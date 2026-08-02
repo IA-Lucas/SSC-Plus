@@ -545,3 +545,197 @@ instrumento e **cego para fora** e **indiscriminado para dentro**.
 
 > Quem corrigiu nao certificou, e quem revisou reprovou. O resultado
 > desta missao e o veredito, nao o conserto.
+
+## 9. ATESTADO
+
+Emenda de registro proprio, por ordem do Fundador. Lease
+`p1a36-atestado-ops`, fence **1**, pid 97572, adquirido antes desta
+escrita — nome distinto, para nao sobrescrever `p1a36-ops` nem
+`p1a36-emenda-ops`, que sao evidencia citada nas §1 e §4.1.
+
+### 9.1 Eram SEIS. Agora sao SEIS + SEIS = DOZE
+
+Os dois numeros ficam **separados**, e o total nunca aparece sozinho:
+
+| Conjunto | Quantos | Origem |
+|---|---|---|
+| MAJOR **nao fechados** | **6** | abertos pela revisao da P1-A.3.1; o codex pronunciou-se sobre cada um e disse NAO-FECHADO nos seis |
+| MAJOR **novos** | **6** | abertos pelo proprio veredito do codex desta missao |
+| | **6 + 6** | escrever "12" sem os dois numeros esconde que **nenhum** dos originais fechou |
+
+Escrever so o total permitiria a leitura falsa de que houve progresso
+parcial. **Nao houve.** O saldo dos seis originais e zero fechados.
+
+### 9.2 Classificacao dos seis novos — medida, nao presumida
+
+Duas classes, conforme a ordem: **(F) mesma familia** — guarda que
+**afirma** a propriedade em vez de exercer a interface real, a classe do
+MAJOR #3 — ou **(N) classe que a varredura dos 86 guardas nao media**.
+Cada linha traz a medicao que sustenta a classificacao.
+
+**N1 · `05_p0/ssc_p0/writelock.py` — escritor unico entre missoes**
+→ **(F) mesma familia, E (N) invisivel ao eixo da varredura.**
+Medido: a docstring de `escritor.py` **afirma** *"uma segunda sessao
+falha na aquisicao"*, e o teste que a sustenta
+(`test_estabilizacao_p1a1.py:347`) usa `"p1-ops"` nos **dois** lados —
+exercita o unico caso que funciona, nunca o que ocorre em operacao. E
+familia do MAJOR #3 sem ambiguidade.
+Mas a varredura **o viu e o classificou EXERCE**: linha P0-26,
+`writelock.py:78-108 LockSessao`, *"2 de 4 ramos; lock de SO real em
+tmpdir"*. O eixo media **alcance de linha**, e a linha era alcancada. O
+que o eixo nao podia ver e que **o caso exercido nao e o caso que
+ocorre**. Esta e a Declaracao 4 demonstrada num achado real, e nao em
+tese.
+A varredura ja o registrara por outro caminho — linha A1, "Escritor
+unico entre missoes" —, e a P1-A.3.5 §5 **P4** o pulou como materia de
+politica. O que muda hoje: deixou de ser candidato e **e MAJOR por
+revisor independente**.
+
+**N2 · `06_p1a/leitores_config.py` — falha fechada**
+→ **(F) mesma familia.**
+Medido no fonte: `ler_json` e `ler_toml` fazem
+`except (OSError, ValueError): return {}`. A docstring do modulo
+**afirma** *"Fonte ausente, ilegivel ou vazia devolve `{}` — sempre por
+medicao do disco, jamais por cegueira escrita no fonte"*. A distincao
+existe **na prosa**; o valor devolvido nao a carrega, e nenhum consumidor
+a jusante consegue separar "fonte lida e limpa" de "fonte que nao pude
+ler". A propriedade e afirmada, nao exercida — familia do MAJOR #3.
+**A varredura nao media isto**: o modulo nasceu da correcao 7 da propria
+P1-A.3.5 e tem teste (`test_leitor_config_p1a35.py`); o eixo perguntava
+se a linha do guarda era alcancada, nunca se o **valor degradado** era
+distinguivel do valor limpo.
+
+**N3 · `06_p1a/evidencias/contencao.py` — rotulo "deteccao integral"**
+→ **(F) mesma familia — e e a familia do MAJOR #3 no sentido literal.**
+Medido: `EXCLUIDOS_DO_MANIFESTO = ("locks",)` e `manifesto(raiz)`
+fotografa **so** a arvore sob `RAIZ`; o rotulo `enforcement_kimi()`
+afirma *"DETECCAO INTEGRAL por manifesto SHA-256 da arvore inteira"*.
+Escrita fora do repositorio nao aparece. O rotulo afirma alcance que o
+mecanismo nao tem.
+**Parcialmente medida pela varredura**: existe teste que **proibe** o
+rotulo de afirmar sandbox inexistente (heranca da P1-A.3.2) — logo o eixo
+"rotulo honesto" foi exercido para a palavra *sandbox*. A palavra
+*integral* nao foi. Classe medida no principio, nao no caso.
+
+**N4 · `06_p1a/evidencias/revisao_p1a2.py` — credenciais e PII**
+→ **(F) mesma familia, pelo mecanismo ja nomeado do achado 10 e da
+correcao 7: a copia que ninguem exercita fica para tras.**
+Medido linha a linha, e o revisor esta **exato**:
+`revisao_p1a2.py:170` grava `"dir_descartavel": tmp` **cru**, e
+`:179-180` escreve `json.dumps(meta…)` **sem redacao integral**. Os
+outros quatro runners fazem `_redigir(tmp)` e
+`_redigir(json.dumps(…))` — `revisao_p1a3.py:228,248`,
+`revisao_p1a31.py:202,221`, `revisao_p1a33.py:202,220` e
+`revisao_p1a36.py:207,225`. **Quatro corrigidos, um esquecido.**
+**A varredura o viu, mas por outro eixo**: linha P1A-33,
+`revisao_p1a2.py:51 redacao`, **SEM-TESTE**, *"forca FRACA; arquivo com
+ZERO linha executada"*. Ela mediu a **primitiva** de redacao. Nao mediu
+os **pontos de chamada** — se cada campo que sai para disco passa por
+ela. Classe nao medida: cobertura de call-site, nao de funcao.
+
+**N5 · `06_p1a/tests/test_emendas_p1a3.py` — anti-P2**
+→ **(F) mesma familia** quanto ao escopo, **(N) classe nao medida**
+quanto a explorabilidade.
+Medido: a varredura ja registrara a metade de escopo como **achado 13** —
+*"a metade (A) do sentinela anti-P2 cobre so `06_p1a`"*, marcado
+`escopo (ja aberto)`. Isso o revisor confirmou.
+O que ele acrescentou e **novo e nao medido**: o sentinela so reconhece
+literais exatos e aliases atribuidos no mesmo arquivo, de modo que
+concatenacao, constante importada (`RESULTADOS`) ou propagacao por
+booleano **contornam** `_portoes_de_execucao`. A varredura classificava
+guardas; **nao media se um guarda podia ser contornado de proposito**.
+
+**N6 · `pacote-revisao.txt` — ancoragem**
+→ **nem (F) nem (N): nao e guarda do acervo.**
+E defeito de composicao **desta missao** — o pacote manda julgar o
+gerador e omite seu codigo-fonte (§3.4). O objeto **nao existia** quando
+os 86 foram varridos, e nao poderia ter sido classificado por ela.
+Registrado como classe propria para nao inflar nenhuma das outras duas.
+
+**Saldo da classificacao:** **4 de 6** na mesma familia por inteiro
+(N1–N4), **1** partilhado entre as duas classes (N5), **1** fora de ambas
+(N6). A familia do MAJOR #3 — afirmar em vez de exercer — **continua
+sendo a classe dominante**, agora dita por revisor independente e nao
+pela sessao que a nomeou.
+
+### 9.3 O portao exige zero MAJOR nos DOIS vereditos, e so existe UM
+
+**A revisao dupla nunca ocorreu desde a P1-A.3.1.** Medido, rodada a
+rodada:
+
+| Rodada | codex | kimi | Causa da falta |
+|---|---|---|---|
+| P1-A.3.1 | veredito (REPROVADO, seis MAJOR) | **sem veredito** | returncode 1, 3,844 s; causa nao caracterizada na evidencia |
+| P1-A.3.3 | **sem veredito** | **sem veredito** | codex: limite de uso do ciclo. kimi: `Cannot combine --prompt with --plan` |
+| P1-A.3.6 | veredito (REPROVADO) | **sem veredito** | kimi: 403, cota do ciclo de faturamento |
+
+Em **tres** rodadas houve **dois** vereditos ao todo, ambos do codex,
+ambos REPROVADO. **Nunca houve dois vereditos na mesma rodada.**
+
+**Ausencia de veredito nao e ressalva.** Nao conta como aprovacao
+parcial, nao conta como silencio favoravel e nao se soma ao veredito
+existente para formar consenso. Onde falta um veredito, falta **um
+revisor** — e a §9 da `99_decisao-p1a31.md` exige os dois. A metade (b)
+do portao esta **aberta**, nao mitigada (§4.1).
+
+Correcao ao que o despacho supunha: a falta do kimi na **P1-A.3.3** nao
+foi por tier vencido — foi incompatibilidade de flags do CLI, medida em
+`kimi-20260731T155932Z.json`. Tier vencido foi a causa do **BLOCKED de
+codex e kimi no preflight** da P1-B.01, coisa distinta. Registrado pelo
+que foi medido.
+
+### 9.4 Dono, gatilho e remedio dos doze
+
+**Os seis nao fechados** (numeracao original da P1-A.3.1):
+
+| # | Dono | Gatilho | Remedio especificado |
+|---|---|---|---|
+| 1 | missao de correcao | abertura | alcancar a config do grok em SQLite, ou devolver **INDETERMINADO** em vez de `{}` — nunca classificar como limpo o que nao foi lido |
+| 2 | missao de correcao | abertura | ancorar `_ZERO` no **valor numerico parseado**, nao em prefixo textual; casos `.0`, `00`, `0.00`, `0,0` no teste, e contraprova com franquia real |
+| 3 | missao de correcao | abertura | separar **atribuicao** de **deteccao** (§6); cobrir alem de `RAIZ` ou retirar a palavra "integral" do rotulo — teste que reprove o rotulo excedente, como ja existe para "sandbox" |
+| 4 | missao de correcao | abertura | `_verificar_lock(fence_esperado=…)` imediatamente antes da persistencia em `revisao_p1a2.main`, como os outros quatro runners ja fazem; teste **no caminho de persistencia**, nao so na funcao canonica |
+| 5 | missao que refizer a revisao | montagem do proximo pacote | o gerador embute o **proprio** codigo-fonte com o SHA-256 do arquivo ao lado, OU o pacote para de pedir julgamento sobre ele |
+| 6 | missao que reabrir a P1-B | ja disparado | metade (A) passa a cobrir `07_p1b`; o sentinela resolve alias, import e concatenacao — ou **nega** quando nao consegue resolver |
+
+**Os seis novos:**
+
+| # | Dono | Gatilho | Remedio especificado |
+|---|---|---|---|
+| N1 | **missao de politica, materia 4** | abertura dessa missao | lock **unico do repositorio**, e `liberar()` que expire o lease que concedeu; teste com **nomes distintos** nos dois lados |
+| N2 | missao de correcao | primeira correcao do MAJOR-1 | distinguir no **valor** "fonte ausente/ilegivel" de "fonte lida e vazia" (sentinela ou excecao), e `auditar_config` falhar **fechada** no primeiro caso |
+| N3 | missao de correcao | junto com o MAJOR-3 | o mesmo remedio do MAJOR-3 — as duas linhas sao o mesmo objeto visto de dois lados, e **nao se fundem na contagem** |
+| N4 | missao de correcao | primeira correcao | `_redigir` em `dir_descartavel` e no `json.dumps` integral de `revisao_p1a2.py`; teste que reprove o caminho cru, e que varra **os cinco** runners de uma vez |
+| N5 | missao que reabrir a P1-B | junto com o MAJOR-6 | idem MAJOR-6, acrescida da resolucao de alias/import/concatenacao; **nao se funde na contagem** |
+| N6 | missao que refizer a revisao | montagem do proximo pacote | idem MAJOR-5; **nao se funde na contagem** |
+
+Tres pares (3/N3, 6/N5, 5/N6) tratam do mesmo objeto por lados
+diferentes. Ficam com o **mesmo remedio** e **contagem separada**: fundi-los
+transformaria doze em nove e produziria a aparencia de progresso que a
+§9.1 existe para impedir.
+
+### 9.5 Quem corrigiu nao certificou, e ADJUST e desfecho previsto
+
+**Nenhuma das correcoes sob julgamento foi certificada por quem as fez.**
+As correcoes dos seis MAJOR vieram da P1-A.3.2, da P1-A.3.4 e da
+P1-A.3.5; nenhuma dessas missoes emitiu atestado de fechamento — todas
+registraram, com essas palavras, que fechar depende de revisor
+independente. Esta missao **nao corrigiu nada** e por isso podia
+submeter. O revisor falou, e disse NAO-FECHADO nos seis.
+
+**ADJUST e desfecho previsto pelo ato, nao falha da missao.** O ato
+escreve *"Achado que exija alteracao encerra em ADJUST; nao corrigir
+nesta missao"* e *"Commitar o registro qualquer que seja o veredito,
+inclusive ADJUST e BLOCKED"*. A missao entregou o que lhe cabia: pacote
+novo e ancorado, mesmos bytes aos dois provedores, as quatro declaracoes
+obrigatorias transmitidas — com efeito verificavel em tres achados do
+veredito —, pronunciamento explicito por MAJOR e sobre defeito novo, e o
+registro commitado com o resultado desfavoravel intacto.
+
+**O que seria falha:** corrigir aqui para o portao passar, resumir o
+pacote para caber, tratar a ausencia do kimi como ressalva, ou escrever
+"12 MAJOR" sem dizer que seis sao os mesmos de antes. Nada disso foi
+feito.
+
+**Contagem como medida, nunca como meta.** Os numeros deste atestado —
+6 + 6, 4 de 6 na mesma familia, 2 vereditos em 3 rodadas — sao o que foi
+medido. Nenhum e alvo a perseguir.
