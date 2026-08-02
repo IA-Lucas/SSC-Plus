@@ -26,43 +26,70 @@ _MARCADORES_QUOTA_ESGOTADA = (
     "quota exhausted", "quota esgotada", "esgotada", "0 remaining",
     "rate_limit_exceeded", "usage limit reached",
 )
-# Zero como NUMERO, nao como digito solto (revisao P1-A.3.1, MAJOR #2).
-# Cobre "0", "0.0" e "0,0"; recusa o zero que e parte de outro numero.
-# As duas ancoras sao necessarias e nao simetricas:
-#   - sem a de tras, "10.0 tokens available" casaria pelo "0" depois do
-#     ponto e bloquearia franquia DISPONIVEL (fail-closed indevido);
-#   - sem a da frente, "0.5 calls left" casaria pelo "0" e bloquearia
-#     meia franquia.
-_ZERO = r"(?<![\d.,])0(?:[.,]0+)?(?![\d.,])"
-
-# Esgotamento em grafias alternativas (regex): zero-quota e negacao.
-# Sem isto, "0 requests remaining" ou "no calls left" escapavam dos
-# marcadores literais e caiam no sinal positivo "remaining"/"left" —
-# quota REALMENTE esgotada classificada como disponivel (fail-open).
+# NUMERO, capturado para ser PARSEADO — nunca comparado como prefixo de
+# texto (revisao P1-A.3.6, MAJOR #2 mantido NAO-FECHADO).
 #
-# Revisao P1-A.3.1, MAJOR #2: o zero literal `\b0\s+` exigia digito nu
-# seguido de espaco, de modo que "0.0 tokens available" (zero decimal) e
-# "0% quota available" (zero percentual) escapavam de TODAS as regexes e
-# caiam no sinal positivo `\bavailable\b` — quota zerada classificada
-# como disponivel, o fail-open exato do achado. `_ZERO` e o sinal de
-# porcentagem opcional fecham as duas grafias.
-_RX_QUOTA_ESGOTADA = tuple(re.compile(p) for p in (
+# O que havia antes: `_ZERO = (?<![\d.,])0(?:[.,]0+)?(?![\d.,])`, um
+# padrao TEXTUAL que exigia o digito `0` na PRIMEIRA posicao do numero.
+# O revisor mediu a consequencia: `.0 tokens available` e
+# `00 tokens available` escapavam dos quatro padroes e caiam no sinal
+# positivo `\bavailable\b` — franquia zerada classificada como
+# disponivel, o mesmo fail-open que a P1-A.3.2 dizia ter fechado. A
+# forma textual so podia reconhecer as grafias de zero que alguem tivesse
+# ENUMERADO; qualquer grafia nova voltava a escapar.
+#
+# `_NUMERO` nao decide nada: ele apenas DELIMITA o numeral. Quem decide e
+# `_valor_zero`, que parseia o texto capturado e compara com 0. Assim
+# `0`, `00`, `.0`, `0.0`, `0.00`, `0,0`, `000,000` e qualquer grafia
+# futura de zero sao o MESMO caso, sem enumeracao; e `10.0`, `0.5` ou
+# `100` continuam sendo franquia disponivel porque o valor parseado nao
+# e zero — nao porque um lookaround os tenha excluido.
+_NUMERO = r"(?<!\w)(\d+(?:[.,]\d*)?|[.,]\d+)"
+
+
+def _valor_zero(texto: str) -> bool:
+    """O numeral capturado vale zero? (virgula decimal incluida.)"""
+    try:
+        return float(texto.replace(",", ".")) == 0.0
+    except ValueError:  # pragma: no cover - _NUMERO so casa numeral
+        return False
+
+
+# Esgotamento por NUMERO ZERO, em quatro posicoes sintaticas. Cada padrao
+# captura o numeral; nenhum decide pelo texto do numeral.
+_RX_QUOTA_NUMERO = tuple(re.compile(p) for p in (
     # "0 requests remaining"; "0 of 100 requests remaining";
     # "0.0 tokens available"; "0% quota available"; "0 remaining".
-    _ZERO + r"\s*%?\s*(?:of\s+[\d.,]+\s+)?(?:\w+\s+)?"
-            r"(?:remaining|left|available)\b",
+    _NUMERO + r"\s*%?\s*(?:of\s+[\d.,]+\s+)?(?:\w+\s+)?"
+              r"(?:remaining|left|available)\b",
     # "requests remaining: 0"; "available: 0.0"; "quota available = 0%".
-    r"\b(?:remaining|left|available)\s*[:=]?\s*" + _ZERO + r"\s*%?",
+    r"\b(?:remaining|left|available)\s*[:=]?\s*" + _NUMERO + r"\s*%?",
     # "quota: 0"; "credits = 0"; "tokens: 0.0"; "balance: 0%".
     r"\b(?:quota|credits?|tokens?|requests?|calls?|balance)\s*[:=]\s*"
-    + _ZERO + r"\s*%?",
-    _ZERO + r"\s*/\s*[\d.,]+",                # "0/100 requests remaining"
-    # Negacao com ou sem palavra intermediaria (revisoes P1-A.3):
-    # "no calls left", "no requests remaining", "no remaining quota",
-    # "none left", "no quota available" — qualquer uma vence o sinal
-    # positivo "remaining"/"available".
-    r"\bno(?:ne)?\s+(?:[a-z]+\s+)?(?:remaining|left|available)\b",
+    + _NUMERO + r"\s*%?",
+    _NUMERO + r"\s*/\s*[\d.,]+",              # "0/100 requests remaining"
 ))
+
+# Esgotamento por NEGACAO — sem numeral, e por isso separado dos de cima
+# (revisoes P1-A.3): "no calls left", "no requests remaining", "no
+# remaining quota", "none left", "no quota available". Qualquer uma vence
+# o sinal positivo "remaining"/"available".
+_RX_QUOTA_ESGOTADA = (
+    re.compile(r"\bno(?:ne)?\s+(?:[a-z]+\s+)?(?:remaining|left|available)\b"),
+)
+
+
+def _quota_zerada(texto: str) -> bool:
+    """Alguma ocorrencia numerica de franquia vale ZERO?
+
+    Percorre TODAS as ocorrencias (`finditer`), nao apenas a primeira:
+    numa saida com "10 tokens available" e "0 requests left" na mesma
+    linha, decidir pela primeira classificaria como disponivel uma
+    franquia que ja acabou.
+    """
+    return any(_valor_zero(achado.group(1))
+               for rx in _RX_QUOTA_NUMERO
+               for achado in rx.finditer(texto))
 # Sinais POSITIVOS observaveis de franquia disponivel, casados por
 # PALAVRA (\b) — "unavailable" nao pode casar "available". "Disponivel"
 # NUNCA e presumida do login: sem um destes sinais no texto do CLI, a
@@ -137,7 +164,8 @@ def _quota_de(texto: str, logado: bool) -> str:
     """
     low = texto.lower()
     if any(m in low for m in _MARCADORES_QUOTA_ESGOTADA) \
-            or any(rx.search(low) for rx in _RX_QUOTA_ESGOTADA):
+            or any(rx.search(low) for rx in _RX_QUOTA_ESGOTADA) \
+            or _quota_zerada(low):
         return "esgotada"
     if not logado:
         return "desconhecida"
