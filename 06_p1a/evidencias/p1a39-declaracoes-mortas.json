@@ -1,0 +1,44 @@
+[
+ {
+  "arquivo": "05_p0/ssc_p0/contratos.py",
+  "nome": "ESTADOS_ATTEMPT",
+  "linha": 24,
+  "tipo": "Call"
+ },
+ {
+  "arquivo": "05_p0/ssc_p0/estados.py",
+  "nome": "_NOMES",
+  "linha": 63,
+  "tipo": "Dict"
+ },
+ {
+  "arquivo": "06_p1a/evidencias/contencao.py",
+  "nome": "FLAGS_DE_AUTO_APROVACAO",
+  "linha": 112,
+  "tipo": "Tuple"
+ },
+ {
+  "arquivo": "06_p1a/evidencias/contencao.py",
+  "nome": "FLAGS_INCOMPATIVEIS_COM_PROMPT",
+  "linha": 118,
+  "tipo": "Tuple"
+ },
+ {
+  "arquivo": "06_p1a/evidencias/contencao.py",
+  "nome": "PREFIXO_ERRO_DE_ARGUMENTO",
+  "linha": 126,
+  "tipo": "Constant"
+ },
+ {
+  "arquivo": "06_p1a/evidencias/contencao.py",
+  "nome": "MARCADOR_ARGV_ACEITO",
+  "linha": 127,
+  "tipo": "Constant"
+ },
+ {
+  "arquivo": "06_p1a/evidencias/contencao.py",
+  "nome": "PALAVRAS_DE_ALCANCE_TOTAL",
+  "linha": 357,
+  "tipo": "Tuple"
+ }
+]
