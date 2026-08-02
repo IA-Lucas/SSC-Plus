@@ -56,11 +56,48 @@ import os
 
 _USUARIO_LOCAL = os.path.basename(os.path.expanduser("~"))
 
-# `locks/` e runtime do escritor unico: o renovador dedicado reescreve o
-# lease a cada 30 s por construcao. Incluir esse diretorio no manifesto
-# produziria alarme falso em toda corrida. Exclusao DECLARADA — a unica —
-# e nao silenciosa: tudo mais da arvore entra, inclusive `.git`.
-EXCLUIDOS_DO_MANIFESTO = ("locks",)
+# NENHUMA exclusao. Ate a P1-A.3.6, `locks/` saia do manifesto porque o
+# renovador dedicado reescreve o lease a cada 30 s, e a alternativa
+# conhecida era alarme falso em toda corrida. O revisor independente
+# mediu o preco disso: *"cobre apenas RAIZ e exclui todo `locks/`; o
+# kimi segue capaz de alterar arquivos fora do repositorio, ou locks nao
+# verificados, sem aparecer em `mutacoes`"*.
+#
+# A saida nao e excluir: e SEPARAR AS DUAS PERGUNTAS que o manifesto
+# respondia juntas (§6 do registro da P1-A.3.6) — *a arvore mudou?*, que
+# e deteccao, e *quem escreveu?*, que e atribuicao. O lease do renovador
+# volta a ser fotografado e passa a ser ATRIBUIDO (`atribuir`), nao
+# apagado. Ponto cego por exclusao vira ponto declarado por atribuicao.
+EXCLUIDOS_DO_MANIFESTO = ()
+
+# Alvos vigiados FORA do repositorio — a metade "cobrir alem de RAIZ".
+#
+# Sao exatamente as fontes de config que `auditar_config` le. A escolha
+# nao e arbitraria e nao e "tudo o que der": vigiar o disco inteiro e
+# inviavel, e vigiar diretorios de CLI produziria alarme por escrita
+# LEGITIMA do proprio revisor (o codex grava sessao e log em `~/.codex/`
+# durante a chamada). O que se vigia e a SUPERFICIE QUE A AUDITORIA
+# ECONOMICA CONSOME: adulterar uma destas fontes e o caminho pelo qual
+# uma escrita de fora derrubaria a politica de custo zero.
+#
+# A lista e acoplada por teste a `leitores_config.FONTES` — se a
+# auditoria passar a ler uma fonte nova e esta lista nao acompanhar, o
+# teste fica vermelho, e nao ha divergencia silenciosa.
+ALVOS_VIGIADOS_FORA_DO_REPOSITORIO = (
+    "~/.codex/auth.json",
+    "~/.codex/config.toml",
+    "~/.claude/settings.json",
+    "~/.kimi-code/config.toml",
+    "~/.gemini/settings.json",
+    "~/.grok",
+)
+
+# O que NAO e vigiado, dito por extenso para que o rotulo possa cita-lo:
+# todo o resto do disco. Escrita do revisor em qualquer caminho fora do
+# repositorio e fora das fontes acima NAO e detectada por este
+# mecanismo — e limite conhecido, nao propriedade.
+NAO_VIGIADO = ("todo caminho fora do repositorio e fora das fontes de "
+               "config declaradas")
 
 # Restricoes REAIS que o CLI do kimi oferece em modo headless (`-p`),
 # medidas EXERCENDO o CLI 0.30.0, nao lendo `--help`: NAO existe
@@ -151,6 +188,140 @@ def manifesto(raiz, excluir=EXCLUIDOS_DO_MANIFESTO) -> dict:
             except OSError:
                 saida[rel] = "<ilegivel>"
     return saida
+
+
+def _hash_de_arquivo(caminho: str) -> str:
+    try:
+        with open(caminho, "rb") as f:
+            return hashlib.sha256(f.read()).hexdigest()
+    except OSError:
+        return "<ilegivel>"
+
+
+def manifesto_de_alvos(alvos=None) -> dict:
+    """SHA-256 dos alvos vigiados fora do repositorio.
+
+    `alvos=None` resolve a lista DENTRO da funcao, e nao no `def`: assim
+    a lista declarada e um ponto unico, e um teste que a substitua
+    alcanca tambem os chamadores que nao a passam.
+
+    Alvo que e ARQUIVO entra sozinho; alvo que e DIRETORIO entra com os
+    arquivos do seu topo, um a um (o `~/.grok/` desta estacao guarda
+    `grok.db` + `-wal` + `-shm`). Alvo AUSENTE entra como `<ausente>` —
+    some-lo seria nao detectar a sua CRIACAO durante a janela, que e
+    justamente uma das formas de plantar config PAYG.
+    """
+    saida = {}
+    for alvo in (ALVOS_VIGIADOS_FORA_DO_REPOSITORIO if alvos is None
+                 else alvos):
+        caminho = os.path.expanduser(alvo)
+        if os.path.isdir(caminho):
+            try:
+                nomes = sorted(os.listdir(caminho))
+            except OSError:
+                saida[alvo] = "<ilegivel>"
+                continue
+            achou = False
+            for nome in nomes:
+                completo = os.path.join(caminho, nome)
+                if os.path.isfile(completo):
+                    saida[f"{alvo}/{nome}"] = _hash_de_arquivo(completo)
+                    achou = True
+            if not achou:
+                saida[f"{alvo}/"] = "<diretorio-vazio>"
+        elif os.path.isfile(caminho):
+            saida[alvo] = _hash_de_arquivo(caminho)
+        else:
+            saida[alvo] = "<ausente>"
+    return saida
+
+
+def manifesto_vigiado(raiz, alvos=None) -> dict:
+    """As DUAS raizes vigiadas num so manifesto, com rotulo de origem.
+
+    `repositorio/...` para a arvore do laboratorio (inteira, inclusive
+    `locks/` e `.git`) e `fora/...` para as fontes de config declaradas.
+    O rotulo existe para que a evidencia diga ONDE a mutacao ocorreu sem
+    carregar caminho absoluto.
+    """
+    saida = {f"repositorio/{rel}": h
+             for rel, h in manifesto(raiz).items()}
+    saida.update({f"fora/{rel}": h
+                  for rel, h in manifesto_de_alvos(alvos).items()})
+    return saida
+
+
+def atribuir(mudancas, sessao_lock: str) -> dict:
+    """Separa DETECCAO de ATRIBUICAO — a segunda pergunta do §6.
+
+    `mutacoes` responde *a arvore mudou?*. Esta funcao responde *ha
+    escritor esperado para esta mudanca?*. So um caminho tem escritor
+    esperado durante a janela da chamada: o lease e o fence da SESSAO
+    OPERACIONAL, reescritos a cada 30 s pelo renovador dedicado, por
+    construcao e nao por acidente.
+
+    LIMITE DECLARADO, e e o que separa esta funcao de uma prova de
+    autoria: a atribuicao e por CONVENCAO DE CAMINHO. O que se afirma e
+    que aquele caminho e o unico com escritor esperado — nunca que o byte
+    veio dele. Um revisor que escrevesse exatamente em
+    `locks/<sessao>.lease` seria atribuido ao renovador, e isso fica
+    registrado como limite, nao escondido. Tudo o mais fica NAO
+    ATRIBUIDO — inclusive escrita do proprio operador, que nao vira "do
+    revisor" nem deixa de reprovar a corrida.
+    """
+    esperados = {f"repositorio/locks/{sessao_lock}{sufixo}"
+                 for sufixo in (".lease", ".lease.tmp", ".fence",
+                                ".fence.tmp")}
+    do_renovador, nao_atribuidas = [], []
+    for mudanca in mudancas:
+        caminho = mudanca.split(": ", 1)[-1]
+        destino = do_renovador if caminho in esperados else nao_atribuidas
+        destino.append(mudanca)
+    return {"do_renovador": do_renovador,
+            "nao_atribuidas": nao_atribuidas}
+
+
+class Vigilancia:
+    """Protocolo UNICO de contencao das corridas de revisao.
+
+    Os quatro runners (`revisao_p1a3`, `_p1a31`, `_p1a33`, `_p1a36`)
+    repetiam a mesma sequencia `manifesto(RAIZ)` / `mutacoes(...)` em
+    copias separadas — o mecanismo dos achados 7, 10 e 14: a copia que
+    ninguem exercita fica para tras. Aqui ela existe uma vez, e o teste
+    de varredura exige que os quatro apontem para ESTA classe.
+    """
+
+    def __init__(self, raiz, sessao_lock: str, alvos=None):
+        self.raiz = str(raiz)
+        self.sessao_lock = str(sessao_lock)
+        self.alvos = tuple(ALVOS_VIGIADOS_FORA_DO_REPOSITORIO
+                           if alvos is None else alvos)
+        self.antes = None
+
+    def abrir(self) -> dict:
+        self.antes = manifesto_vigiado(self.raiz, self.alvos)
+        return self.antes
+
+    def fechar(self) -> dict:
+        """Fotografia final, deteccao e atribuicao — nesta ordem."""
+        if self.antes is None:
+            raise RuntimeError("Vigilancia.fechar() sem abrir()")
+        depois = manifesto_vigiado(self.raiz, self.alvos)
+        mudancas = mutacoes(self.antes, depois)
+        atribuicao = atribuir(mudancas, self.sessao_lock)
+        return {
+            "medida": "manifesto SHA-256 antes/depois das raizes "
+                      "vigiadas, com atribuicao separada da deteccao",
+            "raizes_vigiadas": ["repositorio (arvore inteira, inclusive "
+                                "locks/ e .git)"] + [f"fora: {a}"
+                                                     for a in self.alvos],
+            "nao_vigiado": NAO_VIGIADO,
+            "arquivos_no_manifesto": len(self.antes),
+            "mutacoes_detectadas": mudancas,
+            "mutacoes_atribuidas_ao_renovador": atribuicao["do_renovador"],
+            "mutacoes_fora_do_descartavel": atribuicao["nao_atribuidas"],
+            "violada": bool(atribuicao["nao_atribuidas"]),
+        }
 
 
 def mutacoes(antes: dict, depois: dict) -> list:

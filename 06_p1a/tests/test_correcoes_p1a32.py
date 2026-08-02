@@ -276,10 +276,13 @@ class ContencaoDoReviewer(unittest.TestCase):
             self.assertEqual(contencao.mutacoes(antes,
                                                 contencao.manifesto(raiz)), [])
 
-    def test_locks_e_a_unica_exclusao_e_ela_e_declarada(self):
-        # `locks/` sai porque o renovador dedicado reescreve o lease a
-        # cada 30 s. Qualquer outra exclusao seria ponto cego.
-        self.assertEqual(contencao.EXCLUIDOS_DO_MANIFESTO, ("locks",))
+    def test_o_manifesto_nao_tem_exclusao_alguma(self):
+        # Ate a P1-A.3.6 `locks/` era excluido, porque o renovador
+        # reescreve o lease a cada 30 s. O revisor independente mediu o
+        # preco: locks nao verificados nao apareciam em `mutacoes`. A
+        # exclusao acabou (P1-A.3.7, MAJOR #3) e o lease do renovador
+        # passou a ser ATRIBUIDO, nao apagado.
+        self.assertEqual(contencao.EXCLUIDOS_DO_MANIFESTO, ())
         with tempfile.TemporaryDirectory() as raiz:
             os.makedirs(os.path.join(raiz, "locks"))
             os.makedirs(os.path.join(raiz, ".git"))
@@ -287,8 +290,8 @@ class ContencaoDoReviewer(unittest.TestCase):
                 with open(os.path.join(raiz, rel), "w") as f:
                     f.write("x")
             manifesto = contencao.manifesto(raiz)
-            self.assertNotIn("locks/x.lease", manifesto)
-            self.assertIn(".git/objeto", manifesto)  # .git NAO e ponto cego
+            self.assertIn("locks/x.lease", manifesto)  # deixou de ser cego
+            self.assertIn(".git/objeto", manifesto)
             self.assertIn("a.py", manifesto)
 
     def test_argv_do_kimi_usa_a_restricao_que_o_cli_oferece(self):
@@ -349,7 +352,15 @@ class ContencaoDoReviewer(unittest.TestCase):
         env_minimo = {k: os.environ[k] for k in
                       ("PATH", "SYSTEMROOT", "TEMP", "TMP", "COMSPEC",
                        "PATHEXT") if k in os.environ}
+        # P1-A.3.7, MAJOR #3: a vigilancia passou a cobrir tambem as
+        # fontes de config em `~`. Aqui elas sao neutralizadas de
+        # proposito — este teste e sobre a arvore do repositorio, e ler
+        # o `~` real tornaria o resultado dependente do que a estacao
+        # estivesse gravando no instante.
         with mock.patch.dict(os.environ, env_minimo, clear=True), \
+                mock.patch.object(contencao,
+                                  "ALVOS_VIGIADOS_FORA_DO_REPOSITORIO",
+                                  ()), \
                 mock.patch.object(modulo, "RAIZ", Path(raiz)), \
                 mock.patch.object(modulo, "SAIDA", saida), \
                 mock.patch.object(modulo, "COMANDOS", {
@@ -374,7 +385,10 @@ class ContencaoDoReviewer(unittest.TestCase):
                 raiz, f"open(r'{fora}', 'w').write('escrevi fora')")
             self.assertEqual(rc, 3, "corrida com violacao nao pode dar 0")
             self.assertTrue(evidencia["contencao"]["violada"])
-            self.assertIn("criado: codigo/backdoor.py",
+            # O rotulo `repositorio/` entrou na P1-A.3.7 (MAJOR #3):
+            # agora ha mais de uma raiz vigiada, e a evidencia precisa
+            # dizer em qual delas a mutacao ocorreu.
+            self.assertIn("criado: repositorio/codigo/backdoor.py",
                           evidencia["contencao"]["mutacoes_fora_do_descartavel"])
 
     def test_reviewer_bem_comportado_nao_reprova(self):

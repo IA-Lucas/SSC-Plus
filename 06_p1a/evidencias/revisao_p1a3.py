@@ -45,7 +45,7 @@ sys.path.insert(0, str(RAIZ / "06_p1a" / "evidencias"))
 
 from capsula import ambiente_capsula  # noqa: E402
 from contencao import (argv_kimi, enforcement_kimi,  # noqa: E402
-                       manifesto, mutacoes, verificar_lock)
+                       Vigilancia, verificar_lock)
 
 SESSAO_LOCK = os.environ.get("SSC_LOCK_SESSAO", "p1a3-ops")
 _KIMI_EXE = os.path.expanduser("~/.kimi-code/bin/kimi")
@@ -199,7 +199,10 @@ def main() -> int:
     ts = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     # Revisao P1-A.3.1 (MAJOR #3): manifesto SHA-256 da arvore INTEIRA
     # antes e depois — a lista de restantes so ve dentro do descartavel.
-    antes = manifesto(RAIZ)
+    # MAJOR #3 (P1-A.3.7): protocolo UNICO de contencao — as duas
+    # raizes vigiadas, e a atribuicao separada da deteccao.
+    vigilancia = Vigilancia(RAIZ, SESSAO_LOCK)
+    vigilancia.abrir()
     inicio = time.monotonic()
     try:
         proc = subprocess.run(
@@ -210,7 +213,8 @@ def main() -> int:
         rc, out = "TIMEOUT", (e.stdout or "")
         err = (e.stderr or "") + "\nTIMEOUT apos 900s"
     duracao = round(time.monotonic() - inicio, 3)
-    fora_do_descartavel = mutacoes(antes, manifesto(RAIZ))
+    contencao_medida = vigilancia.fechar()
+    fora_do_descartavel = contencao_medida["mutacoes_fora_do_descartavel"]
     restantes = [str(p.relative_to(tmp)) for p in Path(tmp).rglob("*")
                  if p.is_file()]
     # Revisao P1-A.3.1 (MAJOR #4): lease reverificado imediatamente antes
@@ -227,13 +231,7 @@ def main() -> int:
         "pacote_sha256": hashlib.sha256(pacote.encode()).hexdigest(),
         "dir_descartavel": _redigir(tmp),
         "dir_descartavel_arquivos_restantes": restantes,
-        "contencao": {
-            "medida": "manifesto SHA-256 da arvore inteira antes/depois",
-            "arquivos_no_manifesto": len(antes),
-            "excluido_e_declarado": ["locks"],
-            "mutacoes_fora_do_descartavel": fora_do_descartavel,
-            "violada": bool(fora_do_descartavel),
-        },
+        "contencao": contencao_medida,
         "lock_verificado_antes_da_persistencia": True,
         "env_vars_removidas_nomes": removidas,
         "returncode": rc, "duracao_s": duracao,
