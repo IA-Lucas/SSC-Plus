@@ -57,6 +57,17 @@ _GITBASH = r"E:\LucasIA\Git\bin\bash.exe"
 _SESSAO_LOCK = os.environ.get("SSC_LOCK_SESSAO", "p1a3-ops")
 _VIA_GITBASH = ("google", "grok")  # CLIs npm sem executavel Windows direto
 
+# Teto da sonda que passa pelo Git Bash. ALINHADO com o runner da P1-B na
+# P1-A.3.9, e escolhido por MEDICAO e nao por antiguidade: o teto
+# canonico da camada partilhada e `adaptadores.TIMEOUT_PADRAO = 20`, e a
+# partida do Git Bash nesta estacao custa 0,35 s (5 corridas de
+# `bash -lc true`; min 0,31, max 0,41). A camada extra justifica ~21 s —
+# nem 60, nem os 120 que a copia da P1-B carregava. Fica o MENOR dos dois
+# valores em uso: o timeout e fail-closed (rc 124 -> CliIndisponivel),
+# entao encurtar nunca transforma falha em passagem, so faz o portao
+# decidir mais cedo.
+TIMEOUT_GITBASH = 60
+
 # Leitor de tiers: implementacao UNICA em `leitor_tiers`, partilhada com
 # o runner da P1-B. Estava aqui dentro, e a ordem 4 da P1-B.01 ia
 # duplica-la do outro lado — o mecanismo dos achados 7, 10 e 14 (a copia
@@ -105,11 +116,24 @@ def _verificar_lock_vivo(fence_esperado: int | None = None,
 
 
 def _sensor_de(provider_id: str):
+    """Sensor real; google/grok (npm) rodam via Git Bash na estacao.
+
+    ALINHADO com `07_p1b/preflight_atual._sensor_de` na P1-A.3.9. As duas
+    copias divergiam em silencio — timeout 60 contra 120, e `expanduser`
+    so na P1-B —, e nenhum teste via porque nenhum lado era exercido.
+
+    `expanduser` VENCEU, por necessidade medida: o catalogo guarda
+    caminhos com `~` (ver `07_p1b/evidencias/*.json`, campo `caminho`), e
+    `shlex.join` CITA o til (`'~/x'`), de modo que o bash nao o expande
+    dentro de aspas simples — medido: `bash -lc "echo '~/x'"` imprime
+    `~/x`. Sem `expanduser` o caminho chega literal ao CLI e nao resolve.
+    A omissao daqui era defeito latente, nao estilo.
+    """
     if provider_id not in _VIA_GITBASH:
         return sensor_subprocess
 
-    def sensor_gitbash(argv, env=None, timeout=60):
-        comando = shlex.join([str(a) for a in argv])
+    def sensor_gitbash(argv, env=None, timeout=TIMEOUT_GITBASH):
+        comando = shlex.join([os.path.expanduser(str(a)) for a in argv])
         return sensor_subprocess([_GITBASH, "-lc", comando], env=env,
                                  timeout=timeout)
     return sensor_gitbash

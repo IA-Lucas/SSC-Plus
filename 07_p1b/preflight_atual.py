@@ -87,6 +87,16 @@ _SESSAO_LOCK = os.environ.get("SSC_LOCK_SESSAO", "p1b-ops")
 # CLIs npm sem executavel Windows direto: a sonda vai pelo Git Bash.
 _VIA_GITBASH = ("google", "grok")
 
+# Teto da sonda via Git Bash. ERA 120 e passa a 60 na P1-A.3.9, alinhado
+# com `06_p1a/preflight_capsula`. Escolhido por MEDICAO: o teto canonico
+# da camada partilhada e `adaptadores.TIMEOUT_PADRAO = 20`, e a partida do
+# Git Bash nesta estacao custa 0,35 s (5 corridas de `bash -lc true`; min
+# 0,31, max 0,41) — a camada extra justifica ~21 s, e os 120 daqui
+# carregavam ~99 s sem fundamento escrito. O timeout e fail-closed
+# (rc 124 -> CliIndisponivel): encurtar nao transforma falha em passagem,
+# so faz o portao decidir mais cedo, que e o que se quer de um preflight.
+TIMEOUT_GITBASH = 60
+
 
 def _redigir(texto: str) -> str:
     """ACHADO 10: era uma das TRES redacoes mais fracas do acervo —
@@ -157,7 +167,7 @@ def _sensor_de(provider_id: str):
     if provider_id not in _VIA_GITBASH:
         return sensor_subprocess
 
-    def sensor_gitbash(argv, env=None, timeout=120):
+    def sensor_gitbash(argv, env=None, timeout=TIMEOUT_GITBASH):
         comando = shlex.join([os.path.expanduser(str(a)) for a in argv])
         return sensor_subprocess([_GITBASH, "-lc", comando], env=env,
                                  timeout=timeout)

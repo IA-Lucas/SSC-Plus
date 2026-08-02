@@ -11,18 +11,45 @@ constante, duplicada em duas camadas, e as duas copias SOLTAS:
 ## ACHADO DE ARQUITETURA, alem de guarda — por ordem do ato
 
 *"Duplicata que ninguem exercita diverge em silencio"* — o mecanismo dos
-achados 7, 10 e 14 desta trilha. E aqui a divergencia **ja comecou**, o
-que este arquivo mede em vez de supor. As duas copias da CONSTANTE sao
-iguais; os dois SENSORES construidos a partir dela **nao sao**:
+achados 7, 10 e 14 desta trilha. E aqui a divergencia **ja tinha
+comecado**, o que este arquivo mediu em vez de supor. As duas copias da
+CONSTANTE eram iguais; os dois SENSORES construidos a partir dela **nao
+eram**:
 
 | | `preflight_capsula` | `preflight_atual` (P1-B) |
 |---|---|---|
-| `timeout` do wrapper | **60** | **120** |
-| argv | `str(a)` | `os.path.expanduser(str(a))` |
+| `timeout` do wrapper | 60 | **120** |
+| argv | `str(a)` | **`os.path.expanduser(str(a))`** |
 
-Ou seja: a lista que decide QUEM vai pelo Git Bash e a mesma, e o COMO
-ja se separou. Nenhum teste via isso, porque nenhum dos dois lados era
+A lista que decide QUEM vai pelo Git Bash era a mesma, e o COMO ja se
+separara. Nenhum teste via isso, porque nenhum dos dois lados era
 exercido.
+
+## O ALINHAMENTO, e por que cada lado venceu onde venceu
+
+Feito na ordem 2 do despacho final da P1-A.3.9. **Nenhum dos dois
+arquivos venceu inteiro** — cada atributo foi decidido pelo seu proprio
+fundamento, e nao por qual copia veio primeiro.
+
+**`timeout`: venceu 60, o MENOR.** Medido, nao arbitrado: o teto canonico
+da camada partilhada e `adaptadores.TIMEOUT_PADRAO = 20`, e a partida do
+Git Bash nesta estacao custa **0,35 s** (5 corridas de `bash -lc true`;
+min 0,31, max 0,41). A camada extra justifica cerca de **21 s** — nem 60,
+nem 120. Os dois numeros carregam margem sem fundamento escrito; fica o
+menor, porque o timeout e **fail-closed** (`rc 124` -> `CliIndisponivel`)
+e encurtar nunca transforma falha em passagem: so faz o portao decidir
+mais cedo, que e o que se quer de um preflight.
+
+**`expanduser`: venceu a versao da P1-B, por necessidade.** O catalogo
+guarda caminhos com `~` (`07_p1b/evidencias/*.json`, campo `caminho`:
+`~/AppData/Local/Programs/...`), e `shlex.join` **cita** o til. Medido:
+`bash -lc "echo '~/x'"` imprime `~/x` literal, contra `/c/Users/.../x`
+sem as aspas. Sem `expanduser`, o caminho chegava literal ao CLI e nao
+resolvia — a omissao em `preflight_capsula` era **defeito latente**, nao
+diferenca de estilo.
+
+**A constante segue duplicada**, por ordem do ato: o achado de
+arquitetura permanece ABERTO, com o remedio registrado abaixo.
 
 **Nao se unifica nesta missao**, por ordem explicita do ato. O remedio
 fica registrado: implementacao UNICA de `_sensor_de` numa camada
@@ -56,9 +83,17 @@ que teria sido executado.
   absoluto desta estacao (`E:/LucasIA/Git/bin/bash.exe`, com barras
   invertidas no codigo) e nada aqui verifica que ele exista ou funcione —
   o que se prova e o ROTEAMENTO, nunca a execucao;
-- **a divergencia de `timeout` e de `expanduser` e FIXADA, nao
-  corrigida**: se alguem alinhar os dois lados, este arquivo fica
-  vermelho de proposito, para que a mudanca seja vista e nao presumida;
+- **o alinhamento nao foi VALIDADO contra os CLIs reais.** Que 60 s
+  bastem para a sonda de `google` e `grok` nesta estacao **nao foi
+  medido** — as sondas nao foram invocadas, por restricao do ato (zero
+  chamada, cota fechada ate 5 de agosto). O que se mediu foi a partida do
+  Git Bash e o teto canonico da camada; se alguma sonda estourar 60 s em
+  operacao, o efeito e `CliIndisponivel`, visivel e fail-closed, nunca
+  passagem silenciosa. **Confirmar na primeira corrida real do preflight
+  fica REGISTRADO como pendencia;**
+- **`expanduser` nao e exercido contra caminho que exista**: prova-se que
+  o til deixa de sair literal, jamais que o caminho expandido aponte para
+  um executavel presente;
 - **remocao SIMULTANEA do membro nas duas copias E no `_sensor_de`**
   passa.
 """
@@ -172,10 +207,13 @@ class AsDuasCopiasNaoPodemDivergirEmSilencio(unittest.TestCase):
         # Guarda anti-igualdade-trivial: duas tuplas vazias sao iguais.
         self.assertEqual(len(_CAPSULA._VIA_GITBASH), 2)
 
-    def test_a_divergencia_JA_EXISTENTE_dos_wrappers_esta_declarada(self):
-        # MEDIDO, nao suposto: as constantes sao iguais e os wrappers ja
-        # se separaram. Fixado aqui para que alinhar os dois lados seja
-        # um ato VISTO, e nao um efeito colateral.
+    def test_os_wrappers_estao_ALINHADOS_nos_dois_runners(self):
+        # ERA o teste que fixava a DIVERGENCIA (timeout 60 contra 120 e
+        # `expanduser` so na P1-B). A divergencia foi alinhada na ordem 2
+        # do despacho final da P1-A.3.9, e este teste ficou vermelho DE
+        # PROPOSITO — que era a intencao declarada: alinhar tinha de ser
+        # ato visto. Agora fixa o estado ALINHADO, e voltar a divergir
+        # fica vermelho pelo mesmo motivo.
         cap_c = _Capturador()
         cap_a = _Capturador()
         for modulo, cap in ((_CAPSULA, cap_c), (_ATUAL, cap_a)):
@@ -183,11 +221,34 @@ class AsDuasCopiasNaoPodemDivergirEmSilencio(unittest.TestCase):
             modulo.sensor_subprocess = cap
             self.addCleanup(setattr, modulo, "sensor_subprocess", original)
             modulo._sensor_de("google")(["gemini", "~/x"])
+        # TIMEOUT: venceu 60, o menor dos dois. Fundamento medido —
+        # `adaptadores.TIMEOUT_PADRAO` e 20 e a partida do Git Bash custa
+        # 0,35 s nesta estacao, entao a camada extra justifica ~21 s.
         self.assertEqual(cap_c.chamadas[0]["timeout"], 60)
-        self.assertEqual(cap_a.chamadas[0]["timeout"], 120)
-        # `preflight_atual` expande `~`; `preflight_capsula` nao.
-        self.assertIn("~/x", cap_c.chamadas[0]["argv"][2])
-        self.assertNotIn("~/x", cap_a.chamadas[0]["argv"][2])
+        self.assertEqual(cap_a.chamadas[0]["timeout"], 60)
+        self.assertEqual(cap_c.chamadas[0]["timeout"],
+                         cap_a.chamadas[0]["timeout"])
+        # EXPANDUSER: venceu a versao da P1-B, por necessidade medida —
+        # `shlex.join` CITA o til e o bash nao o expande entre aspas
+        # simples, entao sem expandir o caminho chega literal ao CLI.
+        for cap in (cap_c, cap_a):
+            self.assertNotIn("~/x", cap.chamadas[0]["argv"][2])
+
+    def test_os_dois_wrappers_produzem_o_MESMO_comando(self):
+        # A propriedade que o alinhamento quer dizer, exercida inteira:
+        # mesma entrada, mesmo argv e mesmo teto nos dois runners.
+        caps = []
+        for modulo in (_CAPSULA, _ATUAL):
+            cap = _Capturador()
+            original = modulo.sensor_subprocess
+            modulo.sensor_subprocess = cap
+            self.addCleanup(setattr, modulo, "sensor_subprocess", original)
+            modulo._sensor_de("grok")(["grok", "~/bin/grok", "--version"])
+            caps.append(cap)
+        self.assertEqual(caps[0].chamadas[0]["argv"][1:],
+                         caps[1].chamadas[0]["argv"][1:])
+        self.assertEqual(caps[0].chamadas[0]["timeout"],
+                         caps[1].chamadas[0]["timeout"])
 
 
 if __name__ == "__main__":
