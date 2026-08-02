@@ -207,10 +207,11 @@ class ConfigRecursivaENormalizada(unittest.TestCase):
         self.assertEqual(sensor_exec.n, 0)
         self.assertEqual(sensor_modelos.n, 0)
 
-    def test_dez_tipos_de_erro_preservados(self):
+    def test_onze_tipos_de_erro_preservados(self):
         # 9 tipos originais + DeclaracaoExpirada (emenda P1-A.3, item 1:
-        # declaracao de tier fora da validade de 24 h e erro tipado).
-        self.assertEqual(len(_TIPOS_ERRO), 10)
+        # declaracao de tier fora da validade de 24 h e erro tipado)
+        # + ConfigNaoLida (P1-A.3.7, N2: fonte nao lida falha fechada).
+        self.assertEqual(len(_TIPOS_ERRO), 11)
 
 
 class SanitizacaoUnica(unittest.TestCase):

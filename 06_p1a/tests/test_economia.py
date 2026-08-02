@@ -235,8 +235,10 @@ class ErrosTipados(unittest.TestCase):
 
     def test_round_trip_de_todos_os_tipos(self):
         from preflight.economia import _TIPOS_ERRO
-        # 9 tipos originais + DeclaracaoExpirada (emenda P1-A.3, item 1).
-        self.assertEqual(len(_TIPOS_ERRO), 10)
+        # 9 tipos originais + DeclaracaoExpirada (emenda P1-A.3, item 1)
+        # + ConfigNaoLida (achado N2 da P1-A.3.7: fonte de config que
+        # nao pode ser lida nao e config limpa).
+        self.assertEqual(len(_TIPOS_ERRO), 11)
         for nome, cls in _TIPOS_ERRO.items():
             with self.subTest(tipo=nome):
                 erro = cls(detalhe="d", alvo="a")

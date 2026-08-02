@@ -40,6 +40,7 @@ from apoio import codigos
 _DIR_P1A = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(_DIR_P1A, "evidencias"))
 
+import leitores_config  # noqa: E402
 import preflight_capsula  # noqa: E402
 
 _PROVEDORES = ("codex", "claude", "kimi", "google", "grok")
@@ -147,24 +148,27 @@ class LeitorRealDeConfig(unittest.TestCase):
 
     # --- contraprovas: o guarda nao pode reprovar sempre ----------------
 
-    def test_lar_limpo_mantem_grok_supervised(self):
+    def test_diretorio_lido_e_limpo_mantem_grok_supervised(self):
         # Sem esta contraprova, um leitor que devolvesse violacao sempre
-        # passaria em todos os testes acima.
+        # passaria em todos os testes acima. Desde a P1-A.3.7 a
+        # contraprova exige um diretorio que EXISTA: lar sem `.grok/` e
+        # fonte NAO LIDA, e nao fonte lida e limpa (achado N2).
         self._no_lar_descartavel()
+        os.makedirs(os.path.join(self.lar, ".grok"))
         rels = self._classificar_sem_injetar_config()
         self.assertEqual(rels["grok"].resultado, "SUPERVISED")
         self.assertNotIn("P1A-PAYG-CONFIG", codigos(rels["grok"]))
 
-    def test_diretorio_de_grok_ausente_devolve_vazio_sem_excecao(self):
+    def test_diretorio_de_grok_ausente_e_diretorio_vazio_nao_colidem(self):
         # Estado desta estacao, medido na P1-A.3.5: `~/.grok/` existe mas
-        # guarda SQLite, sem JSON de topo. Ausencia e vazio precisam ser
-        # o mesmo caminho tranquilo — e `{}` aqui e MEDICAO do disco, nao
-        # a cegueira incondicional que havia antes.
+        # guarda SQLite, sem JSON de topo. Ate a P1-A.3.7 ausencia e
+        # vazio eram o MESMO `{}`; agora sao valores distintos — ausencia
+        # e fonte NAO LIDA (achado N2), diretorio lido e sem JSON e `{}`.
+        from preflight.economia import CHAVE_FONTE_NAO_LIDA
         self._no_lar_descartavel()
-        self.assertEqual(preflight_capsula._config_persistida("grok"), {})
+        self.assertIn(CHAVE_FONTE_NAO_LIDA,
+                      preflight_capsula._config_persistida("grok"))
         os.makedirs(os.path.join(self.lar, ".grok"))
-        with open(os.path.join(self.lar, ".grok", "grok.db"), "wb") as f:
-            f.write(b"SQLite format 3\x00")
         self.assertEqual(preflight_capsula._config_persistida("grok"), {})
 
     # --- achado A: o leitor real dos CINCO, nao so do grok -------------
@@ -240,6 +244,12 @@ class LeitorRealDeConfig(unittest.TestCase):
             "tokens": {"access_token": apoio.SENTINELA,
                        "refresh_token": apoio.SENTINELA,
                        "id_token": apoio.SENTINELA}})
+        # A SEGUNDA fonte do codex precisa existir e estar vazia: desde a
+        # P1-A.3.7 uma fonte ausente e declarada NAO LIDA, e o marcador
+        # entraria no dicionario junto com `auth_mode`.
+        with open(os.path.join(self.lar, ".codex", "config.toml"), "w",
+                  encoding="utf-8") as f:
+            f.write("")
         cfg = preflight_capsula._config_persistida("codex")
         self.assertEqual(cfg, {"auth_mode": "subscription-oauth"})
         self.assertNotIn("tokens", cfg)
@@ -261,14 +271,18 @@ class LeitorRealDeConfig(unittest.TestCase):
         self.assertEqual(rels["codex"].resultado, "BLOCKED")
         self.assertIn("P1A-PAYG-CONFIG", codigos(rels["codex"]))
 
-    def test_config_ausente_ou_ilegivel_e_vazio_em_todo_provedor(self):
-        # Fail-safe simetrico: fonte ausente nao pode virar excecao, e
-        # tampouco pode inventar violacao.
+    def test_config_ausente_nao_vira_excecao_e_se_declara_nao_lida(self):
+        # Fail-safe: fonte ausente nao pode virar excecao. O que ela
+        # devolve mudou na P1-A.3.7 (achado N2): era `{}`, indistinguivel
+        # de fonte lida e limpa; passa a ser o marcador de fonte NAO
+        # LIDA, que `auditar_config` transforma em P1A-CONFIG-NAO-LIDA.
+        from preflight.economia import CHAVE_FONTE_NAO_LIDA
         self._no_lar_descartavel()
         for pid in _PROVEDORES:
             with self.subTest(provedor=pid):
-                self.assertEqual(preflight_capsula._config_persistida(pid),
-                                 {})
+                cfg = preflight_capsula._config_persistida(pid)
+                self.assertIn(CHAVE_FONTE_NAO_LIDA, cfg)
+                self.assertNotEqual(cfg, {})
 
     def test_json_ilegivel_nao_derruba_o_leitor(self):
         # Fail-safe do leitor: um JSON corrompido nao pode transformar a
@@ -282,8 +296,15 @@ class LeitorRealDeConfig(unittest.TestCase):
             f.write("{isto nao e json")
         self._escrever(".grok/bom.json", {"auto_topup": True})
         cfg = preflight_capsula._config_persistida("grok")
-        self.assertEqual(cfg, {"bom.json": {"auto_topup": True},
-                               "quebrado.json": {}})
+        # O arquivo quebrado carrega o marcador de fonte NAO LIDA sob a
+        # PROPRIA chave (P1-A.3.7, N2): antes ele virava `{}` e sumia da
+        # auditoria com cara de arquivo lido e limpo.
+        from preflight.economia import CHAVE_FONTE_NAO_LIDA
+        self.assertEqual(cfg["bom.json"], {"auto_topup": True})
+        self.assertEqual(list(cfg["quebrado.json"]), [CHAVE_FONTE_NAO_LIDA])
+        motivo = cfg["quebrado.json"][CHAVE_FONTE_NAO_LIDA][0]
+        self.assertTrue(motivo.endswith("quebrado.json: JSON invalido"),
+                        motivo)
 
 
 class LeitorUnicoParaOsDoisRunners(unittest.TestCase):

@@ -17,13 +17,31 @@ de um lar fora do pacote, e este e ele: um modulo de leitura, sem
 politica, cujos resultados sao entregues a `economia.auditar_config`.
 
 Os valores lidos NUNCA sao gravados: a auditoria devolve apenas nomes de
-campo. Fonte ausente, ilegivel ou vazia devolve `{}` — sempre por
-medicao do disco, jamais por cegueira escrita no fonte.
+campo.
+
+FALHA FECHADA (achado N2 da P1-A.3.7). Ate aqui, fonte ausente, ilegivel
+ou com JSON invalido devolvia `{}` — o MESMO valor de uma fonte lida e
+limpa. A distincao vivia na prosa desta docstring e o valor entregue a
+`auditar_config` nao a carregava. Agora ela vive no VALOR: fonte que nao
+pode ser lida devolve `{CHAVE_FONTE_NAO_LIDA: ["<fonte>: <motivo>"]}`, e
+`auditar_config` transforma isso em `P1A-CONFIG-NAO-LIDA`. Somente
+fonte lida DE FATO e vazia devolve `{}`.
+
+Consequencia declarada, e nao efeito colateral: um provedor cuja fonte
+declarada em `FONTES` nao exista na estacao passa a sair BLOCKED. E o
+resultado pretendido — "nao localizada" descrevendo o que nao foi
+procurado e o fundamento do MAJOR #1, e nao pode continuar valendo como
+prova de estacao limpa.
 """
 
 import json
 import os
 import tomllib
+
+from preflight.economia import CHAVE_FONTE_NAO_LIDA
+
+__all__ = ["CHAVE_FONTE_NAO_LIDA", "FONTES", "config_persistida",
+           "ler_json", "ler_jsons_do_diretorio", "ler_toml"]
 
 # Fontes reais por provedor, medidas na P1-A e na P1-A.3.5. Lista
 # explicita: um provedor sem fonte declarada nao vira `{}` silencioso.
@@ -36,30 +54,56 @@ FONTES = {
 }
 
 
+def nao_lida(fonte: str, motivo: str) -> dict:
+    """Valor que declara, no proprio conteudo, que a fonte nao foi lida.
+
+    Nunca e `{}`: e essa desigualdade que `auditar_config` consome para
+    falhar fechada. O motivo e o NOME da excecao ou uma frase curta —
+    jamais bytes do arquivo.
+    """
+    return {CHAVE_FONTE_NAO_LIDA: [f"{fonte}: {motivo}"]}
+
+
+def _juntar_nao_lidas(*dicts) -> list:
+    """Motivos de fonte-nao-lida de topo dos dicts, na ordem recebida."""
+    motivos = []
+    for d in dicts:
+        motivos.extend(d.get(CHAVE_FONTE_NAO_LIDA, ()))
+    return motivos
+
+
 def ler_json(caminho: str) -> dict:
     try:
         with open(os.path.expanduser(caminho), encoding="utf-8") as f:
             dado = json.load(f)
-        return dado if isinstance(dado, dict) else {}
-    except (OSError, ValueError):
-        return {}
+    except OSError as exc:
+        return nao_lida(caminho, type(exc).__name__)
+    except ValueError:
+        return nao_lida(caminho, "JSON invalido")
+    if not isinstance(dado, dict):
+        return nao_lida(caminho, f"topo {type(dado).__name__}, nao objeto")
+    return dado
 
 
 def ler_toml(caminho: str) -> dict:
     try:
         with open(os.path.expanduser(caminho), "rb") as f:
             return tomllib.load(f)
-    except (OSError, ValueError):
-        return {}
+    except OSError as exc:
+        return nao_lida(caminho, type(exc).__name__)
+    except ValueError:
+        return nao_lida(caminho, "TOML invalido")
 
 
 def ler_jsons_do_diretorio(caminho: str) -> dict:
     """Todo JSON de TOPO de um diretorio de config, sob a chave do arquivo.
 
-    Diretorio ausente, ilegivel ou sem JSON devolve `{}` — porem por
-    MEDICAO do disco, nunca por cegueira escrita no fonte. Cada arquivo
-    entra sob o proprio nome, de modo que o `alvo` da violacao nomeie o
-    arquivo que a carrega (`user-settings.json.auto_topup`).
+    Diretorio ausente ou ilegivel devolve o marcador de fonte NAO LIDA
+    (achado N2). Diretorio lido e SEM nenhum JSON devolve `{}` — este
+    sim por MEDICAO do disco. Cada arquivo entra sob o proprio nome, de
+    modo que o `alvo` da violacao nomeie o arquivo que a carrega
+    (`user-settings.json.auto_topup`), e o arquivo que nao pode ser lido
+    carregue o marcador sob a propria chave.
 
     Le o DIRETORIO em vez de um nome de arquivo fixo de proposito: um
     nome fixo seria invencao — nenhuma evidencia do acervo diz como o
@@ -68,8 +112,8 @@ def ler_jsons_do_diretorio(caminho: str) -> dict:
     base = os.path.expanduser(caminho)
     try:
         nomes = sorted(n for n in os.listdir(base) if n.endswith(".json"))
-    except OSError:
-        return {}
+    except OSError as exc:
+        return nao_lida(caminho, type(exc).__name__)
     return {n: ler_json(os.path.join(base, n)) for n in nomes}
 
 
@@ -105,7 +149,16 @@ def config_persistida(provider_id: str) -> dict:
         return ler_jsons_do_diretorio(caminho)
     if provider_id == "codex":
         auth = ler_json(caminho)
-        cfg = {k: v for k, v in auth.items() if k != "tokens"}
-        cfg.update(ler_toml("~/.codex/config.toml"))
+        toml = ler_toml("~/.codex/config.toml")
+        cfg = {k: v for k, v in auth.items()
+               if k not in ("tokens", CHAVE_FONTE_NAO_LIDA)}
+        cfg.update({k: v for k, v in toml.items()
+                    if k != CHAVE_FONTE_NAO_LIDA})
+        # As DUAS fontes do codex sao somadas, e os marcadores das duas
+        # tambem: sem esta juncao, um `update` faria a segunda fonte
+        # apagar o marcador da primeira e uma delas sumiria da auditoria.
+        motivos = _juntar_nao_lidas(auth, toml)
+        if motivos:
+            cfg[CHAVE_FONTE_NAO_LIDA] = motivos
         return cfg
     return ler_json(caminho)

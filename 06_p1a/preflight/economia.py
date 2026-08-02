@@ -74,6 +74,23 @@ _FLAGS_TOPUP = frozenset({
     "autotopup", "autotopupenabled", "extrausage", "extrausageenabled",
     "allowextracharges", "payasyougo",
 })
+# Chave RESERVADA que um leitor de config usa para dizer, no proprio
+# VALOR, que a fonte NAO foi lida — SSC+ P1-A.3.7, achado N2.
+#
+# O defeito: `ler_json`/`ler_toml` devolviam `{}` para fonte ausente,
+# ilegivel ou com JSON invalido, e `{}` e exatamente o que devolve uma
+# fonte lida e limpa. A distincao existia so na prosa da docstring; o
+# valor entregue a `auditar_config` nao a carregava, e nenhum consumidor
+# a jusante conseguia separar "li e nao ha nada" de "nao consegui ler".
+# Uma config PAYG numa fonte ilegivel saia daqui indistinguivel de
+# estacao limpa.
+#
+# A chave e reservada por construcao: comeca e termina com `__`, forma
+# que nenhuma config de CLI real usa, e `auditar_config` a consome ANTES
+# de qualquer outra regra. O valor e uma lista de motivos legiveis
+# (`"<fonte>: <motivo>"`) — nunca conteudo lido.
+CHAVE_FONTE_NAO_LIDA = "__fonte_nao_lida__"
+
 # Modos de auth reconhecidos como canal de assinatura/local. Qualquer
 # outro valor PRESENTE em auth_mode e desconhecido = DENY (fail-closed);
 # campo ausente/vazio e coberto pela regra de billing desconhecido.
@@ -116,6 +133,18 @@ class ChavePaygDetectada(ErroPreflight):
 class ConfigPaygPersistida(ErroPreflight):
     """Config persistida com chave PAYG, endpoint pago ou top-up ligado."""
     codigo = "P1A-PAYG-CONFIG"
+
+
+class ConfigNaoLida(ErroPreflight):
+    """Fonte de config ausente, ilegivel ou invalida: NUNCA e "limpa".
+
+    Falha FECHADA (achado N2): o que nao foi lido nao pode ser
+    classificado como limpo. Uma fonte que existe e nao abre, ou que abre
+    e nao parseia, pode carregar `api_key`, endpoint pago ou auto top-up —
+    e a ausencia da fonte declarada significa que se procurou no lugar
+    errado, que e o fundamento do MAJOR #1.
+    """
+    codigo = "P1A-CONFIG-NAO-LIDA"
 
 
 class OAuthAusente(ErroPreflight):
@@ -167,7 +196,7 @@ class DeclaracaoExpirada(ErroPreflight):
 
 
 _TIPOS_ERRO = {c.__name__: c for c in (
-    ChavePaygDetectada, ConfigPaygPersistida, OAuthAusente,
+    ChavePaygDetectada, ConfigPaygPersistida, ConfigNaoLida, OAuthAusente,
     PlanoNaoReconhecido, QuotaEsgotada, BillingDesconhecido,
     CliIndisponivel, ModeloRemovido, ConflitoAmbienteLogin,
     DeclaracaoExpirada)}
@@ -284,12 +313,26 @@ def _verdadeiro(valor) -> bool:
 def auditar_config(persistido: dict) -> list:
     """Detecta PAYG na configuracao persistida do CLI (auth.json, settings).
 
-    Tres violacoes: chave de API persistida substituindo OAuth; endpoint
-    PAYG configurado quando o canal deveria ser assinatura; flags de auto
-    top-up / extra usage ligados. Nunca retorna valores, somente caminhos.
+    Quatro violacoes: fonte NAO LIDA (achado N2 — falha fechada, avaliada
+    ANTES das demais); chave de API persistida substituindo OAuth;
+    endpoint PAYG configurado quando o canal deveria ser assinatura;
+    flags de auto top-up / extra usage ligados. Nunca retorna valores,
+    somente caminhos — o motivo da fonte nao lida e texto do proprio
+    leitor (`"<fonte>: <motivo>"`), jamais conteudo do arquivo.
+
+    A fonte nao lida e detectada em QUALQUER profundidade: o leitor de
+    diretorio aninha o marcador sob o nome do arquivo que falhou
+    (`grok.db.__fonte_nao_lida__`), e um marcador aninhado vale tanto
+    quanto um de topo.
     """
     violacoes = []
     for caminho, chave, valor in _achatar(persistido or {}):
+        if chave == CHAVE_FONTE_NAO_LIDA:
+            violacoes.append(ConfigNaoLida(
+                detalhe=f"fonte de config nao lida: {valor} — o que nao "
+                        "foi lido NAO e limpo (unknown_billing_mode = "
+                        "DENY)", alvo=caminho))
+            continue
         low = chave.lower()
         normalizado = _normalizar_nome(chave)
         if isinstance(valor, str) and valor.strip():
