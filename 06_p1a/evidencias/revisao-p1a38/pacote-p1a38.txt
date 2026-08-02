@@ -1,0 +1,1895 @@
+PACOTE DE REVISAO — SSC+ (laboratorio experimental, sem autoridade)
+
+Quem corrigiu nao certifica: correcao nao fecha por ter sido feita, fecha por revisor independente dizer que fechou.
+
+=== IDENTIDADE (ancorada em commit, nao no checkout) ===
+BASE:  9cb1a798ba594539a6476629940cbab5ffffb485  SSC+ P1-A.3.7 — registro e decisao: CONCLUIDA-COM-PULADOS
+ALVO:  bd055b9d39ca0d7323ba285dfbc25c77fb4c0049  SSC+ P1-A.3.8 FASE 4 — o remedio do MAJOR #5 nao reproduzia: medido e corrigido
+tree de ALVO: f0f039fd10848cb6cee65cca090736d844cae4c2
+commits entre BASE e ALVO: 10
+Todo conteudo abaixo vem de `git cat-file blob <commit>:<caminho>`. A arvore de trabalho NAO e lida — exceto pelo fonte do gerador, que e o objeto sob julgamento e nao pode vir do commit.
+
+=== GERADOR DESTE PACOTE (auto-incluido) ===
+arquivo: pacote_p1a37.py
+sha256 (bytes do arquivo, ANTES da redacao): c8edefd766ce426425e51c846abf40b96cbffc1d1ee5784f0e032ee96e9e9b37
+lido do DISCO, nao do commit: o objeto sob julgamento e o gerador que produziu este pacote.
+Confira com `sha256sum` sobre o arquivo do repositorio; se divergir, este pacote foi montado por outro codigo.
+
+#!/usr/bin/env python3
+"""Gerador deterministico de pacote de revisao — SSC+ P1-A.3.7.
+
+CORRIGE O MAJOR #5 / N6, que o pacote da P1-A.3.6 deixou aberto: ele
+mandava o revisor julgar a construcao do gerador e nao incluia o codigo
+do gerador. Aqui o fonte deste arquivo entra no pacote com o seu SHA-256
+ao lado (`autoinclusao.secao_do_gerador`), e a montagem PARA se o pacote
+pedir o julgamento sem carregar o objeto (`autoinclusao.conferir`).
+
+HERDA A ANCORAGEM (MAJOR #5, a metade que a P1-A.3.6 ja tinha certa):
+todo conteudo julgado vem de `git cat-file blob <ALVO>:<caminho>` — o
+banco de objetos, nunca a arvore de trabalho. Um checkout sujo, ou um
+checkout de OUTRO commit, produz o mesmo pacote.
+
+DUAS DIFERENCAS DELIBERADAS em relacao ao gerador da P1-A.3.6:
+
+1. ALVO e BASE sao ARGUMENTOS, nao constantes no fonte. Constante no
+   fonte obriga a editar o gerador a cada missao, e foi editando o
+   gerador que a lista de arquivos e o alvo divergiram antes;
+2. as listas de arquivos sao DERIVADAS de `git diff --name-status`, nao
+   escritas a mao. A lista literal precisava de conferencia contra o
+   banco de objetos para nao virar omissao silenciosa; derivada, ela nao
+   pode divergir do diff que descreve.
+
+EXCLUSOES, todas declaradas e nenhuma silenciosa:
+  1. o diff cobre os `.py` que EXISTEM em BASE; os `.py` novos entrariam
+     ali como a propria integra com prefixo `+`, e por isso entram
+     inteiros, uma vez, na secao de conteudo completo;
+  2. registro (`.md`) e evidencia (`.json`) alterados entram SOMENTE
+     como SHA-256 do blob em ALVO;
+  3. arquivo REMOVIDO entre BASE e ALVO entra como linha de remocao, com
+     o SHA-256 que ele tinha em BASE — sumir seria omissao;
+  4. nao entram timestamp, UUID, caminho absoluto, credencial nem lock;
+  5. usuario local (forma longa e 8.3) e prefixo de caminho local sao
+     redigidos.
+
+O QUE ESTE GERADOR NAO FAZ: nao envia, nao invoca provedor e nao decide
+quem revisa. Ele monta bytes num arquivo de saida, e nada mais.
+
+Uso: python 06_p1a/evidencias/pacote_p1a37.py <BASE> <ALVO> <saida>
+"""
+
+import hashlib
+import os
+import subprocess
+import sys
+from pathlib import Path
+
+RAIZ = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(RAIZ / "06_p1a" / "evidencias"))
+
+from autoinclusao import conferir, secao_do_gerador  # noqa: E402
+from contencao import redigir  # noqa: E402
+
+EXTENSOES_HASHEADAS = (".md", ".json", ".txt")
+
+
+def _git(*args: str) -> str:
+    return subprocess.run(
+        ["git", *args], cwd=RAIZ, capture_output=True, text=True,
+        encoding="utf-8", errors="replace", check=True).stdout
+
+
+def _blob(commit: str, rel: str) -> bytes:
+    """Bytes EXATOS do blob versionado — nunca o disco.
+
+    Esta funcao e a ancoragem. `git cat-file blob` devolve o objeto cru,
+    sem filtro de EOL e sem depender de `core.autocrlf`. Trocar por
+    leitura de arquivo reintroduz o MAJOR #5.
+    """
+    return subprocess.run(
+        ["git", "cat-file", "blob", f"{commit}:{rel}"], cwd=RAIZ,
+        capture_output=True, check=True).stdout
+
+
+def _classificar(base: str, alvo: str) -> dict:
+    """`git diff --name-status` -> listas por classe, sem lista literal."""
+    saida = _git("diff", "--name-status", "-z", base, alvo)
+    campos = [c for c in saida.split("\0") if c]
+    classes = {"modificados": [], "novos": [], "removidos": []}
+    i = 0
+    while i < len(campos) - 1:
+        estado, rel = campos[i][:1], campos[i + 1]
+        i += 2
+        destino = {"A": "novos", "D": "removidos"}.get(estado, "modificados")
+        classes[destino].append(rel)
+    for chave in classes:
+        classes[chave].sort()
+    return classes
+
+
+def montar_pacote(base: str, alvo: str) -> str:
+    # Portao de identidade ANCORADO NOS COMMITS, nao no checkout.
+    try:
+        alvo = _git("rev-parse", f"{alvo}^{{commit}}").strip()
+        base = _git("rev-parse", f"{base}^{{commit}}").strip()
+    except subprocess.CalledProcessError as exc:
+        raise SystemExit(
+            f"PARADA: commit alvo ou base ausente: {exc}") from exc
+    if subprocess.run(["git", "merge-base", "--is-ancestor", base, alvo],
+                      cwd=RAIZ).returncode != 0:
+        raise SystemExit(f"PARADA: {base} nao e ancestral de {alvo}")
+
+    classes = _classificar(base, alvo)
+    py_modificados = [r for r in classes["modificados"] if r.endswith(".py")]
+    py_novos = [r for r in classes["novos"] if r.endswith(".py")]
+    hasheados = [(r, alvo) for r in classes["modificados"] + classes["novos"]
+                 if r.endswith(EXTENSOES_HASHEADAS)]
+    hasheados += [(r, base) for r in classes["removidos"]]
+
+    partes = [
+        "PACOTE DE REVISAO — SSC+ (laboratorio experimental, sem "
+        "autoridade)\n",
+        "Quem corrigiu nao certifica: correcao nao fecha por ter sido "
+        "feita, fecha por revisor independente dizer que fechou.\n",
+        "=== IDENTIDADE (ancorada em commit, nao no checkout) ===",
+        f"BASE:  {base}  {_git('log', '-1', '--format=%s', base).strip()}",
+        f"ALVO:  {alvo}  {_git('log', '-1', '--format=%s', alvo).strip()}",
+        f"tree de ALVO: {_git('rev-parse', f'{alvo}^{{tree}}').strip()}",
+        f"commits entre BASE e ALVO: "
+        f"{_git('rev-list', '--count', f'{base}..{alvo}').strip()}",
+        "Todo conteudo abaixo vem de `git cat-file blob <commit>:<caminho>`."
+        " A arvore de trabalho NAO e lida — exceto pelo fonte do gerador,"
+        " que e o objeto sob julgamento e nao pode vir do commit.\n",
+        secao_do_gerador(__file__, redigir),
+        "=== EXCLUSOES DECLARADAS ===",
+        "1. diff so dos .py que existem em BASE; .py novos entram "
+        "inteiros na secao de conteudo completo, uma unica vez;",
+        "2. .md/.json/.txt alterados ou novos entram SOMENTE como "
+        "SHA-256 do blob em ALVO;",
+        "3. arquivo removido entra como linha de remocao com o SHA-256 "
+        "que tinha em BASE;",
+        "4. usuario local (forma longa e 8.3) e prefixo de caminho local "
+        "sao redigidos.\n",
+        f"=== DIFF DOS .PY MODIFICADOS ({len(py_modificados)}) ===",
+    ]
+    if py_modificados:
+        partes.append(_git("diff", base, alvo, "--", *py_modificados))
+    else:
+        partes.append("(nenhum .py modificado entre BASE e ALVO)\n")
+
+    partes.append(f"=== CONTEUDO COMPLETO DOS .PY NOVOS ({len(py_novos)}) ===")
+    for rel in py_novos:
+        partes.append(f"--- {rel} ---")
+        partes.append(_blob(alvo, rel).decode("utf-8", errors="replace"))
+
+    partes.append(f"=== SHA-256 DE REGISTROS E EVIDENCIAS ({len(hasheados)}) ===")
+    for rel, commit in sorted(hasheados):
+        marca = "removido em ALVO, hash de BASE" if commit == base else ""
+        digest = hashlib.sha256(_blob(commit, rel)).hexdigest()
+        partes.append(f"{digest}  {rel}  {marca}".rstrip())
+
+    partes.append(
+        "\n=== O QUE SE PEDE AO REVISOR ===\n"
+        "1. Cada correcao fecha o achado que diz fechar, ou so muda de "
+        "forma?\n"
+        "2. O teste de cada correcao exerce o caso que OCORRE em "
+        "operacao, ou um vizinho dele?\n"
+        "3. Ha defeito NOVO introduzido pelas correcoes?\n"
+        "4. O gerador DESTE pacote esta incluido acima, com o seu "
+        "SHA-256 — julgue-o tambem, e nao apenas o que ele produziu.\n"
+        "Responda um achado por linha, prefixado por CRITICAL | MAJOR | "
+        "MINOR | OBS, e termine com APROVADO | APROVADO-COM-RESSALVAS | "
+        "REPROVADO.\n")
+    return redigir("\n".join(partes))
+
+
+def main(argv=None) -> int:
+    argv = list(sys.argv[1:] if argv is None else argv)
+    if len(argv) != 3:
+        print("uso: pacote_p1a37.py <BASE> <ALVO> <saida>", file=sys.stderr)
+        return 2
+    base, alvo, saida = argv
+    texto = montar_pacote(base, alvo)
+    # N6: pedir julgamento sobre o gerador e omiti-lo e o defeito. O
+    # portao roda ANTES de a saida existir — pacote defeituoso nao chega
+    # a virar arquivo.
+    conferir(texto, __file__)
+    dados = texto.encode("utf-8")
+    with open(saida, "wb") as f:
+        f.write(dados)
+        f.flush()
+        os.fsync(f.fileno())
+    print(f"pacote: {saida}")
+    print(f"sha256: {hashlib.sha256(dados).hexdigest()}")
+    print(f"bytes:  {len(dados)}")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
+
+
+=== EXCLUSOES DECLARADAS ===
+1. diff so dos .py que existem em BASE; .py novos entram inteiros na secao de conteudo completo, uma unica vez;
+2. .md/.json/.txt alterados ou novos entram SOMENTE como SHA-256 do blob em ALVO;
+3. arquivo removido entra como linha de remocao com o SHA-256 que tinha em BASE;
+4. usuario local (forma longa e 8.3) e prefixo de caminho local sao redigidos.
+
+=== DIFF DOS .PY MODIFICADOS (0) ===
+(nenhum .py modificado entre BASE e ALVO)
+
+=== CONTEUDO COMPLETO DOS .PY NOVOS (9) ===
+--- 05_p0/tests/test_p0_kernel_attempt_p1a38.py ---
+"""P0-21 FASE 3 [3/6] — as cinco recusas do ExecutionAttempt.
+
+  L475 `criar_attempt`     attempt de outra linhagem (IS-1)
+  L491 `criar_attempt`     vinculos do attempt divergentes
+  L500 `criar_attempt`     workunit em estado que nao aceita attempt
+  L527 `concluir_attempt`  resultado fora do enum
+  L529 `concluir_attempt`  efeito_externo=incerto sem resultado indeterminado
+
+O attempt e o objeto que representa UMA chamada externa. As tres
+recusas da criacao correm ANTES de qualquer invocacao — e duas delas
+gravam evento de recusa, de modo que a tentativa fica na cadeia mesmo
+sem ter acontecido. As duas da conclusao protegem a outra ponta: o que
+foi registrado sobre uma chamada que ja ocorreu.
+
+A L529 e a mais importante das cinco e a que menos parece guarda:
+`efeito_externo == "incerto"` obriga `resultado == "indeterminado"`.
+E a regra IR-2 escrita como codigo — **efeito incerto nunca e assumido
+como sucesso**. Sem ela, uma chamada cujo efeito externo ninguem sabe
+poderia ser gravada como "sucesso" e a WorkUnit concluiria sobre um
+resultado que talvez nao exista.
+
+O CASO QUE OCORRE, por ramo:
+- L475/L491: o attempt chega com linhagem ou vinculos que nao sao os do
+  estado corrente — o `ExecutionGateway` os calcula na hora, de modo que
+  divergir e chegar de fora ou chegar velho;
+- L500: attempt para uma WorkUnit **ja concluida**. O fluxo real inteiro
+  e percorrido primeiro (forjar, decidir, executar, julgar) e so entao
+  se tenta o attempt — que e exatamente o despacho duplicado ou o retry
+  tardio;
+- L527/L529: o attempt existe, foi despachado de verdade, e a CONCLUSAO
+  e que carrega o valor invalido.
+
+O QUE ESTES TESTES NAO COBREM, declarado:
+- `RoutingDecision supersedada` (a outra recusa de `criar_attempt`) ja
+  era alcancada e nao e destes cinco ramos;
+- nada aqui prova que o provedor real produza `efeito_externo` correto:
+  na P0 o provedor e falso e deterministico, e quem preenche o campo e
+  o gateway;
+- nao se cobre conclusao concorrente do mesmo attempt;
+- os enums (`RESULTADOS_ATTEMPT`) sao tomados como dados: nao se afirma
+  que a lista seja a lista certa.
+"""
+
+import unittest
+
+import apoio
+from ssc_p0 import contratos as ct
+from ssc_p0.canonico import novo_id
+from ssc_p0.kernel import TransicaoIlegal, VinculoDivergente
+
+PERFIL = {"modalidade": "texto", "ferramentas": [], "formato_saida": "livre",
+          "contexto_max_tokens": 8000, "dominio": "geral",
+          "privacidade": "remoto-permitido", "latencia_max_ms": None,
+          "orcamento_max_custo": None}
+
+
+class RecusasDoAttempt(unittest.TestCase):
+
+    def setUp(self):
+        self.lab = apoio.novo_lab()
+        self.addCleanup(apoio.limpar_lab, self.lab)
+        self.kernel = self.lab.kernel
+        self.wu = self.lab.router.forjar(
+            intencao="tarefa base para as recusas de attempt",
+            criterios={"tipo": "saida-nao-vazia"}, tipo="ato", nivel="L2",
+            perfil=dict(PERFIL), classe="C1")
+        self.decisao = self.lab.router.propor_decisao(
+            self.wu, rota="padrao",
+            selecao=self.lab.selecao("prov-a", "modelo-x"),
+            aprovacao_custo=self.lab.aprovacao, motivo="decisao legitima")
+
+    def _attempt(self, **sobre) -> ct.ExecutionAttempt:
+        campos = {
+            "attempt_id": novo_id(), "work_unit_id": self.wu.work_unit_id,
+            "decisao_id": self.decisao.decisao_id,
+            "linhagem_id": self.kernel.envelope.linhagem_id,
+            "selecao_solicitada": dict(self.decisao.selecao),
+            "executor_resolvido": dict(self.decisao.selecao),
+            "executor_observado": None,
+            "vinculos": self.kernel.vinculos_correntes(
+                self.decisao.hash_pacote),
+            "inicio": None, "fim": None, "captura": {}, "resultado": None,
+            "efeito_externo": None, "custo_medido": None,
+            "artefato_ref": None}
+        campos.update(sobre)
+        return ct.ExecutionAttempt(**campos)
+
+    # --- criacao: antes de qualquer invocacao --------------------------
+
+    def test_attempt_de_outra_linhagem_e_recusado(self):
+        with self.assertRaises(VinculoDivergente) as ctx:
+            self.kernel.criar_attempt(
+                self._attempt(linhagem_id="linhagem-alheia"), None)
+        self.assertIn("outra linhagem", str(ctx.exception))
+
+    def test_attempt_com_vinculos_divergentes_e_recusado(self):
+        alvo = self._attempt(vinculos={"hash_envelope": "0" * 64})
+        with self.assertRaises(VinculoDivergente) as ctx:
+            self.kernel.criar_attempt(alvo, None)
+        self.assertIn("vinculos do attempt divergentes", str(ctx.exception))
+        self.assertNotIn(alvo.attempt_id, self.kernel.attempts)
+
+    def test_a_recusa_por_vinculos_deixa_evento_de_recusa_na_cadeia(self):
+        # RA-3: a tentativa recusada nao some. Um attempt barrado sem
+        # rastro seria indistinguivel de um attempt que nunca existiu.
+        antes = self.kernel.log.seq_atual()
+        with self.assertRaises(VinculoDivergente):
+            self.kernel.criar_attempt(
+                self._attempt(vinculos={"hash_envelope": "0" * 64}), None)
+        self.assertGreater(self.kernel.log.seq_atual(), antes)
+
+    def test_attempt_para_workunit_ja_concluida_e_recusado(self):
+        # O fluxo real inteiro primeiro; so entao o despacho tardio.
+        apoio.fluxo_sucesso(self.lab, intencao="tarefa que conclui")
+        concluidas = [w for w in self.kernel.work_units.values()
+                      if w.estado == "concluida"]
+        self.assertTrue(concluidas, "o fluxo nao concluiu nenhuma WorkUnit")
+        alvo = concluidas[0]
+        decisao_id = self.kernel.vigente[alvo.work_unit_id]
+        decisao = self.kernel.decisao_canonica(decisao_id)
+        attempt = self._attempt(
+            work_unit_id=alvo.work_unit_id, decisao_id=decisao_id,
+            selecao_solicitada=dict(decisao.selecao),
+            executor_resolvido=dict(decisao.selecao),
+            vinculos=self.kernel.vinculos_correntes(decisao.hash_pacote))
+        with self.assertRaises(TransicaoIlegal) as ctx:
+            self.kernel.criar_attempt(attempt, None)
+        self.assertIn("nao aceita attempt", str(ctx.exception))
+
+    # --- conclusao: o que se registra sobre a chamada ------------------
+
+    def _captura(self) -> dict:
+        """Captura estruturada REAL: bytes no CAS, como o gateway grava."""
+        ref = self.kernel.cas.gravar(b"saida de prova")
+        return {"saida_estruturada_ref": ref, "saida_final_ref": ref,
+                "stderr_ref": None, "codigo_saida": 0, "assinatura": None}
+
+    def _despachado(self) -> str:
+        attempt = self._attempt()
+        ev = self.kernel.criar_attempt(attempt, None)
+        self.kernel.despachar_attempt(attempt.attempt_id, ev.evento_id)
+        return attempt.attempt_id
+
+    def test_resultado_fora_do_enum_e_recusado(self):
+        attempt_id = self._despachado()
+        for ruim in ("ok", "passou", "SUCESSO", "indefinido"):
+            with self.subTest(resultado=ruim):
+                with self.assertRaises(ct.FalhaContrato) as ctx:
+                    self.kernel.concluir_attempt(
+                        attempt_id, ruim, "nenhum", self._captura(), None,
+                        None, None, None)
+                self.assertIn("resultado fora do enum", str(ctx.exception))
+
+    def test_efeito_incerto_com_resultado_de_sucesso_e_recusado(self):
+        # IR-2: efeito externo incerto NUNCA vira sucesso.
+        attempt_id = self._despachado()
+        for resultado in ("sucesso", "falha-transitoria"):
+            with self.subTest(resultado=resultado):
+                with self.assertRaises(ct.FalhaContrato) as ctx:
+                    self.kernel.concluir_attempt(
+                        attempt_id, resultado, "incerto", self._captura(),
+                        None, None, None, None)
+                self.assertIn("efeito_externo=incerto", str(ctx.exception))
+
+    def test_efeito_incerto_com_indeterminado_atravessa(self):
+        # A outra metade da regra: incerto + indeterminado e legitimo, e
+        # e assim que um attempt orfao termina. Sem esta contraprova, um
+        # guarda que recusasse todo "incerto" passaria acima.
+        attempt_id = self._despachado()
+        evento = self.kernel.concluir_attempt(
+            attempt_id, "indeterminado", "incerto", self._captura(), None,
+            None, None, None)
+        self.assertIsNotNone(evento.evento_id)
+        reg = self.kernel.attempts[attempt_id]
+        self.assertEqual(reg["attempt"].resultado, "indeterminado")
+
+    def test_conclusao_legitima_continua_atravessando(self):
+        attempt_id = self._despachado()
+        evento = self.kernel.concluir_attempt(
+            attempt_id, "sucesso", "nenhum", self._captura(), None, None,
+            None, None)
+        self.assertIsNotNone(evento.evento_id)
+        self.assertEqual(
+            self.kernel.attempts[attempt_id]["attempt"].resultado, "sucesso")
+
+
+if __name__ == "__main__":
+    unittest.main()
+
+--- 05_p0/tests/test_p0_kernel_ciclos_p1a38.py ---
+"""P0-21 FASE 3 [1/6] — os dois ramos de CICLO do grafo de WorkUnits.
+
+`SessionKernel._checar_ciclo` tem duas recusas, ambas medidas como NAO
+ALCANCADAS: ciclo pela cadeia de `parent_work_unit` e ciclo por
+`depende_de`. A tentacao e escrever um teste que mute uma WorkUnit ja
+registrada para fabricar o ciclo, e chamar isso de cobertura. Este
+arquivo faz o oposto: MEDE se o ramo e alcancavel pela interface real, e
+registra o resultado.
+
+MEDIDO, pela interface real e nao por leitura:
+
+    registrar_work_unit(wu, parent_work_unit=<ela mesma>)
+      -> FalhaContrato: parent_work_unit desconhecido
+    registrar_work_unit(wu, depende_de=[<ela mesma>])
+      -> FalhaContrato: depende_de desconhecido: 'wu-y'
+
+Nenhuma das duas alcanca `_checar_ciclo`: as recusas de "desconhecido"
+correm ANTES, na mesma funcao.
+
+POR QUE OS DOIS RAMOS SAO INALCANCAVEIS, e nao apenas "nao testados".
+E inducao sobre o grafo, e ela e curta:
+
+- toda WorkUnit registrada teve `parent_work_unit` e `depende_de`
+  conferidos contra `self.work_units` ANTES de entrar;
+- logo todo pai e toda dependencia ja estavam registrados;
+- logo o subgrafo dos registrados e aciclico, por construcao;
+- a WorkUnit NOVA ainda nao esta em `self.work_units`, de modo que
+  nenhuma aresta pode apontar para ela;
+- acrescentar um no cujas arestas so saem, a um grafo aciclico, nao
+  fecha ciclo.
+
+O caso que a operacao percorre, portanto, e a recusa POR DESCONHECIDO —
+e e ela que estes testes exercem. `_checar_ciclo` e DEFESA EM
+PROFUNDIDADE: a segunda linha, que so tem trabalho se a primeira cair.
+
+A REVERSAO PROVA A CAMADA. Removida a recusa de `depende_de
+desconhecido`, quem passa a recusar e `_checar_ciclo` — com a mensagem
+de ciclo. E a medicao de que as duas camadas nao sao a mesma, e de que
+a segunda de fato funciona quando chamada.
+
+O QUE ESTES TESTES NAO COBREM, declarado:
+- nao cobrem ciclo entre TRES ou mais WorkUnits: pela mesma inducao ele
+  tambem e inalcancavel, e encena-lo exigiria mutar o dicionario interno
+  do kernel — o vizinho que a regra proibe;
+- nao cobrem replay: `_aplicar` reinsere as WorkUnits na ordem de seq do
+  log, que e a ordem em que foram aceitas, de modo que a invariante e
+  preservada. Nada aqui prova isso — e afirmacao de leitura, e esta
+  declarada como tal;
+- nao se afirma que `_checar_ciclo` esteja CORRETO para todo grafo: o
+  que se mede e que a operacao nao chega ate ele.
+"""
+
+import unittest
+
+import apoio
+from ssc_p0 import contratos as ct
+from ssc_p0.canonico import canonico
+
+PERFIL = {"modalidade": "texto", "ferramentas": [], "formato_saida": "livre",
+          "contexto_max_tokens": 8000, "dominio": "geral",
+          "privacidade": "remoto-permitido", "latencia_max_ms": None,
+          "orcamento_max_custo": None}
+
+
+class CicloNoGrafoDeWorkUnits(unittest.TestCase):
+
+    def setUp(self):
+        self.lab = apoio.novo_lab()
+        self.addCleanup(apoio.limpar_lab, self.lab)
+        self.kernel = self.lab.kernel
+
+    def _wu(self, wid, **sobre) -> ct.WorkUnit:
+        ref = self.kernel.cas.gravar(
+            canonico({"work_unit_id": wid, "entradas": []}))
+        campos = {
+            "work_unit_id": wid,
+            "sessao_id": self.kernel.envelope.sessao_id,
+            "linhagem_id": self.kernel.envelope.linhagem_id,
+            "parent_work_unit": None, "tipo": "ato", "tipo_decisao": "tipo-2",
+            "intencao": f"intencao de {wid}", "criterios_aceite_ref": ref,
+            "nivel_capacidade": "L2", "perfil_capacidade": dict(PERFIL),
+            "classe_governanca": "C1", "contexto_ref": ref, "depende_de": [],
+            "estado": "proposta", "resultado_ref": None, "custo_medido": None}
+        campos.update(sobre)
+        return ct.WorkUnit(**campos)
+
+    # --- o caso que a operacao percorre --------------------------------
+
+    def test_workunit_que_se_declara_propria_mae_e_recusada(self):
+        with self.assertRaises(ct.FalhaContrato) as ctx:
+            self.kernel.registrar_work_unit(
+                self._wu("wu-x", parent_work_unit="wu-x"), None)
+        self.assertIn("parent_work_unit desconhecido", str(ctx.exception))
+
+    def test_workunit_que_depende_de_si_mesma_e_recusada(self):
+        with self.assertRaises(ct.FalhaContrato) as ctx:
+            self.kernel.registrar_work_unit(
+                self._wu("wu-y", depende_de=["wu-y"]), None)
+        self.assertIn("depende_de desconhecido", str(ctx.exception))
+
+    def test_dependencia_futura_e_recusada_antes_de_existir(self):
+        # A unica forma de fechar um ciclo seria uma aresta apontando
+        # para quem ainda nao nasceu. E exatamente isso que a recusa por
+        # "desconhecido" torna impossivel.
+        self.kernel.registrar_work_unit(self._wu("wu-a"), None)
+        with self.assertRaises(ct.FalhaContrato) as ctx:
+            self.kernel.registrar_work_unit(
+                self._wu("wu-b", depende_de=["wu-a", "wu-c"]), None)
+        self.assertIn("wu-c", str(ctx.exception))
+
+    def test_nada_e_gravado_quando_a_aresta_e_recusada(self):
+        # A recusa por "desconhecido" acontece ANTES de qualquer evento:
+        # `_registrar_recusa` so e chamado no ramo de ciclo, que nao e
+        # alcancado. Uma WorkUnit malformada nao deixa rastro no log.
+        antes = self.kernel.log.seq_atual()
+        with self.assertRaises(ct.FalhaContrato):
+            self.kernel.registrar_work_unit(
+                self._wu("wu-z", depende_de=["inexistente"]), None)
+        self.assertEqual(self.kernel.log.seq_atual(), antes)
+        self.assertNotIn("wu-z", self.kernel.work_units)
+
+    # --- a inducao, exercida em vez de afirmada -------------------------
+
+    def test_toda_cadeia_de_pais_registrada_termina_em_None(self):
+        # A propriedade de onde sai a inalcancabilidade: nenhum ciclo
+        # pode existir entre os registrados. Aqui ela e MEDIDA sobre uma
+        # cadeia real de tres niveis, percorrendo ate o fim.
+        self.kernel.registrar_work_unit(self._wu("wu-1"), None)
+        self.kernel.registrar_work_unit(
+            self._wu("wu-2", parent_work_unit="wu-1"), None)
+        self.kernel.registrar_work_unit(
+            self._wu("wu-3", parent_work_unit="wu-2"), None)
+        for inicio in ("wu-1", "wu-2", "wu-3"):
+            with self.subTest(de=inicio):
+                atual, passos = inicio, 0
+                while atual is not None:
+                    passos += 1
+                    self.assertLessEqual(passos, len(self.kernel.work_units))
+                    atual = self.kernel.work_units[atual].parent_work_unit
+                self.assertLessEqual(passos, 3)
+
+    def test_grafo_de_dependencias_registrado_e_aciclico(self):
+        self.kernel.registrar_work_unit(self._wu("wu-1"), None)
+        self.kernel.registrar_work_unit(
+            self._wu("wu-2", depende_de=["wu-1"]), None)
+        self.kernel.registrar_work_unit(
+            self._wu("wu-3", depende_de=["wu-1", "wu-2"]), None)
+        # Toda aresta aponta para um no que JA existia: a ordem de
+        # registro e, ela propria, uma ordenacao topologica.
+        ordem = list(self.kernel.work_units)
+        for i, wid in enumerate(ordem):
+            for dep in self.kernel.work_units[wid].depende_de:
+                with self.subTest(de=wid, para=dep):
+                    self.assertLess(ordem.index(dep), i)
+
+    # --- contraprova ----------------------------------------------------
+
+    def test_grafo_legitimo_continua_sendo_aceito(self):
+        # Sem ela, um `registrar_work_unit` que recusasse toda aresta
+        # passaria em todos os testes acima.
+        self.kernel.registrar_work_unit(self._wu("wu-raiz"), None)
+        evento = self.kernel.registrar_work_unit(
+            self._wu("wu-filha", parent_work_unit="wu-raiz",
+                     depende_de=["wu-raiz"]), None)
+        self.assertEqual(self.kernel.work_units["wu-filha"].parent_work_unit,
+                         "wu-raiz")
+        self.assertIsNotNone(evento.evento_id)
+
+
+if __name__ == "__main__":
+    unittest.main()
+
+--- 05_p0/tests/test_p0_kernel_contexto_p1a38.py ---
+"""P0-21 FASE 3 [5/6] — as duas recusas de `montar_contexto`.
+
+  L718 IC-2/IC-3: conteudo externo nao entra como instrucao executavel
+  L725 verbatim acima do teto: RECUSA, nunca resumo
+
+Sao as duas recusas que decidem o que entra no contexto de uma chamada
+— e, portanto, o que o modelo le. Sao guardas de CONTENCAO, nao de
+formato.
+
+**L718 e a fronteira entre citar e obedecer.** Um arquivo lido do disco
+com `papel="contrato"` e `inclusao` diferente de `referencia` entraria
+no pacote como texto que o executor pode tratar como instrucao. E a
+injecao por documento: quem escreve o arquivo passa a escrever a ordem.
+A regra da P0 e que conteudo externo entra como EVIDENCIA ou
+NORMA-CITADA, nunca como instrucao executavel.
+
+**L725 e a recusa que se recusa a resumir.** Acima do teto o kernel
+NAO resume, nao trunca e nao escolhe: para. Truncar silenciosamente
+seria pior que falhar — o pacote continuaria parecendo completo, e a
+proveniencia registraria um hash de algo que ninguem decidiu cortar.
+
+O CASO QUE OCORRE. As duas recusas sao exercidas **lendo arquivo de
+verdade do disco**, dentro das raizes declaradas (IC-5), pelo mesmo
+caminho que o `ExecutionGateway` usa para montar o pacote de uma
+WorkUnit. Nenhuma delas e alcancada passando `conteudo` inline — esse
+seria o vizinho, porque o ramo de L718 so existe no caminho de arquivo.
+
+O QUE ESTES TESTES NAO COBREM, declarado:
+- o teto `verbatim_ate` e um DADO de politica; nada aqui afirma que o
+  valor padrao seja o valor certo. O que se mede e que ele e respeitado
+  e que a decisao acima dele e recusar;
+- a lista de papeis que caracterizam instrucao executavel e enumerada
+  (`("contrato",)`): um papel novo com a mesma semantica passaria, e
+  isso e limite do guarda, nao do teste;
+- IC-5 (fuga de caminho) e IC-4 (segredo) sao outros guardas, ja
+  cobertos em `test_seguranca.py` e `test_p0_kernel_p1a37.py`;
+- nada aqui prova que o executor de fato trate `evidencia` de forma
+  diferente de `contrato` — a P0 nao invoca modelo.
+"""
+
+import os
+import unittest
+
+import apoio
+from ssc_p0 import contratos as ct
+from ssc_p0.canonico import novo_id
+from ssc_p0.kernel import VERBATIM_ATE_DEFAULT
+
+
+class RecusasDaMontagemDeContexto(unittest.TestCase):
+
+    def setUp(self):
+        self.lab = apoio.novo_lab()
+        self.addCleanup(apoio.limpar_lab, self.lab)
+        self.kernel = self.lab.kernel
+        self.wid = novo_id()
+        # Arquivo REAL, dentro das raizes de fontes declaradas do lab.
+        self.fonte = os.path.join(self.kernel.raizes_fontes[-1], "to1",
+                                  "entrada.txt")
+        self.assertTrue(os.path.isfile(self.fonte),
+                        "fixture de entrada ausente: o teste mediria nada")
+
+    # --- L718: citar nao e obedecer ------------------------------------
+
+    def test_arquivo_externo_como_contrato_executavel_e_recusado(self):
+        for inclusao in ("verbatim", "resumo"):
+            with self.subTest(inclusao=inclusao):
+                with self.assertRaises(ct.FalhaContrato) as ctx:
+                    self.kernel.montar_contexto(
+                        self.wid,
+                        [{"origem": self.fonte, "papel": "contrato",
+                          "inclusao": inclusao}])
+                self.assertIn("IC-2/IC-3", str(ctx.exception))
+                self.assertIn("instrucao executavel", str(ctx.exception))
+
+    def test_o_mesmo_arquivo_como_evidencia_atravessa(self):
+        # A outra metade da regra, e a contraprova de L718: o arquivo nao
+        # e proibido — o PAPEL e que decide. Sem ela, um guarda que
+        # recusasse toda leitura de disco passaria no teste acima.
+        pacote = self.kernel.montar_contexto(
+            self.wid, [{"origem": self.fonte, "papel": "evidencia",
+                             "inclusao": "verbatim"}])
+        self.assertEqual(len(pacote.entradas), 1)
+        self.assertEqual(pacote.entradas[0]["papel"], "evidencia")
+        self.assertTrue(pacote.entradas[0]["bytes_ref"])
+
+    def test_contrato_por_referencia_atravessa(self):
+        # A excecao declarada na propria regra: `contrato` e permitido
+        # quando entra por REFERENCIA — citado, nunca executavel.
+        pacote = self.kernel.montar_contexto(
+            self.wid, [{"origem": self.fonte, "papel": "contrato",
+                             "inclusao": "referencia"}])
+        self.assertEqual(pacote.entradas[0]["inclusao"], "referencia")
+
+    def test_nada_vai_para_o_CAS_quando_a_montagem_e_recusada(self):
+        # A recusa corre ANTES de a entrada ser gravada. Um pacote
+        # recusado que ja tivesse deixado bytes no CAS seria proveniencia
+        # de algo que nunca entrou em contexto nenhum.
+        antes = self._objetos_no_cas()
+        with self.assertRaises(ct.FalhaContrato):
+            self.kernel.montar_contexto(
+                self.wid, [{"origem": self.fonte, "papel": "contrato",
+                                 "inclusao": "verbatim"}])
+        self.assertEqual(self._objetos_no_cas(), antes)
+
+    def _objetos_no_cas(self) -> int:
+        raiz = os.path.join(self.kernel.raiz, "cas")
+        if not os.path.isdir(raiz):
+            return 0
+        return sum(len(arqs) for _, _, arqs in os.walk(raiz))
+
+    # --- L725: acima do teto, recusa — nunca resumo --------------------
+
+    def test_verbatim_acima_do_teto_e_recusado_e_nao_resumido(self):
+        grande = b"L" * (VERBATIM_ATE_DEFAULT + 1)
+        with self.assertRaises(ct.FalhaContrato) as ctx:
+            self.kernel.montar_contexto(
+                self.wid, [{"origem": "inline:grande",
+                                 "papel": "evidencia", "inclusao": "verbatim",
+                                 "conteudo": grande}])
+        self.assertIn("recusa", str(ctx.exception))
+        self.assertIn("nunca resume", str(ctx.exception))
+
+    def test_o_teto_e_configuravel_e_a_recusa_o_respeita(self):
+        # Mede que o guarda le a POLITICA, e nao uma constante embutida:
+        # com um teto menor, o mesmo conteudo que passava e recusado.
+        conteudo = b"L" * 64
+        pacote = self.kernel.montar_contexto(
+            self.wid, [{"origem": "inline:medio", "papel": "evidencia",
+                             "inclusao": "verbatim", "conteudo": conteudo}])
+        self.assertEqual(len(pacote.entradas), 1)
+        with self.assertRaises(ct.FalhaContrato) as ctx:
+            self.kernel.montar_contexto(
+                self.wid, [{"origem": "inline:medio",
+                                 "papel": "evidencia", "inclusao": "verbatim",
+                                 "conteudo": conteudo}],
+                politica_inclusao={"verbatim_ate": 32})
+        self.assertIn("32 bytes", str(ctx.exception))
+
+    def test_no_limite_exato_o_conteudo_atravessa(self):
+        # A fronteira e fechada do lado certo: `> teto` recusa, `== teto`
+        # passa. Sem esta medicao, um erro de um byte ficaria invisivel.
+        no_limite = b"L" * VERBATIM_ATE_DEFAULT
+        pacote = self.kernel.montar_contexto(
+            self.wid, [{"origem": "inline:limite", "papel": "evidencia",
+                             "inclusao": "verbatim", "conteudo": no_limite}])
+        self.assertEqual(len(pacote.entradas), 1)
+
+    def test_acima_do_teto_por_REFERENCIA_atravessa(self):
+        # Contraprova de L725: o teto e do VERBATIM. A mesma massa de
+        # bytes entra por referencia sem recusa — o guarda nao e um
+        # limite de tamanho geral.
+        grande = b"L" * (VERBATIM_ATE_DEFAULT + 1)
+        pacote = self.kernel.montar_contexto(
+            self.wid, [{"origem": "inline:grande", "papel": "evidencia",
+                             "inclusao": "referencia", "conteudo": grande}])
+        self.assertEqual(len(pacote.entradas), 1)
+
+
+if __name__ == "__main__":
+    unittest.main()
+
+--- 05_p0/tests/test_p0_kernel_decisao_p1a38.py ---
+"""P0-21 FASE 3 [2/6] — as quatro recusas de RoutingDecision.
+
+Quatro ramos medidos como NAO ALCANCADOS:
+
+  L431 `registrar_decisao`  decisao para workunit desconhecida
+  L434 `registrar_decisao`  vinculos divergentes do estado corrente
+  L438 `registrar_decisao`  reroteamento sem supersede = vigente
+  L461 `decisao_canonica`   decisao desconhecida
+
+A RoutingDecision e o objeto que autoriza gasto. Tudo o que a P0
+promete sobre custo — teto zero, nenhuma chamada sem rota aprovada —
+depende de a decisao registrada ser a MESMA que a execucao usa. Estes
+quatro ramos sao o que impede uma decisao solta, de outra WorkUnit, de
+outro estado ou simplesmente inexistente de virar autorizacao.
+
+O CASO QUE OCORRE, por ramo — medido antes de escrito:
+
+- **L431** e exercido pelo **router real**: `propor_decisao` sobre uma
+  WorkUnit que nunca foi registrada. Nao e o kernel chamado a seco: e o
+  caminho por onde toda decisao nasce;
+- **L434** e a decisao cujos vinculos nao descrevem mais o estado. Ela
+  so pode CHEGAR ao kernel ja divergente — o router os calcula na hora
+  —, e chegar divergente e exatamente o que o guarda nomeia: pacote
+  trocado sob uma decisao com o resto intacto;
+- **L438** e o reroteamento que nao aponta para a decisao vigente. O
+  `TaskRouter.rerotear` preenche `supersede` sozinho, de modo que este
+  ramo e a rede que pega quem NAO passa pelo router;
+- **L461** e exercido pelo seu **ponto de chamada**, `criar_attempt`, e
+  nao pela funcao a seco. E ali que a decisao desconhecida seria
+  transformada em gasto.
+
+O QUE ESTES TESTES NAO COBREM, declarado:
+- `DecisaoMutada` (mutacao apos o registro) nao e destes quatro ramos e
+  nao e coberta aqui;
+- os tres ramos de `registrar_decisao` sao exercidos com objetos
+  PRODUZIDOS PELO ROUTER e alterados em um campo. Nao ha, no acervo,
+  um segundo produtor de RoutingDecision, de modo que "decisao que
+  chega divergente" e uma hipotese sobre um chamador futuro — declarada
+  como tal, nao mascarada;
+- nada aqui prova que a Policy vete o que deve vetar: o veto corre
+  ANTES e e outro guarda (`P0-24`);
+- nao se cobre reroteamento concorrente.
+"""
+
+import dataclasses
+import unittest
+
+import apoio
+from ssc_p0 import contratos as ct
+from ssc_p0.canonico import novo_id
+from ssc_p0.kernel import VinculoDivergente
+
+PERFIL = {"modalidade": "texto", "ferramentas": [], "formato_saida": "livre",
+          "contexto_max_tokens": 8000, "dominio": "geral",
+          "privacidade": "remoto-permitido", "latencia_max_ms": None,
+          "orcamento_max_custo": None}
+
+
+class RecusasDeRoutingDecision(unittest.TestCase):
+
+    def setUp(self):
+        self.lab = apoio.novo_lab()
+        self.addCleanup(apoio.limpar_lab, self.lab)
+        self.kernel = self.lab.kernel
+        self.wu = self.lab.router.forjar(
+            intencao="tarefa base para as recusas de decisao",
+            criterios={"tipo": "saida-nao-vazia"}, tipo="ato", nivel="L2",
+            perfil=dict(PERFIL), classe="C1")
+
+    def _decisao(self, **sobre) -> ct.RoutingDecision:
+        d = self.lab.router.propor_decisao(
+            self.wu, rota="padrao",
+            selecao=self.lab.selecao("prov-a", "modelo-x"),
+            aprovacao_custo=self.lab.aprovacao, motivo="decisao legitima")
+        return dataclasses.replace(d, **sobre) if sobre else d
+
+    # --- L431: decisao para WorkUnit desconhecida ----------------------
+
+    def test_router_recusa_decisao_para_workunit_nunca_registrada(self):
+        # Pelo ROUTER, que e por onde toda decisao nasce.
+        solta = dataclasses.replace(self.wu, work_unit_id="wu-nao-registrada")
+        with self.assertRaises(ct.FalhaContrato) as ctx:
+            self.lab.router.propor_decisao(
+                solta, rota="padrao",
+                selecao=self.lab.selecao("prov-a", "modelo-x"),
+                aprovacao_custo=self.lab.aprovacao, motivo="solta")
+        self.assertIn("workunit desconhecida", str(ctx.exception))
+
+    def test_decisao_para_workunit_desconhecida_nao_fica_vigente(self):
+        # O dano nao e a excecao: e a decisao solta virar autorizacao.
+        solta = dataclasses.replace(self.wu, work_unit_id="wu-fantasma")
+        with self.assertRaises(ct.FalhaContrato):
+            self.lab.router.propor_decisao(
+                solta, rota="padrao",
+                selecao=self.lab.selecao("prov-a", "modelo-x"),
+                aprovacao_custo=self.lab.aprovacao, motivo="solta")
+        self.assertNotIn("wu-fantasma", self.kernel.vigente)
+
+    # --- L434: vinculos divergentes ------------------------------------
+
+    def test_decisao_com_pacote_trocado_e_recusada(self):
+        trocada = self._decisao(decisao_id=novo_id(), hash_pacote="0" * 64)
+        with self.assertRaises(VinculoDivergente) as ctx:
+            self.kernel.registrar_decisao(trocada, None)
+        self.assertIn("vinculos da decisao divergem", str(ctx.exception))
+
+    def test_decisao_divergente_nao_entra_no_indice_de_decisoes(self):
+        trocada = self._decisao(decisao_id=novo_id(), hash_pacote="0" * 64)
+        with self.assertRaises(VinculoDivergente):
+            self.kernel.registrar_decisao(trocada, None)
+        self.assertNotIn(trocada.decisao_id, self.kernel.decisoes)
+
+    # --- L438: supersede fora da vigente -------------------------------
+
+    def test_reroteamento_sem_supersede_da_vigente_e_recusado(self):
+        self._decisao()  # ha uma decisao vigente
+        errada = self._decisao(decisao_id=novo_id(),
+                               supersede="decisao-que-nunca-existiu")
+        with self.assertRaises(ct.FalhaContrato) as ctx:
+            self.kernel.registrar_decisao(errada, None)
+        self.assertIn("supersede = decisao vigente", str(ctx.exception))
+
+    def test_o_router_preenche_supersede_sozinho_e_o_reroteamento_passa(self):
+        # Contraprova e medicao ao mesmo tempo: o caminho legitimo do
+        # reroteamento nao depende de quem chama acertar o campo.
+        primeira = self._decisao()
+        segunda = self.lab.router.rerotear(
+            self.wu, rota="padrao",
+            selecao=self.lab.selecao("prov-a", "modelo-x"),
+            aprovacao_custo=self.lab.aprovacao, motivo="nova rodada")
+        self.assertEqual(segunda.supersede, primeira.decisao_id)
+        self.assertEqual(self.kernel.vigente[self.wu.work_unit_id],
+                         segunda.decisao_id)
+
+    # --- L461: decisao desconhecida, no PONTO DE CHAMADA ---------------
+
+    def test_attempt_que_aponta_para_decisao_inexistente_e_recusado(self):
+        # O ponto de chamada de `decisao_canonica` e `criar_attempt` — e
+        # e ali que a decisao desconhecida viraria gasto.
+        decisao = self._decisao()
+        attempt = ct.ExecutionAttempt(
+            attempt_id=novo_id(), work_unit_id=self.wu.work_unit_id,
+            linhagem_id=self.kernel.envelope.linhagem_id,
+            decisao_id="decisao-que-nao-existe",
+            selecao_solicitada=dict(decisao.selecao),
+            executor_resolvido=dict(decisao.selecao),
+            executor_observado=None,
+            vinculos=self.kernel.vinculos_correntes(decisao.hash_pacote),
+            inicio=None, fim=None, captura={}, resultado=None,
+            efeito_externo="nenhum", custo_medido=None, artefato_ref=None)
+        with self.assertRaises(ct.FalhaContrato) as ctx:
+            self.kernel.criar_attempt(attempt, None)
+        self.assertIn("decisao desconhecida", str(ctx.exception))
+        self.assertNotIn(attempt.attempt_id, self.kernel.attempts)
+
+    # --- contraprova geral ---------------------------------------------
+
+    def test_o_fluxo_legitimo_continua_registrando_e_executando(self):
+        # Sem ela, um `registrar_decisao` que recusasse sempre passaria
+        # em todos os testes acima e ninguem veria.
+        decisao = self._decisao()
+        self.assertEqual(self.kernel.vigente[self.wu.work_unit_id],
+                         decisao.decisao_id)
+        self.assertIs(self.kernel.decisao_canonica(decisao.decisao_id),
+                      self.kernel.decisoes[decisao.decisao_id])
+        resultado = self.lab.execution.executar(
+            self.wu, decisao, idempotency_key="idem-ok", entrada=b"dados")
+        self.assertEqual(resultado.status, "sucesso")
+
+
+if __name__ == "__main__":
+    unittest.main()
+
+--- 05_p0/tests/test_p0_kernel_retomada_p1a38.py ---
+"""P0-21 FASE 3 [6/6] — checkpoint, suspensao e retomada (IP-1 / IP-2).
+
+  L817 checkpoint reprovado pelo Juiz 1        INALCANCAVEL (medido)
+  L841 suspensao exige checkpoint gravado      ALCANCAVEL
+  L883 selo do envelope divergente             ALCANCAVEL
+  L893 evento de outra linhagem no replay      ALCANCAVEL
+  L897 causado_por fora da cadeia no replay    ALCANCAVEL
+  L902 payload ausente no CAS                  ALCANCAVEL
+  L931 nenhum checkpoint para a sessao         ALCANCAVEL
+  L963 ancora do checkpoint fora da cadeia     ALCANCAVEL
+
+Estes sao os guardas de RETOMADA. Eles decidem se uma sessao que caiu
+pode voltar — e a regra IP-1 e que retomar exige checkpoint valido MAIS
+log verificado, **nunca inferencia**. IP-2 diz o que fazer quando algo
+nao bate: a sessao **nao retoma**, e o chamador escalona. Um kernel que
+retomasse "do jeito que der" produziria uma linhagem que ninguem pode
+reconstruir — e a P0 inteira existe para que um terceiro possa.
+
+## O CASO QUE OCORRE: corrupcao no disco, feita no disco
+
+Nenhuma destas recusas e alcancada por objeto montado em memoria. Todas
+partem de uma sessao REAL que rodou o fluxo inteiro, gravou checkpoint,
+suspendeu e caiu (`_simular_crash`), e entao **o disco e mutado**:
+
+- **L883**: o `.envelope.json` e reescrito com `politica_ref` trocado.
+  O selo HMAC deixa de bater e a sessao nao retoma;
+- **L893/L897**: o `.jsonl` e **reescrito inteiro**, com a cadeia
+  `prev_event_hash` RECOMPUTADA linha a linha. Isto e importante: a
+  cadeia do EventLog e SHA-256, nao HMAC — quem tem o arquivo pode
+  refazer a cadeia. Os dois guardas sao exatamente a defesa contra isso:
+  a cadeia ficar integra e o CONTEUDO nao pertencer a esta sessao;
+- **L902**: o objeto do CAS referenciado pelo primeiro evento e
+  APAGADO. E a corrupcao parcial — o log intacto apontando para bytes
+  que sumiram;
+- **L963**: o checkpoint e reescrito com uma ancora que nao existe na
+  cadeia **e re-selado com a chave local**. Sem re-selar, quem recusa e
+  o selo (outro guarda) e este ramo nunca e alcancado — a chave de selo
+  e local, de modo que re-selar e o que um adversario com acesso ao
+  disco faria. Registrar essa distincao e o que separa medir de supor;
+- **L841/L931**: suspender sem checkpoint, e retomar sem checkpoint.
+
+## O INALCANCAVEL, medido
+
+`L817` levanta quando o Juiz 1 REPROVA o checkpoint que o proprio
+kernel acabou de montar. Medido: numa sessao real
+`gravar_checkpoint()` e sempre APROVADO — `_estado_refs()` preenche
+`envelope`, `ultimo_evento_hash` e `seq` a partir do estado corrente, e
+`seq` ja vale 1 na abertura, de modo que as tres condicoes do Juiz 1
+estao satisfeitas por construcao. E defesa em profundidade contra
+`_estado_refs` regredir. O que se exerce aqui e a invariante: um
+checkpoint recem-gravado sai APROVADO e com `seq >= 1`.
+
+O QUE ESTES TESTES NAO COBREM, declarado:
+- nao cobrem `EventoTruncado`/`EventoAdulterado` vindos de
+  `EventLog.verificar` — sao guardas do P0-15, ja cobertos;
+- a re-selagem de L963 usa `kernel._selo`, que e o mesmo que ter a
+  `chave_selo.bin` local. Nada aqui prova o que aconteceria se a chave
+  fosse remota ou de hardware;
+- attempts orfaos (`indeterminado`/`incerto`) sao consequencia da
+  retomada bem-sucedida e nao sao destes ramos;
+- nao se cobre retomada concorrente da mesma sessao (o lock de escritor
+  unico e P0-26);
+- nao se afirma nada sobre durabilidade real apos queda de energia.
+"""
+
+import glob
+import json
+import os
+import unittest
+
+import apoio
+from ssc_p0.canonico import canonico, sha256_bytes
+from ssc_p0.judge import Juiz1
+from ssc_p0.kernel import (CheckpointInvalido, CorrupcaoDetectada,
+                           EventoAdulterado, SessionKernel)
+
+
+class RetomadaEIntegridade(unittest.TestCase):
+
+    def setUp(self):
+        self.lab = apoio.novo_lab()
+        self.addCleanup(apoio.limpar_lab, self.lab)
+        self.kernel = self.lab.kernel
+        self.sid = self.lab.envelope.sessao_id
+        self.raiz = self.lab.raiz
+
+    # --- caminhos que nao dependem de corromper nada -------------------
+
+    def test_suspender_sem_checkpoint_e_recusado(self):
+        # IP-1: suspender sem ponto de retomada seria perder a sessao.
+        with self.assertRaises(CheckpointInvalido) as ctx:
+            self.kernel.suspender()
+        self.assertIn("exige checkpoint gravado", str(ctx.exception))
+
+    def test_retomar_sessao_sem_checkpoint_e_recusado(self):
+        apoio.fluxo_sucesso(self.lab)
+        self.kernel.fechar()
+        with self.assertRaises(CheckpointInvalido) as ctx:
+            SessionKernel.retomar(self.raiz, self.sid, relogio=self.lab.relogio)
+        self.assertIn("nenhum checkpoint para a sessao", str(ctx.exception))
+
+    def test_checkpoint_recem_gravado_sai_aprovado_pelo_juiz1(self):
+        # A invariante de onde sai a inalcancabilidade de L817.
+        apoio.fluxo_sucesso(self.lab)
+        checkpoint = self.kernel.gravar_checkpoint()
+        self.assertTrue(checkpoint.validacao["aprovado"])
+        self.assertEqual(checkpoint.validacao["falhas"], [])
+        self.assertGreaterEqual(checkpoint.estado_refs["seq"], 1)
+        # E o proprio Juiz 1, reexecutado sobre o corpo, concorda.
+        corpo = {c: v for c, v in checkpoint.to_dict().items()
+                 if c not in ("validacao", "selo")}
+        self.assertTrue(Juiz1.validar_checkpoint(corpo)["aprovado"])
+
+    # --- corrupcao FEITA NO DISCO --------------------------------------
+
+    def _sessao_caida(self):
+        """Fluxo real + checkpoint + suspensao + queda."""
+        apoio.fluxo_sucesso(self.lab)
+        self.kernel.gravar_checkpoint()
+        self.kernel.suspender()
+        self.kernel._simular_crash()
+
+    def _retomar(self):
+        return SessionKernel.retomar(self.raiz, self.sid,
+                                     relogio=self.lab.relogio)
+
+    def _caminho_log(self) -> str:
+        return os.path.join(self.raiz, "logs", f"{self.sid}.jsonl")
+
+    def _caminho_envelope(self) -> str:
+        return os.path.join(self.raiz, "sessoes",
+                            f"{self.sid}.envelope.json")
+
+    def test_retomada_legitima_funciona(self):
+        # Contraprova, e ela vem PRIMEIRO: sem ela, tudo abaixo passaria
+        # com um `retomar` que sempre levantasse.
+        self._sessao_caida()
+        k2 = self._retomar()
+        self.addCleanup(k2.fechar)
+        self.assertEqual(k2.envelope.sessao_id, self.sid)
+        self.assertTrue(k2.work_units)
+
+    def test_envelope_adulterado_nao_retoma(self):
+        self._sessao_caida()
+        dados = json.loads(open(self._caminho_envelope(), "rb").read())
+        dados["politica_ref"] = "0" * 64
+        with open(self._caminho_envelope(), "wb") as f:
+            f.write(canonico(dados))
+        with self.assertRaises(CheckpointInvalido) as ctx:
+            self._retomar()
+        self.assertIn("selo do envelope divergente", str(ctx.exception))
+
+    def test_payload_apagado_do_cas_nao_retoma(self):
+        self._sessao_caida()
+        primeira = open(self._caminho_log(), "rb").read().split(b"\n")[0]
+        ref = json.loads(primeira)["payload_ref"]
+        alvo = os.path.join(self.raiz, "cas", "objetos", ref[:2], ref[2:4],
+                            ref)
+        self.assertTrue(os.path.exists(alvo), "o payload nem existia")
+        os.remove(alvo)
+        with self.assertRaises(CorrupcaoDetectada) as ctx:
+            self._retomar()
+        self.assertIn("payload ausente no CAS", str(ctx.exception))
+
+    def _reescrever_log(self, muta) -> None:
+        """Reescreve o log com a cadeia prev_event_hash RECOMPUTADA.
+
+        A cadeia do EventLog e SHA-256, nao HMAC: quem tem o arquivo
+        pode refaze-la. Isto encena exatamente esse adversario.
+        """
+        caminho = self._caminho_log()
+        linhas = open(caminho, "rb").read().split(b"\n")
+        linhas = [linha for linha in linhas if linha]
+        eventos = [json.loads(linha) for linha in linhas]
+        anterior = eventos[0]["prev_event_hash"]  # genese, preservada
+        saida = []
+        for i, evento in enumerate(eventos):
+            muta(i, evento)
+            evento["prev_event_hash"] = anterior
+            linha = canonico(evento)
+            saida.append(linha)
+            anterior = sha256_bytes(linha)
+        with open(caminho, "wb") as f:
+            f.write(b"\n".join(saida) + b"\n")
+
+    def test_evento_de_outra_linhagem_com_cadeia_integra_nao_retoma(self):
+        self._sessao_caida()
+        self._reescrever_log(
+            lambda i, ev: ev.__setitem__("linhagem_id", "linhagem-alheia"))
+        with self.assertRaises(EventoAdulterado) as ctx:
+            self._retomar()
+        self.assertIn("outra linhagem", str(ctx.exception))
+
+    def test_causado_por_fora_da_cadeia_com_cadeia_integra_nao_retoma(self):
+        self._sessao_caida()
+
+        def apontar_para_o_nada(i, ev):
+            if i >= 1:
+                ev["causado_por"] = "evento-que-nunca-existiu"
+
+        self._reescrever_log(apontar_para_o_nada)
+        with self.assertRaises(EventoAdulterado) as ctx:
+            self._retomar()
+        self.assertIn("causado_por fora da cadeia", str(ctx.exception))
+
+    def test_checkpoint_re_selado_com_ancora_falsa_nao_retoma(self):
+        # O ramo so e alcancado com o checkpoint RE-SELADO: sem isso quem
+        # recusa e o selo, que e outro guarda. A chave de selo e LOCAL,
+        # de modo que re-selar e o que um adversario com o disco faria.
+        self._sessao_caida()
+        arquivo = glob.glob(os.path.join(self.raiz, "checkpoints", self.sid,
+                                         "*.json"))[0]
+        checkpoint = json.loads(open(arquivo, "rb").read())
+        checkpoint["estado_refs"]["ultimo_evento_hash"] = "f" * 64
+        corpo = {c: v for c, v in checkpoint.items()
+                 if c not in ("validacao", "selo")}
+        checkpoint["selo"] = self.kernel._selo(canonico(corpo))
+        with open(arquivo, "wb") as f:
+            f.write(canonico(checkpoint))
+        with self.assertRaises(CheckpointInvalido) as ctx:
+            self._retomar()
+        self.assertIn("fora da cadeia", str(ctx.exception))
+
+
+if __name__ == "__main__":
+    unittest.main()
+
+--- 05_p0/tests/test_p0_kernel_veredito_p1a38.py ---
+"""P0-21 FASE 3 [4/6] — as sete recusas de `registrar_veredito`.
+
+  L607 attempt nao concluido                    ALCANCAVEL
+  L613 veredito para workunit desconhecida      ALCANCAVEL
+  L621 decisao do attempt fora da cadeia da WU  INALCANCAVEL (medido)
+  L625 veredito fora da linhagem da sessao      INALCANCAVEL (medido)
+  L633 contexto_ref divergente do da WorkUnit   ALCANCAVEL
+  L658 IV-1: juiz sem independencia             ALCANCAVEL
+  L660 veredito com workunit em estado errado   ALCANCAVEL
+
+O veredito e o que CONCLUI uma WorkUnit. Depois dele a WU sai do fluxo
+e o resultado entra na linhagem como fato. As sete recusas existem para
+que nenhum veredito conclua o que nao julgou.
+
+## Os cinco alcancaveis, pelo caminho que a operacao percorre
+
+Todos partem do FLUXO REAL — forjar, decidir, executar pelo gateway,
+julgar por `Juiz1.julgar` — e nao de vereditos montados a mao:
+
+- **L607**: um attempt CRIADO e DESPACHADO de verdade, mas ainda nao
+  concluido. E o julgamento que chega antes da resposta;
+- **L613**: veredito cujo `alvo.work_unit_id` nao existe;
+- **L633**: veredito com `contexto_ref` que nao e o da WorkUnit — o juiz
+  que julgou olhando outro contexto;
+- **L658**: **IV-1**, e o mais importante dos sete. Um juiz da camada
+  `juiz-llm` sem independencia declarada. O fluxo de duas camadas e
+  percorrido de verdade (`Juiz1.julgar(conclui=False)` deixa a WU em
+  `aguardando-validacao`, que e como a segunda camada a encontra) e so
+  entao chega o veredito do juiz nao independente;
+- **L660**: julgar duas vezes. A WorkUnit ja esta `concluida`, e um
+  segundo veredito a reabriria.
+
+## Os dois INALCANCAVEIS — medidos, nao presumidos
+
+`L621` exige `attempt.decisao_id` apontando para uma decisao de OUTRA
+WorkUnit. Mas `criar_attempt` recusa todo attempt cuja `decisao_id` nao
+seja a **vigente da propria WorkUnit** (`self.vigente.get(...)`), e a
+decisao vigente de uma WorkUnit tem, por construcao,
+`decisao.work_unit_id` igual a ela. Nao ha attempt registrado que
+viole isso.
+
+`L625` exige `attempt.linhagem_id` ou `wu.linhagem_id` fora da linhagem
+da sessao. Os dois campos sao conferidos na ENTRADA — `criar_attempt`
+recusa o attempt (IS-1, testado em `test_p0_kernel_attempt_p1a38`) e
+`registrar_work_unit` recusa a WorkUnit. Nada com linhagem errada chega
+a existir.
+
+Os dois sao DEFESA EM PROFUNDIDADE. O que este arquivo exerce e a
+propriedade de onde sai a inalcancabilidade — que todo attempt
+registrado aponta para a decisao vigente da propria WorkUnit, e que
+tudo esta na linhagem da sessao — em vez de fabricar o estado que a
+operacao nao produz.
+
+O QUE ESTES TESTES NAO COBREM, declarado:
+- IV-2 (veto deterministico nao anulavel), IV-3 (`criterios_ref`),
+  `artefato_ref` fora da cadeia e "veredito cruzado" ja eram
+  alcancados e nao sao destes sete ramos;
+- o `Juiz2` real (juiz-llm falso deterministico) nao e usado: o
+  veredito de camada `juiz-llm` e montado a partir do veredito
+  deterministico REAL, alterando apenas camada e independencia. Nada
+  aqui prova comportamento de juiz-llm;
+- nao se afirma que os criterios de independencia sejam os certos —
+  so que o guarda recusa quando eles sao negados;
+- nao se cobre veredito concorrente sobre o mesmo attempt.
+"""
+
+import dataclasses
+import unittest
+
+import apoio
+from ssc_p0 import contratos as ct
+from ssc_p0.canonico import novo_id
+from ssc_p0.judge import Juiz1
+from ssc_p0.kernel import TransicaoIlegal
+
+PERFIL = {"modalidade": "texto", "ferramentas": [], "formato_saida": "livre",
+          "contexto_max_tokens": 8000, "dominio": "geral",
+          "privacidade": "remoto-permitido", "latencia_max_ms": None,
+          "orcamento_max_custo": None}
+
+APROVA = ([{"criterio": "saida nao vazia", "evidencia": "-", "passou": True}],
+          "aprovado")
+
+
+class RecusasDoVeredito(unittest.TestCase):
+
+    def setUp(self):
+        self.lab = apoio.novo_lab()
+        self.addCleanup(apoio.limpar_lab, self.lab)
+        self.kernel = self.lab.kernel
+
+    def _wu(self, marca: str) -> ct.WorkUnit:
+        return self.lab.router.forjar(
+            intencao=f"tarefa {marca} para as recusas de veredito",
+            criterios={"tipo": "saida-nao-vazia"}, tipo="ato", nivel="L2",
+            perfil=dict(PERFIL), classe="C1")
+
+    def _ate_o_attempt(self, marca: str):
+        """Fluxo real ate ter um attempt CONCLUIDO com sucesso."""
+        wu = self._wu(marca)
+        decisao = self.lab.router.propor_decisao(
+            wu, rota="padrao",
+            selecao=self.lab.selecao("prov-a", "modelo-x"),
+            aprovacao_custo=self.lab.aprovacao, motivo=f"decisao {marca}")
+        resultado = self.lab.execution.executar(
+            wu, decisao, idempotency_key=f"idem-{marca}", entrada=b"dados")
+        self.assertEqual(resultado.status, "sucesso")
+        return wu, decisao, resultado.attempt_id
+
+    def _julgar(self, wu, attempt_id, conclui=True):
+        return Juiz1.julgar(self.kernel, wu, attempt_id,
+                            lambda saida, pacote, attempt: APROVA,
+                            conclui=conclui)
+
+    # --- L607: julgamento antes da resposta ----------------------------
+
+    def test_veredito_sobre_attempt_ainda_nao_concluido_e_recusado(self):
+        wu = self._wu("nao-concluida")
+        decisao = self.lab.router.propor_decisao(
+            wu, rota="padrao",
+            selecao=self.lab.selecao("prov-a", "modelo-x"),
+            aprovacao_custo=self.lab.aprovacao, motivo="decisao")
+        attempt = ct.ExecutionAttempt(
+            attempt_id=novo_id(), work_unit_id=wu.work_unit_id,
+            decisao_id=decisao.decisao_id,
+            linhagem_id=self.kernel.envelope.linhagem_id,
+            selecao_solicitada=dict(decisao.selecao),
+            executor_resolvido=dict(decisao.selecao), executor_observado=None,
+            vinculos=self.kernel.vinculos_correntes(decisao.hash_pacote),
+            inicio=None, fim=None, captura={}, resultado=None,
+            efeito_externo=None, custo_medido=None, artefato_ref=None)
+        ev = self.kernel.criar_attempt(attempt, None)
+        self.kernel.despachar_attempt(attempt.attempt_id, ev.evento_id)
+        with self.assertRaises(ct.FalhaContrato) as ctx:
+            self._julgar(wu, attempt.attempt_id)
+        self.assertIn("exige attempt concluido", str(ctx.exception))
+
+    # --- L613 / L633 / L660: sobre um veredito REAL alterado -----------
+
+    def test_veredito_para_workunit_desconhecida_e_recusado(self):
+        wu, _, attempt_id = self._ate_o_attempt("desconhecida")
+        real = self._julgar(wu, attempt_id, conclui=False)
+        alheio = dataclasses.replace(
+            real, veredito_id=novo_id(),
+            alvo={**real.alvo, "work_unit_id": "wu-que-nao-existe"})
+        with self.assertRaises(ct.FalhaContrato) as ctx:
+            self.kernel.registrar_veredito(alheio, None)
+        self.assertIn("workunit desconhecida", str(ctx.exception))
+
+    def test_veredito_com_contexto_de_outra_workunit_e_recusado(self):
+        wu, _, attempt_id = self._ate_o_attempt("contexto")
+        real = self._julgar(wu, attempt_id, conclui=False)
+        torto = dataclasses.replace(real, veredito_id=novo_id(),
+                                    contexto_ref="0" * 64)
+        with self.assertRaises(ct.FalhaContrato) as ctx:
+            self.kernel.registrar_veredito(torto, None)
+        self.assertIn("contexto_ref do veredito diverge", str(ctx.exception))
+
+    def test_segundo_veredito_sobre_workunit_ja_concluida_e_recusado(self):
+        wu, _, attempt_id = self._ate_o_attempt("dois-vereditos")
+        primeiro = self._julgar(wu, attempt_id)
+        self.assertEqual(self.kernel.work_units[wu.work_unit_id].estado,
+                         "concluida")
+        segundo = dataclasses.replace(primeiro, veredito_id=novo_id())
+        with self.assertRaises(TransicaoIlegal) as ctx:
+            self.kernel.registrar_veredito(segundo, None)
+        self.assertIn("veredito com workunit em", str(ctx.exception))
+
+    # --- L658: IV-1, o juiz sem independencia --------------------------
+
+    def test_juiz_llm_sem_independencia_e_recusado(self):
+        # O fluxo de DUAS CAMADAS, percorrido: a deterministica aprova
+        # sem concluir, e a WorkUnit fica `aguardando-validacao` — que e
+        # o estado em que a segunda camada a encontra em operacao.
+        wu, _, attempt_id = self._ate_o_attempt("iv1")
+        self._julgar(wu, attempt_id, conclui=False)
+        self.assertEqual(self.kernel.work_units[wu.work_unit_id].estado,
+                         "aguardando-validacao")
+        base = self.kernel.vereditos[-1]
+        for negado in ("provedor_distinto_do_executor", "modelo_distinto"):
+            with self.subTest(negado=negado):
+                sem_indep = dataclasses.replace(
+                    base, veredito_id=novo_id(), camada="juiz-llm",
+                    independencia={**base.independencia, negado: False})
+                with self.assertRaises(ct.FalhaContrato) as ctx:
+                    self.kernel.registrar_veredito(sem_indep, None)
+                self.assertIn("IV-1: juiz sem independencia",
+                              str(ctx.exception))
+
+    def test_juiz_llm_com_independencia_atravessa(self):
+        # Contraprova indispensavel de IV-1: sem ela, um guarda que
+        # recusasse toda camada juiz-llm passaria no teste acima.
+        wu, _, attempt_id = self._ate_o_attempt("iv1-ok")
+        self._julgar(wu, attempt_id, conclui=False)
+        base = self.kernel.vereditos[-1]
+        segunda_camada = dataclasses.replace(
+            base, veredito_id=novo_id(), camada="juiz-llm")
+        evento = self.kernel.registrar_veredito(segunda_camada, None)
+        self.assertIsNotNone(evento.evento_id)
+        self.assertEqual(self.kernel.work_units[wu.work_unit_id].estado,
+                         "concluida")
+
+    # --- os dois INALCANCAVEIS: a invariante, exercida -----------------
+
+    def test_todo_attempt_aponta_para_a_decisao_vigente_da_propria_wu(self):
+        # A invariante de onde sai a inalcancabilidade de L621. Medida
+        # sobre attempts REAIS de duas WorkUnits distintas.
+        for marca in ("inv-a", "inv-b"):
+            self._ate_o_attempt(marca)
+        self.assertGreaterEqual(len(self.kernel.attempts), 2)
+        for attempt_id, reg in self.kernel.attempts.items():
+            attempt = reg["attempt"]
+            with self.subTest(attempt=attempt_id[:8]):
+                decisao = self.kernel.decisoes[attempt.decisao_id]
+                self.assertEqual(decisao.work_unit_id, attempt.work_unit_id)
+
+    def test_tudo_que_existe_esta_na_linhagem_da_sessao(self):
+        # A invariante de onde sai a inalcancabilidade de L625.
+        self._ate_o_attempt("inv-linhagem")
+        linhagem = self.kernel.envelope.linhagem_id
+        for wid, wu in self.kernel.work_units.items():
+            with self.subTest(work_unit=wid[:8]):
+                self.assertEqual(wu.linhagem_id, linhagem)
+        for attempt_id, reg in self.kernel.attempts.items():
+            with self.subTest(attempt=attempt_id[:8]):
+                self.assertEqual(reg["attempt"].linhagem_id, linhagem)
+
+    # --- contraprova geral ---------------------------------------------
+
+    def test_veredito_legitimo_conclui_a_workunit(self):
+        wu, _, attempt_id = self._ate_o_attempt("legitimo")
+        veredito = self._julgar(wu, attempt_id)
+        self.assertEqual(veredito.resultado, "aprovado")
+        self.assertEqual(self.kernel.work_units[wu.work_unit_id].estado,
+                         "concluida")
+
+
+if __name__ == "__main__":
+    unittest.main()
+
+--- 05_p0/tests/test_p0_seq_booleana_p1a38.py ---
+"""FASE 1.1 — `bool` por `int` na seq, PROVADO NO CAMINHO DA OPERACAO.
+
+O defeito foi achado e corrigido na P1-A.3.7 (`contratos._tipo`,
+commit `684682c`). O que faltava e o que este arquivo entrega: a prova
+no caminho que a operacao percorre.
+
+POR QUE A PROVA ANTERIOR ERA VIZINHA. `test_p0_tipo_p1a37.py` exerce
+`_tipo(...)` e `evento.validate()` — a PRIMITIVA e o metodo que a
+chama. Medido nesta missao revertendo o guarda: **6 testes vermelhos,
+todos em `test_p0_tipo_p1a37.py`, nenhum passando pelo `EventLog`**.
+E a licao do achado N4 na letra: *primitiva corrigida nao cobre ponto
+de chamada*. A afirmacao do registro da P1-A.3.7 e sobre o EventLog —
+*"a seq do EventLog aceitava `True`"* —, e o EventLog nao era exercido.
+
+O CASO QUE OCORRE, medido com o guarda revertido e nao suposto:
+
+    linha crua: {"causado_por":null,...,"seq":true,...}
+    EventLog.verificar  ACEITOU 1 registro; seq lido = True
+    EventLog(caminho)   seq_atual = True   proxima_seq = 2
+    EventLog.anexar     devolveu True; seq_atual = True
+
+Um log com `"seq": true` na posicao 1 atravessa inteiro: `from_dict`
+aceita, `validate()` aceitava, `evento.seq != i` e FALSO porque
+`True == 1`, e a cadeia segue com a ponta em `True`. A seq e a
+AUTORIDADE DE ORDEM da P0 — o relogio nao e —, e a partir dai dois
+eventos ocupam a mesma posicao: a ordem deixa de ser total.
+
+A PORTA E REAL. Nao e preciso encenar nada: o EventLog e relido do
+disco a cada construcao (`__init__` chama `verificar`), e essa releitura
+E a recuperacao apos queda. Um log editado, truncado e reescrito, ou
+gerado por um produtor que serialize booleano onde o contrato pede
+inteiro, entra por essa porta.
+
+O DISCRIMINADOR. `test_a_recusa_nao_vem_da_canonicidade` mede que a
+linha injetada E a serializacao canonica do proprio evento — ou seja,
+o guarda de linha nao canonica (`EventoAdulterado`) NAO a pegaria. Sem
+essa medicao, os testes abaixo poderiam passar pelo motivo errado e
+ninguem saberia.
+
+O QUE ESTES TESTES NAO COBREM, declarado:
+- nao cobrem a seq do CHECKPOINT: `Checkpoint.validate` nao chama
+  `_tipo` sobre `estado_refs["seq"]` e `Juiz1.validar_checkpoint` usa
+  `isinstance(..., int)`, que aceita `True`. Medido nesta missao:
+  **nao e alcancavel em operacao** — a seq do checkpoint vem de
+  `log.seq_atual()`, ja tipada aqui, e o checkpoint de disco e barrado
+  pelo selo HMAC antes de qualquer uso. Fica registrado como defesa em
+  profundidade ausente, nao como defeito vivo;
+- nao cobrem `float` onde o contrato pede `int` (`seq=1.0`): o
+  `_tipo` o recusa, e isso ja e coberto em `test_p0_tipo_p1a37.py`;
+- nao provam que TODO campo inteiro do acervo esteja tipado — o que se
+  mede aqui e a seq, que e a autoridade de ordem;
+- nada aqui prova durabilidade nem concorrencia do log.
+"""
+
+import json
+import os
+import shutil
+import unittest
+import uuid
+
+import apoio
+from ssc_p0 import contratos as ct
+from ssc_p0.canonico import canonico, sha256_bytes
+from ssc_p0.eventlog import EventLog, EventoTruncado, hash_evento
+
+GENESE = "0" * 64
+
+
+def _evento(seq, chave="k1", prev=GENESE) -> ct.Evento:
+    """Evento com seq ARBITRARIA — inclusive booleana, de proposito."""
+    return ct.Evento(
+        evento_id=f"ev-{chave}", seq=seq, ts="2026-08-01T00:00:00Z",
+        schema_version=ct.SCHEMA_VERSION, linhagem_id="lin-1",
+        tipo="sessao", causado_por=None, idempotency_key=chave,
+        prev_event_hash=prev, payload_ref="sha256:" + "a" * 64)
+
+
+class SeqBooleanaNoCaminhoDaOperacao(unittest.TestCase):
+
+    def setUp(self):
+        self.raiz = os.path.join(apoio.DIR_TESTS, uuid.uuid4().hex)
+        os.makedirs(self.raiz)
+        self.addCleanup(shutil.rmtree, self.raiz, ignore_errors=True)
+        self.caminho = os.path.join(self.raiz, "log.jsonl")
+
+    def _gravar_linha_com_seq_booleana(self) -> bytes:
+        """Escreve no disco a linha CANONICA de um evento com seq=True."""
+        linha = canonico(_evento(True).to_dict()) + b"\n"
+        with open(self.caminho, "wb") as f:
+            f.write(linha)
+        return linha
+
+    # --- a releitura do disco: o caminho da recuperacao -----------------
+
+    def test_verificar_recusa_log_com_seq_booleana(self):
+        self._gravar_linha_com_seq_booleana()
+        with self.assertRaises(EventoTruncado) as ctx:
+            EventLog.verificar(self.caminho, GENESE)
+        self.assertIn("fora de schema", str(ctx.exception))
+        self.assertIn("evento.seq", str(ctx.exception))
+
+    def test_construir_o_eventlog_sobre_esse_log_recusa(self):
+        # `EventLog.__init__` relê o arquivo existente: e por aqui que a
+        # sessao volta apos uma queda. Se a construcao aceitasse, a
+        # ponta da cadeia passaria a ser `True` sem ninguem ver.
+        self._gravar_linha_com_seq_booleana()
+        with self.assertRaises(EventoTruncado):
+            EventLog(self.caminho, GENESE)
+
+    def test_a_recusa_nao_vem_da_canonicidade(self):
+        # DISCRIMINADOR. A linha injetada E a serializacao canonica do
+        # evento que ela descreve: o guarda de "linha nao canonica"
+        # calcula o mesmo hash e nao a recusaria. Logo, quem recusa e o
+        # guarda de TIPO — e nao um vizinho dele.
+        linha = self._gravar_linha_com_seq_booleana()
+        self.assertIn(b'"seq":true', linha)
+        dados = json.loads(linha.decode("utf-8"))
+        self.assertIs(dados["seq"], True)
+        evento_lido = ct.Evento(**dados)
+        self.assertEqual(sha256_bytes(linha[:-1]), hash_evento(evento_lido))
+
+    # --- a escrita em memoria: o caminho do kernel ----------------------
+
+    def test_anexar_com_seq_booleana_nao_escreve_byte_algum(self):
+        # O log e append-only: aceitar e depois desfazer nao existe.
+        open(self.caminho, "wb").close()
+        log = EventLog(self.caminho, GENESE)
+        with self.assertRaises(ct.FalhaContrato) as ctx:
+            log.anexar(_evento(True))
+        self.assertIn("evento.seq", str(ctx.exception))
+        self.assertEqual(os.path.getsize(self.caminho), 0)
+        self.assertEqual(log.seq_atual(), 0)
+
+    def test_a_ponta_da_cadeia_continua_inteira_apos_a_recusa(self):
+        # O dano que o defeito causava nao era a linha ruim: era a ponta
+        # virar `True` e a proxima seq nascer de um booleano.
+        open(self.caminho, "wb").close()
+        log = EventLog(self.caminho, GENESE)
+        self.assertTrue(log.anexar(_evento(1)))
+        with self.assertRaises(ct.FalhaContrato):
+            log.anexar(_evento(True, chave="k2",
+                               prev=hash_evento(_evento(1))))
+        self.assertIsInstance(log.seq_atual(), int)
+        self.assertNotIsInstance(log.seq_atual(), bool)
+        self.assertEqual(log.proxima_seq(), 2)
+
+    # --- contraprova ----------------------------------------------------
+
+    def test_log_com_seq_inteira_continua_atravessando(self):
+        # Sem esta, um guarda que recusasse toda seq passaria em tudo
+        # acima e o acervo inteiro pararia sem que os testes vissem.
+        open(self.caminho, "wb").close()
+        log = EventLog(self.caminho, GENESE)
+        primeiro = _evento(1)
+        self.assertTrue(log.anexar(primeiro))
+        self.assertTrue(log.anexar(_evento(2, chave="k2",
+                                           prev=hash_evento(primeiro))))
+        registros = EventLog.verificar(self.caminho, GENESE)
+        self.assertEqual([r["evento"].seq for r in registros], [1, 2])
+        self.assertEqual(EventLog(self.caminho, GENESE).seq_atual(), 2)
+
+
+if __name__ == "__main__":
+    unittest.main()
+
+--- 06_p1a/tests/test_ancoragem_gerador_p1a38.py ---
+"""FASE 4 — a ancoragem do gerador auto-incluido, medida e presa.
+
+O DEFEITO, achado ao EXECUTAR a prova de ancoragem que o ato exige e
+nao ao ler o codigo.
+
+`pacote_p1a37.py` embute o proprio fonte com o SHA-256 ao lado — e o
+remedio do MAJOR #5 / N6, entregue na P1-A.3.7. O fonte e lido do
+DISCO, por decisao declarada: *"o objeto sob julgamento e o gerador que
+ESTA RODANDO"*. A consequencia tambem estava declarada: o hash do
+pacote e funcao dos commits **e** do fonte do gerador.
+
+O que NAO estava previsto e que "o fonte do gerador" deixasse de ser
+funcao do commit. Medido nesta missao:
+
+    geracao no repositorio de trabalho   sha256 c2505a41…  82110 bytes
+    geracao em CHECKOUT LIMPO do commit  sha256 8f5efac7…  82110 bytes
+
+Mesmo tamanho, uma unica linha diferente — a linha do SHA-256 do proprio
+gerador. A causa, medida e nao suposta:
+
+    blob no Git                 8277 bytes, 191 LF, 0 CRLF
+    arquivo no checkout limpo   8468 bytes, 191 CRLF
+
+O BLOB E IDENTICO nos dois repositorios (`892479a7…`). O que difere e o
+que o `git checkout` escreve no disco: com `core.autocrlf=true` e sem
+atributo, o arquivo e convertido para CRLF. O gerador entao hasheia
+bytes que nao sao os do commit — e o pacote deixa de reproduzir.
+
+O PRECEDENTE JA EXISTIA E NAO FOI ESTENDIDO. `06_p1a/.gitattributes`
+marca `/evidencias/pacote_p1a31.py -text` e
+`/evidencias/revisao_p1a31.py -text` exatamente por isto. O gerador novo
+nasceu sem o atributo. E o mecanismo do achado 10 mais uma vez: a copia
+que ninguem exercita fica para tras.
+
+A CORRECAO e a linha que faltava — `/evidencias/pacote_p1a37.py -text`
+—, e este arquivo e o guarda que impede o proximo gerador de nascer sem
+ela.
+
+O CASO QUE OCORRE, e por que o teste NAO compara disco com blob e para
+por ai: nesta estacao os dois JA sao iguais (o arquivo nunca foi
+reescrito por um checkout). Um teste que so comparasse bytes passaria
+verde com o defeito vivo — foi assim que ele sobreviveu. O que este
+teste exige e o ATRIBUTO, que e a propriedade que vale em toda estacao,
+e a igualdade de bytes vem junto como segunda metade.
+
+O QUE ESTES TESTES NAO COBREM, declarado:
+- nao provam que um `git checkout` real preserve os bytes: isso exigiria
+  clonar dentro do teste, e a suite nao cria repositorio. A medicao do
+  clone esta acima, feita a mao e registrada;
+- nao cobrem outros geradores do acervo que nao se auto-incluem
+  (`pacote_p1a31`, `pacote_p1a33`): eles ja tem o atributo por outro
+  motivo, e os seus hashes estao publicados;
+- nao se afirma que `-text` seja suficiente para toda forma de
+  normalizacao (por exemplo, filtros `clean`/`smudge` configurados na
+  estacao);
+- nada aqui prova o conteudo do pacote — so a sua reprodutibilidade.
+"""
+
+import os
+import subprocess
+import unittest
+
+import apoio  # noqa: F401  (ajusta sys.path da suite)
+
+_DIR_P1A = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+_RAIZ = os.path.dirname(_DIR_P1A)
+
+# Geradores que embutem o PROPRIO fonte com o SHA-256 ao lado. Todo
+# arquivo desta lista tem os seus bytes de disco hasheados dentro do
+# pacote — e portanto precisa sair do checkout byte a byte igual ao blob.
+AUTO_INCLUIDOS = ("06_p1a/evidencias/pacote_p1a37.py",)
+
+
+def _git(*args: str) -> str:
+    return subprocess.run(["git", *args], cwd=_RAIZ, capture_output=True,
+                          text=True, check=True).stdout
+
+
+class GeradorAutoIncluidoEAncorado(unittest.TestCase):
+
+    def test_todo_gerador_auto_incluido_esta_marcado_como_binario(self):
+        # A propriedade que vale em TODA estacao: sem `-text` o checkout
+        # converte EOL e o hash do gerador deixa de ser funcao do commit.
+        for rel in AUTO_INCLUIDOS:
+            with self.subTest(gerador=rel):
+                saida = _git("check-attr", "text", "--", rel).strip()
+                self.assertTrue(
+                    saida.endswith("text: unset"),
+                    f"{rel} precisa de `-text` em .gitattributes; "
+                    f"check-attr devolveu {saida!r}")
+
+    def test_os_bytes_de_disco_sao_os_bytes_do_blob(self):
+        # A segunda metade: aqui e agora, disco e commit coincidem.
+        for rel in AUTO_INCLUIDOS:
+            with self.subTest(gerador=rel):
+                blob = subprocess.run(
+                    ["git", "cat-file", "blob", f"HEAD:{rel}"], cwd=_RAIZ,
+                    capture_output=True, check=True).stdout
+                with open(os.path.join(_RAIZ, rel), "rb") as f:
+                    disco = f.read()
+                self.assertEqual(len(disco), len(blob))
+                self.assertEqual(disco, blob)
+
+    def test_o_gerador_realmente_se_auto_inclui(self):
+        # Guarda contra lista vazia de significado: se o gerador deixar
+        # de se auto-incluir, esta lista nao descreve mais nada e os dois
+        # testes acima viram cerimonia.
+        import sys
+        sys.path.insert(0, os.path.join(_DIR_P1A, "evidencias"))
+        from autoinclusao import ROTULO_SECAO
+        for rel in AUTO_INCLUIDOS:
+            with self.subTest(gerador=rel):
+                with open(os.path.join(_RAIZ, rel), encoding="utf-8") as f:
+                    fonte = f.read()
+                self.assertIn("secao_do_gerador", fonte)
+                self.assertTrue(ROTULO_SECAO)
+
+    def test_o_precedente_do_acervo_continua_valendo(self):
+        # Contraprova de que o teste mede o atributo certo: os dois
+        # arquivos que JA tinham `-text` continuam tendo. Se
+        # `check-attr` mudasse de formato, isto reprovaria junto.
+        for rel in ("06_p1a/evidencias/pacote_p1a31.py",
+                    "06_p1a/evidencias/revisao_p1a31.py"):
+            with self.subTest(arquivo=rel):
+                self.assertTrue(
+                    _git("check-attr", "text", "--", rel).strip().endswith(
+                        "text: unset"))
+
+    def test_um_arquivo_sem_o_atributo_e_visivelmente_diferente(self):
+        # Contraprova do outro lado: o teste nao passa para tudo. Um
+        # `.py` qualquer do acervo NAO e `-text`, e o guarda enxerga a
+        # diferenca — sem isto, um `check-attr` quebrado passaria.
+        saida = _git("check-attr", "text", "--",
+                     "06_p1a/evidencias/autoinclusao.py").strip()
+        self.assertTrue(saida.endswith("text: unspecified"), saida)
+
+
+if __name__ == "__main__":
+    unittest.main()
+
+--- 06_p1a/tests/test_chaves_proibidas_p1a38.py ---
+"""FASE 1.2 — o terceiro ramo do `AdaptadorAssinatura`, medido.
+
+O ato manda: *corrigir, ou declarar com evidencia por que o comportamento
+atual esta correto. Medir, nunca presumir.* Esta e a medicao, e a
+correcao que ela justifica — que nao e a que o enunciado sugeria.
+
+## 1. O ramo NAO dispara, e isso e por construcao
+
+`frota.AdaptadorAssinatura.__init__` faz, em linhas consecutivas:
+
+    self.env = ambiente_sanitizado(env)      # remove CHAVES_PROIBIDAS ∪ padrao
+    ...
+    if any(k in self.env for k in CHAVES_PROIBIDAS):   # <- o terceiro ramo
+
+O predicado do guarda (`CHAVES_PROIBIDAS`) e SUBCONJUNTO PROPRIO do
+predicado do sanitizador (`CHAVES_PROIBIDAS` ∪ sufixo de credencial).
+Logo o ramo e falso para QUALQUER entrada. Medido por exaustao sobre as
+oito chaves da lista: **0 de 8 sobrevivem** ao sanitizador.
+
+## 2. E o comportamento atual esta CORRETO — com evidencia
+
+Transformar o ramo em bloqueio de verdade exigiria conferir o ambiente
+RECEBIDO em vez do sanitizado. Isso seria uma regressao, e o proprio
+modulo diz por que: *"o ambiente global do usuario NAO e modificado —
+apenas impedimos a heranca pelo subprocesso"*. Numa estacao que exporte
+uma chave PAYG — o caso comum de quem tem conta de API —, toda
+construcao legitima do adaptador passaria a levantar. O desenho da P0 e
+FILTRAR, e o ramo e a REAUDITORIA do filtro, no mesmo padrao de
+`capsula.ambiente_capsula`. O ramo fica como esta.
+
+Medido tambem, e nao presumido: `AdaptadorAssinatura` **nao tem
+chamador de producao** em `05_p0/ssc_p0` — so testes o constroem. Em
+operacao, hoje, nenhum dos seus tres ramos e percorrido por codigo de
+producao; a classe e o portao que a P1+ vai usar.
+
+## 3. O defeito VIVO que a medicao encontrou
+
+A reauditoria quantifica sobre a MESMA `CHAVES_PROIBIDAS` que o
+sanitizador usa. Se um nome sair da lista, os dois lados encolhem juntos
+e o ramo continua mudo. E nada no acervo prendia o conteudo dessa lista.
+
+MEDIDO nesta missao: removida `GOOGLE_APPLICATION_CREDENTIALS` de
+`CHAVES_PROIBIDAS`, as duas suites ficam **793/793 VERDES** — P0 238 e
+P1-A 555, zero vermelhos. A chave passa a entrar no ambiente do
+adaptador e ninguem ve.
+
+`GOOGLE_APPLICATION_CREDENTIALS` nao e uma escolha arbitraria: das oito
+chaves, **sete tambem casam** o padrao de sufixo (`_API_KEY`,
+`_AUTH_TOKEN`) e sobreviveriam a perda da lista. Ela e a UNICA protegida
+so pela lista — e por isso e a unica cuja remocao e invisivel.
+
+## 4. A correcao, e por que o corpus vem de OUTRA camada
+
+Um teste que iterasse `CHAVES_PROIBIDAS` para provar `CHAVES_PROIBIDAS`
+repetiria a tautologia: encolher a lista encolheria o corpus e o teste
+seguiria verde. O corpus tem de ser INDEPENDENTE.
+
+Ele existe: `preflight.economia.CHAVES_PAYG_CONHECIDAS`, a lista que a
+camada P1-A mantem por conta propria. O precedente e `EspelhoDaPoliticaP0`
+(`test_economia.py:23`), que ja espelha a politica economica de uma
+camada na outra pelo mesmo motivo.
+
+O QUE ESTES TESTES NAO COBREM, declarado:
+- **encolhimento SIMULTANEO das duas listas** nao e pego: o espelho
+  compara uma com a outra, e duas remocoes casadas passam. O remedio
+  para isso seria uma terceira fonte, e inventar uma seria politica
+  nova, nao correcao;
+- nao se afirma que as oito chaves sejam as chaves CERTAS: o corpus
+  mede consistencia entre camadas, nunca suficiencia da politica.
+  Medido e registrado: `OPENAI_KEY`, `ANTHROPIC_KEY`, `XAI_TOKEN`,
+  `AWS_SESSION_TOKEN` e `GOOGLE_CLOUD_KEYFILE_JSON` atravessam os dois
+  sanitizadores — nenhum casa lista nem sufixo;
+- nao se cobre o valor da credencial em lugar nenhum: os testes usam a
+  `SENTINELA` do acervo, que nunca foi credencial;
+- nada aqui prova comportamento de subprocesso real — a P0 nao invoca
+  provedor, e `invocar()` delega a um falso deterministico.
+"""
+
+import unittest
+
+from apoio import SENTINELA
+from preflight.economia import CHAVES_PAYG_CONHECIDAS
+from ssc_p0 import contratos as ct
+from ssc_p0.frota import (CHAVES_PROIBIDAS, AdaptadorAssinatura,
+                          PoliticaEconomicaViolada, ambiente_sanitizado)
+from ssc_p0.frota import _PADRAO_CHAVE_PAYG as PADRAO_P0
+
+# Protegida SO pela lista: o padrao de sufixo nao a alcanca, porque o
+# nome nao termina em credencial — termina em CREDENTIALS, que e um
+# CAMINHO DE ARQUIVO de credencial. Remove-la da lista era invisivel.
+SO_PELA_LISTA = "GOOGLE_APPLICATION_CREDENTIALS"
+
+
+class ProvedorFalso:
+    def invocar(self, *a, **k):
+        return {"saida": b"nada"}
+
+
+def _entrada(**sobre) -> ct.FleetEntry:
+    campos = {"provider_id": "prov-a", "model_id": "modelo-x",
+              "capability_profile": {}, "auth_mode": "subscription-oauth",
+              "billing_mode": "subscription", "quota_state": "disponivel",
+              "quota_reset": None, "automation_permission": "allow",
+              "terms_profile": {"oauth_profile": "oauth:prov-a"},
+              "variable_cost": 0, "papeis_preferidos": [],
+              "canal_oficial": True}
+    campos.update(sobre)
+    return ct.FleetEntry(**campos)
+
+
+def _adaptador(env) -> AdaptadorAssinatura:
+    """Constroi o adaptador REAL — o ponto de chamada, nao a primitiva."""
+    return AdaptadorAssinatura(_entrada(), ProvedorFalso(), env=env)
+
+
+class ListaProibidaPresaPorOutraCamada(unittest.TestCase):
+    """O corpus vem da P1-A; o alvo e a P0. Encolher um lado fica vermelho."""
+
+    def test_as_duas_listas_sao_a_mesma_lista(self):
+        self.assertEqual({k.lower() for k in CHAVES_PROIBIDAS},
+                         set(CHAVES_PAYG_CONHECIDAS))
+
+    def test_nenhum_nome_do_corpus_sobrevive_no_ambiente_do_adaptador(self):
+        # O ponto de chamada REAL: o objeto construido, e o dicionario
+        # que ele levaria a um subprocesso — nao `ambiente_sanitizado`
+        # chamada a seco, que e a primitiva.
+        for nome in sorted(CHAVES_PAYG_CONHECIDAS):
+            with self.subTest(chave=nome):
+                adaptador = _adaptador({"PATH": "/bin",
+                                        nome.upper(): SENTINELA})
+                self.assertNotIn(nome.upper(), adaptador.env)
+                self.assertEqual(adaptador.env.get("PATH"), "/bin")
+
+    def test_ha_nome_no_corpus_que_SO_a_lista_protege(self):
+        # DISCRIMINADOR. Sem ele, o teste acima poderia passar de graca
+        # pelo padrao de sufixo, e a lista poderia esvaziar sem ruido.
+        so_lista = sorted(n.upper() for n in CHAVES_PAYG_CONHECIDAS
+                          if not PADRAO_P0.search(n.upper()))
+        self.assertIn(SO_PELA_LISTA, so_lista)
+        self.assertNotIn(SO_PELA_LISTA, ambiente_sanitizado(
+            {SO_PELA_LISTA: SENTINELA}))
+        self.assertNotIn(SO_PELA_LISTA,
+                         _adaptador({SO_PELA_LISTA: SENTINELA}).env)
+
+    def test_as_outras_sete_seguem_cobertas_pelo_padrao(self):
+        # A outra metade da medicao: sete das oito sobrevivem a perda da
+        # lista porque o padrao as pega. Registrar isso e o que torna o
+        # discriminador acima uma medicao, e nao uma escolha de gosto.
+        pelo_padrao = {n.upper() for n in CHAVES_PAYG_CONHECIDAS
+                       if PADRAO_P0.search(n.upper())}
+        self.assertEqual(len(pelo_padrao), len(CHAVES_PAYG_CONHECIDAS) - 1)
+
+
+class OTerceiroRamoEReauditoria(unittest.TestCase):
+    """Fixa o comportamento CORRETO: filtrar, nunca bloquear."""
+
+    def test_chave_payg_no_ambiente_recebido_nao_bloqueia_a_construcao(self):
+        # Se algum dia isto virar bloqueio, toda estacao que exporte uma
+        # chave de API para de construir o adaptador. O desenho da P0 e
+        # filtrar; o ambiente global do usuario nao e alterado.
+        recebido = {"PATH": "/bin", "OPENAI_API_KEY": SENTINELA}
+        adaptador = _adaptador(recebido)
+        self.assertNotIn("OPENAI_API_KEY", adaptador.env)
+        self.assertEqual(recebido["OPENAI_API_KEY"], SENTINELA)
+
+    def test_o_ramo_e_inalcancavel_por_construcao(self):
+        # Exaustao sobre a lista inteira: nenhuma chave sobrevive ao
+        # sanitizador, logo `any(k in self.env ...)` e falso sempre.
+        sobreviventes = [k for k in CHAVES_PROIBIDAS
+                         if k in ambiente_sanitizado({k: SENTINELA})]
+        self.assertEqual(sobreviventes, [])
+
+    def test_nome_fora_da_lista_e_do_padrao_atravessa(self):
+        # Contraprova: o sanitizador nao remove tudo. Sem ela, um
+        # sanitizador que devolvesse `{}` passaria em todos os testes
+        # acima e ninguem veria.
+        adaptador = _adaptador({"PATH": "/bin", "LANG": "pt_BR"})
+        self.assertEqual(adaptador.env.get("LANG"), "pt_BR")
+
+    def test_entrada_ilegitima_continua_recusada(self):
+        # Contraprova do outro lado: o adaptador nao virou permissivo.
+        with self.assertRaises(PoliticaEconomicaViolada):
+            AdaptadorAssinatura(_entrada(auth_mode="payg-api"),
+                                ProvedorFalso(), env={})
+
+
+if __name__ == "__main__":
+    unittest.main()
+
+=== SHA-256 DE REGISTROS E EVIDENCIAS (1) ===
+5066451d3899860945a75f5f0cf1054b83116ec3afebe643f9b56322b5982cee  06_p1a/99_remedicao-guardas-p1a38.md
+
+=== O QUE SE PEDE AO REVISOR ===
+1. Cada correcao fecha o achado que diz fechar, ou so muda de forma?
+2. O teste de cada correcao exerce o caso que OCORRE em operacao, ou um vizinho dele?
+3. Ha defeito NOVO introduzido pelas correcoes?
+4. O gerador DESTE pacote esta incluido acima, com o seu SHA-256 — julgue-o tambem, e nao apenas o que ele produziu.
+Responda um achado por linha, prefixado por CRITICAL | MAJOR | MINOR | OBS, e termine com APROVADO | APROVADO-COM-RESSALVAS | REPROVADO.
