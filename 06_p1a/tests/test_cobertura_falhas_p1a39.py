@@ -27,6 +27,39 @@ vazia nao responde.
    e seis falhas ficariam sem dono — o buraco que uma contagem por nome
    nao ve.
 
+## REVERSAO VERMELHA MEDIDA, CLASSE A CLASSE
+
+O caso que o guarda ANTIGO aceitava e a **classe vazia com o nome
+certo** — entao e ele que se aplica. Cada uma das nove foi reduzida a
+`pass`, uma por vez, com a suite P1-A inteira rodada a cada mutante
+(703/703 verde de partida):
+
+| classe | vermelhos |
+|---|---|
+| `Falha01VariavelPaygCaixaMista` | **2** |
+| `Falha02ChavePersistidaEmConfig` | **3** |
+| `Falha03OAuthAusente` | **2** |
+| `Falha04PlanoNaoReconhecido` | **3** |
+| `Falha05QuotaEsgotada` | **3** |
+| `Falha06BillingDesconhecido` | **3** |
+| `Falha07CliIndisponivel` | **2** |
+| `Falha08ModeloRemovido` | **3** |
+| `Falha09ConflitoAmbienteLogin` | **3** |
+
+**Nenhuma sem exercicio: 9 de 9.**
+
+E a prova de que o remedio e ESTE arquivo, e nao outro guarda que ja
+existisse: com `Falha01` esvaziada, os vermelhos nomeados sao
+
+    test_cobertura_falhas_p1a39 ... test_toda_classe_tem_ao_menos_um_
+        metodo_que_o_loader_colhe   (classe='Falha01VariavelPaygCaixaMista')
+    test_cobertura_falhas_p1a39 ... test_toda_classe_cita_o_codigo_da_
+        falha_que_cobre             (classe='Falha01VariavelPaygCaixaMista')
+
+e `CoberturaDasNoveFalhas`, o guarda antigo, permanece **VERDE** — o que
+confirma, por medicao e nao por leitura, a linha da remedicao: ele aceita
+a classe vazia.
+
 ## Por que o codigo, e nao a contagem de assercoes
 
 Contar `assert` premiaria teste inchado. Contar linhas premiaria
