@@ -29,6 +29,10 @@ cota de ciclo esgotada.
 Achado que exija alteracao encerra em ADJUST, e **nada foi corrigido
 nesta missao**, como o ato manda.
 
+**As duas metades do portao falharam por causas independentes, e fechar
+uma nao abre a outra** — a §4.1 dispoe disso formalmente, para que
+"ADJUST" nao seja lido como "feche os doze MAJOR e o portao passa".
+
 ## SUMARIO — 10 linhas
 
 1. Pacote **NOVO** sobre o HEAD atual: `5ab35a6c…`, **445.056 bytes**,
@@ -349,6 +353,83 @@ teste; a missao e probatoria e **nao corrige**. Logo: **ADJUST**.
 — que nao expirou — e para pacote que nao coubesse em algum revisor — e o
 pacote coube: o codex leu as 9.519 linhas e computou o hash. A falha do
 kimi e **comercial**, no provedor, e nao de tamanho.
+
+### 4.1 Disposicao formal da metade "nos dois vereditos"
+
+Emenda de registro proprio, acrescentada apos o commit `8b227aa`: a §4
+concluia que o portao nao foi atravessado **sem dispor** da segunda metade
+da clausula. Dispor dela e necessario — sem isso, uma missao futura pode
+ler "ADJUST" como "feche os doze MAJOR e o portao passa", que e **falso**.
+
+**O portao tem duas metades, e as duas falharam por causas independentes.**
+
+| Metade | Exigencia | Medido | Reparavel nesta missao? |
+|---|---|---|---|
+| (a) | zero CRITICAL e zero MAJOR | 0 CRITICAL, **12 MAJOR** | Nao — corrigir e alterar codigo e teste, vedado a missao probatoria |
+| (b) | **nos dois** vereditos | **um** veredito existe, nao dois | Nao — depende de ato do proprietario ou de terceiro provedor |
+
+**Fechar (a) NAO faz o portao passar.** Ainda que os doze MAJOR fossem
+fechados amanha, o portao continuaria fechado sobre esta evidencia, porque
+(b) exige um segundo veredito que **nao existe**. As duas metades sao
+conjuntivas, e este registro nao as funde.
+
+**(b) e hoje insatisfazivel, e isso e medido, nao suposto.** A ultima
+corrida de frota (`07_p1b/evidencias/preflight-20260801T235521Z.json`,
+2026-08-01T23:55:21Z) da:
+
+| provedor | resultado |
+|---|---|
+| codex | **SHADOW_ELIGIBLE** |
+| kimi | **SHADOW_ELIGIBLE** |
+| claude | SUPERVISED |
+| google | SUPERVISED |
+| grok | SUPERVISED |
+
+O ato nomeia revisor entre os **SHADOW_ELIGIBLE**, e ha exatamente dois —
+um deles com a cota do ciclo esgotada. **Nao existe substituto**:
+SUPERVISED e teto de especificacao, nao autorizacao, e trocar por um
+SUPERVISED seria promover provedor por conveniencia de portao — exatamente
+o que o eixo anti-P2 proibe.
+
+**Por que ADJUST e nao BLOCKED, pelo texto do ato e nao por preferencia.**
+O ato nomeia **dois** gatilhos de BLOCKED, e os dois foram **medidos
+ausentes**: declaracao de tier expirada (nao expirou —
+`valido_no_instante: true` nas duas evidencias) e pacote que nao coubesse
+em algum revisor (coube — 9.519 linhas lidas, hash recomputado pelo
+revisor). O ato nomeia **um** gatilho de ADJUST — "achado que exija
+alteracao" — e ele **ocorreu**, com doze ocorrencias apontaveis. Entre um
+terminal cujas condicoes nao ocorreram e um cuja condicao ocorreu, o
+registro segue o que foi medido.
+
+BLOCKED tambem seria **menos informativo**: apagaria do rotulo o unico
+resultado substantivo desta missao — um veredito independente, integral e
+desfavoravel.
+
+**Nenhuma segunda tentativa contra o kimi.** O 403 e do **ciclo de
+faturamento**, nao de janela de taxa: repetir devolve a mesma recusa. E
+"uma chamada valida por provedor" limita chamadas **validas** — nao
+autoriza recusas em serie contra um portao comercial, cujas duas saidas
+(comprar uso extra, subir de plano) sao respectivamente proibida e ato do
+proprietario.
+
+| Campo | Valor |
+|---|---|
+| **Dono** | o proprietario, para a cota do kimi; a missao de frota, para um terceiro SHADOW_ELIGIBLE |
+| **Gatilho** | renovacao do ciclo do kimi, ou provedor novo saindo SHADOW_ELIGIBLE numa corrida de preflight |
+| **Estado da metade (b)** | **ABERTA e insatisfazivel no ciclo corrente** |
+| **Corrigido nesta missao?** | **Nao** — nao e materia de missao probatoria |
+
+Isto **nao reabre** o veredito do codex nem o converte. Registra-se que o
+criterio de aceite "mesmo pacote/hash nos dois revisores" (§9 da
+`99_decisao-p1a31.md`) tem hoje a metade do **pacote cumprida** — mesmos
+bytes preparados e entregues aos dois, hash identico nas duas evidencias —
+e a metade do **revisor descumprida**, pela terceira rodada consecutiva.
+
+**Escritor desta emenda.** Lease `p1a36-emenda-ops`, fence **1**, pid
+108332, adquirido antes desta escrita. Nome distinto de `p1a36-ops`
+deliberadamente: reusar o lease da missao sobrescreveria `.lease` e
+`.fence`, que sao a evidencia do escritor unico citada na §1 e nas duas
+evidencias de revisao — precedente de `achados-gov-emenda6-ops`.
 
 ## 5. Fronteira, custo e ambiente
 
