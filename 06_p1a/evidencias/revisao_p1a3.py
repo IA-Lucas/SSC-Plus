@@ -6,8 +6,9 @@ Enforcement read-only: codex roda com `--sandbox read-only --ephemeral`.
 O kimi NAO tem sandbox de filesystem (medido em `kimi --help`): o
 enforcement dele e (i) restricao parcial pelo proprio CLI — `--plan`,
 `--skills-dir` vazio e ausencia deliberada de `-y/--yolo/--auto` — com
-cwd num DIRETORIO DESCARTAVEL, e (ii) DETECCAO integral por manifesto
-SHA-256 da arvore inteira antes e depois da chamada. Foi esta segunda
+cwd num DIRETORIO DESCARTAVEL, e (ii) DETECCAO DE ALCANCE DECLARADO
+por manifesto SHA-256 das raizes vigiadas antes e depois da chamada,
+seguida de ATRIBUICAO (P1-A.3.7, N3). Foi esta segunda
 metade que faltava (revisao P1-A.3.1, MAJOR #3): cwd descartavel e
 instrucao textual nao restringem o filesystem, e a lista de arquivos
 restantes so olha DENTRO do descartavel — escrita fora dele passava sem
@@ -197,7 +198,7 @@ def main() -> int:
     prompt = montar_prompt()
     argv = COMANDOS[provider](tmp, skills, prompt)
     ts = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
-    # Revisao P1-A.3.1 (MAJOR #3): manifesto SHA-256 da arvore INTEIRA
+    # Revisao P1-A.3.1 (MAJOR #3): manifesto SHA-256 das raizes vigiadas
     # antes e depois — a lista de restantes so ve dentro do descartavel.
     # MAJOR #3 (P1-A.3.7): protocolo UNICO de contencao — as duas
     # raizes vigiadas, e a atribuicao separada da deteccao.

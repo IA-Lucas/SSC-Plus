@@ -13,9 +13,10 @@ aparece em lugar nenhum. As duas metades do conserto vivem aqui:
 
 - restricao REAL do alcance do CLI (`argv_kimi`), com as flags que o
   proprio CLI oferece — medidas em `kimi --help`, nao presumidas;
-- DETECCAO de qualquer mutacao fora do descartavel (`manifesto` +
-  `mutacoes`): SHA-256 de cada arquivo da arvore antes e depois da
-  chamada. O que a instrucao textual nao impede, o manifesto acusa.
+- DETECCAO DE ALCANCE DECLARADO (`Vigilancia`): SHA-256 de cada arquivo
+  das raizes vigiadas antes e depois da chamada, seguido de ATRIBUICAO.
+  O que a instrucao textual nao impede, o manifesto acusa — dentro do
+  alcance que o rotulo declara, e so dentro dele.
 
 CORRECAO P1-A.3.4 — a primeira metade acima estava INEXECUTAVEL. A
 P1-A.3.3 (§4) mediu, invocando o CLI de verdade, que o kimi 0.30.0
@@ -40,8 +41,8 @@ passa-los e a restricao que sobra, e ela e verificada por teste.
 
 A honestidade do rotulo faz parte do conserto: o kimi NAO tem sandbox de
 filesystem como o `--sandbox read-only` do codex. O que se afirma aqui e
-o que se mede — restricao parcial pelo CLI mais deteccao integral por
-manifesto —, nunca isolamento equivalente.
+o que se mede — restricao parcial pelo CLI mais deteccao de alcance
+DECLARADO por manifesto —, nunca isolamento equivalente.
 
 MAJOR #4 — o lease era verificado apenas ANTES do trabalho. Uma chamada
 de provider excede a janela do lease (256 s observados contra 120 s de
@@ -312,9 +313,9 @@ class Vigilancia:
         return {
             "medida": "manifesto SHA-256 antes/depois das raizes "
                       "vigiadas, com atribuicao separada da deteccao",
-            "raizes_vigiadas": ["repositorio (arvore inteira, inclusive "
-                                "locks/ e .git)"] + [f"fora: {a}"
-                                                     for a in self.alvos],
+            "raizes_vigiadas": ["repositorio (toda a arvore sob RAIZ, "
+                                "inclusive locks/ e .git)"]
+                               + [f"fora: {a}" for a in self.alvos],
             "nao_vigiado": NAO_VIGIADO,
             "arquivos_no_manifesto": len(self.antes),
             "mutacoes_detectadas": mudancas,
@@ -350,15 +351,44 @@ def argv_kimi(executavel: str, prompt: str, dir_skills: str) -> list:
     return [executavel, "--skills-dir", dir_skills, "-p", prompt]
 
 
+# Palavras de ALCANCE TOTAL. Nenhuma pode aparecer no rotulo: o
+# mecanismo nao tem alcance total e o rotulo nao pode afirma-lo (achado
+# N3). O teste que as procura e o irmao do que ja proibia "sandbox".
+PALAVRAS_DE_ALCANCE_TOTAL = ("integral", "arvore inteira", "disco inteiro",
+                             "qualquer mutacao", "toda mutacao",
+                             "deteccao completa", "todo o sistema")
+
+
 def enforcement_kimi() -> str:
-    """Rotulo do enforcement do kimi — o que se mede, nao o que se quer."""
+    """Rotulo do enforcement do kimi — o que se mede, nao o que se quer.
+
+    ACHADO N3. O rotulo afirmava deteccao de alcance TOTAL sobre a
+    arvore, e o revisor independente mediu que ele **excedia o
+    mecanismo**: a arvore fotografada era so `RAIZ`, com
+    `locks/` de fora, e escrita fora do repositorio nao aparecia. Era a
+    familia do MAJOR #3 no sentido literal — afirmar a propriedade em
+    vez de exerce-la.
+
+    O rotulo passa a ser CONSTRUIDO a partir dos mesmos objetos que o
+    mecanismo usa (`ALVOS_VIGIADOS_FORA_DO_REPOSITORIO`, `NAO_VIGIADO`).
+    Ampliar ou reduzir a cobertura muda o rotulo por construcao — nao
+    por alguem lembrar de reescrever a frase. Foi por a frase e o
+    mecanismo serem objetos independentes que um pode ter passado o
+    outro.
+    """
+    alvos = ", ".join(ALVOS_VIGIADOS_FORA_DO_REPOSITORIO)
     return ("sem sandbox de filesystem no CLI (nao ha equivalente ao "
             "`--sandbox read-only` do codex) e sem plan mode em headless "
             "(o CLI recusa `--plan` com `-p`): restricao PARCIAL por "
             "`--skills-dir` vazio, sem `-y/--yolo/--auto`; "
-            "cwd descartavel; e DETECCAO INTEGRAL por manifesto SHA-256 "
-            "da arvore inteira antes/depois da chamada (mutacao fora do "
-            "descartavel e registrada e reprova a corrida)")
+            "cwd descartavel; e DETECCAO DE ALCANCE DECLARADO por "
+            "manifesto SHA-256 antes/depois da chamada, sobre duas "
+            "raizes — a arvore do repositorio (inclusive `locks/` e "
+            f"`.git`) e as fontes de config declaradas ({alvos}). "
+            f"NAO detecta escrita em {NAO_VIGIADO}. A mutacao detectada "
+            "passa por ATRIBUICAO: o lease da sessao operacional tem "
+            "escritor esperado (o renovador); o que nao tem escritor "
+            "esperado reprova a corrida")
 
 
 def verificar_lock(raiz, sessao: str, fence_esperado: int | None = None,

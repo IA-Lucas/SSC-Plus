@@ -8,7 +8,7 @@ de cada reviewer — nenhuma reconstrucao entre revisores. UMA unica
 chamada por provider, via assinatura, custo variavel = 0. Enforcement
 read-only: codex `--sandbox read-only --ephemeral`; kimi sem sandbox de
 filesystem no CLI — restricao parcial (`--plan`, `--skills-dir` vazio,
-sem `-y/--yolo/--auto`) mais DETECCAO integral por manifesto SHA-256 da
+sem `-y/--yolo/--auto`) mais DETECCAO DE ALCANCE DECLARADO por SHA-256 da
 arvore antes/depois (revisao P1-A.3.1, MAJOR #3).
 
 O tier declarado do provider (`tiers_declarados.json`) precisa estar
@@ -167,7 +167,7 @@ def main() -> int:
     prompt = montar_prompt()
     argv = COMANDOS[provider](tmp, skills, prompt)
     ts = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
-    # Revisao P1-A.3.1 (MAJOR #3): manifesto SHA-256 da arvore INTEIRA
+    # Revisao P1-A.3.1 (MAJOR #3): manifesto SHA-256 das raizes vigiadas
     # antes e depois da chamada. A lista de restantes so olha dentro do
     # descartavel; e a escrita FORA dele que precisava de deteccao.
     # MAJOR #3 (P1-A.3.7): protocolo UNICO de contencao — as duas

@@ -16,7 +16,7 @@ Herda integralmente as correcoes ja ratificadas:
 - MAJOR #3 (isolamento): codex com `--sandbox read-only --ephemeral`;
   kimi sem sandbox de filesystem no CLI — restricao parcial
   (`--skills-dir` vazio, sem `-y/--yolo/--auto`; sem `--plan`, que o CLI
-  recusa junto de `-p`) mais DETECCAO INTEGRAL por manifesto SHA-256 da
+  recusa junto de `-p`) mais DETECCAO DECLARADA por manifesto SHA-256 da
   arvore antes/depois. Mutacao fora do descartavel REPROVA a corrida
   (returncode 3), nao apenas aparece.
 - MAJOR #4 (lease): `verificar_lock` com fence esperado IMEDIATAMENTE

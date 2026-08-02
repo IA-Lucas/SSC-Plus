@@ -15,7 +15,7 @@ custo variavel zero.
 Herda integralmente as correcoes da P1-A.3.2:
 - MAJOR #3 (isolamento): codex com `--sandbox read-only --ephemeral`;
   kimi sem sandbox de filesystem no CLI — restricao parcial (`--plan`,
-  `--skills-dir` vazio, sem `-y/--yolo/--auto`) mais DETECCAO INTEGRAL
+  `--skills-dir` vazio, sem `-y/--yolo/--auto`) mais DETECCAO DECLARADA
   por manifesto SHA-256 da arvore antes/depois. Mutacao fora do
   descartavel REPROVA a corrida (returncode 3), nao apenas aparece.
 - MAJOR #4 (lease): `verificar_lock` com fence esperado IMEDIATAMENTE
