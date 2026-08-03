@@ -33,11 +33,14 @@ desta missao invoca CLI real, e nenhum gasta franquia de assinatura.
 
 import locale
 import subprocess
+import tempfile
 import time
 
-import caminhos  # noqa: F401  (insere 05_p0/06_p1a/08_p2 no sys.path)
+import caminhos  # (insere 05_p0/06_p1a/08_p2/evidencias no sys.path)
 
+from contencao import Vigilancia, manifesto, mutacoes
 from preflight.adaptadores import argv_de, quota_esgotada
+from preflight.frota_real import MARCA_DESCARTAVEL, rotulo_restricao
 from ssc_p0.frota import ambiente_sanitizado
 from ssc_p0.providers import RespostaProvedor
 
@@ -123,7 +126,8 @@ def decodificar(bruto: bytes) -> str:
     return bruto.decode("utf-8", errors="replace")
 
 
-def sensor_subprocess(argv, env=None, timeout: int = TIMEOUT_PADRAO_S):
+def sensor_subprocess(argv, env=None, timeout: int = TIMEOUT_PADRAO_S,
+                      cwd: str | None = None):
     """Sensor real: subprocesso sanitizado, sem shell, com teto de parede.
 
     Captura stdout/stderr sem ecoa-los. `shell=False` (implicito na forma
@@ -134,11 +138,18 @@ def sensor_subprocess(argv, env=None, timeout: int = TIMEOUT_PADRAO_S):
     Captura em BYTES e decodifica com `decodificar`: deixar o `subprocess`
     decodar por nos fixa uma codificacao unica, e foi assim que a primeira
     resposta real em portugues chegou com todo acento trocado por U+FFFD.
+
+    `cwd` EXPLICITO desde a P2.3 (achado A). Ate aqui o argumento estava
+    ausente da chamada, e ausente nao e neutro: o filho herdava o
+    diretorio do runner, que herdava o do terminal, que o passo 3 do
+    `08_p2/README.md` deixa na RAIZ DESTE REPOSITORIO. Qualquer caminho
+    relativo que o filho escrevesse caia sobre o proprio acervo —
+    inclusive sobre `locks/`, de onde os guardas leem.
     """
     ambiente = ambiente_sanitizado(env)
     try:
         proc = subprocess.run(list(argv), env=ambiente, capture_output=True,
-                              timeout=timeout)
+                              timeout=timeout, cwd=cwd)
     except subprocess.TimeoutExpired:
         return (RC_TIMEOUT, "", f"timeout de {timeout}s na invocacao")
     except (FileNotFoundError, OSError) as exc:
@@ -150,8 +161,8 @@ def sensor_subprocess(argv, env=None, timeout: int = TIMEOUT_PADRAO_S):
             decodificar(proc.stderr))
 
 
-def classificar(rc: int, texto: str) -> tuple:
-    """(falha, efeito_externo) a partir do que o CLI devolveu.
+def classificar(rc: int, texto: str, mutacoes_medidas) -> tuple:
+    """(falha, efeito_externo) a partir do que o CLI devolveu E do que o disco mostrou.
 
     Ordem de precedencia, e cada degrau tem razao propria:
 
@@ -169,23 +180,49 @@ def classificar(rc: int, texto: str) -> tuple:
        que ninguem reconheceu NAO vira transitorio por otimismo — isso
        geraria retry contra uma falha determinista.
 
-    `efeito_externo` e `nenhum` em tudo que nao seja timeout porque a P2
-    opera em modo read-only por envelope. No dia em que houver escrita, e
-    aqui que a distincao aplicado/nao-aplicado precisa nascer — e esta
-    frase e o marco desse dia.
+    `mutacoes_medidas` E A CORRECAO DO ACHADO A (P2.3), e o parametro e
+    OBRIGATORIO por isso. Ate aqui esta funcao devolvia `efeito_externo =
+    "nenhum"` para TODO `rc == 0`, e a razao escrita era *"porque a P2
+    opera em modo read-only por envelope"*: o envelope declarava
+    read-only, a classificacao repetia a declaracao, e o recibo gravava
+    `"nenhum"` sem que nada tivesse olhado o disco. O registro confirmava
+    a suposicao que o produziu — MAJOR #3 na forma literal.
+
+    Agora quem decide e a lista de mutacoes que o chamador MEDIU (o
+    manifesto SHA-256 do descartavel e das raizes vigiadas, antes e
+    depois da chamada). Lista vazia continua produzindo `nenhum`, mas
+    `nenhum` passou a ser MEDICAO em vez de eco do envelope; lista nao
+    vazia produz `aplicado`, e o recibo diz quais caminhos.
+
+    Obrigatorio, e nao opcional com default: um default deixaria o
+    chamador esquecido devolvendo `nenhum` de novo — o defeito voltaria
+    por omissao, calado, que e exatamente como ele existia.
+
+    O QUE A MEDICAO NAO COBRE, e por isso `nao-aplicado` no degrau
+    transitorio NAO virou medicao: ela ve DISCO, dentro das raizes
+    vigiadas. Se a chamada teve efeito do outro lado da rede — uma
+    escrita no servico do provedor —, nenhuma fotografia local a mostra.
+    O `nao-aplicado` do transitorio segue sendo o que sempre foi, uma
+    afirmacao sobre o lado remoto, e o `incerto` do timeout tambem: a
+    medicao local nao pode contradizer nem confirmar o remoto, e por isso
+    nao o sobrescreve.
     """
     if rc == RC_TIMEOUT:
         return ("indeterminado", "incerto")
+    # Mutacao MEDIDA vence a classificacao textual: houve escrita, e
+    # chamar isso de `nenhum` seria a mesma declaracao de antes com um
+    # medidor ligado ao lado.
+    medido = "aplicado" if mutacoes_medidas else None
     if rc == 0:
-        return (None, "nenhum")
+        return (None, medido or "nenhum")
     low = texto.lower()
     if quota_esgotada(low):
-        return ("falha-quota", "nenhum")
+        return ("falha-quota", medido or "nenhum")
     if any(m in low for m in _MARCADORES_CLI_INDISPONIVEL):
-        return ("falha-contrato", "nenhum")
+        return ("falha-contrato", medido or "nenhum")
     if any(m in low for m in _MARCADORES_TRANSITORIOS):
-        return ("falha-transitoria", "nao-aplicado")
-    return ("falha-contrato", "nenhum")
+        return ("falha-transitoria", medido or "nao-aplicado")
+    return ("falha-contrato", medido or "nenhum")
 
 
 class ProvedorAssinaturaReal:
@@ -198,23 +235,51 @@ class ProvedorAssinaturaReal:
     """
 
     def __init__(self, espec, sensor=None, timeout: int = TIMEOUT_PADRAO_S,
-                 env=None, relogio=time.monotonic):
+                 env=None, relogio=time.monotonic, vigia=None,
+                 sessao_lock: str | None = None):
         self.espec = espec
         self.sensor = sensor or sensor_subprocess
         self.timeout = int(timeout)
         self.env = dict(env) if env is not None else None
         self.relogio = relogio
+        self.sessao_lock = sessao_lock or caminhos.SESSAO_LOCK
+        # `vigia` injetavel pela mesma razao do sensor: em teste ela olha
+        # uma arvore de brinquedo, em operacao a arvore de verdade. `None`
+        # NAO desliga a vigilancia — constroi a real. Desligar por omissao
+        # seria repor o defeito: quem esquecesse de passar o objeto
+        # voltaria a invocar sem ninguem olhando o disco.
+        self.vigia = vigia
         self.chamadas = 0
         self.chaves_recebidas = []      # idempotency_keys propagadas (0.2.1-5)
+        # Uma entrada por invocacao, na ordem em que ocorreram: o que foi
+        # restringido, onde o filho correu e o que o disco mostrou. E daqui
+        # que o recibo tira a medicao do efeito externo.
+        self.medicoes = []
 
-    def argv(self, prompt: str) -> list:
-        """argv nao-interativo: executavel + modo headless + prompt.
+    def _vigilancia(self):
+        return self.vigia or Vigilancia(caminhos.RAIZ, self.sessao_lock)
+
+    def argv(self, prompt: str, descartavel: str) -> list:
+        """argv nao-interativo: executavel + headless + RESTRICAO + prompt.
 
         `espec.headless` e o campo que a P1-A declarou e NUNCA usou —
         `codex exec`, `kimi -p`. A P2 e o primeiro uso dele, e passa a ser
         a razao de ele existir.
+
+        `espec.restricao_headless` entra ENTRE o modo headless e o prompt
+        (P2.3, achado A), com `MARCA_DESCARTAVEL` trocado pelo diretorio
+        descartavel desta invocacao. A ordem nao e estetica: `codex exec`
+        toma o prompt como argumento POSICIONAL, e uma flag depois dele
+        seria lida como parte do prompt ou recusada.
+
+        Provedor sem restricao declarada monta o argv de sempre — e o
+        rotulo (`rotulo_restricao`) diz isso por extenso, em vez de deixar
+        a ausencia passar por protecao.
         """
-        return argv_de(self.espec, list(self.espec.headless) + [prompt])
+        restricao = [descartavel if arg == MARCA_DESCARTAVEL else arg
+                     for arg in self.espec.restricao_headless]
+        return argv_de(self.espec,
+                       list(self.espec.headless) + restricao + [prompt])
 
     def invocar(self, entrada: bytes, pacote: dict | None = None,
                 idempotency_key: str | None = None) -> RespostaProvedor:
@@ -229,13 +294,66 @@ class ProvedorAssinaturaReal:
         self.chamadas += 1
         prompt = (entrada or b"").decode("utf-8", errors="replace")
 
+        # Diretorio descartavel POR INVOCACAO: e o `--cd` do CLI e o `cwd`
+        # do processo filho ao mesmo tempo. Dois elos herdavam o diretorio
+        # do terminal ate a P2.3 (`capsula.py:111` e a chamada de
+        # `subprocess.run` daqui), e caminho relativo escrito pelo filho
+        # caia na raiz deste repositorio.
+        descartavel = tempfile.mkdtemp(
+            prefix=f"p2-{self.espec.provider_id}-")
+        argv = self.argv(prompt, descartavel)
+
+        # As DUAS fotografias de antes. O descartavel responde *o filho
+        # escreveu no proprio espaco?*; a `Vigilancia` responde *escreveu
+        # fora dele?* — e sao perguntas diferentes, com respostas
+        # diferentes no recibo.
+        antes = manifesto(descartavel)
+        vigia = self._vigilancia()
+        vigia.abrir()
+
         inicio = self.relogio()
-        rc, out, err = self.sensor(self.argv(prompt), self.env, self.timeout)
+        rc, out, err = self.sensor(argv, self.env, self.timeout,
+                                   cwd=descartavel)
         latencia_ms = int(round((self.relogio() - inicio) * 1000))
 
+        relatorio_vigilancia = vigia.fechar()
+        no_descartavel = mutacoes(antes, manifesto(descartavel))
+        fora = list(relatorio_vigilancia["mutacoes_fora_do_descartavel"])
+        # Mutacao do renovador de lease NAO entra: ela tem escritor
+        # esperado por construcao, e conta-la como efeito do provedor
+        # faria toda corrida longa parecer escrita externa.
+        medidas = [f"descartavel: {m}" for m in no_descartavel] + fora
+
         texto = (out or "") + "\n" + (err or "")
-        falha, efeito = classificar(rc, texto)
+        falha, efeito = classificar(rc, texto, medidas)
         ok = falha is None
+
+        self.medicoes.append({
+            "provider_id": self.espec.provider_id,
+            "restricao": rotulo_restricao(self.espec),
+            # O prompt e a tarefa do usuario: fora do recibo publico.
+            "argv_publico": ["<PROMPT>" if a == prompt else a for a in argv],
+            "dir_descartavel": descartavel,
+            "cwd_do_filho": descartavel,
+            "medida": "manifesto SHA-256 do diretorio descartavel e das "
+                      "raizes vigiadas, ANTES e DEPOIS da invocacao",
+            "mutacoes_no_descartavel": no_descartavel,
+            "mutacoes_fora_do_descartavel": fora,
+            "mutacoes_atribuidas_ao_renovador":
+                relatorio_vigilancia["mutacoes_atribuidas_ao_renovador"],
+            "arquivos_no_manifesto_vigiado":
+                relatorio_vigilancia["arquivos_no_manifesto"],
+            "raizes_vigiadas": relatorio_vigilancia["raizes_vigiadas"],
+            "nao_vigiado": relatorio_vigilancia["nao_vigiado"],
+            "efeito_externo": efeito,
+            "efeito_externo_origem": (
+                "timeout: o efeito do lado REMOTO e incerto, e a "
+                "fotografia local nao o decide (IR-2)"
+                if rc == RC_TIMEOUT else
+                "mutacao medida no disco" if medidas else
+                "fotografia sem nenhuma mutacao — `nenhum` aqui e "
+                "medicao, nao eco do envelope"),
+        })
 
         return RespostaProvedor(
             ok=ok,

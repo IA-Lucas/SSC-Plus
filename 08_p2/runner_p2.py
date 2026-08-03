@@ -45,7 +45,6 @@ from datetime import datetime, timedelta, timezone
 import caminhos
 
 sys.path.insert(0, os.path.join(caminhos.RAIZ, "05_p0", "cenarios"))
-sys.path.insert(0, os.path.join(caminhos.RAIZ, "06_p1a", "evidencias"))
 
 import frota_medida                                          # noqa: E402
 from capsula import exigir_capsula_limpa, verificar_capsula   # noqa: E402
@@ -60,7 +59,10 @@ from ssc_p0.frota import (AdaptadorAssinatura, Frota,         # noqa: E402
                           envelope_de_frota, executar_com_frota,
                           politica_de_frota)
 
-_SESSAO_LOCK = os.environ.get("SSC_LOCK_SESSAO", "p2-ops")
+# Leitor UNICO do nome do lease (P2.3): o executor real precisa do MESMO
+# nome para atribuir a mutacao do renovador na `Vigilancia`, e duas
+# leituras da mesma variavel com o mesmo default seriam duas fontes.
+_SESSAO_LOCK = caminhos.SESSAO_LOCK
 DIR_SAIDAS = os.path.join(caminhos.RAIZ, "08_p2", "evidencias")
 DIR_LABS = os.path.join(caminhos.RAIZ, "08_p2", "saidas", "labs")
 VALIDADE_PREFLIGHT_H = 24
@@ -166,7 +168,8 @@ def carregar_preflight(caminho: str, validade_h: int,
     return dados
 
 
-def fabrica_de_provedores(frota: Frota, timeout: int, sensor=None):
+def fabrica_de_provedores(frota: Frota, timeout: int, sensor=None,
+                          executores=None, vigia=None):
     """Devolve a fabrica que `Lab` usa para montar cada executor.
 
     O objeto entregue ao `ExecutionGateway` e o `AdaptadorAssinatura`
@@ -180,15 +183,27 @@ def fabrica_de_provedores(frota: Frota, timeout: int, sensor=None):
     teste de ponta a ponta deste runner invocaria os CLIs de verdade e
     queimaria franquia de assinatura a cada corrida da suite. `None` usa
     o sensor real — a operacao nao precisa declarar nada.
+
+    `executores` e a lista onde cada executor construido e guardado, e ela
+    existe por uma razao de EVIDENCIA (P2.3): a medicao do efeito externo
+    e feita dentro da invocacao, e o `ExecutionAttempt` ratificado da P0
+    nao tem campo para carrega-la. Guardar o objeto e o unico jeito de o
+    recibo publicar o que o disco mostrou sem alterar o contrato da P0.
     """
     por_chave = {(e.provider_id, e.model_id): e for e in frota.entradas}
 
     def fabrica(executor_id, executor, resolvido):
         entrada = por_chave[(executor["provedor"], executor["modelo"])]
         espec = ESPECIFICACOES[entrada.provider_id]
-        return AdaptadorAssinatura(
-            entrada,
-            ProvedorAssinaturaReal(espec, sensor=sensor, timeout=timeout))
+        # `vigia=None` NAO desliga a vigilancia: o executor constroi a
+        # real, sobre a arvore deste repositorio. A injecao existe para a
+        # suite olhar uma arvore de brinquedo em vez do acervo inteiro —
+        # e um teto de custo do teste, nunca um interruptor da operacao.
+        real = ProvedorAssinaturaReal(espec, sensor=sensor, timeout=timeout,
+                                      sessao_lock=_SESSAO_LOCK, vigia=vigia)
+        if executores is not None:
+            executores.append(real)
+        return AdaptadorAssinatura(entrada, real)
 
     return fabrica
 
@@ -196,7 +211,8 @@ def fabrica_de_provedores(frota: Frota, timeout: int, sensor=None):
 def executar(tarefa: str, criterio: str, preflight: dict,
              capacidade: str | None = None, papel: str = "autor",
              timeout: int = TIMEOUT_PADRAO_S, raiz_lab: str | None = None,
-             idempotency_key: str | None = None, sensor=None) -> dict:
+             idempotency_key: str | None = None, sensor=None,
+             vigia=None) -> dict:
     """Uma tarefa, da frota medida ao veredito — devolve o registro."""
     montagem = frota_medida.frota_do_preflight(preflight["frota"],
                                                ESPECIFICACOES)
@@ -228,6 +244,7 @@ def executar(tarefa: str, criterio: str, preflight: dict,
     raiz_lab = raiz_lab or os.path.join(
         DIR_LABS, agora_utc().strftime("%Y%m%dT%H%M%SZ"))
     os.makedirs(raiz_lab, exist_ok=True)
+    executores = []
     lab = Lab(raiz_lab,
               catalogo=catalogo_de_frota(frota),
               politica=politica_de_frota(frota),
@@ -235,8 +252,8 @@ def executar(tarefa: str, criterio: str, preflight: dict,
               # external_variable_cost_cap = 0: custo variavel positivo
               # estoura o portao de orcamento ANTES do proximo attempt.
               teto_custo=0.0,
-              fabrica_provider=fabrica_de_provedores(frota, timeout,
-                                                     sensor))
+              fabrica_provider=fabrica_de_provedores(frota, timeout, sensor,
+                                                     executores, vigia))
 
     wu = lab.router.forjar(
         intencao=tarefa[:4000],
@@ -264,7 +281,14 @@ def executar(tarefa: str, criterio: str, preflight: dict,
                 "montagem": montagem, "work_unit_id": wu.work_unit_id,
                 "sessao_id": lab.envelope.sessao_id,
                 "linhagem_id": lab.envelope.linhagem_id,
-                "raiz_lab": raiz_lab, "saida": None, "attempts": []}
+                "raiz_lab": raiz_lab, "saida": None, "attempts": [],
+                # Uma entrada por INVOCACAO, na ordem em que ocorreram — e
+                # a ordem e o vinculo, porque a medicao nasce dentro do
+                # executor e o attempt da P0 nao tem campo para ela. Vazia
+                # significa que nenhum subprocesso chegou a existir (veto
+                # economico, frota vazia), nunca que ninguem mediu.
+                "efeito_externo_medido":
+                    [m for e in executores for m in e.medicoes]}
 
     for attempt_id, registro_attempt in lab.kernel.attempts.items():
         att = registro_attempt["attempt"]

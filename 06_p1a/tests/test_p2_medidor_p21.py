@@ -43,6 +43,7 @@ for _d in ("05_p0", os.path.join("05_p0", "cenarios"), "08_p2",
     if _c not in sys.path:
         sys.path.insert(0, _c)
 
+import contencao  # noqa: E402
 import medidor  # noqa: E402
 import runner_p2  # noqa: E402
 from test_p2_runner_p2 import SensorObrigatorio, preflight_real  # noqa: E402
@@ -103,8 +104,15 @@ class _ComCorrida(unittest.TestCase):
         self._tmp = tempfile.TemporaryDirectory(prefix="p21-medidor-")
         self.addCleanup(self._tmp.cleanup)
         self.raiz_lab = os.path.join(self._tmp.name, "lab")
+        # Igual a suite do runner (P2.3): aqui a vigilancia olha uma
+        # arvore de brinquedo, porque o objeto sob teste e o medidor de
+        # fronteira e nao a contencao. O default de operacao tem teste.
+        self.vigia_arvore = os.path.join(self._tmp.name, "vigiado")
+        os.makedirs(self.vigia_arvore)
 
     def corrida(self, sensor, tarefa="responda com a palavra pronto", **kw):
+        kw.setdefault("vigia", contencao.Vigilancia(
+            self.vigia_arvore, "sessao-de-teste", alvos=()))
         return runner_p2.executar(
             tarefa=tarefa, criterio="resposta nao vazia",
             preflight=preflight_real(), raiz_lab=self.raiz_lab,

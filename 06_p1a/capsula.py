@@ -35,6 +35,13 @@ from preflight.economia import _nome_payg
 __all__ = ["ViolacaoCapsula", "ambiente_capsula", "verificar_capsula",
            "iniciar_em_capsula", "exigir_capsula_limpa"]
 
+# Raiz do repositorio, deduzida do proprio arquivo. O entry point da
+# capsula passa a definir o `cwd` do filho AQUI (P2.3, achado A): ate a
+# P2.2 o argumento ficava `None` e o processo do SSC+ herdava o diretorio
+# do terminal, que herdava o de quem o abriu. Diretorio de trabalho por
+# heranca nao e diretorio de trabalho escolhido — e o que estivesse la.
+RAIZ = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
 
 class ViolacaoCapsula(Exception):
     """Credencial de modelo presente dentro da capsula (fail-closed)."""
@@ -103,12 +110,18 @@ def main() -> int:
 
     Gera o ambiente-filho sem credenciais ANTES de carregar o SSC+ e
     repassa o codigo de saida do filho.
+
+    O `cwd` do filho e a RAIZ do repositorio, declarada e nao herdada: o
+    SSC+ escreve evidencia por caminho absoluto, mas quem herda o
+    diretorio do terminal herda tambem o de qualquer processo que o tenha
+    aberto — e era esse diretorio, e nao um escolhido, que descia por dois
+    elos ate o CLI do provedor.
     """
     if len(sys.argv) < 2:
         print("uso: python 06_p1a/capsula.py <argv-do-processo-filho...>",
               file=sys.stderr)
         return 2
-    proc = iniciar_em_capsula(sys.argv[1:])
+    proc = iniciar_em_capsula(sys.argv[1:], cwd=RAIZ)
     sys.stdout.write(proc.stdout or "")
     sys.stderr.write(proc.stderr or "")
     return proc.returncode

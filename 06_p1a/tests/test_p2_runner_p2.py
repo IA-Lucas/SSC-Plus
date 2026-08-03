@@ -52,6 +52,7 @@ for _d in ("05_p0", os.path.join("05_p0", "cenarios"), "08_p2",
     if _c not in sys.path:
         sys.path.insert(0, _c)
 
+import contencao  # noqa: E402
 import provedor_assinatura as pa  # noqa: E402
 import runner_p2  # noqa: E402
 from ssc_p0.frota import STOP_WAIT_RESET  # noqa: E402
@@ -77,11 +78,12 @@ class SensorObrigatorio:
         self.por_provedor = por_provedor
         self.chamadas = []
 
-    def __call__(self, argv, env=None, timeout=None):
+    def __call__(self, argv, env=None, timeout=None, cwd=None):
         exe = str(argv[0]).lower()
         for pid, resposta in self.por_provedor.items():
             if pid in exe:
-                self.chamadas.append({"provedor": pid, "argv": list(argv)})
+                self.chamadas.append({"provedor": pid, "argv": list(argv),
+                                      "cwd": cwd})
                 return resposta
         raise AssertionError(f"sensor chamado para executavel nao previsto: "
                              f"{exe}")
@@ -97,12 +99,24 @@ class _ComLab(unittest.TestCase):
         self._tmp = tempfile.TemporaryDirectory(prefix="p2-runner-")
         self.addCleanup(self._tmp.cleanup)
         self.raiz_lab = os.path.join(self._tmp.name, "lab")
+        # Vigilancia estreitada: em operacao ela fotografa as duas raizes
+        # reais (~1,3 s por invocacao), e aqui olha uma arvore de
+        # brinquedo vazia. Que o DEFAULT construa a real esta preso por
+        # teste proprio na suite da P2.3 — sem ele, esta injecao seria o
+        # interruptor que apaga o mecanismo em operacao sem ninguem ver.
+        self.vigia_arvore = os.path.join(self._tmp.name, "vigiado")
+        os.makedirs(self.vigia_arvore)
+
+    def vigia(self):
+        return contencao.Vigilancia(self.vigia_arvore, "sessao-de-teste",
+                                    alvos=())
 
     def executar(self, sensor, **kw):
         base = dict(tarefa="responda com a palavra pronto",
                     criterio="resposta nao vazia",
                     preflight=preflight_real(),
-                    raiz_lab=self.raiz_lab, sensor=sensor)
+                    raiz_lab=self.raiz_lab, sensor=sensor,
+                    vigia=self.vigia())
         base.update(kw)
         return runner_p2.executar(**base)
 

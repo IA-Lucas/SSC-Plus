@@ -24,6 +24,14 @@ from dataclasses import dataclass
 
 _CODEX_EXE = "~/AppData/Local/Programs/OpenAI/Codex/bin/codex.exe"
 
+# Marcador trocado pelo diretorio descartavel NO MOMENTO DA INVOCACAO
+# (P2.3). A especificacao e estatica e o descartavel so existe quando a
+# chamada acontece; sem marcador, ou a especificacao carregaria um
+# caminho — e ela nao carrega caminho local por decisao da rodada 3 da
+# revisao P1-A.3 —, ou o montador de argv precisaria saber a POSICAO da
+# flag, que e conhecimento do CLI vivendo fora da especificacao dele.
+MARCA_DESCARTAVEL = "<DESCARTAVEL>"
+
 
 @dataclass(frozen=True)
 class EspecProvedor:
@@ -53,6 +61,14 @@ class EspecProvedor:
     # versao, nem login, nem modelos.
     sondas_automaticas: bool = True
     observacoes: str = ""
+    # Flags de restricao REAL que o CLI oferece em modo headless, emitidas
+    # ENTRE `headless` e o prompt (P2.3, achado A). Vazio significa
+    # exatamente o que diz: o CLI nao oferece restricao de filesystem, e o
+    # rotulo NAO pode afirmar sandbox que nao existe (achado N3 / MAJOR #3
+    # — o kimi 0.30.0 devolve `unknown option '--sandbox'`, medido na
+    # P1-A.3.4). Contem `MARCA_DESCARTAVEL` onde entra o diretorio
+    # descartavel da invocacao.
+    restricao_headless: tuple = ()
 
 
 ESPECIFICACOES: dict[str, EspecProvedor] = {
@@ -74,6 +90,19 @@ ESPECIFICACOES: dict[str, EspecProvedor] = {
                   # equivale a catalogo completo (`codex models` e
                   # TTY-only, bloqueio factual da P1-A.2).
                   "modelos": ("doctor",)},
+        # P2.3, achado A: as MESMAS flags que `prova_minima.py:46` ja
+        # passava na P1-A e que a P2 nao herdou. Medidas contra o CLI
+        # 0.145.0, nao lidas em `--help`: `--sandbox read-onlyX` e
+        # recusado com `[possible values: read-only, workspace-write,
+        # danger-full-access]`, e o argv completo abaixo faz o CLI
+        # imprimir `sandbox: read-only` e `workdir: <descartavel>` no
+        # proprio cabecalho antes de morrer sem credencial.
+        # `--skip-git-repo-check` acompanha `--cd` por necessidade: o
+        # descartavel nao e repositorio Git, e sem ele o CLI recusa
+        # rodar ali.
+        restricao_headless=("--sandbox", "read-only",
+                            "--cd", MARCA_DESCARTAVEL,
+                            "--skip-git-repo-check", "--ephemeral"),
         observacoes="automacao: allow (supervised headless); billing "
                     "subscription; variable_cost 0"),
     "claude": EspecProvedor(
@@ -116,6 +145,11 @@ ESPECIFICACOES: dict[str, EspecProvedor] = {
         comandos={"versao": ("--version",),
                   "login": ("provider", "list"),
                   "modelos": ("provider", "list")},
+        # `restricao_headless` fica VAZIA de proposito, e a ausencia e o
+        # achado: o kimi 0.30.0 devolve `unknown option '--sandbox'` e
+        # recusa `--plan` junto com `-p` (medido na P1-A.3.4, nao lido em
+        # `--help`). Nao ha flag de filesystem a emitir, e inventar uma
+        # rotularia isolamento inexistente.
         observacoes="4 modelos via provider list; ACP disponivel "
                     "(`kimi acp`); billing subscription"),
     "google": EspecProvedor(
@@ -163,6 +197,45 @@ ESPECIFICACOES: dict[str, EspecProvedor] = {
                     "assinatura, NUNCA XAI_API_KEY, nunca api.x.ai PAYG; "
                     "unattended = TERMS_REVIEW_REQUIRED"),
 }
+
+
+# Palavras que AFIRMAM restricao do CLI. Nenhuma pode aparecer no rotulo
+# de um provedor cuja `restricao_headless` esteja vazia — a licao do
+# achado N3, aqui aplicada ao outro rotulo do acervo: o kimi nao tem
+# sandbox de filesystem, e dizer que tem seria afirmar a propriedade em
+# vez de exerce-la (MAJOR #3).
+PALAVRAS_DE_RESTRICAO_DO_CLI = ("sandbox", "read-only", "somente leitura",
+                                "isolad", "efemer")
+
+
+def rotulo_restricao(espec) -> str:
+    """O que a restricao E — CONSTRUIDO a partir das flags que serao emitidas.
+
+    Nao ha frase fixa: o rotulo se monta a partir de
+    `espec.restricao_headless`, o MESMO objeto que o executor emite. Uma
+    flag removida some do rotulo por construcao, e uma flag acrescentada
+    aparece — nunca por alguem lembrar de reescrever a frase. Foi por a
+    frase e o mecanismo serem objetos independentes que um pode ter
+    passado o outro (achado N3, `contencao.enforcement_kimi`).
+
+    Vazio nao vira silencio: o rotulo diz, por extenso, que o CLI nao
+    oferece restricao de filesystem e nomeia o que sobra.
+    """
+    if not espec.restricao_headless:
+        return (f"o CLI `{espec.cli}` NAO oferece restricao de filesystem "
+                "em modo headless: nenhuma flag de restricao e emitida. O "
+                "que resta e o diretorio de trabalho descartavel do "
+                "processo filho e a deteccao por manifesto SHA-256 antes e "
+                "depois da invocacao (`contencao.Vigilancia`) — deteccao "
+                "declarada, jamais impedimento")
+    flags = " ".join(espec.restricao_headless)
+    return (f"restricao emitida ao CLI `{espec.cli}` em modo headless: "
+            f"`{flags}` (o marcador {MARCA_DESCARTAVEL} e trocado pelo "
+            "diretorio descartavel da invocacao), mais o diretorio de "
+            "trabalho descartavel do processo filho e a deteccao por "
+            "manifesto SHA-256 antes e depois (`contencao.Vigilancia`). O "
+            "que a flag FAZ dentro do turno do modelo e propriedade do CLI "
+            "externo e NAO foi medido aqui")
 
 
 def frota_real() -> list:
