@@ -6,6 +6,106 @@
 > capsula, em modo supervisionado. **Chamada de API paga continua
 > PROIBIDA** — a politica economica nao foi tocada.
 
+## A FRONTEIRA — quando despachar poupa, e quando NAO poupa
+
+Medido na P2.2 em **2026-08-03**, com quatro corridas novas mais a corrida
+da P2.1 (`08_p2/evidencias/medicao-p22-*.json`). Esta secao vem antes dos
+comandos porque quem chega aqui precisa saber **quando nao usar** — e o
+numero bonito do item 1 abaixo veio de uma tarefa de um tipo so.
+
+### O desenho: mesma tarefa, so o turno interno muda
+
+Tres prompts de **forma identica**, mesmo pedido de saida (`no maximo 8
+linhas`, duas perguntas), diferindo **somente** no turno interno exigido.
+O prompt foi byte a byte igual nos dois canais.
+
+| corrida | turno interno | razao | razao com a MESMA resposta nos dois lados |
+|---|---|---|---|
+| (a) P2.2 | `execution.py`, 13.508 B | **19,558** | 18,475 |
+| (a) P2.1 | `eventlog.py`, 6.184 B | **8,776** | 8,092 |
+| (c) P2.2 #1 | `estados.py`, 2.987 B | **6,737** | 5,512 |
+| (c) P2.2 #2 | `estados.py`, 2.987 B (mesmo prompt) | **6,464** | 5,329 |
+| (b) P2.2 | **nenhum** | **2,766** | **1,000** |
+
+### A identidade que separa economia de ilusao
+
+A poupanca decompoe, e a decomposicao fecha **em todas as cinco
+corridas**:
+
+    poupanca = turno_interno + (resposta_do_alternativo - resposta_da_assinatura)
+
+O primeiro termo e economia: sao bytes que o despachante **nunca ingere**.
+O segundo termo **nao vem de despachar** — vem de um canal responder mais
+curto que o outro. Ele saiu **597, 783, 811, 837 e 890 B** nas cinco
+corridas: praticamente constante e indiferente a classe da tarefa. Nas
+tres corridas da P2.2 o codex usou 3 ou 4 das 8 linhas permitidas; o canal
+alternativo usou 8. **Qual resposta presta, a proxy nao diz.**
+
+### Onde a tese vale
+
+**Poupa** quando o turno interno e grande diante desse termo de ~800 B —
+ler arquivo, varrer diretorio, abrir muitas ferramentas. E o unico regime
+em que a poupanca medida e majoritariamente economia: na corrida (a) o
+turno interno foi 94% dela.
+
+**A razao acompanha o tamanho do turno interno, e nao a classe.** Os
+`8,78x` da P2.1 e os `19,56x` da P2.2 sao a MESMA classe de tarefa com
+arquivos diferentes. Citar a razao sem citar o arquivo e citar a escolha
+do arquivo.
+
+### Onde a tese NAO vale
+
+**Nao poupa** em pergunta autocontida, sem turno interno. Medindo com a
+mesma resposta nos dois lados, a razao da classe (b) e **1,000 exatos** —
+poupanca estrutural **zero**. Os `2,766` que o instrumento anuncia sao,
+integralmente, os 890 B de diferenca de verbosidade: **890 de 890**. Ha
+guarda que prende isso
+(`test_sem_turno_interno_e_resposta_IGUAL_a_poupanca_e_ZERO`), para a
+frase acima nao ser afirmacao que ninguem exerce.
+
+**Custa MAIS** quando a assinatura responde mais longo que o canal
+alternativo responderia — o instrumento diz `MAIS` nesse caso, e tem teste
+para isso desde a P2.1. E **custa uma tentativa perdida** pedir capacidade
+que puxa o kimi enquanto a franquia dele estiver esgotada (item 2 abaixo):
+essa tentativa fica com a assinatura, nao com o despachante, entao a proxy
+de fronteira **nao a mostra** ao despachante. A proxy mede a fronteira de
+quem despacha, jamais a queima total da frota.
+
+### O que NENHUMA destas corridas estabelece
+
+**Nao ha tendencia estabelecida, em nenhuma das tres classes.** O `n` por
+classe, sendo honesto sobre o que conta como repeticao:
+
+| classe | corridas | repeticoes de MESMO prompt |
+|---|---|---|
+| (a) turno interno pesado | 2 | **0** — arquivos diferentes, tarefas diferentes |
+| (b) turno interno nulo | 1 | **0** |
+| (c) intermediaria | 2 | **1** |
+
+A unica repeticao real do acervo moveu a razao de **6,737 para 6,464
+(-4,1 %)**, com o lado alternativo mantido identico de proposito: a
+variacao veio toda do tamanho da resposta da assinatura (438 -> 466 B).
+Uma repeticao da **um delta**, nunca uma dispersao — e a P2.1 escreveu
+`8,776`, com tres casas, sobre `n = 1`.
+
+**Quantas corridas seriam necessarias, e por que nao ha resposta medida.**
+Um `n` justificado sai de uma estimativa de dispersao, e a dispersao so
+existe depois das corridas: nenhum numero aqui pode ser deduzido do que
+foi medido. O que se pode afirmar sem extrapolar:
+
+1. **2 corridas de mesmo prompt por classe** e o minimo para existir
+   qualquer delta — hoje so a classe (c) tem;
+2. **5 por classe** e o menor `n` em que existe mediana que um unico
+   outlier nao move. E propriedade aritmetica da mediana, **nao** medicao
+   deste acervo, e esta escrito como convencao declarada;
+3. **um intervalo de confianca continua fora de alcance** ate haver
+   variancia estimada, e estima-la exige as corridas — a ordem nao pode
+   ser invertida.
+
+E a proxima medicao provavelmente **nao** deve ser repeticao: como a razao
+acompanha o tamanho do turno interno, varrer tamanhos de turno interno
+mede a fronteira, e repetir o mesmo arquivo mede o ruido da resposta.
+
 ## LEIA ANTES DE RODAR — tres limites que valem hoje
 
 Estao aqui, e nao no rodape, porque quem vem usar a P2 segue os tres
@@ -41,6 +141,16 @@ A tese central do projeto — despachar para a assinatura poupa token de
 outro canal — segue **NAO MEDIDA em token**. O que ha e uma corrida, numa
 proxy declarada, apontando na direcao dela.
 
+**Emenda da P2.2 (2026-08-03).** Os `8,78x` acima continuam verdadeiros
+sobre a corrida que os produziu, e a P2.2 mediu duas coisas que mudam como
+eles se leem: a razao **acompanha o tamanho do arquivo lido** (a mesma
+classe de tarefa, com um arquivo de 13.508 B, deu 19,558) e parte da
+poupanca **nao vem de despachar**, e sim de um canal responder mais curto
+que o outro. Antes de citar qualquer razao daqui, ler
+[A FRONTEIRA](#a-fronteira--quando-despachar-poupa-e-quando-nao-poupa),
+acima: e la que esta escrito em que tipo de tarefa despachar **nao poupa
+nada**. `NAO_CAPTURA` tem hoje **nove** limites, nao oito.
+
 ### 2. A frota e codex-only enquanto a franquia do kimi estiver esgotada
 
 Medido em **2026-08-03T11:56Z**
@@ -60,9 +170,10 @@ mecanismo funcionando.
 
 Quem construiu nao certifica — regra do `CLAUDE.md` da raiz. A P2.0
 escreveu o codigo, os testes e a propria evidencia; a P2.1 escreveu o
-medidor e mediu as corridas acima. **Nenhuma revisao independente passou
-por nada disso.** Nao existe atestado de aprovacao da P2, e este README
-nao e um.
+medidor e mediu as corridas acima; a P2.2 mediu a fronteira, achou dois
+defeitos e fechou os dois. **Nenhuma revisao independente passou por nada
+disso** — nem sobre a P2.0, nem sobre a P2.1, nem sobre a P2.2. Nao existe
+atestado de aprovacao da P2, e este README nao e um.
 
 ## Os tres passos, em PowerShell
 
@@ -163,4 +274,14 @@ usuario vira `<CAMINHO-LOCAL>`) e um laboratorio proprio em
    `decodificar` mas nao o ponto de chamada `sensor_subprocess`. Os dois
    foram fechados com teste, sem tocar producao. O que isso ensina sobre
    o resto do acervo — quantos outros guardas estao na mesma condicao —
-   **nao foi medido**.
+   **nao foi medido**;
+9. **o relato do runner ja perdeu uma evidencia, e a ORDEM entre relatar e
+   persistir continua sem guarda.** Medido na P2.2: a resposta do codex
+   trouxe `→`, o console da estacao codifica cp1252, e `print` derrubou o
+   processo ANTES do bloco que persiste a evidencia — com o attempt em
+   **sucesso** e a franquia gasta. O relato foi corrigido e nao pode mais
+   derrubar a corrida por codificacao; mas nada prova que a evidencia seja
+   gravada se outra coisa levantar antes da persistencia, porque exercitar
+   isso exige `main` com lease vivo e invocacao real. Enquanto isso valer,
+   **corrida cujo artefato nao apareceu em `08_p2/evidencias/` ainda pode
+   ter ocorrido** — a cadeia em `08_p2/saidas/labs/` e quem sabe.
