@@ -440,6 +440,25 @@ class ReciboDaCorridaCarregaAMedicao(unittest.TestCase):
         self.assertIn("--sandbox", medicoes[0]["argv_publico"])
         self.assertEqual(r["attempts"][0]["efeito_externo"], "nenhum")
 
+    def test_a_vigilancia_injetada_no_runner_e_a_QUE_CORRE(self):
+        # Guarda contra declaracao morta (a familia que a P1-A.3.9 mediu):
+        # um parametro aceito na assinatura, registrado, e sem efeito
+        # nenhum sobre quem executa. Se `executar` deixasse de repassar
+        # `vigia`, o executor construiria a vigilancia REAL e a corrida
+        # seguiria verde — o teste passaria medindo outra coisa.
+        #
+        # A injecao desta suite usa `alvos=()`; a vigilancia de operacao
+        # carrega as SEIS fontes de config. E por essa diferenca que se
+        # sabe qual das duas correu.
+        r = self.corrida(SensorObrigatorio(codex=(0, "pronto", "")))
+        raizes = " ".join(r["efeito_externo_medido"][0]["raizes_vigiadas"])
+        for fonte in contencao.ALVOS_VIGIADOS_FORA_DO_REPOSITORIO:
+            with self.subTest(fonte=fonte):
+                self.assertNotIn(
+                    fonte, raizes,
+                    "a vigilancia injetada nao chegou ao executor: o "
+                    "parametro existe e nao faz nada")
+
     def test_o_prompt_do_usuario_NAO_vai_no_argv_publico(self):
         # O argv entra no recibo; a tarefa e do usuario. `<PROMPT>` no
         # lugar dela e a mesma regra de `prova_minima.py:101`.

@@ -26,9 +26,9 @@ criado_em: 2026-08-03
 |---|---|---|
 | HEAD | `db68151` | este commit |
 | `git status --porcelain` | vazio | vazio |
-| `scratchpad/MUTANTE-ATIVO.txt` | **ausente** (lido antes de qualquer medicao) | ausente (apagado apos reverter os 5 mutantes) |
+| `scratchpad/MUTANTE-ATIVO.txt` | **ausente** (lido antes de qualquer medicao) | ausente (apagado apos reverter os 6 mutantes) |
 | Suite `05_p0/tests` | **344/344 OK** | **344/344 OK** |
-| Suite `06_p1a/tests` | **838/838 OK** | **866/866 OK** (838 + 28) |
+| Suite `06_p1a/tests` | **838/838 OK** | **867/867 OK** (838 + 29) |
 | `05_p0/cenarios/prova_central.py` | OK, 18 assercoes / 20 eventos | idem |
 | Escritor unico | — | `p23-ops`, fence **1**, pid 54736 |
 | Chamadas **pagas** de modelo nesta missao | — | **ZERO** |
@@ -61,7 +61,7 @@ a posicao das flags de nenhum CLI.
 
 ## 2. As quatro provas da ORDEM 3
 
-Todas em `06_p1a/tests/test_p2_protecao_no_mecanismo_p23.py` (28 testes).
+Todas em `06_p1a/tests/test_p2_protecao_no_mecanismo_p23.py` (29 testes).
 Cada uma responde a pergunta obrigatoria da REGRA DE PROVA — *o teste
 exerce o caminho que a operacao percorre, ou um vizinho?*
 
@@ -96,9 +96,9 @@ razao: afirmar o que uma interface externa aceita nao e medi-la.
 
 ### (b) Desfazer a restricao e a suite acusar
 
-Cinco mutantes, **um por vez**, cada um registrado em
+Seis mutantes, **um por vez**, cada um registrado em
 `scratchpad/MUTANTE-ATIVO.txt` ANTES de aplicar e revertido em seguida.
-Medido sobre a suite `06_p1a/tests` (866 testes):
+Medido sobre a suite `06_p1a/tests` (867 testes):
 
 | # | mutante | arquivo:linha | testes vermelhos |
 |---|---|---|---|
@@ -107,6 +107,7 @@ Medido sobre a suite `06_p1a/tests` (866 testes):
 | **R3** | a medicao para de decidir o efeito | `08_p2/provedor_assinatura.py:215` | **3** |
 | **R4** | o achado da `Vigilancia` e descartado | `08_p2/provedor_assinatura.py:321` | **2** |
 | **R5** | `cwd=RAIZ` sai do entry point da capsula | `06_p1a/capsula.py:124` | **1** |
+| **R6** | `executar()` para de repassar `vigia` a fabrica | `08_p2/runner_p2.py:240` | **1** |
 
 Nomes dos testes que caem, por mutante, para que a medicao seja
 auditavel e nao um numero solto:
@@ -126,7 +127,8 @@ auditavel e nao um numero solto:
   `..._falha_com_escrita_medida_nao_vira_nao_aplicado`;
 - **R4**: `..._vigilancia_dispara_sobre_escrita_na_arvore_vigiada` e
   `..._escrita_plantada_FORA_do_descartavel_e_REGISTRADA`;
-- **R5**: `..._filho_da_capsula_corre_na_raiz_do_repositorio`.
+- **R5**: `..._filho_da_capsula_corre_na_raiz_do_repositorio`;
+- **R6**: `..._vigilancia_injetada_no_runner_e_a_QUE_CORRE`.
 
 R5 derruba **um** teste, e isso e propriedade da correcao, nao fraqueza
 da prova: ha um caminho so — o entry point — e ele e exercido de verdade,
@@ -137,6 +139,16 @@ lancando `python 06_p1a/capsula.py` de um diretorio que nao e a raiz.
 nasce na RAIZ do repositorio. O proprio teste o remove no `cleanup` — a
 limpeza foi escrita junto com o mutante em mente, e a arvore foi
 conferida vazia depois da campanha.
+
+**R6 nasceu de uma lacuna encontrada DEPOIS do commit [1/3]**, e fica
+registrada porque e da mesma familia que este acervo ja mediu. O
+parametro `vigia` de `executar()` era aceito, viajava pela assinatura e
+ninguem provava que chegava ao executor: se `executar` deixasse de
+repassa-lo, o executor construiria a vigilancia REAL e **toda a suite
+seguiria verde**, medindo outra coisa. E declaracao morta na forma que a
+P1-A.3.9 descreveu — flag aceita, registrada, sem efeito. O guarda
+distingue as duas pela cobertura: a vigilancia injetada tem `alvos=()`, a
+de operacao carrega as SEIS fontes de config.
 
 ### (c) O recibo pega escrita plantada
 
@@ -163,7 +175,7 @@ original.
 
 ### (d) A Vigilancia dispara
 
-Nao basta estar importada, e por isso ha tres testes:
+Nao basta estar importada, e por isso ha quatro testes:
 
 1. ela **acusa** escrita plantada na arvore que declara vigiar;
 2. **sem injecao**, o executor constroi a vigilancia REAL — mais de 300
@@ -174,7 +186,10 @@ Nao basta estar importada, e por isso ha tres testes:
 3. o lease do renovador e **ATRIBUIDO** e nao vira efeito do provedor —
    a separacao entre deteccao e atribuicao do §6 da P1-A.3.6. Sem ela,
    toda corrida longa pareceria escrita externa, e o recibo perderia o
-   poder de acusar a de verdade.
+   poder de acusar a de verdade;
+4. a vigilancia **injetada no runner e a que corre** (o guarda do R6):
+   sem ele, o parametro poderia deixar de ser repassado e a suite
+   inteira seguiria verde medindo a vigilancia errada.
 
 ## 3. O que a medicao NAO cobre
 
