@@ -34,6 +34,12 @@ htmlcov/
 # Os relatorios agregados sem segredo (05_p0/saidas/*.json) PERMANECEM versionados.
 05_p0/saidas/labs/
 
+# Runtime da P2 (mesma natureza): cada corrida do runner monta um lab
+# proprio sob 08_p2/saidas/labs/. As EVIDENCIAS da corrida
+# (08_p2/evidencias/*.json) sao agregadas, redigidas e PERMANECEM
+# versionadas — e o lab, que carrega saida crua de modelo, que nao sobe.
+08_p2/saidas/
+
 # Estado do escritor unico (P1-A.1): locks, leases e fencing tokens —
 # runtime puro, nunca versionado.
 locks/

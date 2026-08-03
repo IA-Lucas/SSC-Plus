@@ -32,7 +32,16 @@ class Lab:
     def __init__(self, raiz, relogio=None, teto_custo=0.5,
                  programa_providers=None, seeds=None,
                  funcoes_sucesso=None, observados=None,
-                 catalogo=None, politica=None, aprovacao=None):
+                 catalogo=None, politica=None, aprovacao=None,
+                 fabrica_provider=None, teto_tokens=100000):
+        """`fabrica_provider(executor_id, executor, resolvido) -> provider`.
+
+        Ponto de troca acrescentado pela P2: sem ele, `Lab` so sabia montar
+        `FakeProvider`, e executar de verdade exigiria um segundo montador
+        de laboratorio — dois montadores que precisam concordar sao dois
+        montadores que um dia divergem. O default continua sendo o falso
+        deterministico, e nenhuma corrida da P0 muda de comportamento.
+        """
         self.raiz = os.path.realpath(str(raiz))
         self.relogio = relogio or RelogioDeterministico()
         self.catalogo = catalogo or catalogo_padrao()
@@ -53,6 +62,10 @@ class Lab:
             chave = (executor["provedor"], executor["modelo"])
             resolvido = {"provedor": executor["provedor"],
                          "modelo": executor["modelo"], "effort": "alto"}
+            if fabrica_provider is not None:
+                self.providers[chave] = fabrica_provider(eid, executor,
+                                                         resolvido)
+                continue
             self.providers[chave] = FakeProvider(
                 resolvido,
                 seed=seeds.get(eid, 7),
@@ -67,7 +80,7 @@ class Lab:
                     "fronteiras": []},
             permissoes={"pode_escrever": False, "pode_executar": True,
                         "pode_rede": False, "conectores_com_escrita": []},
-            orcamento={"teto_custo": teto_custo, "teto_tokens": 100000,
+            orcamento={"teto_custo": teto_custo, "teto_tokens": teto_tokens,
                        "teto_tempo": 3600, "consumido_custo": 0.0,
                        "consumido_tokens": 0, "consumido_tempo": 0},
             politica_ref=sha256_de(self.politica),

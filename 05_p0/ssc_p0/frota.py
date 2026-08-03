@@ -377,13 +377,31 @@ class ResultadoFrota:
 
 def executar_com_frota(lab, frota: Frota, wu, papel: str = "autor",
                        idempotency_key: str | None = None,
-                       entrada: bytes = b"") -> ResultadoFrota:
+                       entrada: bytes = b"",
+                       custo_previsto: dict | None = None) -> ResultadoFrota:
     """Escolha por WorkUnit dentro do MESMO SessionEnvelope (adendo).
 
     QUOTA_EXHAUSTED -> estado registrado na frota + nova RoutingDecision
     para outra assinatura capaz (sessao, WorkUnit, memoria e causalidade
     preservados pelo proprio mecanismo de fallback 0.2.1-6). Nenhuma
     assinatura disponivel = STOP_WAIT_RESET — NUNCA PAYG.
+
+    `custo_previsto` acrescentado pela P2, e o motivo e um achado medido.
+    `envelope_de_frota` declara `teto_custo: 0.0` — que e o
+    `external_variable_cost_cap = 0` da politica imutavel —, mas o default
+    do Router estima `{"valor": 0.01, "rotulo": "estimado"}`, numero
+    SIMULADO da P0. Com o teto de fato em zero, o portao de orcamento
+    escalona ANTES do primeiro attempt e nenhuma tarefa sai.
+
+    Isso nunca aparecera porque `test_frota.py:47` monta o laboratorio com
+    `teto_custo=1.0` enquanto passa `envelope_de_frota()` — cujo teto e
+    0.0 — a Policy. O teto zero era DECLARADO no envelope e nunca
+    EXERCIDO contra o orcamento da sessao. A P2, que roda com ele de
+    verdade, e a primeira a bater nele.
+
+    Sob assinatura o custo variavel externo e zero por fato, nao por
+    estimativa: quem chama declara `{"valor": 0.0}` e o portao passa a
+    comparar o numero certo. `None` preserva o comportamento anterior.
     """
     elegiveis = frota.elegiveis(papel=papel)
     if not elegiveis:
@@ -402,6 +420,7 @@ def executar_com_frota(lab, frota: Frota, wu, papel: str = "autor",
     decisao = lab.router.propor_decisao(
         wu, rota="frota", selecao=selecao(primeira),
         alternativas=[selecao(e) for e in restantes],
+        custo_previsto=custo_previsto,
         aprovacao_custo=lab.aprovacao,
         motivo=f"frota: {primeira.provider_id}/{primeira.model_id} por "
                f"capacidade/preferencia (fallback autorizado)",

@@ -69,6 +69,7 @@ VOCABULARIO_VEREDITO = frozenset(
 # vazio contra o qual este acervo tem tres missoes de trilha.
 CONSUMIDORES_DECLARADOS = (
     "08_p2/frota_medida.py",
+    "08_p2/runner_p2.py",
 )
 
 # Primitivas que EXECUTAM algo: subprocesso, interpretacao dinamica e as
