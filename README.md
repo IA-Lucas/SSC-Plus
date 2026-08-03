@@ -52,8 +52,13 @@ Snapshots de hash reproduziveis em [01_fontes/snapshots/](01_fontes/snapshots/).
 
 1. Escrita permitida **somente** dentro deste repositorio.
 2. Proibidos: links simbolicos, imports diretos, estado compartilhado com as fontes.
-3. Proibidos nesta fase: runtime, integracao com provedor, chamada de API paga,
-   instalacao de dependencias, execucao de codigo legado, agente oficial.
+3. Proibidos **nas fases 0.1/0.2**: runtime, integracao com provedor, chamada de
+   API paga, instalacao de dependencias, execucao de codigo legado, agente
+   oficial. **Emendado em 2026-08-03** pelo ato soberano
+   [08_p2/00_ato-soberano-p2.md](08_p2/00_ato-soberano-p2.md), que abre a fase
+   P2 e libera runtime e invocacao produtiva **somente** por `codex` e `kimi`,
+   somente dentro da capsula, somente em modo supervisionado. **Chamada de API
+   paga continua PROIBIDA** — a politica economica nao foi tocada.
 4. Nenhum ID canonico (FND/ADR/RFC/CAP/DEP/...) e criado aqui. Prefixos `SSC-*` sao
    locais e nao existem no espaco canonico.
 5. Nada experimental sobe para o canonico automaticamente — ver D8.

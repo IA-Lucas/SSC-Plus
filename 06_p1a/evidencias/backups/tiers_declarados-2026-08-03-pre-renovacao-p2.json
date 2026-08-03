@@ -1,0 +1,22 @@
+{
+  "tipo": "declaracao-de-tiers-do-proprietario",
+  "ato": "decisao soberana sobre as emendas da P1-A.2, item 1 (APROVADA COM LIMITES), registrada na missao P1-A.3",
+  "limites": "habilita SOMENTE SHADOW_ELIGIBLE; validade maxima de 24 horas; NAO autoriza P2 nem execucao autonoma",
+  "validade_maxima_horas": 24,
+  "declaracoes": [
+    {
+      "provider_id": "codex",
+      "tier": "ChatGPT Pro 5x",
+      "declarado_por": "proprietario",
+      "declarado_em_utc": "2026-08-01T23:54:41Z",
+      "validade_horas": 24
+    },
+    {
+      "provider_id": "kimi",
+      "tier": "Allegretto",
+      "declarado_por": "proprietario",
+      "declarado_em_utc": "2026-08-01T23:54:41Z",
+      "validade_horas": 24
+    }
+  ]
+}
