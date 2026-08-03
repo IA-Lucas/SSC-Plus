@@ -293,6 +293,39 @@ class DecodificacaoDaSaida(unittest.TestCase):
         self.assertTrue(r.ok, r.saida)
         self.assertEqual(r.saida.decode("utf-8"), "função ção")
 
+    def test_o_sensor_real_devolve_acento_intacto_de_um_CLI_EM_CP1252(self):
+        """O caso que OCORREU, e que o teste vizinho nao alcancava.
+
+        MEDIDO na P2.1 (ordem 3). A reversao vermelha de `decodificar`
+        derrubava 1 teste, mas trocar o PONTO DE CHAMADA — fazer
+        `sensor_subprocess` decodificar com utf-8 fixo, como antes da
+        correcao — derrubava ZERO. O guarda existia so na primitiva.
+
+        A causa e que o teste acima escreve bytes UTF-8, e utf-8 fixo
+        decodifica utf-8 sem erro nenhum: ele exercia o vizinho. O achado
+        4.3 da P2.0 nasceu de um CLI escrevendo na PAGE DE CODIGO DO
+        WINDOWS, e e essa a unica forma que separa os dois caminhos —
+        cp1252 e justamente o que utf-8 estrito NAO consegue decodificar.
+
+        E a licao N4 da P1-A.3.7, paga de novo: *primitiva corrigida nao
+        cobre ponto de chamada*.
+        """
+        espec = dataclasses.replace(espec_de("codex"),
+                                    executavel=sys.executable,
+                                    headless=("-c",))
+        p = pa.ProvedorAssinaturaReal(espec)
+        r = p.invocar("import sys;"
+                      "sys.stdout.buffer.write("
+                      "'propriedade só confirma'.encode('cp1252'))"
+                      .encode("utf-8"))
+        self.assertTrue(r.ok, r.saida)
+        lido = r.saida.decode("utf-8")
+        self.assertEqual(lido, "propriedade só confirma")
+        self.assertNotIn("�", lido,
+                         "acento perdido no PONTO DE CHAMADA: o texto "
+                         "corrompido vai para o CAS e para a cadeia de "
+                         "hashes como se fosse a resposta")
+
 
 class RespostaCompativelComAMaquinaDaP0(unittest.TestCase):
     """Trocar simulado por real e trocar o objeto, nao a maquina."""
