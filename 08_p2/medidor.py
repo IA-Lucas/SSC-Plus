@@ -102,6 +102,17 @@ NAO_CAPTURA = (
      "porque": "n=1 mede a corrida que ocorreu. Nada aqui autoriza "
                "extrapolar para a proxima tarefa, outro modelo ou outra "
                "estacao."},
+    {"codigo": "verbosidade-do-canal-entra-na-poupanca",
+     "porque": "a poupanca decompoe, por identidade, em turno interno MAIS "
+               "a diferenca de tamanho entre as duas respostas — e o "
+               "segundo termo nao vem de despachar, vem de um canal "
+               "responder mais curto que o outro. Medido na P2.2 em tres "
+               "corridas: 837, 811 e 890 bytes, praticamente constante e "
+               "independente da classe da tarefa. Na tarefa SEM turno "
+               "interno ele foi a poupanca INTEIRA (890 de 890), e a razao "
+               "caiu de 2,766 para 1,000 ao medir com a mesma resposta nos "
+               "dois lados. Quem cita a poupanca sem separar os dois "
+               "termos esta creditando ao despacho a brevidade do outro."},
 )
 
 PAPEIS = ("entrada", "saida", "interno")
@@ -273,8 +284,14 @@ def medir_alternativo(itens) -> dict:
 
     - **sem turno interno declarado**: a economia inteira que a tese
       afirma mora nos turnos internos (leitura de arquivo, chamada de
-      ferramenta). Razonete sem nenhum deles nao prova ausencia de
-      economia, so nao a mediu;
+      ferramenta). O aviso NAO distingue dois casos que a P2.2 mediu como
+      diferentes: razonete que OMITIU o turno — e ai subconta o canal
+      alternativo — e tarefa que nao TEM turno interno, e ai a ausencia e
+      o fato da tarefa, a poupanca estrutural e zero, e o que sobra na
+      conta e so a diferenca de verbosidade entre as duas respostas. Quem
+      le o aviso tem de dizer qual dos dois e; a P2.1 escrevia aqui que
+      razonete sem turno interno "nunca prova ausencia de economia", e a
+      classe (b) da P2.2 e o contraexemplo medido;
     - **sem saida declarada**: o canal que faz a tarefa produz resposta.
       Razonete sem ela conta metade da fronteira.
     """

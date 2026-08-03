@@ -47,11 +47,15 @@ import medidor  # noqa: E402
 import runner_p2  # noqa: E402
 from test_p2_runner_p2 import SensorObrigatorio, preflight_real  # noqa: E402
 
-# Os oito limites, ESCRITOS AQUI a mao. Nao se importa `NAO_CAPTURA` para
+# Os NOVE limites, ESCRITOS AQUI a mao. Nao se importa `NAO_CAPTURA` para
 # compara-la consigo mesma: isso seria tautologia — o guarda que afirma a
 # propriedade em vez de exerce-la, a familia do MAJOR #3 que este acervo
 # ja pagou tres vezes. Com a lista literal, apagar um membro do modulo
 # fica VERMELHO aqui.
+#
+# O nono entrou na P2.2, por medicao: a poupanca decompoe em turno interno
+# mais diferenca de verbosidade, e na classe sem turno interno o segundo
+# termo era a poupanca inteira.
 CODIGOS_ESPERADOS = {
     "bytes-nao-sao-tokens",
     "contexto-do-canal-nao-atravessa-a-fronteira",
@@ -61,6 +65,7 @@ CODIGOS_ESPERADOS = {
     "qualidade-nao-e-medida",
     "entrada-da-cadeia-e-truncada-em-4000-chars",
     "uma-corrida-nao-e-tendencia",
+    "verbosidade-do-canal-entra-na-poupanca",
 }
 
 
@@ -354,7 +359,37 @@ class Comparacao(_ComCorrida):
         self.assertLess(c["poupanca"]["bytes_utf8"], 0)
         self.assertIn("MAIS", c["veredito_da_fronteira"])
 
-    def test_os_OITO_limites_viajam_dentro_do_numero(self):
+    def test_sem_turno_interno_e_resposta_IGUAL_a_poupanca_e_ZERO(self):
+        # A FRONTEIRA que a P2.2 mediu e escreveu no README da P2, presa
+        # aqui para nao virar afirmacao sem guarda. Tarefa sem turno
+        # interno, e as duas respostas do mesmo tamanho: nao ha o que
+        # poupar na fronteira, e o instrumento tem de DIZER empate — nunca
+        # anunciar economia onde a estrutura da tarefa nao permite nenhuma.
+        c = self._par([medidor.item_de_texto("responda pronto", "entrada",
+                                             "prompt"),
+                       medidor.item_de_texto("pronto", "saida", "r")])
+        self.assertEqual(c["poupanca"]["bytes_utf8"], 0)
+        self.assertEqual(c["razao_alternativo_sobre_residual"], 1.0)
+        self.assertIn("empate", c["veredito_da_fronteira"])
+
+    def test_a_poupanca_decompoe_em_turno_interno_MAIS_verbosidade(self):
+        # A identidade medida nas tres classes da P2.2:
+        #     poupanca == turno_interno + (saida_alt - saida_assinatura)
+        # O segundo termo nao vem de despachar. Sem este guarda, um
+        # medidor que somasse os dois num numero so continuaria verde, e
+        # quem citasse a poupanca creditaria ao despacho a brevidade do
+        # outro canal.
+        interno = "z" * 500
+        alheia = "resposta bem mais longa que a da assinatura"
+        c = self._par([medidor.item_de_texto("responda pronto", "entrada",
+                                             "prompt"),
+                       medidor.item_de_texto(interno, "interno", "leitura"),
+                       medidor.item_de_texto(alheia, "saida", "r")])
+        verbosidade = len(alheia.encode("utf-8")) - len("pronto".encode())
+        self.assertEqual(c["poupanca"]["bytes_utf8"], 500 + verbosidade)
+        self.assertGreater(verbosidade, 0)   # o termo existe nesta corrida
+
+    def test_os_NOVE_limites_viajam_dentro_do_numero(self):
         # Proxy declarada vale; proxy silenciosa vira o defeito. A lista
         # esperada esta escrita a mao no topo deste arquivo, entao apagar
         # um membro de `NAO_CAPTURA` fica VERMELHO aqui — o guarda exerce
