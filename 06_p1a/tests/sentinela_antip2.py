@@ -67,7 +67,9 @@ VOCABULARIO_VEREDITO = frozenset(
 # correspondente. Declarar antes deixaria aqui um caminho morto — e o
 # teste que percorre a lista ficaria verde sem medir nada, que e o guarda
 # vazio contra o qual este acervo tem tres missoes de trilha.
-CONSUMIDORES_DECLARADOS = ()
+CONSUMIDORES_DECLARADOS = (
+    "08_p2/frota_medida.py",
+)
 
 # Primitivas que EXECUTAM algo: subprocesso, interpretacao dinamica e as
 # juntas de sonda do proprio pacote. Um consumidor nao precisa chamar

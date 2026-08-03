@@ -208,13 +208,47 @@ class AllowlistDoAcervo(unittest.TestCase):
             "allowlist")
         self.assertEqual(achados["nao_resolvidos"], [])
 
-    def test_allowlist_ainda_vazia_nesta_ordem(self):
-        # Estado desta ordem, medido e nao suposto: o MECANISMO da emenda
-        # existe e esta exercido pelos controles sinteticos, e NENHUM
-        # consumidor foi autorizado ainda. O teste que percorre a lista
-        # contra o disco nasce junto com o primeiro nome nela — antes
-        # disso ele iteraria vazio e ficaria verde sem medir nada.
-        self.assertEqual(sentinela.CONSUMIDORES_DECLARADOS, ())
+    def test_todo_consumidor_declarado_existe_no_disco(self):
+        # Allowlist com caminho morto e autorizacao que ninguem exerce —
+        # e, pior, esconde renomeacao: o arquivo muda de nome, deixa de
+        # ser autorizado, e a lista continua verde afirmando que ele e.
+        #
+        # Este teste nasceu junto com o PRIMEIRO nome na lista (ordem 3).
+        # Enquanto ela estava vazia ele teria iterado sobre nada e ficado
+        # verde sem medir — o guarda vazio que este acervo persegue.
+        self.assertTrue(sentinela.CONSUMIDORES_DECLARADOS,
+                        "allowlist vazia: este teste nao mede nada")
+        for rel in sentinela.CONSUMIDORES_DECLARADOS:
+            with self.subTest(consumidor=rel):
+                self.assertTrue(
+                    os.path.isfile(os.path.join(_RAIZ_REAL, *rel.split("/"))),
+                    f"consumidor declarado inexistente: {rel}")
+
+    def test_o_executor_nao_esta_na_allowlist(self):
+        # A propriedade de desenho: quem invoca o CLI recebe FleetEntry ja
+        # aprovada e NUNCA le veredito. No dia em que
+        # `provedor_assinatura.py` precisar entrar nesta lista, o executor
+        # passou a decidir — e a sentinela deve acusar, nao acomodar.
+        self.assertNotIn("08_p2/provedor_assinatura.py",
+                         sentinela.CONSUMIDORES_DECLARADOS)
+
+    def test_o_consumidor_real_produz_achado_quando_nao_autorizado(self):
+        # O controle que fecha o circulo: sem a allowlist, o arquivo REAL
+        # da P2 — nao um sintetico — e acusado pela sentinela. E a prova de
+        # que a autorizacao esta cobrindo um consumidor de verdade, e nao
+        # um nome que por acaso nao produz achado nenhum.
+        achados = sentinela.varrer(
+            _RAIZ_REAL,
+            os.path.join(_DIR_P1A, "preflight", "pipeline.py"),
+            consumidores=())
+        acusados = {a.split(":")[0].replace("\\", "/")
+                    for a in achados["decisoes_fora"]}
+        for rel in sentinela.CONSUMIDORES_DECLARADOS:
+            with self.subTest(consumidor=rel):
+                self.assertIn(
+                    rel, acusados,
+                    f"{rel} esta na allowlist mas nao decide sobre o "
+                    "veredito: autorizacao sem consumidor e caminho morto")
 
 
 if __name__ == "__main__":  # pragma: no cover
