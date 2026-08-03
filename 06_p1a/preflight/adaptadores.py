@@ -154,6 +154,25 @@ def plano_reconhecido(plano, planos_aceitos) -> bool:
     return any(_contem_token(low, p) for p in planos_aceitos)
 
 
+def quota_esgotada(texto: str) -> bool:
+    """Franquia comprovadamente ESGOTADA no texto de um CLI.
+
+    Publica desde a P2 (`08_p2/provedor_assinatura.py`): o executor real
+    precisa distinguir `falha-quota` de `falha-contrato` para que o
+    fallback entre assinaturas dispare, e a alternativa seria uma SEGUNDA
+    lista de marcadores num modulo vizinho. O acervo ja tem uma
+    duplicacao de leitor em aberto (`_VIA_GITBASH`); esta nao nasce.
+
+    Extracao pura de `_quota_de`, que passa a chama-la: os tres criterios
+    (marcador textual, negacao, numeral zero) e a precedencia sao os
+    mesmos de antes, sem uma linha de comportamento nova.
+    """
+    low = texto.lower()
+    return (any(m in low for m in _MARCADORES_QUOTA_ESGOTADA)
+            or any(rx.search(low) for rx in _RX_QUOTA_ESGOTADA)
+            or _quota_zerada(low))
+
+
 def _quota_de(texto: str, logado: bool) -> str:
     """Classifica a franquia: disponivel | esgotada | desconhecida.
 
@@ -163,9 +182,7 @@ def _quota_de(texto: str, logado: bool) -> str:
     e unknown, nunca presumida disponivel.
     """
     low = texto.lower()
-    if any(m in low for m in _MARCADORES_QUOTA_ESGOTADA) \
-            or any(rx.search(low) for rx in _RX_QUOTA_ESGOTADA) \
-            or _quota_zerada(low):
+    if quota_esgotada(low):
         return "esgotada"
     if not logado:
         return "desconhecida"
@@ -363,6 +380,21 @@ _PARSERS_MODELOS = {
 }
 
 
+def argv_de(espec, comando) -> list:
+    """argv de um comando para `espec`, com o `~` do executavel expandido.
+
+    Publica desde a P2 pela mesma razao de `quota_esgotada`: o executor
+    real precisa montar argv com a MESMA regra do preflight — expandir
+    SOMENTE o `~` do executavel, sem expandvars, sem shell, sem hardcode
+    de usuario, argumentos intactos em lista (espacos e metacaracteres
+    sao literais porque a execucao e sempre argv-lista com shell=False).
+    Uma segunda montagem de argv num modulo vizinho seria a duplicacao
+    que este acervo ja tem em aberto noutro lugar.
+    """
+    exe = os.path.expanduser(espec.executavel or espec.cli)
+    return [exe] + list(comando)
+
+
 class AdaptadorPreflight:
     """Diagnostico read-only de um CLI de assinatura.
 
@@ -384,8 +416,9 @@ class AdaptadorPreflight:
         # seguem em lista, intactos (espacos e metacaracteres sao literais,
         # pois a execucao e sempre argv-lista com shell=False). Caminho
         # inexistente vira CliIndisponivel na sonda (FileNotFoundError).
-        exe = os.path.expanduser(self.espec.executavel or self.espec.cli)
-        return [exe] + list(comando)
+        # A montagem vive em `argv_de` desde a P2, para que o executor real
+        # use a MESMA regra em vez de uma segunda copia dela.
+        return argv_de(self.espec, comando)
 
     def sonda(self, comando, sensor=None):
         """Executa um comando de diagnostico via sensor injetavel."""
