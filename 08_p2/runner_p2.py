@@ -70,6 +70,59 @@ def agora_utc() -> datetime:
     return datetime.now(timezone.utc)
 
 
+def _no_codec_do_console(texto: str) -> str:
+    """Texto de procedencia de MODELO, reduzido ao que o console aceita.
+
+    Degradacao de EXIBICAO, declarada: caractere fora do codec do console
+    sai como substituto. O byte gravado no CAS nao e tocado — a mesma
+    separacao que o achado 5.3 da P2.1 mediu (dano de exibicao, nunca
+    perda gravada).
+    """
+    codec = getattr(sys.stdout, "encoding", None) or "utf-8"
+    try:
+        return texto.encode(codec, errors="replace").decode(codec,
+                                                            errors="replace")
+    except LookupError:                     # codec do console desconhecido
+        return texto.encode("ascii", errors="replace").decode("ascii")
+
+
+def relatar(registro: dict) -> None:
+    """Imprime o desfecho da corrida SEM deixar o console decidir se ela existiu.
+
+    MEDIDO NA P2.2, e a razao de esta funcao existir. A resposta do codex
+    trouxe `→`; o console da estacao codifica cp1252; `print` levantou
+    `UnicodeEncodeError` na linha que exibia a saida — e essa linha fica
+    ANTES do bloco que reverifica o lease e persiste a evidencia. O attempt
+    tinha dado **sucesso**: a franquia foi gasta, a cadeia ficou gravada no
+    laboratorio, e o artefato de registro em `08_p2/evidencias/` nao
+    existiu. Um caractere que o console nao sabe desenhar nao pode decidir
+    se a corrida foi registrada.
+
+    Todo texto de procedencia de modelo — `detalhe`, motivos de veto e a
+    `saida` — passa por `_no_codec_do_console`. Os rotulos fixos sao ASCII
+    e nao precisam, mas atravessam junto porque separa-los criaria dois
+    caminhos de impressao e um deles voltaria a ser o cru.
+    """
+    for descarte in registro["montagem"]["descartes"]:
+        print(_no_codec_do_console(
+            f"  descartado {descarte['provider_id']}: {descarte['motivo']}"))
+    for veto in registro["montagem"]["vetos"]:
+        print(_no_codec_do_console(
+            f"  VETADO {veto['provider_id']}/{veto['model_id']}: "
+            f"{'; '.join(veto['motivos'])}"))
+    for att in registro["attempts"]:
+        ex = att["executor_resolvido"]
+        print(_no_codec_do_console(
+            f"  attempt {ex['provedor']}/{ex['modelo']}: {att['resultado']}"))
+
+    print(_no_codec_do_console(
+        f"\nstatus: {registro['status']}"
+        + (f" ({registro['detalhe']})" if registro.get("detalhe") else "")))
+    if registro.get("saida"):
+        print("\n--- saida ---")
+        print(_no_codec_do_console(registro["saida"]))
+
+
 def carregar_preflight(caminho: str, validade_h: int,
                        agora: datetime | None = None) -> dict:
     """Le a evidencia do preflight e RECUSA o que nao serve.
@@ -286,20 +339,7 @@ def main(argv=None) -> int:
                         capacidade=args.capacidade, papel=args.papel,
                         timeout=args.timeout)
 
-    for descarte in registro["montagem"]["descartes"]:
-        print(f"  descartado {descarte['provider_id']}: {descarte['motivo']}")
-    for veto in registro["montagem"]["vetos"]:
-        print(f"  VETADO {veto['provider_id']}/{veto['model_id']}: "
-              f"{'; '.join(veto['motivos'])}")
-    for att in registro["attempts"]:
-        ex = att["executor_resolvido"]
-        print(f"  attempt {ex['provedor']}/{ex['modelo']}: {att['resultado']}")
-
-    print(f"\nstatus: {registro['status']}"
-          + (f" ({registro['detalhe']})" if registro.get("detalhe") else ""))
-    if registro.get("saida"):
-        print("\n--- saida ---")
-        print(registro["saida"])
+    relatar(registro)
 
     # Escritor unico verificado DE NOVO, com o MESMO fence, imediatamente
     # antes de persistir: entre a verificacao de abertura e agora correram

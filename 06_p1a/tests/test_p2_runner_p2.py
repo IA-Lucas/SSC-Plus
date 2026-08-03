@@ -16,16 +16,25 @@ usa `sensor_subprocess`.
 O QUE ESTES TESTES NAO COBREM, declarado:
 - **nao provam que codex ou kimi respondam** ao argv que a especificacao
   declara. Isso e leitura ate a primeira corrida real;
-- **nao cobrem `main()`**: a funcao de linha de comando exige capsula e
-  lease vivos, e monta-los num teste unitario reproduziria a operacao pela
-  metade. O que ela orquestra esta coberto por `executar`,
-  `carregar_preflight` e os portoes;
+- **nao cobrem `main()` executando**: a funcao de linha de comando exige
+  capsula e lease vivos, e monta-los num teste unitario reproduziria a
+  operacao pela metade. O que ela orquestra esta coberto por `executar`,
+  `carregar_preflight` e os portoes. UMA excecao, aberta na P2.2 por
+  defeito medido: `test_main_relata_por_relatar_e_NAO_por_print_cru` le o
+  FONTE de `main` por AST, porque o defeito que caiu em operacao morava no
+  ponto de chamada e nao na primitiva. Segue **sem cobertura** a ORDEM
+  entre relatar e persistir: o relato deixou de poder derrubar a corrida,
+  mas nada aqui prova que a evidencia seja gravada quando outra coisa
+  levanta antes da persistencia;
 - **nao medem concorrencia** entre dois runners da P2 ao mesmo tempo. O
   escritor unico e o mecanismo herdado, exercido na suite da P0;
 - **nao cobrem tarefa que exija escrita**: o envelope nasce read-only, e
   nenhum teste aqui pede patch.
 """
 
+import ast
+import inspect
+import io
 import json
 import os
 import sys
@@ -384,6 +393,95 @@ class OSensorRealEOPadraoDaOperacao(unittest.TestCase):
             {"provedor": entrada.provider_id, "modelo": entrada.model_id,
              "effort": "alto"})
         self.assertIs(adaptador.provedor_fake.sensor, marcador)
+
+
+class RelatoNaoDependeDoConsole(unittest.TestCase):
+    """O console nao pode decidir se a corrida foi REGISTRADA.
+
+    O CASO QUE OCORREU EM OPERACAO, na P2.2: a resposta do codex trouxe
+    `→` (U+2192), o console da estacao codifica cp1252, e `print` levantou
+    `UnicodeEncodeError` na linha que exibia a saida — que ficava ANTES do
+    bloco que reverifica o lease e persiste a evidencia. O attempt havia
+    dado **sucesso**: a franquia foi gasta, a cadeia ficou no laboratorio,
+    e o artefato de registro em `08_p2/evidencias/` nao existiu.
+
+    Os testes usam `io.TextIOWrapper(..., encoding="cp1252")`, que
+    ENFORCA o codec e levanta igual ao console real. Um `StringIO` no
+    lugar dele aceitaria qualquer str e ficaria verde sob o defeito: seria
+    o vizinho, nao o caso.
+    """
+
+    SETA = "efeito → indeterminado"
+
+    def _registro(self, **campos):
+        base = {"status": "sucesso", "detalhe": "",
+                "montagem": {"descartes": [], "vetos": []},
+                "attempts": [], "saida": None}
+        base.update(campos)
+        return base
+
+    def _relatar_em(self, registro, codec) -> bytes:
+        buffer = io.BytesIO()
+        fluxo = io.TextIOWrapper(buffer, encoding=codec, newline="",
+                                 write_through=True)
+        original, sys.stdout = sys.stdout, fluxo
+        try:
+            runner_p2.relatar(registro)
+        finally:
+            fluxo.flush()
+            sys.stdout = original
+        return buffer.getvalue()
+
+    def test_saida_do_modelo_com_seta_nao_derruba_o_relato_em_cp1252(self):
+        brutos = self._relatar_em(self._registro(saida=self.SETA), "cp1252")
+        self.assertIn(b"efeito ", brutos)
+        self.assertIn(b"?", brutos)          # a seta virou substituto
+
+    def test_detalhe_do_modelo_tambem_atravessa_o_codec(self):
+        # `detalhe` carrega texto de excecao do provedor: mesma exposicao
+        # que a `saida`, e um relato que cobrisse so a saida deixaria o
+        # outro caminho vivo.
+        brutos = self._relatar_em(
+            self._registro(status="escalonado", detalhe=self.SETA), "cp1252")
+        self.assertIn(b"escalonado", brutos)
+        self.assertIn(b"?", brutos)
+
+    def test_motivo_de_veto_tambem_atravessa_o_codec(self):
+        brutos = self._relatar_em(self._registro(montagem={
+            "descartes": [],
+            "vetos": [{"provider_id": "codex", "model_id": "m",
+                       "motivos": [self.SETA]}]}), "cp1252")
+        self.assertIn(b"VETADO codex/m", brutos)
+        self.assertIn(b"?", brutos)
+
+    def test_console_utf8_PRESERVA_o_caractere(self):
+        # Contraprova: tolerancia nao pode virar perda quando o console
+        # sabe desenhar. Substituir sempre seria dano gratuito, e passaria
+        # por conserto.
+        brutos = self._relatar_em(self._registro(saida=self.SETA), "utf-8")
+        self.assertIn("→".encode("utf-8"), brutos)
+        self.assertNotIn(b"?", brutos)
+
+    def test_main_relata_por_relatar_e_NAO_por_print_cru(self):
+        # N4 da P1-A.3.7 — *primitiva corrigida nao cobre ponto de
+        # chamada* — cobrada de novo na P2.1 §5.2. Os quatro testes acima
+        # prendem a PRIMITIVA; este prende o PONTO DE CHAMADA: se `main`
+        # voltar a imprimir `registro[...]` por `print` cru, a primitiva
+        # segue verde e a operacao volta a cair.
+        arvore = ast.parse(inspect.getsource(runner_p2))
+        main = next(n for n in ast.walk(arvore)
+                    if isinstance(n, ast.FunctionDef) and n.name == "main")
+        chamadas = [n for n in ast.walk(main) if isinstance(n, ast.Call)]
+        nomes = {c.func.id for c in chamadas if isinstance(c.func, ast.Name)}
+        self.assertIn("relatar", nomes)
+        crus = [c for c in chamadas
+                if isinstance(c.func, ast.Name) and c.func.id == "print"
+                and any(isinstance(x, ast.Name) and x.id == "registro"
+                        for a in c.args for x in ast.walk(a))]
+        self.assertEqual(
+            crus, [], "main() imprime texto de modelo por print cru: o "
+                      "console volta a poder derrubar a corrida antes de "
+                      "persistir a evidencia")
 
 
 if __name__ == "__main__":  # pragma: no cover
