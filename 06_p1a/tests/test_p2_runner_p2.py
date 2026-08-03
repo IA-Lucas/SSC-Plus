@@ -303,6 +303,59 @@ class FrotaVaziaNaoViraPagamento(_ComLab):
         self.assertEqual(sensor.chamadas, [])
 
 
+class OTetoZeroEExercidoENaoApenasDeclarado(_ComLab):
+    """O teto e ZERO porque a politica imutavel diz zero — nao por costume.
+
+    MEDIDO na P2.1 (ordem 3), e o resultado motivou esta classe. A
+    reversao vermelha do defeito 4.1 da P2.0 mostrou duas metades com
+    forcas MUITO diferentes:
+
+        runner sem `custo_previsto` (estado pre-correcao) .. 15 vermelhos
+        `teto_custo` do Lab afrouxado de 0.0 para 1.0 ......  0 vermelhos
+
+    Zero. A correcao da P2.0 prendeu que o custo PREVISTO seja 0.0, e os
+    15 vermelhos provam que o portao de orcamento esta vivo. Mas o TETO
+    podia ser afrouxado sem que nada acusasse: nenhum teste ligava o
+    numero do laboratorio ao `external_variable_cost_cap = 0` da politica
+    imutavel. O teto seguia DECLARADO, e a metade que faltava era
+    exatamente a familia do MAJOR #3 — a mesma que o achado 4.1 dizia ter
+    fechado.
+
+    A ligacao aqui NAO e com um literal escrito no teste: e com
+    `POLITICA_ECONOMICA`, fonte independente. Trocar o teto do runner
+    passa a divergir de uma constante que o runner nao controla.
+    """
+
+    def test_o_teto_do_orcamento_da_sessao_e_o_da_politica_imutavel(self):
+        # Le o envelope PERSISTIDO pela corrida real, nao o argumento que
+        # o teste passou: e o que ficou gravado que autoriza gasto.
+        from ssc_p0.evidence import EvidencePlane
+        from ssc_p0.frota import POLITICA_ECONOMICA
+        r = self.executar(SensorObrigatorio(codex=(0, "ok", "")))
+        self.assertEqual(r["status"], "sucesso", r.get("detalhe"))
+        envelope = EvidencePlane(r["raiz_lab"], r["sessao_id"]).envelope
+        self.assertEqual(
+            envelope["orcamento"]["teto_custo"],
+            POLITICA_ECONOMICA["external_variable_cost_cap"],
+            "o teto de custo da sessao divergiu do "
+            "external_variable_cost_cap = 0 da politica imutavel: a P2 "
+            "passaria a admitir custo variavel externo positivo")
+
+    def test_o_envelope_de_aprovacao_da_frota_carrega_o_MESMO_teto(self):
+        # Dois lugares declaram teto — o orcamento da sessao e o envelope
+        # de aprovacao da frota. Prender so um deixaria o outro livre para
+        # divergir, e dois tetos que precisam concordar sao dois tetos que
+        # um dia divergem.
+        from ssc_p0.frota import POLITICA_ECONOMICA, envelope_de_frota, Frota
+        import frota_medida
+        from preflight.frota_real import ESPECIFICACOES
+        montagem = frota_medida.frota_do_preflight(
+            preflight_real()["frota"], ESPECIFICACOES)
+        aprovacao = envelope_de_frota(Frota(montagem["entradas"]))
+        self.assertEqual(aprovacao["teto_custo"],
+                         POLITICA_ECONOMICA["external_variable_cost_cap"])
+
+
 class OSensorRealEOPadraoDaOperacao(unittest.TestCase):
     """O outro lado do contencao: em operacao ninguem declara sensor."""
 
