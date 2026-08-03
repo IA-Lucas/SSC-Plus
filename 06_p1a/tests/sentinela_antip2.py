@@ -26,6 +26,25 @@ DUAS METADES, ambas medidas por AST (achado #6 da 99_decisao-p1a31.md):
 
 Produzir a classificacao e trabalho legitimo do classificador; decidir
 sobre ela fora dele e o primeiro passo de um consumidor.
+
+EMENDA DA P2 (ato soberano de 2026-08-03, `08_p2/00_ato-soberano-p2.md`).
+Ate aqui as duas metades proibiam consumidor NENHUM, e essa era a forma
+certa enquanto ninguem tinha decidido abrir a P2. O Fundador decidiu. A
+sentinela NAO foi desligada — foi convertida:
+
+- o consumidor precisa estar DECLARADO NOMINALMENTE em
+  `CONSUMIDORES_DECLARADOS`, no fonte desta sentinela. Um consumidor novo
+  so passa se alguem o escrever aqui, que e um ato, nunca um acidente —
+  e a propriedade que a sentinela existia para garantir (nada de P2 por
+  acidente) fica preservada inteira;
+- o que e permitido NAO SOME: sai em `portoes_autorizados` e
+  `decisoes_autorizadas`, visivel em toda varredura. Achado que vira
+  silencio e como guarda que afirma em vez de exercer — o defeito que
+  este acervo passou tres missoes corrigindo.
+
+`varrer(raiz, classificador, consumidores=())` devolve o comportamento
+ANTERIOR a emenda, e e assim que os controles positivos medem que a
+sentinela continua pegando quem nao foi declarado.
 """
 
 import ast
@@ -33,6 +52,22 @@ import os
 
 VOCABULARIO_VEREDITO = frozenset(
     {"ELIGIBLE", "SHADOW_ELIGIBLE", "SUPERVISED", "BLOCKED"})
+
+# Consumidores do veredito AUTORIZADOS pelo ato soberano da P2. Caminhos
+# relativos a raiz do repositorio. Esta tupla e a superficie inteira da
+# autorizacao: qualquer outro arquivo que decida sobre o veredito — ou que
+# deixe essa decisao governar execucao — continua sendo achado.
+#
+# `08_p2/provedor_assinatura.py` NAO entra aqui, e a ausencia e
+# deliberada: quem invoca o CLI recebe uma FleetEntry ja aprovada e nunca
+# le veredito. Se um dia ele precisar entrar nesta lista, e sinal de que o
+# executor passou a decidir — exatamente o que a sentinela deve acusar.
+#
+# A lista nasce VAZIA e ganha um nome na MESMA ordem que cria o arquivo
+# correspondente. Declarar antes deixaria aqui um caminho morto — e o
+# teste que percorre a lista ficaria verde sem medir nada, que e o guarda
+# vazio contra o qual este acervo tem tres missoes de trilha.
+CONSUMIDORES_DECLARADOS = ()
 
 # Primitivas que EXECUTAM algo: subprocesso, interpretacao dinamica e as
 # juntas de sonda do proprio pacote. Um consumidor nao precisa chamar
@@ -325,21 +360,33 @@ def portoes_de_execucao(arvore, apelidos) -> list:
     return sorted(set(portoes))
 
 
-def varrer(raiz_repo, classificador) -> dict:
+def varrer(raiz_repo, classificador, consumidores=None) -> dict:
     """A varredura inteira sobre uma raiz — a operacao e o controle.
 
     Devolve `{"ilegiveis": [...], "portoes": [...], "decisoes_fora":
-    [...]}`, cada item na forma `caminho-relativo:linha`.
+    [...], "nao_resolvidos": [...], "portoes_autorizados": [...],
+    "decisoes_autorizadas": [...]}`, cada item na forma
+    `caminho-relativo:linha`.
 
     METADE (A), o que mudou na P1-A.3.7 (MAJOR #6): a raiz de (A) e a
     RAIZ DO REPOSITORIO, nao mais so o diretorio da P1-A. Enquanto ela
     era `06_p1a`, um consumidor escrito em `07_p1b` ficava invisivel —
     achado 13 da varredura de guardas, confirmado pelo revisor.
+
+    EMENDA DA P2: `consumidores` sao caminhos RELATIVOS a raiz, e o que
+    eles produzem migra para os campos `*_autorizados` — nunca some.
+    `None` usa `CONSUMIDORES_DECLARADOS`; `()` devolve o comportamento
+    anterior a emenda, que e como os controles positivos a medem.
     """
     raiz_repo = os.path.abspath(str(raiz_repo))
     classificador = os.path.realpath(str(classificador))
+    declarados = (CONSUMIDORES_DECLARADOS if consumidores is None
+                  else consumidores)
+    autorizados = {os.path.realpath(os.path.join(raiz_repo, str(c)))
+                   for c in declarados}
     indice = indice_de_modulos(raiz_repo)
     ilegiveis, decisoes_fora, portoes, nao_resolvidos = [], [], [], []
+    portoes_autorizados, decisoes_autorizadas = [], []
     for caminho in fontes_py(raiz_repo):
         try:
             with open(caminho, encoding="utf-8") as f:
@@ -355,11 +402,20 @@ def varrer(raiz_repo, classificador) -> dict:
         # sentinela nao conseguiu seguir e ponto cego, e ponto cego nao
         # pode sair como arquivo limpo.
         nao_resolvidos.extend(f"{rel}: {m}" for m in faltou)
+        # Consumidor DECLARADO pelo ato soberano: o que ele produz muda de
+        # campo, nao de existencia. Um arquivo autorizado que ilegivel
+        # continua ilegivel — a autorizacao nunca cobre o fail-closed.
+        autorizado = os.path.realpath(caminho) in autorizados
+        destino_portoes = portoes_autorizados if autorizado else portoes
+        destino_decisoes = (decisoes_autorizadas if autorizado
+                            else decisoes_fora)
         for linha, primitiva in portoes_de_execucao(arvore, apelidos):
-            portoes.append(f"{rel}:{linha} -> {primitiva}()")
+            destino_portoes.append(f"{rel}:{linha} -> {primitiva}()")
         if os.path.realpath(caminho) != classificador:
             for linha in decisoes_sobre_veredito(arvore, apelidos):
-                decisoes_fora.append(f"{rel}:{linha}")
+                destino_decisoes.append(f"{rel}:{linha}")
     return {"ilegiveis": ilegiveis, "portoes": portoes,
             "decisoes_fora": decisoes_fora,
-            "nao_resolvidos": sorted(set(nao_resolvidos))}
+            "nao_resolvidos": sorted(set(nao_resolvidos)),
+            "portoes_autorizados": portoes_autorizados,
+            "decisoes_autorizadas": decisoes_autorizadas}

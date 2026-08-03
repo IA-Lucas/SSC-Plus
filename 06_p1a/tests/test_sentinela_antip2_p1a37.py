@@ -138,9 +138,17 @@ class MetadeAAlcanca07P1B(_ArvoreSintetica):
                       '    for r in rels:\n'
                       '        print(r)\n')
         achados = self.varrer()
+        # Emenda da P2: o relatorio ganhou `portoes_autorizados` e
+        # `decisoes_autorizadas`. A comparacao segue sendo do dicionario
+        # INTEIRO — de proposito: e ela que garante que arvore limpa nao
+        # produz achado em campo NENHUM, inclusive nos campos novos. Um
+        # `assertEqual` por chave deixaria de reprovar quando um campo
+        # futuro nascesse sujo.
         self.assertEqual(achados, {"ilegiveis": [], "portoes": [],
                                    "decisoes_fora": [],
-                                   "nao_resolvidos": []})
+                                   "nao_resolvidos": [],
+                                   "portoes_autorizados": [],
+                                   "decisoes_autorizadas": []})
 
 
 class MetadeBGovernoDeExecucao(_ArvoreSintetica):
