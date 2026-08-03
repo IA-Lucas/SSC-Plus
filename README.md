@@ -37,6 +37,19 @@ repositorio e `experimental / provisorio / sem autoridade`.
 | D8 | [04_integracao/08_protocolo-de-integracao.md](04_integracao/08_protocolo-de-integracao.md) | Snapshot canonico → SSC+ → evidencia → Goal competente → promocao |
 | — | [99_decisao-ssc-01.md](99_decisao-ssc-01.md) | Validacao da missao e decisao (READY-FOR-SSC-0.2 / ADJUST / BLOCKED / STOP) |
 
+## Fase P2 — a frota executa (aberta em 2026-08-03)
+
+| Documento | Conteudo |
+|---|---|
+| [08_p2/00_ato-soberano-p2.md](08_p2/00_ato-soberano-p2.md) | O ato que autoriza a P2, com o que segue PROIBIDO |
+| [08_p2/README.md](08_p2/README.md) | **Como usar**: declarar tier → lease + preflight → despachar tarefa |
+| [08_p2/99_registro-p2.md](08_p2/99_registro-p2.md) | Registro da missao, achados por familia e limites declarados |
+
+Invocacao produtiva por `codex` e `kimi`, dentro da capsula, em modo
+supervisionado, com custo variavel externo **zero**. `claude`, `google` e
+`grok` permanecem `SUPERVISED`. Nenhuma revisao independente foi feita
+sobre a P2 — quem construiu nao certifica.
+
 ## Fontes (somente leitura)
 
 | Fonte | Caminho | Papel |
