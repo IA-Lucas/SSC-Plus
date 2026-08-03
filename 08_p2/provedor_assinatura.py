@@ -31,6 +31,7 @@ Nos testes, sensores falsos substituem qualquer subprocesso: nenhum teste
 desta missao invoca CLI real, e nenhum gasta franquia de assinatura.
 """
 
+import locale
 import subprocess
 import time
 
@@ -72,6 +73,56 @@ _MARCADORES_CLI_INDISPONIVEL = (
 )
 
 
+def decodificar(bruto: bytes) -> str:
+    """Bytes de um CLI -> texto, tentando as codificacoes que ocorrem.
+
+    ACHADO DA PRIMEIRA CORRIDA REAL DA P2 (2026-08-03). O sensor decodava
+    com `encoding="utf-8", errors="replace"` fixo, e a primeira resposta
+    em portugues voltou assim:
+
+        "O teste que afirma uma propriedade s� confirma..."
+
+    Cada acento virou U+FFFD, e o dano nao e de exibicao: o texto
+    corrompido foi para o CAS, entrou na cadeia de hashes e virou o
+    artefato final da WorkUnit. Perda irreversivel, gravada como se fosse
+    a resposta.
+
+    A causa e o console do Windows: o CLI escreve na page de codigo do
+    sistema (cp1252 nesta estacao), nao em UTF-8. Forcar UTF-8 e a
+    suposicao; medir e tentar em ordem.
+
+    A ordem importa e e fail-safe, nao fail-closed — aqui o pior desfecho
+    nao e aceitar demais, e sim PERDER conteudo:
+
+    1. **utf-8 estrito**: se casar, casou; e a codificacao correta e a
+       mais provavel num CLI moderno;
+    2. **a page de codigo local** (`locale.getpreferredencoding`), que e o
+       que o Windows de fato entrega;
+    3. **cp1252 explicito**, para a estacao cuja locale nao seja ela;
+    4. **utf-8 com `replace`**, ultimo recurso: so entao se aceita perder
+       caractere, e nunca antes de ter tentado.
+
+    Latin-1 NAO entra: ele decodifica qualquer byte sem erro, entao
+    colocado antes do fim engoliria os candidatos seguintes e produziria
+    texto plausivel e errado, em silencio. Um decodificador que nunca
+    falha e um decodificador que nunca avisa.
+    """
+    if not bruto:
+        return ""
+    tentativas = ["utf-8"]
+    local = locale.getpreferredencoding(False)
+    if local and local.lower() not in tentativas:
+        tentativas.append(local)
+    if "cp1252" not in [t.lower() for t in tentativas]:
+        tentativas.append("cp1252")
+    for codificacao in tentativas:
+        try:
+            return bruto.decode(codificacao)
+        except (UnicodeDecodeError, LookupError):
+            continue
+    return bruto.decode("utf-8", errors="replace")
+
+
 def sensor_subprocess(argv, env=None, timeout: int = TIMEOUT_PADRAO_S):
     """Sensor real: subprocesso sanitizado, sem shell, com teto de parede.
 
@@ -79,12 +130,15 @@ def sensor_subprocess(argv, env=None, timeout: int = TIMEOUT_PADRAO_S):
     de lista) e o que torna literais os metacaracteres dos argumentos: o
     prompt de uma tarefa pode conter qualquer coisa, inclusive `|`, `&` e
     aspas, e nada disso pode virar comando.
+
+    Captura em BYTES e decodifica com `decodificar`: deixar o `subprocess`
+    decodar por nos fixa uma codificacao unica, e foi assim que a primeira
+    resposta real em portugues chegou com todo acento trocado por U+FFFD.
     """
     ambiente = ambiente_sanitizado(env)
     try:
         proc = subprocess.run(list(argv), env=ambiente, capture_output=True,
-                              text=True, timeout=timeout,
-                              encoding="utf-8", errors="replace")
+                              timeout=timeout)
     except subprocess.TimeoutExpired:
         return (RC_TIMEOUT, "", f"timeout de {timeout}s na invocacao")
     except (FileNotFoundError, OSError) as exc:
@@ -92,7 +146,8 @@ def sensor_subprocess(argv, env=None, timeout: int = TIMEOUT_PADRAO_S):
         # uma excecao aqui derrubaria a sessao inteira em vez de produzir
         # o attempt registrado que a evidencia exige.
         return (127, "", f"{type(exc).__name__}: executavel indisponivel")
-    return (proc.returncode, proc.stdout or "", proc.stderr or "")
+    return (proc.returncode, decodificar(proc.stdout),
+            decodificar(proc.stderr))
 
 
 def classificar(rc: int, texto: str) -> tuple:

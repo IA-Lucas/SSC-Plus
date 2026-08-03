@@ -184,6 +184,116 @@ class ClassificacaoDoResultado(unittest.TestCase):
         self.assertEqual(falha, "falha-contrato")
 
 
+# O texto EXATO que o `kimi` devolveu na primeira corrida real da P2
+# (2026-08-03), com a franquia da assinatura de fato acabada. Copiado da
+# evidencia, nao parafraseado: parafrasear seria escrever o caso que se
+# quer pegar em vez do caso que ocorreu.
+SAIDA_REAL_KIMI_SEM_QUOTA = (
+    "\nerror: failed to run prompt: provider.api_error: 403 You've reached "
+    "your usage limit for this billing cycle. Your quota will be refreshed "
+    "in the next cycle. To continue now, purchase extra usage or upgrade "
+    "your plan: https://www.kimi.com/code/#pricing\n"
+    "See log: C:/Users/<USUARIO>/.kimi-code/logs/kimi-code.log\n")
+
+
+class QuotaRealDoKimi(unittest.TestCase):
+    """O achado da primeira corrida real, preso pelo texto que a produziu.
+
+    A lista de marcadores tinha "usage limit reached"; o CLI escreveu
+    "reached your usage limit" — a MESMA frase na ordem inversa. O
+    esgotamento saiu como `falha-contrato`, `registrar_quota_exhausted`
+    nunca correu, e a entrada do kimi permaneceu `disponivel` na frota: a
+    WorkUnit seguinte da mesma sessao gastaria outra tentativa nele.
+    """
+
+    def test_a_saida_real_e_classificada_como_falha_quota(self):
+        falha, efeito = pa.classificar(1, SAIDA_REAL_KIMI_SEM_QUOTA)
+        self.assertEqual(falha, "falha-quota",
+                         "esgotamento real lido como falha de contrato: a "
+                         "frota nao marca a quota e tenta de novo depois")
+        self.assertEqual(efeito, "nenhum")
+
+    def test_o_detector_canonico_do_preflight_tambem_a_reconhece(self):
+        # A correcao foi feita no detector CANONICO, nao numa lista
+        # paralela da P2 — entao o preflight passa a enxergar o mesmo
+        # esgotamento, e nao so o executor.
+        from preflight.adaptadores import quota_esgotada
+        self.assertTrue(quota_esgotada(SAIDA_REAL_KIMI_SEM_QUOTA))
+
+    def test_as_quatro_formas_da_familia(self):
+        # Cada uma vinda de um pedaco da saida real, generalizada o
+        # minimo: verbo-primeiro, promessa de renovacao e convite a pagar.
+        for texto in ("You've reached your usage limit for this cycle",
+                      "you have reached the monthly limit",
+                      "Your quota will be refreshed in the next cycle",
+                      "purchase extra usage or upgrade your plan",
+                      "buy more credits to continue"):
+            with self.subTest(texto=texto):
+                self.assertEqual(pa.classificar(1, texto)[0], "falha-quota")
+
+    def test_o_convite_a_pagar_nao_vira_pagamento(self):
+        # O CLI oferece "purchase extra usage" — o caminho que
+        # `extra_usage = DENY` e `auto_topup = DENY` PROIBEM. Reconhecer o
+        # convite serve para TROCAR DE ASSINATURA, nunca para aceita-lo:
+        # o efeito e `nenhum` e a falha e tipada, o que leva ao fallback.
+        falha, efeito = pa.classificar(1, SAIDA_REAL_KIMI_SEM_QUOTA)
+        self.assertEqual((falha, efeito), ("falha-quota", "nenhum"))
+
+    def test_texto_com_limite_disponivel_nao_vira_esgotamento(self):
+        # Contraprova: os padroes novos nao podem transformar qualquer
+        # mencao a "limit" em franquia acabada, senao a frota trocaria de
+        # assinatura sem motivo.
+        for texto in ("rate limit: 1000 requests remaining",
+                      "within limit", "usage limit: 500 left"):
+            with self.subTest(texto=texto):
+                self.assertNotEqual(pa.classificar(1, texto)[0],
+                                    "falha-quota")
+
+
+class DecodificacaoDaSaida(unittest.TestCase):
+    """Acento perdido nao volta: o texto corrompido vira o artefato final.
+
+    Na primeira corrida real a resposta do codex chegou como "propriedade
+    s� confirma" — cada acento trocado por U+FFFD, gravado no CAS, na
+    cadeia de hashes e no artefato da WorkUnit.
+    """
+
+    def test_utf8_e_lido_como_utf8(self):
+        self.assertEqual(pa.decodificar("função anotação".encode("utf-8")),
+                         "função anotação")
+
+    def test_cp1252_nao_vira_caractere_de_substituicao(self):
+        # O caso exato do achado: o CLI escreve na page de codigo do
+        # Windows, e forcar utf-8 destroi todo acento.
+        bruto = "propriedade só confirma".encode("cp1252")
+        lido = pa.decodificar(bruto)
+        self.assertEqual(lido, "propriedade só confirma")
+        self.assertNotIn("\ufffd", lido)
+
+    def test_vazio_e_vazio(self):
+        self.assertEqual(pa.decodificar(b""), "")
+
+    def test_bytes_invalidos_em_toda_codificacao_nao_levantam(self):
+        # Ultimo recurso: aceita perder caractere, mas so depois de ter
+        # tentado — e nunca levanta, porque uma excecao aqui derrubaria a
+        # sessao em vez de registrar o attempt.
+        lido = pa.decodificar(b"\xf0\x28\x8c\x28 texto")
+        self.assertIn("texto", lido)
+
+    def test_o_sensor_real_devolve_acento_intacto(self):
+        # Exercicio de ponta a ponta pelo subprocesso de verdade: o
+        # interpretador escreve bytes utf-8 e eles precisam voltar iguais.
+        espec = dataclasses.replace(espec_de("codex"),
+                                    executavel=sys.executable,
+                                    headless=("-c",))
+        p = pa.ProvedorAssinaturaReal(espec)
+        r = p.invocar("import sys;"
+                      "sys.stdout.buffer.write('função ção'.encode('utf-8'))"
+                      .encode("utf-8"))
+        self.assertTrue(r.ok, r.saida)
+        self.assertEqual(r.saida.decode("utf-8"), "função ção")
+
+
 class RespostaCompativelComAMaquinaDaP0(unittest.TestCase):
     """Trocar simulado por real e trocar o objeto, nao a maquina."""
 

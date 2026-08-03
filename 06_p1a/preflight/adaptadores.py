@@ -74,8 +74,42 @@ _RX_QUOTA_NUMERO = tuple(re.compile(p) for p in (
 # (revisoes P1-A.3): "no calls left", "no requests remaining", "no
 # remaining quota", "none left", "no quota available". Qualquer uma vence
 # o sinal positivo "remaining"/"available".
+#
+# ACHADO DA PRIMEIRA CORRIDA REAL DA P2 (2026-08-03). Os padroes acima
+# foram escritos lendo o que um CLI PODERIA dizer. O kimi, com a franquia
+# de fato acabada, disse isto:
+#
+#   error: failed to run prompt: provider.api_error: 403 You've reached
+#   your usage limit for this billing cycle. Your quota will be refreshed
+#   in the next cycle. To continue now, purchase extra usage or upgrade
+#   your plan: https://www.kimi.com/code/#pricing
+#
+# NENHUM dos padroes casou. `_MARCADORES_QUOTA_ESGOTADA` tinha "usage
+# limit reached", e o CLI escreveu "reached your usage limit" — a MESMA
+# frase na ordem inversa. O esgotamento saiu classificado como
+# `falha-contrato`, e a consequencia nao foi cosmetica:
+# `registrar_quota_exhausted` nunca correu, a entrada do kimi ficou
+# `disponivel` na frota, e a WorkUnit seguinte da mesma sessao gastaria
+# outra tentativa nele.
+#
+# E a licao que a P1-A.1 ja tinha escrito, agora paga na P2: "auditar
+# lendo confirma; usar revela".
 _RX_QUOTA_ESGOTADA = (
     re.compile(r"\bno(?:ne)?\s+(?:[a-z]+\s+)?(?:remaining|left|available)\b"),
+    # "reached your usage limit", "reached the monthly limit", "reached
+    # your limit" — a ordem VERBO-primeiro, que a lista textual nao via.
+    re.compile(r"\breached\s+(?:your|the|its)?\s*[a-z ]{0,24}?\blimit\b"),
+    # "your quota will be refreshed", "credits reset next cycle": o CLI
+    # afirmando que a franquia acabou e volta depois.
+    re.compile(r"\b(?:quota|credits?|usage)\b[a-z ]{0,20}\b"
+               r"(?:will be refreshed|refreshes|resets)\b"),
+    # Convite explicito a PAGAR MAIS. So aparece quando a franquia da
+    # assinatura acabou — e e precisamente o caminho que a politica
+    # economica PROIBE tomar (`extra_usage = DENY`, `auto_topup = DENY`).
+    # Reconhece-lo aqui e o que garante que o SSC+ troque de assinatura
+    # em vez de tratar o convite como erro generico.
+    re.compile(r"\b(?:purchase|buy)\s+(?:extra|more|additional)\s+"
+               r"(?:usage|credits?|quota)\b"),
 )
 
 

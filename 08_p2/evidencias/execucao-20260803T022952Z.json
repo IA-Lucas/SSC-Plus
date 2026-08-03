@@ -1,0 +1,222 @@
+{
+  "attempts": [
+    {
+      "attempt_id": "0f94aa4c23194878a069948e54d436c5",
+      "custo_medido": {
+        "rotulo": "medido-assinatura",
+        "tokens_reportados": null,
+        "valor": 0.0
+      },
+      "efeito_externo": "nenhum",
+      "executor_resolvido": {
+        "modelo": "gpt-5.6-sol",
+        "provedor": "codex"
+      },
+      "resultado": "sucesso"
+    }
+  ],
+  "capsula": {
+    "violacoes_no_env_do_processo": []
+  },
+  "detalhe": "",
+  "linhagem_id": "27a132c6110e4c2ab268928941b49611",
+  "lock_escritor_unico": {
+    "fence": 1,
+    "sessao": "p2-ops"
+  },
+  "montagem": {
+    "descartes": [
+      {
+        "motivo": "veredito nao habilita rota: SUPERVISED",
+        "provider_id": "claude"
+      },
+      {
+        "motivo": "veredito nao habilita rota: SUPERVISED",
+        "provider_id": "google"
+      },
+      {
+        "motivo": "veredito nao habilita rota: SUPERVISED",
+        "provider_id": "grok"
+      }
+    ],
+    "entradas": [
+      "codex/gpt-5.6-sol",
+      "kimi/kimi-code/k3"
+    ],
+    "vetos": []
+  },
+  "placar": {
+    "attempts": [
+      {
+        "artefato_ref": "7dc6ad58be39e730980fbe1f286c487d3c8d91ea611c6b0c49c2b63b9018f468",
+        "attempt_id": "0f94aa4c23194878a069948e54d436c5",
+        "captura": {
+          "saida_estruturada_ref": "7dc6ad58be39e730980fbe1f286c487d3c8d91ea611c6b0c49c2b63b9018f468",
+          "saida_final_ref": "7dc6ad58be39e730980fbe1f286c487d3c8d91ea611c6b0c49c2b63b9018f468"
+        },
+        "custo_medido": {
+          "rotulo": "medido-assinatura",
+          "tokens_reportados": null,
+          "valor": 0.0
+        },
+        "decisao_id": "05c00a6995824ab9904ef12db51c2147",
+        "efeito_externo": "nenhum",
+        "executor_observado": null,
+        "executor_resolvido": {
+          "alias_usado": false,
+          "effort": "alto",
+          "executor_id": "codex/gpt-5.6-sol",
+          "ferramenta": "cli-assinatura",
+          "hash_catalogo": "0f3967fc4d63f6170c235f0cbece31a5f687de961346f6d8a3cc983c7e2b3b3e",
+          "modelo": "gpt-5.6-sol",
+          "provedor": "codex"
+        },
+        "fim": "2026-07-30T00:00:09Z",
+        "inicio": "2026-07-30T00:00:07Z",
+        "linhagem_id": "27a132c6110e4c2ab268928941b49611",
+        "resultado": "sucesso",
+        "selecao_solicitada": {
+          "controle": "autonomo",
+          "effort": "alto",
+          "ferramenta": "cli-assinatura",
+          "modelo": "gpt-5.6-sol",
+          "modo": "read-only",
+          "provedor": "codex"
+        },
+        "vinculos": {
+          "hash_aprovacao": "d78dc4b1d23bbab965deabcd8ff2dc711b2b1834a63b3f4f159544ced9560eea",
+          "hash_catalogo": "0f3967fc4d63f6170c235f0cbece31a5f687de961346f6d8a3cc983c7e2b3b3e",
+          "hash_contexto": "d4b36ef4ea24cbe053bec15e23c7e07eedbca6f5799f8ac7f424e49a6ab1a259",
+          "hash_envelope": "e8359c1cc9787bb4e864cdf99a1b481fc0bdfc2b20075d234a49960ef3c5441a",
+          "hash_permissoes": "5683800ce20fea8313db4ee6fe6162e73b1119535cbb1faac5f90b5e136b7d04",
+          "hash_politica": "5f89b79f67c5314d7d0e28abd3bd20be16f6d7be5780c7e3258674a711bf418a"
+        },
+        "work_unit_id": "912bcda0797648b9b7b752b856252158"
+      }
+    ],
+    "custo_total": {
+      "rotulo": "simulado",
+      "valor": 0.0
+    },
+    "decisoes": {
+      "05c00a6995824ab9904ef12db51c2147": {
+        "alternativas": [
+          {
+            "controle": "autonomo",
+            "effort": "alto",
+            "ferramenta": "cli-assinatura",
+            "modelo": "kimi-code/k3",
+            "modo": "read-only",
+            "provedor": "kimi"
+          }
+        ],
+        "aprovacao_custo": {
+          "efforts_permitidos": [
+            "baixo",
+            "alto"
+          ],
+          "fallback_autorizado": true,
+          "modelos_permitidos": [
+            "codex/gpt-5.6-sol",
+            "kimi/kimi-code/k3"
+          ],
+          "modo": "read-only",
+          "teto_custo": 0.0,
+          "validade": "2027-01-01T00:00:00Z"
+        },
+        "classificacao": {
+          "confianca": "alta",
+          "metodo": "declarado",
+          "rota": "frota"
+        },
+        "custo_previsto": {
+          "rotulo": "assinatura-sem-custo-variavel",
+          "valor": 0.0
+        },
+        "decisao_id": "05c00a6995824ab9904ef12db51c2147",
+        "hash_pacote": "d4b36ef4ea24cbe053bec15e23c7e07eedbca6f5799f8ac7f424e49a6ab1a259",
+        "independencia_evidencia": null,
+        "motivo": "frota: codex/gpt-5.6-sol por capacidade/preferencia (fallback autorizado)",
+        "nivel_capacidade_atendido": "L2",
+        "papel": "autor",
+        "selecao": {
+          "controle": "autonomo",
+          "effort": "alto",
+          "ferramenta": "cli-assinatura",
+          "modelo": "gpt-5.6-sol",
+          "modo": "read-only",
+          "provedor": "codex"
+        },
+        "supersede": null,
+        "vinculos": {
+          "hash_aprovacao": "d78dc4b1d23bbab965deabcd8ff2dc711b2b1834a63b3f4f159544ced9560eea",
+          "hash_catalogo": "0f3967fc4d63f6170c235f0cbece31a5f687de961346f6d8a3cc983c7e2b3b3e",
+          "hash_contexto": "d4b36ef4ea24cbe053bec15e23c7e07eedbca6f5799f8ac7f424e49a6ab1a259",
+          "hash_envelope": "e8359c1cc9787bb4e864cdf99a1b481fc0bdfc2b20075d234a49960ef3c5441a",
+          "hash_permissoes": "5683800ce20fea8313db4ee6fe6162e73b1119535cbb1faac5f90b5e136b7d04",
+          "hash_politica": "5f89b79f67c5314d7d0e28abd3bd20be16f6d7be5780c7e3258674a711bf418a"
+        },
+        "work_unit_id": "912bcda0797648b9b7b752b856252158"
+      }
+    },
+    "divergencias_observado_resolvido": [],
+    "escalacoes": [],
+    "fallbacks": [],
+    "linhagem_id": "27a132c6110e4c2ab268928941b49611",
+    "n_eventos": 10,
+    "placar_por_executor": {
+      "codex/gpt-5.6-sol": {
+        "attempts": 1,
+        "custo_simulado": 0.0,
+        "latencias_simuladas_ms": [],
+        "sucesso": 1
+      }
+    },
+    "retries": [],
+    "sessao_id": "27a132c6110e4c2ab268928941b49611",
+    "tokens_total": {
+      "rotulo": "simulado",
+      "valor": 0
+    },
+    "vereditos": [],
+    "work_units": {
+      "912bcda0797648b9b7b752b856252158": {
+        "classe_governanca": "C1",
+        "contexto_ref": "d4b36ef4ea24cbe053bec15e23c7e07eedbca6f5799f8ac7f424e49a6ab1a259",
+        "criterios_aceite_ref": "e4614cb0c2e51dbbdde646c8add4d1bd57633d2a619482671ecdf526573304f9",
+        "custo_medido": null,
+        "depende_de": [],
+        "estado": "aguardando-validacao",
+        "intencao": "Responda apenas com a palavra PRONTO, sem mais nada.",
+        "linhagem_id": "27a132c6110e4c2ab268928941b49611",
+        "nivel_capacidade": "L2",
+        "parent_work_unit": null,
+        "perfil_capacidade": {
+          "contexto_max_tokens": 128000,
+          "dominio": "geral",
+          "ferramentas": [],
+          "formato_saida": "livre",
+          "latencia_max_ms": null,
+          "modalidade": "texto",
+          "orcamento_max_custo": null,
+          "privacidade": "remoto-permitido"
+        },
+        "resultado_ref": null,
+        "sessao_id": "27a132c6110e4c2ab268928941b49611",
+        "tipo": "ato",
+        "tipo_decisao": "tipo-2",
+        "work_unit_id": "912bcda0797648b9b7b752b856252158"
+      }
+    }
+  },
+  "preflight_consumido": {
+    "caminho": "<CAMINHO-LOCAL>\\Projetos\\SSC-Plus\\07_p1b\\evidencias\\preflight-20260803T022852Z.json",
+    "gerado_em_utc": "2026-08-03T02:28:52Z",
+    "idade_s": 53
+  },
+  "raiz_lab": "E:\\LucasIA\\Projetos\\SSC-Plus\\08_p2\\saidas\\labs\\20260803T022945Z",
+  "saida": "PRONTO\n",
+  "sessao_id": "27a132c6110e4c2ab268928941b49611",
+  "status": "sucesso",
+  "work_unit_id": "912bcda0797648b9b7b752b856252158"
+}

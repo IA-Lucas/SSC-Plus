@@ -152,7 +152,20 @@ def executar(tarefa: str, criterio: str, preflight: dict,
                 "detalhe": "nenhuma assinatura habilitada pelo preflight; "
                            "migrar para API paga e PROIBIDO"}
 
-    frota = Frota(montagem["entradas"])
+    # `--capacidade` precisa MUDAR a escolha, nao so decorar o perfil da
+    # WorkUnit. `executar_com_frota` toma o PRIMEIRO elegivel, e
+    # `Frota.elegiveis` preserva a ordem das entradas — entao a
+    # preferencia se exerce ordenando a frota, sem tocar o codigo
+    # ratificado da P0 e sem criar um segundo seletor ao lado do dela.
+    #
+    # Sem esta ordenacao a flag seria declaracao morta: aceita na linha de
+    # comando, registrada na evidencia e sem efeito nenhum sobre quem
+    # recebe a tarefa. E exatamente a familia que a P1-A.3.9 mediu.
+    entradas = sorted(
+        montagem["entradas"],
+        key=lambda e: capacidade not in e.capability_profile.get(
+            "capacidades", []))
+    frota = Frota(entradas)
     elegiveis = frota.elegiveis(papel=papel)
     if not elegiveis:
         return {"status": STOP_WAIT_RESET, "montagem": montagem,
@@ -256,12 +269,16 @@ def main(argv=None) -> int:
     else:
         tarefa = args.tarefa
 
-    capsula = verificar_capsula(os.environ)
+    # `verificar_capsula` devolve a LISTA de nomes proibidos presentes,
+    # nunca um dicionario de diagnostico (capsula.py:43). O runner ja
+    # abortou em `exigir_capsula_limpa`; esta chamada existe para que a
+    # evidencia registre o que foi medido, e nao o que se supos.
+    violacoes_capsula = verificar_capsula(os.environ)
     lock = verificar_lock(caminhos.RAIZ, _SESSAO_LOCK)
     fence = lock.get("fence")
     preflight = carregar_preflight(args.preflight, args.validade_h)
 
-    print(f"capsula: violacoes={capsula.get('violacoes', [])} | "
+    print(f"capsula: violacoes={violacoes_capsula} | "
           f"lease={_SESSAO_LOCK} fence={fence} | "
           f"preflight com {preflight['_idade_s']}s de idade")
 
@@ -299,6 +316,7 @@ def main(argv=None) -> int:
         "vetos": registro["montagem"]["vetos"]}
     persistido["lock_escritor_unico"] = {"sessao": _SESSAO_LOCK,
                                          "fence": fence}
+    persistido["capsula"] = {"violacoes_no_env_do_processo": violacoes_capsula}
     persistido["preflight_consumido"] = {
         "caminho": redigir(os.path.abspath(args.preflight)),
         "gerado_em_utc": preflight.get("gerado_em_utc"),

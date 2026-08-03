@@ -193,6 +193,32 @@ class CorridaDePontaAPonta(_ComLab):
         self.assertEqual(custo["rotulo"], "medido-assinatura")
         self.assertIsNone(custo["tokens_reportados"])
 
+    def test_capacidade_muda_quem_recebe_a_tarefa(self):
+        # A flag precisa EXERCER a preferencia, nao decorar o perfil da
+        # WorkUnit. Sem ordenacao, `executar_com_frota` toma sempre o
+        # primeiro elegivel — que e o codex — e `--capacidade volume`
+        # ficaria aceita, registrada na evidencia e sem efeito nenhum.
+        # Declaracao morta em nascenca, a familia da P1-A.3.9.
+        sensor = SensorObrigatorio(kimi=(0, "feito pelo kimi", ""))
+        r = self.executar(sensor, capacidade="volume")
+        self.assertEqual(r["status"], "sucesso", r.get("detalhe"))
+        self.assertEqual(sensor.provedores_chamados(), ["kimi"])
+
+    def test_sem_capacidade_a_ordem_do_preflight_e_preservada(self):
+        # Contraprova: a ordenacao nao pode embaralhar a frota quando
+        # ninguem pediu capacidade nenhuma.
+        sensor = SensorObrigatorio(codex=(0, "ok", ""))
+        self.executar(sensor, capacidade=None)
+        self.assertEqual(sensor.provedores_chamados(), ["codex"])
+
+    def test_capacidade_inexistente_nao_esvazia_a_frota(self):
+        # Preferencia e preferencia: ninguem atender a capacidade pedida
+        # nao pode virar STOP_WAIT_RESET — o adendo diz "perfil inicial
+        # (PREFERENCIA, nao papel fixo)".
+        sensor = SensorObrigatorio(codex=(0, "ok", ""))
+        r = self.executar(sensor, capacidade="capacidade-que-ninguem-tem")
+        self.assertEqual(r["status"], "sucesso", r.get("detalhe"))
+
     def test_a_cadeia_de_eventos_fica_integra_e_o_placar_e_projetado(self):
         # `verificar_integridade` levanta se a cadeia quebrar, e a
         # EvidencePlane SO le: o placar sai do log verificado, nunca da
