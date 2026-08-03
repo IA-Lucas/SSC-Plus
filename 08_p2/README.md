@@ -106,7 +106,7 @@ E a proxima medicao provavelmente **nao** deve ser repeticao: como a razao
 acompanha o tamanho do turno interno, varrer tamanhos de turno interno
 mede a fronteira, e repetir o mesmo arquivo mede o ruido da resposta.
 
-## LEIA ANTES DE RODAR — tres limites que valem hoje
+## LEIA ANTES DE RODAR — quatro limites que valem hoje
 
 Estao aqui, e nao no rodape, porque quem vem usar a P2 segue os tres
 passos abaixo e pode nunca rolar ate o fim. Os tres sao **medidos**, com
@@ -171,9 +171,57 @@ mecanismo funcionando.
 Quem construiu nao certifica — regra do `CLAUDE.md` da raiz. A P2.0
 escreveu o codigo, os testes e a propria evidencia; a P2.1 escreveu o
 medidor e mediu as corridas acima; a P2.2 mediu a fronteira, achou dois
-defeitos e fechou os dois. **Nenhuma revisao independente passou por nada
-disso** — nem sobre a P2.0, nem sobre a P2.1, nem sobre a P2.2. Nao existe
-atestado de aprovacao da P2, e este README nao e um.
+defeitos e fechou os dois; a P2.3 corrigiu o mecanismo do achado A e
+**declarou o proprio conserto sem fecha-lo**. **Nenhuma revisao
+independente passou por nada disso** — nem sobre a P2.0, nem sobre a
+P2.1, nem sobre a P2.2, nem sobre a P2.3. Nao existe atestado de
+aprovacao da P2, e este README nao e um.
+
+### 4. O `read-only` so vale a partir de `abc75e8` — e o passado nao esta atestado
+
+O achado **A** de 2026-08-03
+([`99_achados-divergencias-20260803.md`](99_achados-divergencias-20260803.md))
+mediu que nada impedia escrita: nenhuma restricao de filesystem chegava
+ao CLI, o diretorio de trabalho era herdado do terminal — a **raiz deste
+repositorio** — e `efeito_externo: "nenhum"` era gravado **por
+declaracao**, sem que nada olhasse o disco.
+
+**CORRIGIDO NO MECANISMO A PARTIR DE `abc75e8`** (missao P2.3, registro em
+[`99_registro-p23.md`](99_registro-p23.md)): o codex passa a receber
+`--sandbox read-only --cd <descartavel> --skip-git-repo-check
+--ephemeral`, o processo filho corre no descartavel, a `Vigilancia` abre
+e fecha em volta da invocacao, e o efeito externo do recibo passa a ser
+**medido** por manifesto SHA-256 antes e depois.
+
+**O achado A NAO esta fechado.** Quem corrige nao certifica: ele segue
+aberto ate uma revisao independente dizer que fechou.
+
+**Sobre as corridas ANTERIORES a `abc75e8`, a resposta honesta e "nao se
+sabe".** As nove corridas da P2.0, P2.1 e P2.2 rodaram **sem fotografia
+de antes e depois**. Nao ha como afirmar nem negar que alguma tenha
+escrito em algum lugar. Esta secao existe para dizer isso, e nao para
+sugerir que a correcao alcanca o passado — ela nao alcanca.
+
+**O que continua NAO MEDIDO, mesmo depois da correcao:**
+
+- **o que `codex exec` faz por conta propria.** Mede-se que o CLI aceita
+  a flag, valida o valor (`--sandbox read-onlyX` e recusado com a lista
+  de valores possiveis) e ecoa `sandbox: read-only` no cabecalho. Que ele
+  **recuse** uma escrita pedida pelo modelo exigiria invocacao real com
+  credencial — e nenhuma foi feita;
+- **a config do codex fora deste repositorio** (`~/.codex/config.toml`).
+  Os testes usam `CODEX_HOME` isolado justamente para nao depender dela,
+  o que tambem significa que nao medem o efeito dela numa corrida de
+  operacao. E, seja qual for, ela vive num arquivo que qualquer processo
+  altera: nao e mecanismo que o SSC+ controle;
+- **o lado remoto.** A medicao ve DISCO, dentro das raizes vigiadas.
+  Escrita que um provedor faca no proprio servico nao aparece em
+  fotografia local nenhuma;
+- **o kimi nao tem sandbox de filesystem** — o CLI nao oferece a flag
+  (`unknown option '--sandbox'`, medido na P1-A.3.4). Ali a protecao e o
+  descartavel como diretorio de trabalho mais a `Vigilancia`, e o rotulo
+  do proprio codigo diz isso por extenso em vez de afirmar isolamento
+  inexistente.
 
 ## Os tres passos, em PowerShell
 
