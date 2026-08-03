@@ -6,6 +6,64 @@
 > capsula, em modo supervisionado. **Chamada de API paga continua
 > PROIBIDA** — a politica economica nao foi tocada.
 
+## LEIA ANTES DE RODAR — tres limites que valem hoje
+
+Estao aqui, e nao no rodape, porque quem vem usar a P2 segue os tres
+passos abaixo e pode nunca rolar ate o fim. Os tres sao **medidos**, com
+data e evidencia; nenhum e precaucao generica.
+
+### 1. A economia de TOKEN nao esta medida
+
+Nenhum dos dois CLIs reporta contagem de token. `tokens_reportados` sai
+`None` em toda invocacao — por honestidade, jamais zero por conveniencia.
+
+O que existe e uma **proxy**, que nao e a medicao: `08_p2/medidor.py`
+conta a **carga de fronteira** em bytes e caracteres. **Uma** corrida
+comparada, em 2026-08-03 (`08_p2/evidencias/medicao-p21-*.json`) — ler o
+arquivo `05_p0/ssc_p0/eventlog.py` e resumi-lo em ate 8 linhas:
+
+| | bytes utf-8 |
+|---|---|
+| o que o despachante pagou ao despachar | **872** |
+| o que o outro canal gastaria fazendo a MESMA tarefa sozinho | **7.653** |
+| poupanca na fronteira | **6.781** — razao **8,78x** |
+
+A poupanca e, quase inteira, o turno interno: os 6.184 B do arquivo que a
+assinatura leu por conta propria e o despachante nao precisou ingerir.
+
+**Nao cite esse 8,78x sozinho.** Byte nao e token; `n = 1`; e a proxy
+declara **oito** coisas que nao captura — entre elas raciocinio, contexto
+reenviado e cache, que e onde a economia de verdade mora. Os oito viajam
+DENTRO da saida de `comparar`, de proposito: o numero nao circula sem os
+proprios limites.
+
+A tese central do projeto — despachar para a assinatura poupa token de
+outro canal — segue **NAO MEDIDA em token**. O que ha e uma corrida, numa
+proxy declarada, apontando na direcao dela.
+
+### 2. A frota e codex-only enquanto a franquia do kimi estiver esgotada
+
+Medido em **2026-08-03T11:56Z**
+(`08_p2/evidencias/execucao-20260803T115622Z.json`): com `--capacidade
+volume`, que puxa o kimi primeiro, o kimi devolveu `falha-quota` e a
+maquina rerroteou sozinha para o codex, que concluiu. Mesma medicao de
+2026-08-03T02:38Z, agora repetida.
+
+Consequencia pratica: **`kimi -p` nunca foi validado num caminho de
+sucesso**. Sabe-se que o argv chega ao provedor — o erro veio do
+provedor, nao do parser — e nada alem disso. Enquanto isso valer, pedir
+`--capacidade volume`, `contexto-extenso` ou `engenharia-reversa` custa
+uma tentativa perdida antes do fallback; nao e erro, e o preco do
+mecanismo funcionando.
+
+### 3. Ninguem certificou a P2
+
+Quem construiu nao certifica — regra do `CLAUDE.md` da raiz. A P2.0
+escreveu o codigo, os testes e a propria evidencia; a P2.1 escreveu o
+medidor e mediu as corridas acima. **Nenhuma revisao independente passou
+por nada disso.** Nao existe atestado de aprovacao da P2, e este README
+nao e um.
+
 ## Os tres passos, em PowerShell
 
 ### 1. Declarar o tier (ato do proprietario, vale 24 h)
@@ -85,13 +143,24 @@ usuario vira `<CAMINHO-LOCAL>`) e um laboratorio proprio em
    respondeu;
 3. **nao ha contagem de token.** Nenhum dos dois CLIs reporta, e o campo
    sai `None`. O placar da EvidencePlane conta ausencia como zero e rotula
-   o total `simulado` — divergencia registrada, nao corrigida;
+   o total `simulado` — divergencia registrada, nao corrigida. A P2.1 nao
+   corrigiu isso: ela construiu uma PROXY de bytes ao lado
+   (`08_p2/medidor.py`), com os proprios limites declarados. Ver o item 1
+   do bloco no topo;
 4. **o contexto nao e enviado.** O prompt e a `--tarefa`; o
    `ContextPackage` da WorkUnit nao vai ao CLI;
 5. **read-only.** O envelope nasce `pode_escrever: False`. A P2 responde;
    nao aplica patch;
-6. **a franquia do kimi estava ACABADA** na medicao de 2026-08-03, entao
-   `kimi -p` nunca foi validado num caminho de sucesso. Sabe-se que o
-   argv chega ao provedor (o erro veio do provedor, nao do parser);
+6. **a franquia do kimi estava ACABADA** nas medicoes de 2026-08-03
+   (02:38Z e 11:56Z), entao `kimi -p` nunca foi validado num caminho de
+   sucesso. Ver o item 2 do bloco no topo;
 7. **quem construiu nao certificou.** Nenhuma revisao independente foi
-   feita sobre a P2.
+   feita sobre a P2 — nem sobre a P2.0, nem sobre a P2.1. Ver o item 3
+   do bloco no topo;
+8. **dois guardas da P2.0 estavam pela metade**, medido pela reversao
+   vermelha da P2.1: o teto de custo zero podia ser AFROUXADO sem
+   vermelho nenhum, e a correcao de codificacao prendia a primitiva
+   `decodificar` mas nao o ponto de chamada `sensor_subprocess`. Os dois
+   foram fechados com teste, sem tocar producao. O que isso ensina sobre
+   o resto do acervo — quantos outros guardas estao na mesma condicao —
+   **nao foi medido**.
