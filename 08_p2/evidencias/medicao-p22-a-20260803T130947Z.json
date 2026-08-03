@@ -1,0 +1,170 @@
+{
+  "alternativo": {
+    "avisos": [],
+    "itens": [
+      {
+        "bytes_utf8": 226,
+        "caracteres": 226,
+        "papel": "entrada",
+        "procedencia": "medido-processo",
+        "rotulo": "prompt (identico ao despachado)"
+      },
+      {
+        "bytes_utf8": 13508,
+        "caracteres": 13493,
+        "papel": "interno",
+        "procedencia": "medido-arquivo",
+        "rotulo": "05_p0/ssc_p0/execution.py"
+      },
+      {
+        "bytes_utf8": 1384,
+        "caracteres": 1382,
+        "papel": "saida",
+        "procedencia": "medido-processo",
+        "rotulo": "resposta produzida pelo canal alternativo"
+      }
+    ],
+    "lado": "alternativo",
+    "por_papel": {
+      "entrada": {
+        "bytes_utf8": 226,
+        "caracteres": 226
+      },
+      "interno": {
+        "bytes_utf8": 13508,
+        "caracteres": 13493
+      },
+      "saida": {
+        "bytes_utf8": 1384,
+        "caracteres": 1382
+      }
+    },
+    "proxy": "carga-de-fronteira",
+    "total": {
+      "bytes_utf8": 15118,
+      "caracteres": 15101
+    }
+  },
+  "assinatura": {
+    "entrada_unitaria": {
+      "bytes_utf8": 226,
+      "caracteres": 226
+    },
+    "fonte": "cadeia-verificada (EventLog + CAS via EvidencePlane)",
+    "lado": "assinatura",
+    "n_tentativas": 1,
+    "procedencia_entrada": "medido-processo",
+    "proxy": "carga-de-fronteira",
+    "residual_do_despachante": {
+      "bytes_utf8": 773,
+      "caracteres": 761
+    },
+    "sessao_id": "9b8893fe3b2d4c21bd8e7f3f849c16a3",
+    "tentativas": [
+      {
+        "attempt_id": "35f7a8d6fc9b4280b127e0e26bc94705",
+        "entrada": {
+          "bytes_utf8": 226,
+          "caracteres": 226
+        },
+        "executor": "codex/gpt-5.6-sol",
+        "final": true,
+        "resultado": "sucesso",
+        "saida": {
+          "bytes_utf8": 547,
+          "caracteres": 535
+        }
+      }
+    ],
+    "total": {
+      "bytes_utf8": 773,
+      "caracteres": 761
+    },
+    "total_entrada": {
+      "bytes_utf8": 226,
+      "caracteres": 226
+    },
+    "total_saida": {
+      "bytes_utf8": 547,
+      "caracteres": 535
+    },
+    "truncamento": {
+      "divergencia_medida": {
+        "bytes_utf8": 0,
+        "caracteres": 0
+      },
+      "possivel": false,
+      "teto_chars": 4000
+    },
+    "work_unit_id": "5e9bc34f74bb471fb50405987cc12114"
+  },
+  "classe": "a",
+  "comparacao": {
+    "alternativo_sozinho": {
+      "bytes_utf8": 15118,
+      "caracteres": 15101
+    },
+    "assinatura_absorveu": {
+      "bytes_utf8": 773,
+      "caracteres": 761
+    },
+    "avisos": [],
+    "n_corridas": 1,
+    "nao_captura": [
+      {
+        "codigo": "bytes-nao-sao-tokens",
+        "porque": "tokenizador nao e linear em byte, e os dois canais nem usam o mesmo. Razao de bytes NAO e razao de tokens; serve para ordem de grandeza, jamais para faturamento."
+      },
+      {
+        "codigo": "contexto-do-canal-nao-atravessa-a-fronteira",
+        "porque": "prompt de sistema, historico de conversa e definicao de ferramenta sao reenviados a cada turno do canal alternativo, e o CLI de assinatura injeta os seus. Nenhum dos dois aparece na fronteira medida."
+      },
+      {
+        "codigo": "raciocinio-nao-emitido",
+        "porque": "token de raciocinio e cobrado e nunca cruza a fronteira. E justamente onde a economia deveria estar, e e o que esta proxy nao alcanca."
+      },
+      {
+        "codigo": "cache-nao-e-visto",
+        "porque": "cache de prompt muda o preco por token sem mudar um byte. Dois numeros iguais nesta proxy podem custar diferente."
+      },
+      {
+        "codigo": "turnos-internos-so-contam-se-declarados",
+        "porque": "o canal alternativo fazendo a tarefa sozinho abre N leituras e chamadas de ferramenta. So entra o que o razonete declarar: leitura nao declarada e leitura nao contada, e o vies favorece 'nao houve economia'."
+      },
+      {
+        "codigo": "qualidade-nao-e-medida",
+        "porque": "resposta mais barata e errada nao e economia. A proxy nao olha o conteudo, e a P2 nunca acionou juiz-llm (`99_registro-p2.md` §6.1)."
+      },
+      {
+        "codigo": "entrada-da-cadeia-e-truncada-em-4000-chars",
+        "porque": "`workunit.intencao` tem teto de contrato e o CLI recebe a tarefa integral. Acima do teto a leitura da cadeia sub-conta o que atravessou."
+      },
+      {
+        "codigo": "uma-corrida-nao-e-tendencia",
+        "porque": "n=1 mede a corrida que ocorreu. Nada aqui autoriza extrapolar para a proxima tarefa, outro modelo ou outra estacao."
+      }
+    ],
+    "poupanca": {
+      "bytes_utf8": 14345,
+      "caracteres": 14340
+    },
+    "proxy": "carga-de-fronteira",
+    "razao_alternativo_sobre_residual": 19.558,
+    "residual_do_despachante": {
+      "bytes_utf8": 773,
+      "caracteres": 761
+    },
+    "unidades": [
+      "bytes_utf8",
+      "caracteres"
+    ],
+    "veredito_da_fronteira": "na fronteira desta corrida o despacho custou MENOS que o canal alternativo faria sozinho"
+  },
+  "execucao_consumida": "execucao-20260803T130829Z.json",
+  "gerado_em_utc": "2026-08-03T13:09:47Z",
+  "tarefa": "Leia o arquivo 05_p0/ssc_p0/execution.py deste repositorio e responda em no maximo 8 linhas: (1) que propriedade o modulo garante sobre execucao de attempt; (2) que erro de operacao ele torna impossivel, e qual ele NAO impede.",
+  "tipo": "medicao-comparada-p22 (NAO e atestado)",
+  "turno_interno_declarado": [
+    "05_p0/ssc_p0/execution.py"
+  ]
+}

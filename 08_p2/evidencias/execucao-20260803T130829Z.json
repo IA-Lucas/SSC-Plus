@@ -1,0 +1,222 @@
+{
+  "attempts": [
+    {
+      "attempt_id": "35f7a8d6fc9b4280b127e0e26bc94705",
+      "custo_medido": {
+        "rotulo": "medido-assinatura",
+        "tokens_reportados": null,
+        "valor": 0.0
+      },
+      "efeito_externo": "nenhum",
+      "executor_resolvido": {
+        "modelo": "gpt-5.6-sol",
+        "provedor": "codex"
+      },
+      "resultado": "sucesso"
+    }
+  ],
+  "capsula": {
+    "violacoes_no_env_do_processo": []
+  },
+  "detalhe": "",
+  "linhagem_id": "9b8893fe3b2d4c21bd8e7f3f849c16a3",
+  "lock_escritor_unico": {
+    "fence": 1,
+    "sessao": "p22-ops"
+  },
+  "montagem": {
+    "descartes": [
+      {
+        "motivo": "veredito nao habilita rota: SUPERVISED",
+        "provider_id": "claude"
+      },
+      {
+        "motivo": "veredito nao habilita rota: SUPERVISED",
+        "provider_id": "google"
+      },
+      {
+        "motivo": "veredito nao habilita rota: SUPERVISED",
+        "provider_id": "grok"
+      }
+    ],
+    "entradas": [
+      "codex/gpt-5.6-sol",
+      "kimi/kimi-code/k3"
+    ],
+    "vetos": []
+  },
+  "placar": {
+    "attempts": [
+      {
+        "artefato_ref": "090f54e120355b31f9752c8c40f8de3c09975161d171b2275edec11228235789",
+        "attempt_id": "35f7a8d6fc9b4280b127e0e26bc94705",
+        "captura": {
+          "saida_estruturada_ref": "090f54e120355b31f9752c8c40f8de3c09975161d171b2275edec11228235789",
+          "saida_final_ref": "090f54e120355b31f9752c8c40f8de3c09975161d171b2275edec11228235789"
+        },
+        "custo_medido": {
+          "rotulo": "medido-assinatura",
+          "tokens_reportados": null,
+          "valor": 0.0
+        },
+        "decisao_id": "bd264790a607418a9f05c5c414e0749f",
+        "efeito_externo": "nenhum",
+        "executor_observado": null,
+        "executor_resolvido": {
+          "alias_usado": false,
+          "effort": "alto",
+          "executor_id": "codex/gpt-5.6-sol",
+          "ferramenta": "cli-assinatura",
+          "hash_catalogo": "0f3967fc4d63f6170c235f0cbece31a5f687de961346f6d8a3cc983c7e2b3b3e",
+          "modelo": "gpt-5.6-sol",
+          "provedor": "codex"
+        },
+        "fim": "2026-07-30T00:00:09Z",
+        "inicio": "2026-07-30T00:00:07Z",
+        "linhagem_id": "9b8893fe3b2d4c21bd8e7f3f849c16a3",
+        "resultado": "sucesso",
+        "selecao_solicitada": {
+          "controle": "autonomo",
+          "effort": "alto",
+          "ferramenta": "cli-assinatura",
+          "modelo": "gpt-5.6-sol",
+          "modo": "read-only",
+          "provedor": "codex"
+        },
+        "vinculos": {
+          "hash_aprovacao": "d78dc4b1d23bbab965deabcd8ff2dc711b2b1834a63b3f4f159544ced9560eea",
+          "hash_catalogo": "0f3967fc4d63f6170c235f0cbece31a5f687de961346f6d8a3cc983c7e2b3b3e",
+          "hash_contexto": "0de0338e6f49c5b7fa5c606dffdde009c112eb7d5e854d8a115faf57003fadfe",
+          "hash_envelope": "5edb28deab066b6d4351a17421a3fdc61972e8476bf4be892dc8aa0ce2ec80e8",
+          "hash_permissoes": "5683800ce20fea8313db4ee6fe6162e73b1119535cbb1faac5f90b5e136b7d04",
+          "hash_politica": "5f89b79f67c5314d7d0e28abd3bd20be16f6d7be5780c7e3258674a711bf418a"
+        },
+        "work_unit_id": "5e9bc34f74bb471fb50405987cc12114"
+      }
+    ],
+    "custo_total": {
+      "rotulo": "simulado",
+      "valor": 0.0
+    },
+    "decisoes": {
+      "bd264790a607418a9f05c5c414e0749f": {
+        "alternativas": [
+          {
+            "controle": "autonomo",
+            "effort": "alto",
+            "ferramenta": "cli-assinatura",
+            "modelo": "kimi-code/k3",
+            "modo": "read-only",
+            "provedor": "kimi"
+          }
+        ],
+        "aprovacao_custo": {
+          "efforts_permitidos": [
+            "baixo",
+            "alto"
+          ],
+          "fallback_autorizado": true,
+          "modelos_permitidos": [
+            "codex/gpt-5.6-sol",
+            "kimi/kimi-code/k3"
+          ],
+          "modo": "read-only",
+          "teto_custo": 0.0,
+          "validade": "2027-01-01T00:00:00Z"
+        },
+        "classificacao": {
+          "confianca": "alta",
+          "metodo": "declarado",
+          "rota": "frota"
+        },
+        "custo_previsto": {
+          "rotulo": "assinatura-sem-custo-variavel",
+          "valor": 0.0
+        },
+        "decisao_id": "bd264790a607418a9f05c5c414e0749f",
+        "hash_pacote": "0de0338e6f49c5b7fa5c606dffdde009c112eb7d5e854d8a115faf57003fadfe",
+        "independencia_evidencia": null,
+        "motivo": "frota: codex/gpt-5.6-sol por capacidade/preferencia (fallback autorizado)",
+        "nivel_capacidade_atendido": "L2",
+        "papel": "autor",
+        "selecao": {
+          "controle": "autonomo",
+          "effort": "alto",
+          "ferramenta": "cli-assinatura",
+          "modelo": "gpt-5.6-sol",
+          "modo": "read-only",
+          "provedor": "codex"
+        },
+        "supersede": null,
+        "vinculos": {
+          "hash_aprovacao": "d78dc4b1d23bbab965deabcd8ff2dc711b2b1834a63b3f4f159544ced9560eea",
+          "hash_catalogo": "0f3967fc4d63f6170c235f0cbece31a5f687de961346f6d8a3cc983c7e2b3b3e",
+          "hash_contexto": "0de0338e6f49c5b7fa5c606dffdde009c112eb7d5e854d8a115faf57003fadfe",
+          "hash_envelope": "5edb28deab066b6d4351a17421a3fdc61972e8476bf4be892dc8aa0ce2ec80e8",
+          "hash_permissoes": "5683800ce20fea8313db4ee6fe6162e73b1119535cbb1faac5f90b5e136b7d04",
+          "hash_politica": "5f89b79f67c5314d7d0e28abd3bd20be16f6d7be5780c7e3258674a711bf418a"
+        },
+        "work_unit_id": "5e9bc34f74bb471fb50405987cc12114"
+      }
+    },
+    "divergencias_observado_resolvido": [],
+    "escalacoes": [],
+    "fallbacks": [],
+    "linhagem_id": "9b8893fe3b2d4c21bd8e7f3f849c16a3",
+    "n_eventos": 10,
+    "placar_por_executor": {
+      "codex/gpt-5.6-sol": {
+        "attempts": 1,
+        "custo_simulado": 0.0,
+        "latencias_simuladas_ms": [],
+        "sucesso": 1
+      }
+    },
+    "retries": [],
+    "sessao_id": "9b8893fe3b2d4c21bd8e7f3f849c16a3",
+    "tokens_total": {
+      "rotulo": "simulado",
+      "valor": 0
+    },
+    "vereditos": [],
+    "work_units": {
+      "5e9bc34f74bb471fb50405987cc12114": {
+        "classe_governanca": "C1",
+        "contexto_ref": "0de0338e6f49c5b7fa5c606dffdde009c112eb7d5e854d8a115faf57003fadfe",
+        "criterios_aceite_ref": "65e4313dce149a3aef8cb2e0671848c591922b5a5b2a3d4735ad82982d4486df",
+        "custo_medido": null,
+        "depende_de": [],
+        "estado": "aguardando-validacao",
+        "intencao": "Leia o arquivo 05_p0/ssc_p0/execution.py deste repositorio e responda em no maximo 8 linhas: (1) que propriedade o modulo garante sobre execucao de attempt; (2) que erro de operacao ele torna impossivel, e qual ele NAO impede.",
+        "linhagem_id": "9b8893fe3b2d4c21bd8e7f3f849c16a3",
+        "nivel_capacidade": "L2",
+        "parent_work_unit": null,
+        "perfil_capacidade": {
+          "contexto_max_tokens": 128000,
+          "dominio": "geral",
+          "ferramentas": [],
+          "formato_saida": "livre",
+          "latencia_max_ms": null,
+          "modalidade": "texto",
+          "orcamento_max_custo": null,
+          "privacidade": "remoto-permitido"
+        },
+        "resultado_ref": null,
+        "sessao_id": "9b8893fe3b2d4c21bd8e7f3f849c16a3",
+        "tipo": "ato",
+        "tipo_decisao": "tipo-2",
+        "work_unit_id": "5e9bc34f74bb471fb50405987cc12114"
+      }
+    }
+  },
+  "preflight_consumido": {
+    "caminho": "<CAMINHO-LOCAL>\\Projetos\\SSC-Plus\\07_p1b\\evidencias\\preflight-20260803T130605Z.json",
+    "gerado_em_utc": "2026-08-03T13:06:05Z",
+    "idade_s": 101
+  },
+  "raiz_lab": "E:\\LucasIA\\Projetos\\SSC-Plus\\08_p2\\saidas\\labs\\20260803T130746Z",
+  "saida": "1. Cada `ExecutionAttempt` recebe um `attempt_id` novo e é invocado **no máximo uma vez**; retry/fallback cria outro attempt.  \n2. Isso impossibilita reexecutar a mesma tentativa (`attempt_id`) duas vezes dentro desse fluxo.  \n3. Porém, **não impede repetir a operação lógica/efeito externo em attempts distintos**; a segurança depende da `idempotency_key` ou da prova `efeito_externo=\"nao-aplicado\"`.  \n4. Se o efeito é `indeterminado`, o módulo bloqueia retry automático e escalona, mas não oferece garantia geral de *exactly-once*.\n",
+  "sessao_id": "9b8893fe3b2d4c21bd8e7f3f849c16a3",
+  "status": "sucesso",
+  "work_unit_id": "5e9bc34f74bb471fb50405987cc12114"
+}
