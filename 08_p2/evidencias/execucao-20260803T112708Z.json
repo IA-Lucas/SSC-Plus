@@ -1,0 +1,222 @@
+{
+  "attempts": [
+    {
+      "attempt_id": "1a050705a9e74e199301cfc6b2faac0f",
+      "custo_medido": {
+        "rotulo": "medido-assinatura",
+        "tokens_reportados": null,
+        "valor": 0.0
+      },
+      "efeito_externo": "nenhum",
+      "executor_resolvido": {
+        "modelo": "gpt-5.6-sol",
+        "provedor": "codex"
+      },
+      "resultado": "sucesso"
+    }
+  ],
+  "capsula": {
+    "violacoes_no_env_do_processo": []
+  },
+  "detalhe": "",
+  "linhagem_id": "36f0258a471e4d83b83c4c6f5644c14d",
+  "lock_escritor_unico": {
+    "fence": 1,
+    "sessao": "p21-ops"
+  },
+  "montagem": {
+    "descartes": [
+      {
+        "motivo": "veredito nao habilita rota: SUPERVISED",
+        "provider_id": "claude"
+      },
+      {
+        "motivo": "veredito nao habilita rota: SUPERVISED",
+        "provider_id": "google"
+      },
+      {
+        "motivo": "veredito nao habilita rota: SUPERVISED",
+        "provider_id": "grok"
+      }
+    ],
+    "entradas": [
+      "codex/gpt-5.6-sol",
+      "kimi/kimi-code/k3"
+    ],
+    "vetos": []
+  },
+  "placar": {
+    "attempts": [
+      {
+        "artefato_ref": "3c25337091d41e221847fc57abb71b1546695763fd647e1aba9c2187be101e4c",
+        "attempt_id": "1a050705a9e74e199301cfc6b2faac0f",
+        "captura": {
+          "saida_estruturada_ref": "3c25337091d41e221847fc57abb71b1546695763fd647e1aba9c2187be101e4c",
+          "saida_final_ref": "3c25337091d41e221847fc57abb71b1546695763fd647e1aba9c2187be101e4c"
+        },
+        "custo_medido": {
+          "rotulo": "medido-assinatura",
+          "tokens_reportados": null,
+          "valor": 0.0
+        },
+        "decisao_id": "765c2ff5c1ba4daf98d1fc8ad9bd7acd",
+        "efeito_externo": "nenhum",
+        "executor_observado": null,
+        "executor_resolvido": {
+          "alias_usado": false,
+          "effort": "alto",
+          "executor_id": "codex/gpt-5.6-sol",
+          "ferramenta": "cli-assinatura",
+          "hash_catalogo": "0f3967fc4d63f6170c235f0cbece31a5f687de961346f6d8a3cc983c7e2b3b3e",
+          "modelo": "gpt-5.6-sol",
+          "provedor": "codex"
+        },
+        "fim": "2026-07-30T00:00:09Z",
+        "inicio": "2026-07-30T00:00:07Z",
+        "linhagem_id": "36f0258a471e4d83b83c4c6f5644c14d",
+        "resultado": "sucesso",
+        "selecao_solicitada": {
+          "controle": "autonomo",
+          "effort": "alto",
+          "ferramenta": "cli-assinatura",
+          "modelo": "gpt-5.6-sol",
+          "modo": "read-only",
+          "provedor": "codex"
+        },
+        "vinculos": {
+          "hash_aprovacao": "d78dc4b1d23bbab965deabcd8ff2dc711b2b1834a63b3f4f159544ced9560eea",
+          "hash_catalogo": "0f3967fc4d63f6170c235f0cbece31a5f687de961346f6d8a3cc983c7e2b3b3e",
+          "hash_contexto": "6df561c15e4fb97afde80808e82536c6aab175907120c4f81aadb75d3c19c1a6",
+          "hash_envelope": "5368bf272a44dbef4853cfde3d65c08cccb5f1c53ddb98502a64ee5fb238fd93",
+          "hash_permissoes": "5683800ce20fea8313db4ee6fe6162e73b1119535cbb1faac5f90b5e136b7d04",
+          "hash_politica": "5f89b79f67c5314d7d0e28abd3bd20be16f6d7be5780c7e3258674a711bf418a"
+        },
+        "work_unit_id": "4315dcf5b2a046b9ac3fb17593663b63"
+      }
+    ],
+    "custo_total": {
+      "rotulo": "simulado",
+      "valor": 0.0
+    },
+    "decisoes": {
+      "765c2ff5c1ba4daf98d1fc8ad9bd7acd": {
+        "alternativas": [
+          {
+            "controle": "autonomo",
+            "effort": "alto",
+            "ferramenta": "cli-assinatura",
+            "modelo": "kimi-code/k3",
+            "modo": "read-only",
+            "provedor": "kimi"
+          }
+        ],
+        "aprovacao_custo": {
+          "efforts_permitidos": [
+            "baixo",
+            "alto"
+          ],
+          "fallback_autorizado": true,
+          "modelos_permitidos": [
+            "codex/gpt-5.6-sol",
+            "kimi/kimi-code/k3"
+          ],
+          "modo": "read-only",
+          "teto_custo": 0.0,
+          "validade": "2027-01-01T00:00:00Z"
+        },
+        "classificacao": {
+          "confianca": "alta",
+          "metodo": "declarado",
+          "rota": "frota"
+        },
+        "custo_previsto": {
+          "rotulo": "assinatura-sem-custo-variavel",
+          "valor": 0.0
+        },
+        "decisao_id": "765c2ff5c1ba4daf98d1fc8ad9bd7acd",
+        "hash_pacote": "6df561c15e4fb97afde80808e82536c6aab175907120c4f81aadb75d3c19c1a6",
+        "independencia_evidencia": null,
+        "motivo": "frota: codex/gpt-5.6-sol por capacidade/preferencia (fallback autorizado)",
+        "nivel_capacidade_atendido": "L2",
+        "papel": "autor",
+        "selecao": {
+          "controle": "autonomo",
+          "effort": "alto",
+          "ferramenta": "cli-assinatura",
+          "modelo": "gpt-5.6-sol",
+          "modo": "read-only",
+          "provedor": "codex"
+        },
+        "supersede": null,
+        "vinculos": {
+          "hash_aprovacao": "d78dc4b1d23bbab965deabcd8ff2dc711b2b1834a63b3f4f159544ced9560eea",
+          "hash_catalogo": "0f3967fc4d63f6170c235f0cbece31a5f687de961346f6d8a3cc983c7e2b3b3e",
+          "hash_contexto": "6df561c15e4fb97afde80808e82536c6aab175907120c4f81aadb75d3c19c1a6",
+          "hash_envelope": "5368bf272a44dbef4853cfde3d65c08cccb5f1c53ddb98502a64ee5fb238fd93",
+          "hash_permissoes": "5683800ce20fea8313db4ee6fe6162e73b1119535cbb1faac5f90b5e136b7d04",
+          "hash_politica": "5f89b79f67c5314d7d0e28abd3bd20be16f6d7be5780c7e3258674a711bf418a"
+        },
+        "work_unit_id": "4315dcf5b2a046b9ac3fb17593663b63"
+      }
+    },
+    "divergencias_observado_resolvido": [],
+    "escalacoes": [],
+    "fallbacks": [],
+    "linhagem_id": "36f0258a471e4d83b83c4c6f5644c14d",
+    "n_eventos": 10,
+    "placar_por_executor": {
+      "codex/gpt-5.6-sol": {
+        "attempts": 1,
+        "custo_simulado": 0.0,
+        "latencias_simuladas_ms": [],
+        "sucesso": 1
+      }
+    },
+    "retries": [],
+    "sessao_id": "36f0258a471e4d83b83c4c6f5644c14d",
+    "tokens_total": {
+      "rotulo": "simulado",
+      "valor": 0
+    },
+    "vereditos": [],
+    "work_units": {
+      "4315dcf5b2a046b9ac3fb17593663b63": {
+        "classe_governanca": "C1",
+        "contexto_ref": "6df561c15e4fb97afde80808e82536c6aab175907120c4f81aadb75d3c19c1a6",
+        "criterios_aceite_ref": "44bd9a61f833f0daf374647b5099c3763eae58e0f4c7a9e2650114db36eaba6c",
+        "custo_medido": null,
+        "depende_de": [],
+        "estado": "aguardando-validacao",
+        "intencao": "Leia o arquivo 05_p0/ssc_p0/eventlog.py deste repositorio e responda em no maximo 8 linhas: (1) como a cadeia de hashes encadeia cada evento ao anterior; (2) o que exatamente a verificacao da cadeia RECUSA. Nao altere nenhum arquivo.",
+        "linhagem_id": "36f0258a471e4d83b83c4c6f5644c14d",
+        "nivel_capacidade": "L2",
+        "parent_work_unit": null,
+        "perfil_capacidade": {
+          "contexto_max_tokens": 128000,
+          "dominio": "operacao-repo",
+          "ferramentas": [],
+          "formato_saida": "livre",
+          "latencia_max_ms": null,
+          "modalidade": "texto",
+          "orcamento_max_custo": null,
+          "privacidade": "remoto-permitido"
+        },
+        "resultado_ref": null,
+        "sessao_id": "36f0258a471e4d83b83c4c6f5644c14d",
+        "tipo": "ato",
+        "tipo_decisao": "tipo-2",
+        "work_unit_id": "4315dcf5b2a046b9ac3fb17593663b63"
+      }
+    }
+  },
+  "preflight_consumido": {
+    "caminho": "<CAMINHO-LOCAL>\\Projetos\\SSC-Plus\\07_p1b\\evidencias\\preflight-20260803T112606Z.json",
+    "gerado_em_utc": "2026-08-03T11:26:06Z",
+    "idade_s": 47
+  },
+  "raiz_lab": "E:\\LucasIA\\Projetos\\SSC-Plus\\08_p2\\saidas\\labs\\20260803T112653Z",
+  "saida": "1. O primeiro evento aponta `prev_event_hash` para `hash_genese`; cada seguinte aponta para o SHA-256 canônico do evento anterior.  \n2. Após validar cada linha, seu hash vira o valor esperado para o próximo evento.  \n3. A verificação recusa cauda sem `\\n`, UTF-8/JSON inválido ou evento fora do schema.  \n4. Recusa serialização não canônica, sequência diferente da posição da linha (`seq != i`) e `prev_event_hash` divergente.  \n5. Recusa também qualquer `evento_id` ou `idempotency_key` repetido.  \n6. Observação: remover apenas eventos completos do fim não é detectado; arquivo vazio e prefixos íntegros são aceitos.\n",
+  "sessao_id": "36f0258a471e4d83b83c4c6f5644c14d",
+  "status": "sucesso",
+  "work_unit_id": "4315dcf5b2a046b9ac3fb17593663b63"
+}

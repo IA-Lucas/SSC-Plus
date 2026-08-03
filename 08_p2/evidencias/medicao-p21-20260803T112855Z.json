@@ -1,0 +1,173 @@
+{
+  "alternativo": {
+    "avisos": [],
+    "itens": [
+      {
+        "bytes_utf8": 233,
+        "caracteres": 233,
+        "papel": "entrada",
+        "procedencia": "medido-processo",
+        "rotulo": "prompt (identico ao despachado)"
+      },
+      {
+        "bytes_utf8": 6184,
+        "caracteres": 6180,
+        "papel": "interno",
+        "procedencia": "medido-arquivo",
+        "rotulo": "05_p0/ssc_p0/eventlog.py"
+      },
+      {
+        "bytes_utf8": 1236,
+        "caracteres": 1232,
+        "papel": "saida",
+        "procedencia": "medido-processo",
+        "rotulo": "resposta produzida pelo canal alternativo"
+      }
+    ],
+    "lado": "alternativo",
+    "por_papel": {
+      "entrada": {
+        "bytes_utf8": 233,
+        "caracteres": 233
+      },
+      "interno": {
+        "bytes_utf8": 6184,
+        "caracteres": 6180
+      },
+      "saida": {
+        "bytes_utf8": 1236,
+        "caracteres": 1232
+      }
+    },
+    "proxy": "carga-de-fronteira",
+    "total": {
+      "bytes_utf8": 7653,
+      "caracteres": 7645
+    }
+  },
+  "alvo_da_tarefa": "05_p0/ssc_p0/eventlog.py",
+  "assinatura": {
+    "entrada_unitaria": {
+      "bytes_utf8": 233,
+      "caracteres": 233
+    },
+    "fonte": "cadeia-verificada (EventLog + CAS via EvidencePlane)",
+    "lado": "assinatura",
+    "n_tentativas": 1,
+    "procedencia_entrada": "medido-processo",
+    "proxy": "carga-de-fronteira",
+    "residual_do_despachante": {
+      "bytes_utf8": 872,
+      "caracteres": 852
+    },
+    "sessao_id": "36f0258a471e4d83b83c4c6f5644c14d",
+    "tentativas": [
+      {
+        "attempt_id": "1a050705a9e74e199301cfc6b2faac0f",
+        "entrada": {
+          "bytes_utf8": 233,
+          "caracteres": 233
+        },
+        "executor": "codex/gpt-5.6-sol",
+        "final": true,
+        "resultado": "sucesso",
+        "saida": {
+          "bytes_utf8": 639,
+          "caracteres": 619
+        }
+      }
+    ],
+    "total": {
+      "bytes_utf8": 872,
+      "caracteres": 852
+    },
+    "total_entrada": {
+      "bytes_utf8": 233,
+      "caracteres": 233
+    },
+    "total_saida": {
+      "bytes_utf8": 639,
+      "caracteres": 619
+    },
+    "truncamento": {
+      "divergencia_medida": {
+        "bytes_utf8": 0,
+        "caracteres": 0
+      },
+      "possivel": false,
+      "teto_chars": 4000
+    },
+    "work_unit_id": "4315dcf5b2a046b9ac3fb17593663b63"
+  },
+  "comparacao": {
+    "alternativo_sozinho": {
+      "bytes_utf8": 7653,
+      "caracteres": 7645
+    },
+    "assinatura_absorveu": {
+      "bytes_utf8": 872,
+      "caracteres": 852
+    },
+    "avisos": [],
+    "n_corridas": 1,
+    "nao_captura": [
+      {
+        "codigo": "bytes-nao-sao-tokens",
+        "porque": "tokenizador nao e linear em byte, e os dois canais nem usam o mesmo. Razao de bytes NAO e razao de tokens; serve para ordem de grandeza, jamais para faturamento."
+      },
+      {
+        "codigo": "contexto-do-canal-nao-atravessa-a-fronteira",
+        "porque": "prompt de sistema, historico de conversa e definicao de ferramenta sao reenviados a cada turno do canal alternativo, e o CLI de assinatura injeta os seus. Nenhum dos dois aparece na fronteira medida."
+      },
+      {
+        "codigo": "raciocinio-nao-emitido",
+        "porque": "token de raciocinio e cobrado e nunca cruza a fronteira. E justamente onde a economia deveria estar, e e o que esta proxy nao alcanca."
+      },
+      {
+        "codigo": "cache-nao-e-visto",
+        "porque": "cache de prompt muda o preco por token sem mudar um byte. Dois numeros iguais nesta proxy podem custar diferente."
+      },
+      {
+        "codigo": "turnos-internos-so-contam-se-declarados",
+        "porque": "o canal alternativo fazendo a tarefa sozinho abre N leituras e chamadas de ferramenta. So entra o que o razonete declarar: leitura nao declarada e leitura nao contada, e o vies favorece 'nao houve economia'."
+      },
+      {
+        "codigo": "qualidade-nao-e-medida",
+        "porque": "resposta mais barata e errada nao e economia. A proxy nao olha o conteudo, e a P2 nunca acionou juiz-llm (`99_registro-p2.md` §6.1)."
+      },
+      {
+        "codigo": "entrada-da-cadeia-e-truncada-em-4000-chars",
+        "porque": "`workunit.intencao` tem teto de contrato e o CLI recebe a tarefa integral. Acima do teto a leitura da cadeia sub-conta o que atravessou."
+      },
+      {
+        "codigo": "uma-corrida-nao-e-tendencia",
+        "porque": "n=1 mede a corrida que ocorreu. Nada aqui autoriza extrapolar para a proxima tarefa, outro modelo ou outra estacao."
+      }
+    ],
+    "poupanca": {
+      "bytes_utf8": 6781,
+      "caracteres": 6793
+    },
+    "proxy": "carga-de-fronteira",
+    "razao_alternativo_sobre_residual": 8.776,
+    "residual_do_despachante": {
+      "bytes_utf8": 872,
+      "caracteres": 852
+    },
+    "unidades": [
+      "bytes_utf8",
+      "caracteres"
+    ],
+    "veredito_da_fronteira": "na fronteira desta corrida o despacho custou MENOS que o canal alternativo faria sozinho"
+  },
+  "execucao_consumida": "execucao-20260803T112708Z.json",
+  "gerado_em_utc": "2026-08-03T11:28:55Z",
+  "o_que_esta_corrida_NAO_estabelece": [
+    "n=1: uma corrida nao e tendencia, e nada aqui autoriza extrapolar para outra tarefa, outro modelo ou outra estacao",
+    "o razonete do canal alternativo conta o ARQUIVO CRU (6184 B); o enquadramento da ferramenta de leitura (numeros de linha, envelope do resultado) NAO entra. A omissao SUBESTIMA o canal alternativo, entao empurra o resultado para 'nao houve economia' — e conservadora, nao favoravel",
+    "a busca por qual arquivo usar ficou fora dos dois lados: o prompt nomeia o arquivo, para a assinatura e para o alternativo",
+    "qualidade das duas respostas nao foi julgada por ninguem; nenhum juiz-llm foi acionado"
+  ],
+  "tarefa": "Leia o arquivo 05_p0/ssc_p0/eventlog.py deste repositorio e responda em no maximo 8 linhas: (1) como a cadeia de hashes encadeia cada evento ao anterior; (2) o que exatamente a verificacao da cadeia RECUSA. Nao altere nenhum arquivo.",
+  "tipo": "medicao-comparada-p21 (NAO e atestado)"
+}
