@@ -1,0 +1,174 @@
+{
+  "alternativo": {
+    "avisos": [],
+    "itens": [
+      {
+        "bytes_utf8": 224,
+        "caracteres": 224,
+        "papel": "entrada",
+        "procedencia": "medido-processo",
+        "rotulo": "prompt (identico ao despachado)"
+      },
+      {
+        "bytes_utf8": 2987,
+        "caracteres": 2971,
+        "papel": "interno",
+        "procedencia": "medido-arquivo",
+        "rotulo": "05_p0/ssc_p0/estados.py"
+      },
+      {
+        "bytes_utf8": 1249,
+        "caracteres": 1245,
+        "papel": "saida",
+        "procedencia": "medido-processo",
+        "rotulo": "resposta produzida pelo canal alternativo"
+      }
+    ],
+    "lado": "alternativo",
+    "por_papel": {
+      "entrada": {
+        "bytes_utf8": 224,
+        "caracteres": 224
+      },
+      "interno": {
+        "bytes_utf8": 2987,
+        "caracteres": 2971
+      },
+      "saida": {
+        "bytes_utf8": 1249,
+        "caracteres": 1245
+      }
+    },
+    "proxy": "carga-de-fronteira",
+    "total": {
+      "bytes_utf8": 4460,
+      "caracteres": 4440
+    }
+  },
+  "assinatura": {
+    "entrada_unitaria": {
+      "bytes_utf8": 224,
+      "caracteres": 224
+    },
+    "fonte": "cadeia-verificada (EventLog + CAS via EvidencePlane)",
+    "lado": "assinatura",
+    "n_tentativas": 1,
+    "procedencia_entrada": "medido-processo",
+    "proxy": "carga-de-fronteira",
+    "residual_do_despachante": {
+      "bytes_utf8": 690,
+      "caracteres": 668
+    },
+    "sessao_id": "4bf725b0132d4bcc9c5f81392af09440",
+    "tentativas": [
+      {
+        "attempt_id": "50ac465ef7ab478a9beca128b7aa9842",
+        "entrada": {
+          "bytes_utf8": 224,
+          "caracteres": 224
+        },
+        "executor": "codex/gpt-5.6-sol",
+        "final": true,
+        "resultado": "sucesso",
+        "saida": {
+          "bytes_utf8": 466,
+          "caracteres": 444
+        }
+      }
+    ],
+    "total": {
+      "bytes_utf8": 690,
+      "caracteres": 668
+    },
+    "total_entrada": {
+      "bytes_utf8": 224,
+      "caracteres": 224
+    },
+    "total_saida": {
+      "bytes_utf8": 466,
+      "caracteres": 444
+    },
+    "truncamento": {
+      "divergencia_medida": {
+        "bytes_utf8": 0,
+        "caracteres": 0
+      },
+      "possivel": false,
+      "teto_chars": 4000
+    },
+    "work_unit_id": "39dd7ebbe9c2429790e576f056242353"
+  },
+  "classe": "c-repeticao",
+  "comparacao": {
+    "alternativo_sozinho": {
+      "bytes_utf8": 4460,
+      "caracteres": 4440
+    },
+    "assinatura_absorveu": {
+      "bytes_utf8": 690,
+      "caracteres": 668
+    },
+    "avisos": [],
+    "n_corridas": 1,
+    "nao_captura": [
+      {
+        "codigo": "bytes-nao-sao-tokens",
+        "porque": "tokenizador nao e linear em byte, e os dois canais nem usam o mesmo. Razao de bytes NAO e razao de tokens; serve para ordem de grandeza, jamais para faturamento."
+      },
+      {
+        "codigo": "contexto-do-canal-nao-atravessa-a-fronteira",
+        "porque": "prompt de sistema, historico de conversa e definicao de ferramenta sao reenviados a cada turno do canal alternativo, e o CLI de assinatura injeta os seus. Nenhum dos dois aparece na fronteira medida."
+      },
+      {
+        "codigo": "raciocinio-nao-emitido",
+        "porque": "token de raciocinio e cobrado e nunca cruza a fronteira. E justamente onde a economia deveria estar, e e o que esta proxy nao alcanca."
+      },
+      {
+        "codigo": "cache-nao-e-visto",
+        "porque": "cache de prompt muda o preco por token sem mudar um byte. Dois numeros iguais nesta proxy podem custar diferente."
+      },
+      {
+        "codigo": "turnos-internos-so-contam-se-declarados",
+        "porque": "o canal alternativo fazendo a tarefa sozinho abre N leituras e chamadas de ferramenta. So entra o que o razonete declarar: leitura nao declarada e leitura nao contada, e o vies favorece 'nao houve economia'."
+      },
+      {
+        "codigo": "qualidade-nao-e-medida",
+        "porque": "resposta mais barata e errada nao e economia. A proxy nao olha o conteudo, e a P2 nunca acionou juiz-llm (`99_registro-p2.md` §6.1)."
+      },
+      {
+        "codigo": "entrada-da-cadeia-e-truncada-em-4000-chars",
+        "porque": "`workunit.intencao` tem teto de contrato e o CLI recebe a tarefa integral. Acima do teto a leitura da cadeia sub-conta o que atravessou."
+      },
+      {
+        "codigo": "uma-corrida-nao-e-tendencia",
+        "porque": "n=1 mede a corrida que ocorreu. Nada aqui autoriza extrapolar para a proxima tarefa, outro modelo ou outra estacao."
+      },
+      {
+        "codigo": "verbosidade-do-canal-entra-na-poupanca",
+        "porque": "a poupanca decompoe, por identidade, em turno interno MAIS a diferenca de tamanho entre as duas respostas — e o segundo termo nao vem de despachar, vem de um canal responder mais curto que o outro. Medido na P2.2 em tres corridas: 837, 811 e 890 bytes, praticamente constante e independente da classe da tarefa. Na tarefa SEM turno interno ele foi a poupanca INTEIRA (890 de 890), e a razao caiu de 2,766 para 1,000 ao medir com a mesma resposta nos dois lados. Quem cita a poupanca sem separar os dois termos esta creditando ao despacho a brevidade do outro."
+      }
+    ],
+    "poupanca": {
+      "bytes_utf8": 3770,
+      "caracteres": 3772
+    },
+    "proxy": "carga-de-fronteira",
+    "razao_alternativo_sobre_residual": 6.464,
+    "residual_do_despachante": {
+      "bytes_utf8": 690,
+      "caracteres": 668
+    },
+    "unidades": [
+      "bytes_utf8",
+      "caracteres"
+    ],
+    "veredito_da_fronteira": "na fronteira desta corrida o despacho custou MENOS que o canal alternativo faria sozinho"
+  },
+  "execucao_consumida": "execucao-20260803T135121Z.json",
+  "gerado_em_utc": "2026-08-03T13:51:36Z",
+  "tarefa": "Leia o arquivo 05_p0/ssc_p0/estados.py deste repositorio e responda em no maximo 8 linhas: (1) que propriedade o modulo garante sobre transicao de estado; (2) que erro de operacao ele torna impossivel, e qual ele NAO impede.",
+  "tipo": "medicao-comparada-p22 (NAO e atestado)",
+  "turno_interno_declarado": [
+    "05_p0/ssc_p0/estados.py"
+  ]
+}
