@@ -4,24 +4,92 @@
 > canonico. Este arquivo registra decisoes do Fundador que valem para
 > QUALQUER sessao que trabalhe neste repositorio.
 
-## CRITERIO DE PARADA DA TRILHA DE CORRECAO
+## CRITERIO DE PARADA DA TRILHA DE CORRECAO — VIGENTE (P1-A.5)
 
-**Decisao do Fundador, gravada na missao P1-A.3.7.**
+**Decisao do Fundador, gravada na missao P1-A.5.** Supera — nao apaga — a
+redacao da P1-A.3.7, preservada na secao seguinte com a razao da
+superacao.
 
-A trilha de correcao **PARA** se a proxima revisao independente devolver
-qualquer uma destas duas condicoes:
+A trilha de correcao **PARA** se a revisao independente devolver
+**qualquer uma** destas tres condicoes:
 
 | # | Condicao |
 |---|---|
-| **(a)** | **SEIS OU MAIS defeitos NOVOS** |
+| **(a)** | **SEIS OU MAIS defeitos NOVOS EM AREA JA REVISADA** — estreia de area conta separado e **nao dispara** |
 | **(b)** | **QUATRO OU MAIS na familia do MAJOR #3** — guarda que AFIRMA a propriedade em vez de EXERCER a interface real |
+| **(c)** | **SALDO NAO-POSITIVO nos MAJOR de origem** — fechados menos reabertos |
 
 **Disparado o criterio:** nao abrir nova missao de correcao. Retornar ao
 Fundador com a **medicao** e a **classificacao por familia**.
 
-**Fundamento, medido e nao suposto:** tres ciclos de correcao com saldo
+**Fundamento, medido e nao suposto:** o criterio original nasceu de tres
+ciclos com saldo **ZERO** e **nao media saldo**. A P1-A.4 fechou **NOVE
+de doze**, a familia recuou de **4/6 para 2/6**, e **tres dos seis novos
+sao da fase P2, revisada pela primeira vez**. O **(c)** e o criterio que
+faltava.
+
+### O que muda em cada condicao, e por que
+
+- **(a) ganha o recorte de area.** A contagem crua nao distingue *area
+  que ja passou por revisao e voltou a falhar* de *area que estreia*. Sao
+  medidas de coisas diferentes: a primeira mede reincidencia, a segunda
+  mede cobertura nova. Somadas num numero so, a estreia de uma fase
+  inteira dispara a parada por construcao — foi o que ocorreu na P1-A.4,
+  onde tres dos seis novos vivem na P2, **que nunca havia passado por
+  revisao nenhuma**. Em area ja revisada, a P1-A.4 devolveu **tres**,
+  contra o limiar seis.
+- **(b) permanece intacta**, com o mesmo limiar e a mesma familia. Ela ja
+  media reincidencia por construcao, e a medicao a confirmou: **recuou de
+  4/6 para 2/6**.
+- **(c) e nova, e e a que faltava.** O fundamento do criterio original
+  era *saldo zero em tres ciclos* — mas o texto media **defeitos novos**,
+  nunca **saldo**. Uma rodada podia fechar nove e disparar a parada; foi
+  exatamente o caso. O saldo dos MAJOR de origem (**fechados menos
+  reabertos**) mede o que o fundamento sempre disse medir.
+
+**A medicao da P1-A.4 sob o criterio vigente**, para que a recalibracao
+seja aferivel e nao apenas declarada:
+
+| Condicao | Limiar | Medido na P1-A.4 | Dispara? |
+|---|---|---|---|
+| (a) novos em area ja revisada | 6 ou mais | **3** (P1A4-1, P1A4-2, P1A4-6; os outros tres sao da P2, em estreia) | nao |
+| (b) familia do MAJOR #3 | 4 ou mais | **2** (P1A4-3, P1A4-6) | nao |
+| (c) saldo nos MAJOR de origem | nao-positivo | **+9** (nove fechados, zero reabertos) | nao |
+
+**Limite declarado desta recalibracao.** Ela mexe no criterio de parada,
+nao no estado do acervo: o veredito da P1-A.4 continua **REPROVADO**, os
+tres MAJOR de origem (6, N1, N5) continuam abertos, os quatro achados da
+P2 continuam nao-fechados, e nada aqui certifica coisa alguma. O que
+muda e **quando a trilha para**, nunca **o que ja foi medido**.
+
+**"Area ja revisada" e questao de fato, nao de conveniencia.** Uma area
+esta revisada se um pacote de revisao independente ja a incluiu e um
+revisor se pronunciou sobre ela. Quem invoca a estreia **declara qual
+pacote nao a continha** — sem essa declaracao, o achado conta como area
+ja revisada. O onus e de quem quer nao disparar.
+
+## CRITERIO ANTERIOR — SUPERADO NA P1-A.5, mantido para leitura
+
+**Decisao do Fundador, gravada na missao P1-A.3.7.** Vigeu ate a
+P1-A.4 inclusive, e foi o criterio sob o qual a P1-A.4 decidiu **STOP**.
+
+| # | Condicao |
+|---|---|
+| **(a)** | **SEIS OU MAIS defeitos NOVOS** |
+| **(b)** | **QUATRO OU MAIS na familia do MAJOR #3** |
+
+**Fundamento que ele declarava:** tres ciclos de correcao com saldo
 **zero** nos seis MAJOR originais; e, na ultima rodada (P1-A.3.6),
 **quatro de seis** achados novos eram da mesma familia.
+
+**Por que foi superado, e nao apagado.** Ele disparou na P1-A.4 **no
+limiar exato** — 6 contra 6 —, e a leitura do Fundador e que disparou
+**por construcao, nao por diagnostico**: a mesma rodada que o disparou
+foi a primeira com saldo positivo em quatro ciclos. Apagar o texto
+esconderia que a decisao STOP da P1-A.4 foi correta **sob o criterio que
+vigia entao** — ela foi. O registro da P1-A.4
+(`06_p1a/99_decisao-p1a4.md` §5) mede as duas contas sob esta redacao, e
+continua valendo como registro do que se mediu naquele dia.
 
 ### Classificacao por familia e OBRIGATORIA
 
