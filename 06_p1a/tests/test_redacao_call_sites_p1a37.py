@@ -113,16 +113,9 @@ class OArquivoGravadoNaoCarregaPii(unittest.TestCase):
         spec = importlib.util.spec_from_file_location("p1a2_pii", caminho)
         modulo = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(modulo)
-        base = self.raiz / "locks"
-        base.mkdir(parents=True, exist_ok=True)
-        with open(base / f"{modulo.SESSAO_LOCK}.lease", "w",
-                  encoding="utf-8") as f:
-            json.dump({"sessao": modulo.SESSAO_LOCK, "pid": os.getpid(),
-                       "token": 3, "renovado_em": time.time(),
-                       "expira_em": time.time() + 600}, f)
-        with open(base / f"{modulo.SESSAO_LOCK}.fence", "w",
-                  encoding="ascii") as f:
-            f.write("3")
+        # P1-A.5, ordem 2: a copia local morreu; ver `apoio.escrever_lock`.
+        apoio.escrever_lock(str(self.raiz / "locks"), modulo.SESSAO_LOCK, 3,
+                            time.time() + 600)
         env_minimo = {k: os.environ[k] for k in
                       ("PATH", "SYSTEMROOT", "TEMP", "TMP", "COMSPEC",
                        "PATHEXT") if k in os.environ}

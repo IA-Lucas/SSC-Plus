@@ -127,8 +127,12 @@ def _verificar_lock_vivo(fence_esperado: int | None = None) -> dict:
     evidencias ja gravadas em `07_p1b/evidencias/`.
     """
     from contencao import verificar_lock
+    from escritor_repositorio import caminho_lease
     estado = verificar_lock(_RAIZ, _SESSAO_LOCK, fence_esperado)
-    caminho = os.path.join(_RAIZ, "locks", f"{_SESSAO_LOCK}.lease")
+    # P1-A.5, ordem 2: o lease e UM so, o do repositorio. Montar
+    # `f"{sessao}.lease"` aqui reabriria o ACHADO 4 por uma porta lateral
+    # — o caminho vem do modulo que o define.
+    caminho = caminho_lease(os.path.join(_RAIZ, "locks"))
     try:
         with open(caminho, encoding="utf-8") as f:
             estado["expira_em"] = json.load(f)["expira_em"]

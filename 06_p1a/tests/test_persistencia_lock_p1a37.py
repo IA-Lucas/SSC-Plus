@@ -54,7 +54,7 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
-import apoio  # noqa: F401  (insere 06_p1a no sys.path)
+import apoio  # (insere 06_p1a no sys.path e traz `escrever_lock`)
 
 _DIR_P1A = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 _RAIZ_REAL = os.path.dirname(_DIR_P1A)
@@ -84,15 +84,8 @@ def _carregar(nome):
     return modulo
 
 
-def _escrever_lock(base, sessao, fence, expira):
-    os.makedirs(base, exist_ok=True)
-    with open(os.path.join(base, f"{sessao}.lease"), "w",
-              encoding="utf-8") as f:
-        json.dump({"sessao": sessao, "pid": os.getpid(), "token": fence,
-                   "renovado_em": time.time(), "expira_em": expira}, f)
-    with open(os.path.join(base, f"{sessao}.fence"), "w",
-              encoding="ascii") as f:
-        f.write(str(fence))
+# P1-A.5, ordem 2: a copia local morreu; ver `apoio.escrever_lock`.
+_escrever_lock = apoio.escrever_lock
 
 
 class _SaidaMuda:
@@ -143,12 +136,10 @@ class ReverificacaoAntesDeGravar(unittest.TestCase):
         return sorted(p.name for p in self.saida.iterdir())
 
     def _reviewer_que_troca_o_fence(self, novo):
-        base = str(self.raiz / "locks").replace("\\", "\\\\")
-        modulo = _carregar("revisao_p1a2")
+        from escritor_repositorio import caminho_fence
+        caminho = caminho_fence(str(self.raiz / "locks")).replace("\\", "\\\\")
         return ("import os\n"
-                f"caminho = os.path.join(r'{base}', "
-                f"'{modulo.SESSAO_LOCK}.fence')\n"
-                f"open(caminho, 'w').write('{novo}')\n")
+                f"open(r'{caminho}', 'w').write('{novo}')\n")
 
     def test_titular_substituido_na_janela_nao_grava_um_byte(self):
         with self.assertRaises(SystemExit) as ctx:
@@ -158,11 +149,10 @@ class ReverificacaoAntesDeGravar(unittest.TestCase):
         self.assertEqual(self._gravados(), [])
 
     def test_lease_morto_na_janela_nao_grava_um_byte(self):
-        base = str(self.raiz / "locks").replace("\\", "\\\\")
-        modulo = _carregar("revisao_p1a2")
-        corpo = ("import json, os, time\n"
-                 f"caminho = os.path.join(r'{base}', "
-                 f"'{modulo.SESSAO_LOCK}.lease')\n"
+        from escritor_repositorio import caminho_lease
+        caminho = caminho_lease(str(self.raiz / "locks")).replace("\\", "\\\\")
+        corpo = ("import json, time\n"
+                 f"caminho = r'{caminho}'\n"
                  "d = json.load(open(caminho))\n"
                  "d['expira_em'] = time.time() - 10\n"
                  "json.dump(d, open(caminho, 'w'))\n")
@@ -209,10 +199,9 @@ class ReverificacaoNoRunnerDaRevisaoIndependente(unittest.TestCase):
             with open(pacote, "wb") as f:
                 f.write(b"pacote de mentira\n")
             saida = Path(raiz) / "06_p1a" / "evidencias" / "revisao-p1a31"
-            escapado = base.replace("\\", "\\\\")
-            corpo = ("import os\n"
-                     f"open(os.path.join(r'{escapado}', "
-                     f"'{modulo.SESSAO_LOCK}.fence'), 'w').write('42')\n")
+            from escritor_repositorio import caminho_fence
+            escapado = caminho_fence(base).replace("\\", "\\\\")
+            corpo = f"open(r'{escapado}', 'w').write('42')\n"
             env_minimo = {k: os.environ[k] for k in
                           ("PATH", "SYSTEMROOT", "TEMP", "TMP", "COMSPEC",
                            "PATHEXT") if k in os.environ}

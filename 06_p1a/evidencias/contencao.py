@@ -252,27 +252,63 @@ def manifesto_vigiado(raiz, alvos=None) -> dict:
     return saida
 
 
-def atribuir(mudancas, sessao_lock: str) -> dict:
+def titular_medido(raiz) -> str | None:
+    """Nome que o lease do repositorio traz AGORA, ou None.
+
+    Le do disco, sem adquirir nada e sem levantar: lease ausente,
+    ilegivel ou VENCIDO devolve None. Serve a `atribuir`, que precisa
+    saber de quem e o escritor no instante em que a fotografia fecha —
+    nao de quem se supunha que fosse quando ela abriu.
+    """
+    from escritor_repositorio import titular_atual
+    titular = titular_atual(os.path.join(str(raiz), "locks"))
+    return None if titular is None else titular.get("sessao")
+
+
+def atribuir(mudancas, sessao_lock: str, titular=None) -> dict:
     """Separa DETECCAO de ATRIBUICAO — a segunda pergunta do §6.
 
     `mutacoes` responde *a arvore mudou?*. Esta funcao responde *ha
     escritor esperado para esta mudanca?*. So um caminho tem escritor
-    esperado durante a janela da chamada: o lease e o fence da SESSAO
-    OPERACIONAL, reescritos a cada 30 s pelo renovador dedicado, por
-    construcao e nao por acidente.
+    esperado durante a janela da chamada: o lease e o fence do ESCRITOR
+    UNICO DO REPOSITORIO, reescritos a cada 30 s pelo renovador dedicado,
+    por construcao e nao por acidente.
+
+    P1-A.5, ordem 2 — o que mudou, e o buraco que a mudanca abriria se
+    parasse na metade. Os caminhos esperados deixam de variar com o nome
+    da missao: ha um lease so, `locks/repositorio.lease`. Sozinha, essa
+    troca ENFRAQUECERIA a atribuicao — antes, um intruso que plantasse
+    `locks/intrusa-ops.lease` caia em `nao_atribuidas` porque o nome nao
+    era o esperado; com um caminho unico, ele bastaria sobrescrever o
+    lease do repositorio para ser atribuido ao renovador e nao reprovar
+    a corrida.
+
+    Por isso a atribuicao passa a exigir DUAS condicoes, e nao uma:
+
+    1. o caminho e o do escritor unico; **e**
+    2. `titular` — o nome que o lease traz no fim da janela, medido em
+       disco por `titular_medido` — e a sessao operacional.
+
+    Titular ausente, vencido ou de OUTRO nome atribui **nada**: tudo cai
+    em `nao_atribuidas` e a corrida reprova. Fail-closed de proposito, e
+    o default `None` e parte disso — quem nao mede o titular nao atribui.
 
     LIMITE DECLARADO, e e o que separa esta funcao de uma prova de
-    autoria: a atribuicao e por CONVENCAO DE CAMINHO. O que se afirma e
-    que aquele caminho e o unico com escritor esperado — nunca que o byte
-    veio dele. Um revisor que escrevesse exatamente em
-    `locks/<sessao>.lease` seria atribuido ao renovador, e isso fica
-    registrado como limite, nao escondido. Tudo o mais fica NAO
-    ATRIBUIDO — inclusive escrita do proprio operador, que nao vira "do
-    revisor" nem deixa de reprovar a corrida.
+    autoria: a atribuicao continua sendo por CONVENCAO, agora de caminho
+    E de titular. Um revisor que sobrescrevesse o lease mantendo o nome
+    da sessao operacional dentro dele ainda seria atribuido ao renovador.
+    O que se afirma e que aquele par caminho/titular e o unico com
+    escritor esperado — nunca que o byte veio dele. A pergunta *quem
+    escreveu?* segue sem resposta, e e o remedio ainda nao entregue do
+    MAJOR #3.
     """
-    esperados = {f"repositorio/locks/{sessao_lock}{sufixo}"
+    from escritor_repositorio import NOME_DO_LOCK
+
+    esperados = {f"repositorio/locks/{NOME_DO_LOCK}{sufixo}"
                  for sufixo in (".lease", ".lease.tmp", ".fence",
                                 ".fence.tmp")}
+    if titular != sessao_lock:
+        esperados = set()
     do_renovador, nao_atribuidas = [], []
     for mudanca in mudancas:
         caminho = mudanca.split(": ", 1)[-1]
@@ -309,8 +345,12 @@ class Vigilancia:
             raise RuntimeError("Vigilancia.fechar() sem abrir()")
         depois = manifesto_vigiado(self.raiz, self.alvos)
         mudancas = mutacoes(self.antes, depois)
-        atribuicao = atribuir(mudancas, self.sessao_lock)
+        # O titular e medido NO FECHAMENTO, e nao presumido pela abertura:
+        # e justamente no fim da janela que se sabe quem detem o escritor.
+        titular = titular_medido(self.raiz)
+        atribuicao = atribuir(mudancas, self.sessao_lock, titular)
         return {
+            "titular_do_escritor_no_fechamento": titular,
             "medida": "manifesto SHA-256 antes/depois das raizes "
                       "vigiadas, com atribuicao separada da deteccao",
             "raizes_vigiadas": ["repositorio (toda a arvore sob RAIZ, "
@@ -401,24 +441,35 @@ def verificar_lock(raiz, sessao: str, fence_esperado: int | None = None,
     que outra sessao adquiriu o escritor no intervalo, e esta gravacao
     seria escrita de escritor obsoleto. Fail-closed nos tres casos
     (lease ilegivel, lease morto, fence divergente): PARADA sem gravar.
+
+    P1-A.5, ordem 2 (ACHADO 4 / N1 / `P1A4-1`): o lease lido e o UNICO do
+    repositorio (`escritor_repositorio.caminho_lease`), nunca mais
+    `locks/<sessao>.lease`. `sessao` deixa de escolher o ARQUIVO e passa
+    a ser o TITULAR exigido: se o lease do repositorio nomeia outra
+    missao, esta chamada PARA. Antes, duas missoes de nomes diferentes
+    liam arquivos diferentes e cada uma se via como escritor unico — o
+    proprio ACHADO 4, na porta de entrada da persistencia.
     """
     import json
 
-    from escritor import EscritorP1
+    from escritor_repositorio import (caminho_fence, caminho_lease,
+                                      lease_expirado)
 
     base = os.path.join(str(raiz), "locks")
-    caminho = os.path.join(base, f"{sessao}.lease")
+    caminho = caminho_lease(base)
     try:
         with open(caminho, encoding="utf-8") as f:
             lease = json.load(f)
     except (OSError, ValueError) as exc:
         raise SystemExit(f"PARADA: lease ilegivel/ausente: {exc}")
-    if lease.get("sessao") != sessao or \
-            EscritorP1.lease_expirado(caminho, agora):
+    if lease.get("sessao") != sessao:
+        raise SystemExit(
+            f"PARADA: o escritor unico do repositorio e de "
+            f"{lease.get('sessao')!r}, nao de {sessao!r}")
+    if lease_expirado(caminho, agora):
         raise SystemExit("PARADA: lease da sessao operacional morto")
     try:
-        with open(os.path.join(base, f"{sessao}.fence"),
-                  encoding="ascii") as f:
+        with open(caminho_fence(base), encoding="ascii") as f:
             fence = int(f.read().strip())
     except (OSError, ValueError) as exc:
         raise SystemExit(f"PARADA: fence ilegivel/ausente: {exc}")

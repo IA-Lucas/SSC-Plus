@@ -72,15 +72,8 @@ def _carregar_p1b():
     return modulo
 
 
-def _escrever_lock(dir_locks, sessao, fence, expira_em):
-    os.makedirs(dir_locks, exist_ok=True)
-    with open(os.path.join(dir_locks, f"{sessao}.lease"), "w",
-              encoding="utf-8") as f:
-        json.dump({"sessao": sessao, "pid": os.getpid(), "token": fence,
-                   "renovado_em": expira_em - 120, "expira_em": expira_em}, f)
-    with open(os.path.join(dir_locks, f"{sessao}.fence"), "w",
-              encoding="ascii") as f:
-        f.write(str(fence))
+# P1-A.5, ordem 2: a copia local morreu; ver `apoio.escrever_lock`.
+_escrever_lock = apoio.escrever_lock
 
 
 class _EspiaoPreflight:
@@ -176,8 +169,8 @@ class Ordem1CapsulaDoRunner(BaseRunnerP1B):
         # Discriminador de ordem: sem lease nenhum, um runner que
         # verificasse o escritor primeiro pararia com "lease ilegivel".
         # O portao da capsula tem de falar antes.
-        os.remove(os.path.join(self.raiz, "locks",
-                               f"{self.mod._SESSAO_LOCK}.lease"))
+        from escritor_repositorio import caminho_lease
+        os.remove(caminho_lease(os.path.join(self.raiz, "locks")))
         with self.assertRaises(ViolacaoCapsula):
             self._rodar_main(_EspiaoPreflight(), sujo=True)
 

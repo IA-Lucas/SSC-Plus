@@ -12,18 +12,22 @@ duas linhas dizem a mesma coisa:
     P1A-19: mesma limitacao do P1A-04 — o lease e nomeado pelo proprio
     verificador.
 
-## Os dois NAO FECHAM aqui, e a razao e uma ordem
+## Os dois fecharam na P1-A.5, ordem 2 — e a fronteira NAO se moveu
 
-O ato desta missao diz: *"Nao trocar o mecanismo de lock — decisao
-atendida do Fundador"*. O remedio prescrito E a troca. Logo os dois
-ficam abertos por ordem, nao por dificuldade.
+Quando este arquivo nasceu, o ato da missao dizia *"nao trocar o
+mecanismo de lock"*, e os dois guardas ficavam abertos por ordem, nao
+por dificuldade. A troca foi autorizada na P1-A.5, e o `P1A-04`/`P1A-19`
+deixaram de medir "escritor unico DENTRO DO NOME": a classe abaixo passa
+a exercer o `EscritorRepositorio`, e a verificacao canonica recusa quem
+nao e o titular.
 
-O que se pode fazer sem trocar mecanismo nenhum e MEDIR A FRONTEIRA: o
-que o escritor unico de fato tranca, e o que ele nao tranca. Ate aqui
-isso vivia em PROSA — a §1 do registro da P1-A.3.8 declara *"enquanto o
-ACHADO 4 nao for corrigido NO MECANISMO VIVO, a exclusao mutua entre
-missoes nao existe; o escritor unico desta missao foi garantido POR
-ORDEM DO FUNDADOR, nunca pelo mecanismo"*. Prosa nao fica vermelha.
+**O QUE A TROCA NAO MOVEU, e e o objeto deste arquivo:** a fronteira
+entre o lease e o Git. `git commit` continua sem consultar lease nenhum,
+e a classe `OLeaseNaoAlcancaOGit` continua medindo exatamente isso, sem
+uma linha alterada. Trocar o escritor deu exclusao mutua entre missoes;
+nao deu, e nao podia dar, alcance sobre quem escreve sem passar pelo
+escritor. Confundir as duas coisas seria fechar um achado com a prova de
+outro.
 
 ## O CASO QUE OCORREU NESTA MISSAO, e nao um exemplo inventado
 
@@ -66,6 +70,7 @@ from pathlib import Path
 
 import apoio  # noqa: F401  (ajusta sys.path da suite)
 from escritor import EscritorP1, LockIndisponivel
+from escritor_repositorio import EscritorRepositorio, caminho_lease
 
 _DIR_P1A = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 _RAIZ_REPO = os.path.dirname(_DIR_P1A)
@@ -154,29 +159,34 @@ class OEscritorUnicoTrancaDentroDoNOME(unittest.TestCase):
         finally:
             primeiro.liberar()
 
-    def test_o_verificador_confere_o_lease_que_ele_mesmo_nomeia(self):
-        # `P1A-19` na letra: quem verifica escolhe o nome, de modo que
-        # "o lease esta vivo" e sempre sobre o proprio lease.
-        escritor = EscritorP1(self.locks, sessao="missao-x")
+    def test_o_verificador_recusa_quem_nao_e_o_titular_do_repositorio(self):
+        # `P1A-19` media que quem verifica escolhe o NOME do lease, de modo
+        # que "o lease esta vivo" era sempre sobre o proprio lease — e por
+        # isso a propriedade nao dizia nada sobre outra missao. Desde a
+        # P1-A.5, ordem 2, ha um lease so: `sessao` deixou de escolher o
+        # arquivo e virou o titular EXIGIDO. Quem nao e o titular PARA.
+        escritor = EscritorRepositorio(self.locks, "missao-x")
         escritor.adquirir()
         self.addCleanup(escritor.liberar)
         raiz = Path(self.locks).parent
         estado = contencao.verificar_lock(raiz, "missao-x")
         self.assertEqual(estado["sessao"], "missao-x")
-        with self.assertRaises(SystemExit):
+        with self.assertRaises(SystemExit) as ctx:
             contencao.verificar_lock(raiz, "missao-y")
+        self.assertIn("repositorio e de 'missao-x', nao de 'missao-y'",
+                      str(ctx.exception))
 
     def test_lease_vencido_recusa_e_fence_divergente_recusa(self):
         # A metade forte de `P1A-04`, com arquivos reais — mantida.
         raiz = Path(self.locks).parent
-        escritor = EscritorP1(self.locks, sessao="missao-x")
+        escritor = EscritorRepositorio(self.locks, "missao-x")
         fence = escritor.adquirir()
         self.addCleanup(escritor.liberar)
         contencao.verificar_lock(raiz, "missao-x", fence_esperado=fence)
         with self.assertRaises(SystemExit):
             contencao.verificar_lock(raiz, "missao-x",
                                      fence_esperado=fence + 1)
-        caminho = os.path.join(self.locks, "missao-x.lease")
+        caminho = caminho_lease(self.locks)
         with open(caminho, encoding="utf-8") as f:
             lease = json.load(f)
         lease["expira_em"] = time.time() - 1

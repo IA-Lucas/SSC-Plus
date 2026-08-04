@@ -201,13 +201,8 @@ def _sem_pii(caso, texto: str, onde: str) -> None:
 
 
 def _preparar_lock(raiz: Path, sessao: str, fence: int = 7) -> None:
-    locks = raiz / "locks"
-    locks.mkdir(parents=True, exist_ok=True)
-    (locks / f"{sessao}.lease").write_text(
-        json.dumps({"sessao": sessao, "pid": os.getpid(), "token": fence,
-                    "renovado_em": time.time(),
-                    "expira_em": time.time() + 600}), encoding="utf-8")
-    (locks / f"{sessao}.fence").write_text(str(fence), encoding="ascii")
+    # P1-A.5, ordem 2: a copia local morreu; ver `apoio.escrever_lock`.
+    apoio.escrever_lock(str(raiz / "locks"), sessao, fence, time.time() + 600)
 
 
 def _env_minimo() -> dict:

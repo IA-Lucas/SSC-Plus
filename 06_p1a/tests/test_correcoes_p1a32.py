@@ -62,16 +62,8 @@ def _sensores():
     return {pid: apoio.sensores_dict(pid) for pid in _PROVEDORES}
 
 
-def _escrever_lock(dir_locks, sessao, fence, expira_em):
-    os.makedirs(dir_locks, exist_ok=True)
-    with open(os.path.join(dir_locks, f"{sessao}.lease"), "w",
-              encoding="utf-8") as f:
-        json.dump({"sessao": sessao, "pid": os.getpid(), "token": fence,
-                   "renovado_em": expira_em - 120,
-                   "expira_em": expira_em}, f)
-    with open(os.path.join(dir_locks, f"{sessao}.fence"), "w",
-              encoding="ascii") as f:
-        f.write(str(fence))
+# P1-A.5, ordem 2: a copia local morreu; ver `apoio.escrever_lock`.
+_escrever_lock = apoio.escrever_lock
 
 
 class AtalhoPaygGoogleGrok(unittest.TestCase):
@@ -449,7 +441,8 @@ class LeaseAntesDaPersistencia(unittest.TestCase):
         with tempfile.TemporaryDirectory() as raiz:
             _escrever_lock(os.path.join(raiz, "locks"), "s-ops", 7,
                            time.time() + 600)
-            os.remove(os.path.join(raiz, "locks", "s-ops.fence"))
+            from escritor_repositorio import caminho_fence
+            os.remove(caminho_fence(os.path.join(raiz, "locks")))
             with self.assertRaises(SystemExit) as ctx:
                 contencao.verificar_lock(raiz, "s-ops")
             self.assertIn("fence ilegivel/ausente", str(ctx.exception))

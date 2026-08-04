@@ -22,11 +22,13 @@ cenario, com o mecanismo VIVO (`EscritorP1`), deixa as duas missoes
 adquirirem. O ACHADO 4 e medido no proprio arquivo que o corrige — nao
 citado de um registro.
 
-O MECANISMO VIVO NAO E TROCADO. Por ordem expressa, este modulo e
-implementado, testado e commitado em ISOLADO: trocar o escritor no meio
-de uma missao de correcao seria mudar o chao enquanto se anda sobre ele,
-e a troca e decisao atendida do Fundador. Ha um teste medindo que
-NENHUM runner do acervo importa este modulo.
+O MECANISMO VIVO FOI TROCADO NA P1-A.5, ordem 2. Ate a P1-A.4 este
+modulo vivia em ISOLADO por ordem expressa, e havia aqui um teste
+exigindo que NENHUM runner o importasse. O revisor da P1-A.4 leu essa
+mesma medicao e a classificou como falha de INTEGRACAO (`P1A4-1`).
+Autorizada a troca, o teste nao foi apagado: ele foi INVERTIDO
+(`OMecanismoVivoFOITrocado`), e agora fica vermelho se a adocao for
+desfeita.
 
 O QUE ESTES TESTES NAO COBREM, declarado:
 - o mecanismo e COOPERATIVO. Um processo que escreva no repositorio sem
@@ -241,13 +243,42 @@ class ExclusaoEntreMissoesDeNomesDiferentes(unittest.TestCase):
             escritor.verificar()
 
 
-class OMecanismoVivoNaoFoiTrocado(unittest.TestCase):
-    """Por ordem expressa: implementar, provar, e NAO trocar."""
+class OMecanismoVivoFOITrocado(unittest.TestCase):
+    """P1-A.5, ordem 2: o inverso exato do que esta classe media antes.
 
-    def test_nenhum_runner_do_acervo_importa_o_escritor_novo(self):
-        # A troca e decisao atendida do Fundador. Se um runner passar a
-        # importar este modulo sem essa decisao, isto fica vermelho.
-        consumidores = []
+    Ate a P1-A.4 ela exigia que NENHUM runner importasse este modulo — o
+    isolamento era a ordem em vigor. Foi essa medicao que o revisor da
+    P1-A.4 leu e classificou como falha de INTEGRACAO (`P1A4-1`): *"o
+    lock unico novo nao esta em uso"*. Autorizada a troca, o guarda nao
+    e apagado: ele passa a exigir o oposto, e continua vermelho se
+    alguem desfizer a adocao.
+    """
+
+    # Os pontos operacionais que TEM de passar pelo escritor unico. Nao e
+    # a lista do que existe: e a lista do que, se sair daqui, reabre o
+    # ACHADO 4 sem ninguem perceber.
+    CAMINHOS_OPERACIONAIS = (
+        os.path.join("06_p1a", "evidencias", "renovador_lock.py"),
+        os.path.join("06_p1a", "evidencias", "prova_minima.py"),
+        os.path.join("06_p1a", "evidencias", "contencao.py"),
+        os.path.join("07_p1b", "preflight_atual.py"),
+    )
+
+    def test_o_caminho_operacional_real_importa_o_escritor_novo(self):
+        for rel in self.CAMINHOS_OPERACIONAIS:
+            with self.subTest(modulo=rel):
+                with open(os.path.join(_RAIZ, rel), encoding="utf-8") as f:
+                    self.assertIn(
+                        "escritor_repositorio", f.read(),
+                        f"{rel} deixou de usar o escritor unico: o ACHADO 4 "
+                        "volta por este caminho")
+
+    def test_nenhum_modulo_de_producao_adquire_mais_o_escritor_por_sessao(self):
+        # A outra metade, e a que importa: nao basta importar o novo — nao
+        # pode sobrar quem ADQUIRA o antigo. `EscritorP1` continua no
+        # acervo (a prova cruzada depende dele), mas quem o instancia fora
+        # dos testes esta abrindo um segundo escritor por nome.
+        instanciam = []
         for base, dirs, arquivos in os.walk(_RAIZ):
             dirs[:] = [d for d in dirs
                        if d not in ("__pycache__", ".git", "tests")]
@@ -257,17 +288,16 @@ class OMecanismoVivoNaoFoiTrocado(unittest.TestCase):
                 caminho = os.path.join(base, nome)
                 with open(caminho, encoding="utf-8") as f:
                     fonte = f.read()
-                if "escritor_repositorio" in fonte \
-                        and os.path.basename(caminho) != \
-                        "escritor_repositorio.py":
-                    consumidores.append(os.path.relpath(caminho, _RAIZ))
+                if "EscritorP1(" in fonte and nome != "escritor.py":
+                    instanciam.append(os.path.relpath(caminho, _RAIZ))
         self.assertEqual(
-            consumidores, [],
-            "o mecanismo novo entrou em uso sem decisao do Fundador")
+            instanciam, [],
+            "modulo de producao ainda constroi o escritor POR SESSAO")
 
-    def test_o_escritor_vivo_continua_sendo_o_por_sessao(self):
-        # O acervo segue com `EscritorP1`, e o seu comportamento nao foi
-        # tocado por esta missao.
+    def test_o_escritor_por_sessao_continua_existindo_e_intacto(self):
+        # Trocar nao e apagar. `EscritorP1` segue correto no que sempre
+        # garantiu, e a prova cruzada deste arquivo mede o ACHADO 4 com
+        # ele — sem ele, o achado voltaria a ser citado em vez de medido.
         self.assertTrue(hasattr(EscritorP1, "lease_expirado"))
         escritor = EscritorP1(self.locks_tmp(), sessao="qualquer-ops")
         self.assertTrue(escritor.caminho_lease.endswith("qualquer-ops.lease"))

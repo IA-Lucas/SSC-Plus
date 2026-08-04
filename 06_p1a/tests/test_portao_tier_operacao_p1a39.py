@@ -162,14 +162,11 @@ class PortaoDeTierParaAntesDaChamada(unittest.TestCase):
         espiao = _Espiao()
         with tempfile.TemporaryDirectory(prefix="p1a39-tier-") as bruto:
             raiz = Path(bruto)
-            locks = raiz / "locks"
-            locks.mkdir(parents=True)
-            (locks / f"{espec_sessao}.lease").write_text(
-                json.dumps({"sessao": espec_sessao, "pid": os.getpid(),
-                            "token": 5, "renovado_em": time.time(),
-                            "expira_em": time.time() + 600}),
-                encoding="utf-8")
-            (locks / f"{espec_sessao}.fence").write_text("5", encoding="ascii")
+            # P1-A.5, ordem 2: a copia local morreu; ver
+            # `apoio.escrever_lock`. O lease continua REAL em disco — o
+            # que mudou e que ha um so, e o nome vive dentro dele.
+            apoio.escrever_lock(str(raiz / "locks"), espec_sessao, 5,
+                                time.time() + 600)
             destino = raiz / "06_p1a"
             destino.mkdir(parents=True, exist_ok=True)
             (destino / "tiers_declarados.json").write_text(

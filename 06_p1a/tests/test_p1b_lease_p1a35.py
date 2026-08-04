@@ -33,7 +33,7 @@ import time
 import unittest
 from unittest import mock
 
-import apoio  # noqa: F401  (ajusta sys.path da suite)
+import apoio  # (ajusta sys.path da suite e traz `escrever_lock`)
 
 _DIR_P1A = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 _RAIZ_REPO = os.path.dirname(_DIR_P1A)
@@ -55,15 +55,9 @@ def _carregar_p1b():
     return modulo
 
 
-def _escrever_lock(dir_locks, sessao, fence, expira_em):
-    os.makedirs(dir_locks, exist_ok=True)
-    with open(os.path.join(dir_locks, f"{sessao}.lease"), "w",
-              encoding="utf-8") as f:
-        json.dump({"sessao": sessao, "pid": os.getpid(), "token": fence,
-                   "renovado_em": expira_em - 120, "expira_em": expira_em}, f)
-    with open(os.path.join(dir_locks, f"{sessao}.fence"), "w",
-              encoding="ascii") as f:
-        f.write(str(fence))
+# P1-A.5, ordem 2: a copia local morreu; o lease e um so, e o caminho vem
+# de quem o define (`apoio.escrever_lock` -> `escritor_repositorio`).
+_escrever_lock = apoio.escrever_lock
 
 
 class EscritorUnicoDaP1B(unittest.TestCase):
@@ -155,10 +149,10 @@ class EscritorUnicoDaP1B(unittest.TestCase):
     def test_fence_ilegivel_e_parada_tipada_e_nao_excecao_crua(self):
         # Antes desta correcao a leitura do fence nao estava protegida:
         # um fence ilegivel virava excecao crua, e nao PARADA.
+        from escritor_repositorio import caminho_fence
         _escrever_lock(os.path.join(self.raiz, "locks"),
                        self.mod._SESSAO_LOCK, 7, time.time() + 600)
-        with open(os.path.join(self.raiz, "locks",
-                               f"{self.mod._SESSAO_LOCK}.fence"), "w",
+        with open(caminho_fence(os.path.join(self.raiz, "locks")), "w",
                   encoding="ascii") as f:
             f.write("nao-e-inteiro")
         with self.assertRaises(SystemExit) as ctx:
@@ -178,10 +172,11 @@ class EscritorUnicoDaP1B(unittest.TestCase):
     def test_capsula_para_com_fence_ilegivel(self):
         # O outro ramo nunca alcancado (`preflight_capsula.py:104`).
         import preflight_capsula
+        from escritor_repositorio import caminho_fence
         sessao = preflight_capsula._SESSAO_LOCK
         _escrever_lock(os.path.join(self.raiz, "locks"), sessao, 3,
                        time.time() + 600)
-        with open(os.path.join(self.raiz, "locks", f"{sessao}.fence"), "w",
+        with open(caminho_fence(os.path.join(self.raiz, "locks")), "w",
                   encoding="ascii") as f:
             f.write("nao-e-inteiro")
         with self.assertRaises(SystemExit) as ctx:
@@ -226,8 +221,8 @@ class EscritorUnicoDaP1B(unittest.TestCase):
         # silencioso. Sem este teste o ramo ficaria como todos os outros
         # que esta missao acusa — escrito e nunca exercido.
         import contencao
-        caminho = os.path.join(self.raiz, "locks",
-                               f"{self.mod._SESSAO_LOCK}.lease")
+        from escritor_repositorio import caminho_lease
+        caminho = caminho_lease(os.path.join(self.raiz, "locks"))
         _escrever_lock(os.path.join(self.raiz, "locks"),
                        self.mod._SESSAO_LOCK, 7, time.time() + 600)
 

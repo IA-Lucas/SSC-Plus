@@ -49,9 +49,10 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import time
 import unittest
 
-import apoio  # noqa: F401  (insere 06_p1a no sys.path)
+import apoio  # (insere 06_p1a no sys.path e traz `escrever_lock`)
 
 _RAIZ = os.path.dirname(os.path.dirname(os.path.dirname(
     os.path.abspath(__file__))))
@@ -400,16 +401,29 @@ class VigilanciaDispara(unittest.TestCase):
         # sessao operacional tem escritor esperado por construcao. Conta-lo
         # como efeito do provedor faria toda corrida longa parecer escrita
         # externa, e o recibo perderia o poder de acusar a de verdade.
+        #
+        # P1-A.5, ordem 2: o que se planta aqui e o LEASE DO REPOSITORIO,
+        # renovado NO NOME da sessao vigiada — que e o que o renovador de
+        # verdade faz a cada 30 s. Plantar um arquivo qualquer com nome de
+        # lease nao exerceria mais o caminho: desde a ordem 2 a atribuicao
+        # exige que o titular gravado seja a sessao operacional, e o teste
+        # irmao (`..._reescrito_em_nome_de_OUTRA_sessao...`) mede o oposto.
         vigiado = tempfile.mkdtemp(prefix="p23-vigiado-")
         self.addCleanup(shutil.rmtree, vigiado, True)
         locks = os.path.join(vigiado, "locks")
-        os.makedirs(locks)
-        sensor = SensorQueEscreve(alvo=locks, nome="sessao-de-teste.lease")
-        p = pa.ProvedorAssinaturaReal(espec_de("codex"), sensor=sensor,
+        apoio.escrever_lock(locks, "sessao-de-teste", 1, time.time() + 600)
+
+        def renovador(argv, env=None, timeout=None, cwd=None):
+            apoio.escrever_lock(locks, "sessao-de-teste", 1,
+                                time.time() + 900)
+            return (0, "ok", "")
+
+        p = pa.ProvedorAssinaturaReal(espec_de("codex"), sensor=renovador,
                                       vigia=vigia_de(vigiado))
         r = p.invocar(b"t")
         medicao = p.medicoes[0]
-        self.assertTrue(medicao["mutacoes_atribuidas_ao_renovador"])
+        self.assertIn("alterado: repositorio/locks/repositorio.lease",
+                      medicao["mutacoes_atribuidas_ao_renovador"])
         self.assertEqual(medicao["mutacoes_fora_do_descartavel"], [])
         self.assertEqual(r.efeito_externo, "nenhum")
 

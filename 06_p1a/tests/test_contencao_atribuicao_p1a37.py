@@ -32,10 +32,12 @@ cobre ponto de chamada. Quatro copias do protocolo `manifesto`/
 `mutacoes` foi o que havia antes, e e o mecanismo dos achados 7, 10 e 14.
 
 O QUE ESTES TESTES NAO COBREM, declarado:
-- a atribuicao e por CONVENCAO DE CAMINHO, nao prova de autoria. Um
-  revisor que escrevesse exatamente em `locks/<sessao>.lease` seria
-  atribuido ao renovador. Isto e limite declarado no fonte e aqui, nao
-  propriedade provada;
+- a atribuicao e por CONVENCAO de caminho E de titular (P1-A.5, ordem
+  2), nao prova de autoria. Um revisor que sobrescrevesse
+  `locks/repositorio.lease` MANTENDO dentro dele o nome da sessao
+  operacional ainda seria atribuido ao renovador. Isto e limite
+  declarado no fonte e aqui, nao propriedade provada. O que deixou de
+  passar — e ha teste — e o intruso que se nomeia, e o lease vencido;
 - a cobertura fora do repositorio alcanca as fontes de config
   declaradas, e MAIS NADA. Escrita do revisor em qualquer outro caminho
   do disco continua invisivel — e o `NAO_VIGIADO` que o rotulo cita;
@@ -53,7 +55,7 @@ import time
 import unittest
 from unittest import mock
 
-import apoio  # noqa: F401  (insere 06_p1a no sys.path)
+import apoio  # (insere 06_p1a no sys.path e traz `escrever_lock`)
 
 _DIR_P1A = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(_DIR_P1A, "evidencias"))
@@ -84,15 +86,8 @@ class _SaidaMuda:
         pass
 
 
-def _escrever_lock(base, sessao, fence, expira):
-    os.makedirs(base, exist_ok=True)
-    with open(os.path.join(base, f"{sessao}.lease"), "w",
-              encoding="utf-8") as f:
-        json.dump({"sessao": sessao, "pid": os.getpid(), "token": fence,
-                   "renovado_em": time.time(), "expira_em": expira}, f)
-    with open(os.path.join(base, f"{sessao}.fence"), "w",
-              encoding="ascii") as f:
-        f.write(str(fence))
+# P1-A.5, ordem 2: a copia local morreu; ver `apoio.escrever_lock`.
+_escrever_lock = apoio.escrever_lock
 
 
 class CoberturaAlemDaRaiz(unittest.TestCase):
@@ -177,17 +172,22 @@ class AtribuicaoSeparadaDaDeteccao(unittest.TestCase):
             _escrever_lock(base, "p1a-ops", 1, time.time() + 900)
             medida = vig.fechar()
             # DETECTADO — nao foi apagado por exclusao...
-            self.assertIn("alterado: repositorio/locks/p1a-ops.lease",
+            self.assertIn("alterado: repositorio/locks/repositorio.lease",
                           medida["mutacoes_detectadas"])
             # ...e ATRIBUIDO, de modo que nao reprova a corrida.
             self.assertIn(
-                "alterado: repositorio/locks/p1a-ops.lease",
+                "alterado: repositorio/locks/repositorio.lease",
                 medida["mutacoes_atribuidas_ao_renovador"])
+            self.assertEqual(medida["titular_do_escritor_no_fechamento"],
+                             "p1a-ops")
             self.assertFalse(medida["violada"])
 
-    def test_lease_de_OUTRA_sessao_nao_e_atribuido(self):
-        # A atribuicao e nominal: so o lease da sessao vigiada tem
-        # escritor esperado. Um lease de outro nome e escrita estranha.
+    def test_lease_reescrito_em_nome_de_OUTRA_sessao_nao_e_atribuido(self):
+        # P1-A.5, ordem 2. Com um lease UNICO, atribuir so por caminho
+        # abriria o buraco que este teste fecha: bastaria ao intruso
+        # sobrescrever `repositorio.lease` para nao reprovar a corrida.
+        # Aqui ele sobrescreve, no CAMINHO ESPERADO, e a corrida reprova
+        # — porque o titular medido no fechamento nao e a sessao vigiada.
         with tempfile.TemporaryDirectory() as raiz:
             base = os.path.join(raiz, "locks")
             _escrever_lock(base, "p1a-ops", 1, time.time() + 600)
@@ -195,17 +195,48 @@ class AtribuicaoSeparadaDaDeteccao(unittest.TestCase):
             vig.abrir()
             _escrever_lock(base, "intrusa-ops", 1, time.time() + 600)
             medida = vig.fechar()
+            self.assertEqual(medida["titular_do_escritor_no_fechamento"],
+                             "intrusa-ops")
             self.assertTrue(medida["violada"])
-            self.assertIn("criado: repositorio/locks/intrusa-ops.lease",
+            self.assertIn("alterado: repositorio/locks/repositorio.lease",
                           medida["mutacoes_fora_do_descartavel"])
+            self.assertEqual(medida["mutacoes_atribuidas_ao_renovador"], [])
+
+    def test_lease_que_morre_na_janela_nao_atribui_nada(self):
+        # O outro ramo fail-closed: titular VENCIDO nao e titular. Sem
+        # ele, uma janela em que o renovador morreu continuaria
+        # atribuindo escrita a um escritor que ja nao existe.
+        with tempfile.TemporaryDirectory() as raiz:
+            base = os.path.join(raiz, "locks")
+            _escrever_lock(base, "p1a-ops", 1, time.time() + 600)
+            vig = contencao.Vigilancia(raiz, "p1a-ops", alvos=())
+            vig.abrir()
+            _escrever_lock(base, "p1a-ops", 1, time.time() - 1)
+            medida = vig.fechar()
+            self.assertIsNone(medida["titular_do_escritor_no_fechamento"])
+            self.assertTrue(medida["violada"])
+            self.assertEqual(medida["mutacoes_atribuidas_ao_renovador"], [])
 
     def test_atribuir_nao_engole_escrita_no_resto_do_repositorio(self):
         self.assertEqual(
-            contencao.atribuir(["criado: repositorio/codigo/backdoor.py",
-                                "alterado: repositorio/locks/s.lease"],
-                               "s"),
-            {"do_renovador": ["alterado: repositorio/locks/s.lease"],
+            contencao.atribuir(
+                ["criado: repositorio/codigo/backdoor.py",
+                 "alterado: repositorio/locks/repositorio.lease"],
+                "s", titular="s"),
+            {"do_renovador":
+                ["alterado: repositorio/locks/repositorio.lease"],
              "nao_atribuidas": ["criado: repositorio/codigo/backdoor.py"]})
+
+    def test_atribuir_sem_titular_medido_nao_atribui_nada(self):
+        # O default e fail-closed de proposito: quem nao mede o titular
+        # nao atribui. Sem isto, um chamador que esquecesse o argumento
+        # novo voltaria silenciosamente a atribuir so por caminho.
+        self.assertEqual(
+            contencao.atribuir(
+                ["alterado: repositorio/locks/repositorio.lease"], "s"),
+            {"do_renovador": [],
+             "nao_atribuidas":
+                ["alterado: repositorio/locks/repositorio.lease"]})
 
 
 class OsQuatroRunnersUsamOMesmoProtocolo(unittest.TestCase):
@@ -291,11 +322,11 @@ class FimAFimAReprovacaoDaCorrida(unittest.TestCase):
         # remover a exclusao de `locks/` teria trocado ponto cego por
         # alarme falso permanente.
         with tempfile.TemporaryDirectory() as raiz:
-            modulo_sessao = _carregar("revisao_p1a31").SESSAO_LOCK
-            base = os.path.join(raiz, "locks").replace("\\", "\\\\")
-            corpo = ("import json, os, time\n"
-                     f"caminho = os.path.join(r'{base}', "
-                     f"'{modulo_sessao}.lease')\n"
+            from escritor_repositorio import caminho_lease
+            caminho = caminho_lease(os.path.join(raiz, "locks")).replace(
+                "\\", "\\\\")
+            corpo = ("import json, time\n"
+                     f"caminho = r'{caminho}'\n"
                      "d = json.load(open(caminho))\n"
                      "d['renovado_em'] = time.time()\n"
                      "d['expira_em'] = time.time() + 1200\n"

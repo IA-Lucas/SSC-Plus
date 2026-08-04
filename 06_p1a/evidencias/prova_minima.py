@@ -8,11 +8,14 @@ sanitizado pela implementacao CANONICA e unica
 chave PAYG entra no subprocesso; o ambiente global NAO e modificado.
 Registra apenas metadados, resposta, duracao e quota observavel.
 
-Escritor unico (P1-A.1): antes de escrever qualquer evidencia ou invocar
-provedor, o runner adquire o `EscritorP1` (lease + fencing sobre o
-writelock da P0). Uma segunda sessao falha na aquisicao — antes de
-escrever um byte ou invocar modelo. Estado de lock: `locks/` (runtime,
-ignorado pelo Git).
+Escritor unico (P1-A.1; mecanismo trocado na P1-A.5, ordem 2): antes de
+escrever qualquer evidencia ou invocar provedor, o runner adquire o
+`EscritorRepositorio` (lease + fencing sobre o writelock da P0, num lock
+UNICO para todo o repositorio). Uma segunda sessao falha na aquisicao —
+QUALQUER que seja o nome dela, e antes de escrever um byte ou invocar
+modelo. Ate a P1-A.4 o lock era `locks/<sessao>.lock`, e a exclusao
+valia so dentro do mesmo nome: era o ACHADO 4. Estado de lock: `locks/`
+(runtime, ignorado pelo Git).
 
 Uso: python 06_p1a/evidencias/prova_minima.py codex|claude|kimi
 """
@@ -34,7 +37,8 @@ SAIDA = RAIZ / "06_p1a" / "evidencias" / "prova-minima"
 sys.path.insert(0, str(RAIZ / "06_p1a"))
 sys.path.insert(0, str(RAIZ / "05_p0"))
 
-from escritor import EscritorP1, LockIndisponivel  # noqa: E402
+from escritor_repositorio import (EscritorRepositorio,  # noqa: E402
+                                  LockIndisponivel)
 from preflight.economia import ambiente_sanitizado  # noqa: E402
 
 PROMPT = "Retorne apenas PROVIDER_OK e o identificador público do modelo."
@@ -67,7 +71,7 @@ def main() -> int:
 
     # Escritor unico ANTES de qualquer escrita ou invocacao de provedor:
     # uma segunda sessao aborta aqui (codigo 3), sem tocar em nada.
-    escritor = EscritorP1(RAIZ / "locks", sessao="p1-ops")
+    escritor = EscritorRepositorio(RAIZ / "locks", sessao="p1-ops")
     try:
         token = escritor.adquirir()
     except LockIndisponivel as exc:

@@ -90,29 +90,21 @@ def _verificar_lock_vivo(fence_esperado: int | None = None,
     substituido: fence diferente significa que outra sessao adquiriu o
     escritor no intervalo, e esta gravacao seria escrita de escritor
     obsoleto. Fail-closed nos dois casos: PARADA antes de escrever.
+
+    P1-A.5, ordem 2. Esta era a QUARTA copia local do guarda — a
+    varredura da P1-A.3.5 contou quatro, a P1-B passou a delegar na
+    correcao 4, e esta ficou. Manter a copia enquanto o escritor mudava
+    de mecanismo seria repetir o achado N4 na letra: primitiva corrigida
+    que nao alcanca o ponto de chamada. Ela passa a DELEGAR para a
+    canonica (`contencao.verificar_lock`), que le o lease UNICO do
+    repositorio e exige que o titular seja esta sessao.
+
+    O retorno ganha `pid_titular`, que a canonica ja devolvia a P1-B: e
+    campo NOVO na evidencia da capsula, nunca campo trocado — `sessao` e
+    `fence` continuam com o mesmo nome e o mesmo significado.
     """
-    from escritor import EscritorP1
-    base = os.path.join(raiz or _RAIZ, "locks")
-    caminho = os.path.join(base, f"{_SESSAO_LOCK}.lease")
-    try:
-        with open(caminho, encoding="utf-8") as f:
-            lease = json.load(f)
-    except (OSError, ValueError) as exc:
-        raise SystemExit(f"PARADA: lease ilegivel/ausente: {exc}")
-    if lease.get("sessao") != _SESSAO_LOCK or \
-            EscritorP1.lease_expirado(caminho):
-        raise SystemExit("PARADA: lease da sessao operacional morto")
-    try:
-        with open(os.path.join(base, f"{_SESSAO_LOCK}.fence"),
-                  encoding="ascii") as f:
-            fence = int(f.read().strip())
-    except (OSError, ValueError) as exc:
-        raise SystemExit(f"PARADA: fence ilegivel/ausente: {exc}")
-    if fence_esperado is not None and fence != fence_esperado:
-        raise SystemExit(
-            f"PARADA: titular do escritor substituido (fence {fence} != "
-            f"{fence_esperado}); escritor obsoleto NAO grava")
-    return {"sessao": lease["sessao"], "fence": fence}
+    from contencao import verificar_lock
+    return verificar_lock(raiz or _RAIZ, _SESSAO_LOCK, fence_esperado)
 
 
 def _sensor_de(provider_id: str):

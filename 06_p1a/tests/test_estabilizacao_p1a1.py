@@ -22,6 +22,7 @@ import importlib.util
 import json
 import os
 import re
+import shutil
 import tempfile
 import time
 import unittest
@@ -356,12 +357,29 @@ class EscritorUnicoP1(unittest.TestCase):
                                                       caminho)
         modulo = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(modulo)
-        locks = os.path.join(os.path.dirname(DIR_P1A), "locks")
-        titular = EscritorP1(locks, sessao="p1-ops")
+        # P1-A.5, ordem 2. DUAS mudancas, e as duas sao a propria prova:
+        #
+        # 1. o titular tem nome DIFERENTE do que `prova_minima` usa
+        #    (`p1-ops`). Ate a P1-A.4 este teste precisava do MESMO nome
+        #    para excluir; com nome distinto o `EscritorP1` deixava as
+        #    duas entrarem e `main()` devolvia 0. Agora exclui;
+        # 2. o diretorio de locks e DESCARTAVEL. Antes o teste adquiria
+        #    no `locks/` VIVO do repositorio, o que era inofensivo
+        #    enquanto cada nome tinha o seu arquivo — e deixou de ser no
+        #    instante em que ha um lock so: a suite disputaria o escritor
+        #    com o renovador da missao em curso.
+        from pathlib import Path
+
+        from escritor_repositorio import EscritorRepositorio
+        raiz = tempfile.mkdtemp(prefix="p1a1-escritor-")
+        self.addCleanup(shutil.rmtree, raiz, True)
+        titular = EscritorRepositorio(os.path.join(raiz, "locks"),
+                                      sessao="outra-missao-ops")
         titular.adquirir()
         try:
-            with mock.patch.object(sys, "argv",
-                                   ["prova_minima.py", "codex"]), \
+            with mock.patch.object(modulo, "RAIZ", Path(raiz)), \
+                    mock.patch.object(sys, "argv",
+                                      ["prova_minima.py", "codex"]), \
                     mock.patch("subprocess.run") as espiar:
                 rc = modulo.main()
             self.assertEqual(rc, 3)

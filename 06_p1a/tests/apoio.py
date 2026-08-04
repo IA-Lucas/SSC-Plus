@@ -9,6 +9,7 @@ unico token de assinatura.
 """
 
 import dataclasses
+import json
 import os
 import sys
 
@@ -122,3 +123,29 @@ def espec_com(provider_id, **sobre):
 def codigos(relatorio) -> list:
     """Codigos de erro do relatorio, na ordem em que foram registrados."""
     return [e.codigo for e in relatorio.erros]
+
+
+def escrever_lock(dir_locks, sessao, fence, expira_em):
+    """Lease + fence do escritor UNICO do repositorio, para os testes.
+
+    IMPLEMENTACAO UNICA, e a razao e medida. Ate a P1-A.4 esta funcao
+    existia copiada em QUATRO suites (`test_correcoes_p1a32`,
+    `test_p1b_lease_p1a35`, `test_persistencia_lock_p1a37`,
+    `test_contencao_atribuicao_p1a37`), cada uma montando
+    `f"{sessao}.lease"` a mao. Quando a P1-A.5 trocou o escritor para
+    exclusao por repositorio, as quatro ficaram vermelhas no mesmo
+    instante — que e o mecanismo dos achados 7, 10 e 14 visto do outro
+    lado. Aqui ela existe uma vez e PERGUNTA o caminho ao modulo que o
+    define, de modo que a proxima troca de mecanismo nao precise achar
+    copia nenhuma.
+
+    `sessao` e o TITULAR gravado dentro do lease — nao escolhe mais o
+    nome do arquivo, e e exatamente isso que a troca fez.
+    """
+    from escritor_repositorio import caminho_fence, caminho_lease
+    os.makedirs(dir_locks, exist_ok=True)
+    with open(caminho_lease(dir_locks), "w", encoding="utf-8") as f:
+        json.dump({"sessao": sessao, "pid": os.getpid(), "token": fence,
+                   "renovado_em": expira_em - 120, "expira_em": expira_em}, f)
+    with open(caminho_fence(dir_locks), "w", encoding="ascii") as f:
+        f.write(str(fence))
