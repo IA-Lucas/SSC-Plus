@@ -106,10 +106,10 @@ E a proxima medicao provavelmente **nao** deve ser repeticao: como a razao
 acompanha o tamanho do turno interno, varrer tamanhos de turno interno
 mede a fronteira, e repetir o mesmo arquivo mede o ruido da resposta.
 
-## LEIA ANTES DE RODAR — quatro limites que valem hoje
+## LEIA ANTES DE RODAR — cinco limites que valem hoje
 
 Estao aqui, e nao no rodape, porque quem vem usar a P2 segue os tres
-passos abaixo e pode nunca rolar ate o fim. Os tres sao **medidos**, com
+passos abaixo e pode nunca rolar ate o fim. Os cinco sao **medidos**, com
 data e evidencia; nenhum e precaucao generica.
 
 ### 1. A economia de TOKEN nao esta medida
@@ -171,11 +171,12 @@ mecanismo funcionando.
 Quem construiu nao certifica — regra do `CLAUDE.md` da raiz. A P2.0
 escreveu o codigo, os testes e a propria evidencia; a P2.1 escreveu o
 medidor e mediu as corridas acima; a P2.2 mediu a fronteira, achou dois
-defeitos e fechou os dois; a P2.3 corrigiu o mecanismo do achado A e
-**declarou o proprio conserto sem fecha-lo**. **Nenhuma revisao
-independente passou por nada disso** — nem sobre a P2.0, nem sobre a
-P2.1, nem sobre a P2.2, nem sobre a P2.3. Nao existe atestado de
-aprovacao da P2, e este README nao e um.
+defeitos e fechou os dois; a P2.3 corrigiu o mecanismo do achado A e a
+P2.4 pos a receita das medicoes no repositorio — as duas **declararam o
+proprio conserto sem fecha-lo**. **Nenhuma revisao independente passou
+por nada disso** — nem sobre a P2.0, nem sobre a P2.1, nem sobre a P2.2,
+nem sobre a P2.3, nem sobre a P2.4. Nao existe atestado de aprovacao da
+P2, e este README nao e um.
 
 ### 4. O `read-only` so vale a partir de `abc75e8` — e o passado nao esta atestado
 
@@ -222,6 +223,52 @@ sugerir que a correcao alcanca o passado — ela nao alcanca.
   descartavel como diretorio de trabalho mais a `Vigilancia`, e o rotulo
   do proprio codigo diz isso por extenso em vez de afirmar isolamento
   inexistente.
+
+### 5. Os numeros da fronteira REPRODUZEM — e 21 % deles e testemunho
+
+Desde a P2.4 ha comando, e ele roda sem provedor nenhum:
+
+```powershell
+python 08_p2/medidor.py --todas
+```
+
+Ele refaz as cinco medicoes publicadas a partir de insumos versionados
+([`08_p2/receitas/`](receitas/)) e confere contra
+`08_p2/evidencias/medicao-*.json`. **30 de 30 campos conferem** —
+`8,776`, `19,558`, `2,766`, `6,737`, `6,464` e os residuais `872`, `773`,
+`504`, `662`, `690`. Codigo de saida **1** em qualquer divergencia.
+
+**O que voce reproduz, e o que tera de aceitar como testemunho.** Esta e
+a parte que importa antes de citar qualquer razao:
+
+| insumo | reproduzivel? | onde |
+|---|---|---|
+| turno interno (o termo dominante) | **SIM**, nas 4 corridas que tem | arquivo versionado, recontado do disco |
+| resposta da assinatura | **SIM em 4 de 5** | campo `saida` de `08_p2/evidencias/execucao-*.json` |
+| prompt | **SIM em 1 de 5** | `08_p2/receitas/prompt-p22-c.txt`, recuperado do unico lab sobrevivente |
+| resposta do canal alternativo | **NAO**, em nenhuma | nunca foi gravada em lugar nenhum |
+| resposta da assinatura da corrida (c) | **NAO** | essa corrida nao tem recibo (ver abaixo) |
+
+No conjunto, **28.057 B sao recontados do repositorio e 7.409 B sao
+testemunho** — 79 % recontado. Por classe a diferenca e grande, e o
+comando imprime a fracao em toda corrida: a classe (a) tem **89,7 %**
+recontado; a classe **(b) tem 17,3 %**, porque sem turno interno os dois
+maiores termos dela sao justamente o prompt e a resposta do outro canal,
+que ninguem pode recontar. **Citar o `2,766` da classe (b) e citar,
+sobretudo, testemunho.**
+
+**Uma das cinco corridas nao tem recibo.** A sessao
+`dd4567c703d3497fae7269ebfd5d1ca7` (classe (c), 1a corrida) nao aparece
+em `08_p2/evidencias/`: foi ela que caiu no `UnicodeEncodeError` do
+console — o attempt deu sucesso, a franquia foi gasta, e o artefato de
+registro nunca existiu. A resposta dela e testemunho declarado, e a
+receita diz isso em vez de inventar um texto que pesasse 438 B.
+
+**E as corridas continuam sem fotografia de antes e depois** (limite 4):
+a receita reproduz os NUMEROS, nunca o que a corrida fez no disco.
+
+Detalhes, incluindo o controle positivo que prova que o comando le mesmo
+os insumos: [`99_registro-p24.md`](99_registro-p24.md).
 
 ## Os tres passos, em PowerShell
 
