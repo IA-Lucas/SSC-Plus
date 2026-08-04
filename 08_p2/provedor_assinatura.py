@@ -38,7 +38,7 @@ import time
 
 import caminhos  # (insere 05_p0/06_p1a/08_p2/evidencias no sys.path)
 
-from contencao import Vigilancia, manifesto, mutacoes
+from contencao import LAR_DO_CLI, Vigilancia, manifesto, mutacoes
 from preflight.adaptadores import argv_de, quota_esgotada
 from preflight.frota_real import MARCA_DESCARTAVEL, rotulo_restricao
 from ssc_p0.frota import ambiente_sanitizado
@@ -206,6 +206,16 @@ def classificar(rc: int, texto: str, mutacoes_medidas) -> tuple:
     afirmacao sobre o lado remoto, e o `incerto` do timeout tambem: a
     medicao local nao pode contradizer nem confirmar o remoto, e por isso
     nao o sobrescreve.
+
+    `nenhum` E VALOR DE CONTRATO, NAO AFIRMACAO DE AUSENCIA (P1-A.5,
+    ordem 3 — achado `P1A4-3`). `EFEITOS_EXTERNO` e o enum ratificado da
+    P0 (`nenhum/aplicado/nao-aplicado/incerto`) e esta funcao nao o
+    alarga: com a lista vazia ela devolve `nenhum`, que ali significa
+    *sem efeito DENTRO DO ALCANCE MEDIDO*. Quem publica esse valor e o
+    recibo, e e la — em `alcance_da_medicao` — que o alcance fica dito
+    caminho por caminho, inclusive o lar do CLI, onde a escrita e
+    CONHECIDA e nao vigiada. Ler `nenhum` como "nada foi escrito" era
+    exatamente o que o revisor da P1-A.4 recusou.
     """
     if rc == RC_TIMEOUT:
         return ("indeterminado", "incerto")
@@ -258,6 +268,43 @@ class ProvedorAssinaturaReal:
 
     def _vigilancia(self):
         return self.vigia or Vigilancia(caminhos.RAIZ, self.sessao_lock)
+
+    def _alcance(self, descartavel: str, relatorio: dict) -> dict:
+        """O que esta fotografia MEDIU, e o que ela nao mediu — por nome.
+
+        A CORRECAO DO `P1A4-3`. O recibo publicava `efeito_externo:
+        "nenhum"` e, ao lado, a frase *"fotografia sem nenhuma mutacao —
+        `nenhum` aqui e medicao"*. As duas coisas juntas leem como
+        ausencia de efeito no disco, e nao e isso que foi medido: a
+        fotografia cobre o descartavel e as raizes vigiadas, e o lar do
+        proprio CLI fica de fora POR DECISAO — o codex grava sessao e log
+        em `~/.codex/` durante a chamada, e `--ephemeral` nao impede
+        isso. O revisor da P1-A.4 chamou pelo nome: afirmar ausencia
+        sobre o que nao se vigia.
+
+        Aqui nao se alarga a vigilancia — se alarga a DECLARACAO. Os dois
+        campos saem do relatorio real da `Vigilancia`, nao de prosa
+        fixa: `medido` e o que ela fotografou, `nao_medido` e o que ela
+        declara nao alcancar, mais o lar do CLI nomeado.
+
+        Provedor sem lar declarado NAO produz silencio: sai
+        `<lar do CLI NAO DECLARADO para '<id>'>`, que e pior de ler e
+        melhor de auditar — a ausencia da declaracao aparece no recibo em
+        vez de virar um `nenhum` sem ressalva.
+        """
+        pid = self.espec.provider_id
+        lar = LAR_DO_CLI.get(pid)
+        lar_dito = (f"o lar do CLI ({lar}), onde a escrita e CONHECIDA e "
+                    "nao vigiada" if lar else
+                    f"<lar do CLI NAO DECLARADO para {pid!r}>")
+        return {
+            "medido": [f"diretorio descartavel desta invocacao "
+                       f"({descartavel})"] + list(relatorio["raizes_vigiadas"]),
+            "nao_medido": [relatorio["nao_vigiado"], lar_dito,
+                           "o lado REMOTO do provedor: efeito no servico "
+                           "nao aparece em fotografia local"],
+            "lar_do_cli": lar_dito,
+        }
 
     def argv(self, prompt: str, descartavel: str) -> list:
         """argv nao-interativo: executavel + headless + RESTRICAO + prompt.
@@ -327,6 +374,7 @@ class ProvedorAssinaturaReal:
         texto = (out or "") + "\n" + (err or "")
         falha, efeito = classificar(rc, texto, medidas)
         ok = falha is None
+        alcance = self._alcance(descartavel, relatorio_vigilancia)
 
         self.medicoes.append({
             "provider_id": self.espec.provider_id,
@@ -346,13 +394,18 @@ class ProvedorAssinaturaReal:
             "raizes_vigiadas": relatorio_vigilancia["raizes_vigiadas"],
             "nao_vigiado": relatorio_vigilancia["nao_vigiado"],
             "efeito_externo": efeito,
+            "alcance_da_medicao": alcance,
             "efeito_externo_origem": (
                 "timeout: o efeito do lado REMOTO e incerto, e a "
                 "fotografia local nao o decide (IR-2)"
                 if rc == RC_TIMEOUT else
                 "mutacao medida no disco" if medidas else
-                "fotografia sem nenhuma mutacao — `nenhum` aqui e "
-                "medicao, nao eco do envelope"),
+                "fotografia sem nenhuma mutacao DENTRO DO ALCANCE "
+                "MEDIDO (ver `alcance_da_medicao`) — `nenhum` aqui e "
+                "medicao, nao eco do envelope. Fora do alcance nada foi "
+                f"medido, inclusive {alcance['lar_do_cli']}: `nenhum` e "
+                "o valor de contrato para 'sem efeito medido', jamais "
+                "afirmacao de que nada foi escrito"),
         })
 
         return RespostaProvedor(

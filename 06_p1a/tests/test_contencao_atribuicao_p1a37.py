@@ -139,14 +139,20 @@ class CoberturaAlemDaRaiz(unittest.TestCase):
         # Acoplamento: se `auditar_config` passar a ler uma fonte nova e
         # a lista vigiada nao acompanhar, isto fica vermelho — sem isso
         # a cobertura derivaria em silencio, que e o achado 7 outra vez.
-        import leitores_config
-        declaradas = set()
-        for tipo, caminho in leitores_config.FONTES.values():
-            declaradas.add(caminho)
-            if tipo == "json" and caminho == "~/.codex/auth.json":
-                declaradas.add("~/.codex/config.toml")  # segunda fonte
-        self.assertEqual(set(contencao.ALVOS_VIGIADOS_FORA_DO_REPOSITORIO),
-                         declaradas)
+        #
+        # P1-A.5, ordem 3 (achado `P1A4-6`). Este teste montava o corpus
+        # a partir de `leitores_config.FONTES` e ACRESCENTAVA
+        # `~/.codex/config.toml` A MAO, com o comentario `# segunda
+        # fonte`, para que a igualdade fechasse. O revisor da P1-A.4
+        # nomeou isso: afirmar a cobertura em vez de exercer a relacao
+        # real. O corpus passa a vir da sonda que planta um campo em cada
+        # caminho e observa qual leitor o devolve.
+        from test_config_real_p1a39 import (caminhos_lidos_de_fato,
+                                            candidatos_de_config)
+        lidos = caminhos_lidos_de_fato(candidatos_de_config())
+        self.assertEqual(
+            set(contencao.ALVOS_VIGIADOS_FORA_DO_REPOSITORIO),
+            {rel for rel, quem in lidos.items() if quem})
 
     def test_o_que_nao_e_vigiado_esta_declarado(self):
         with tempfile.TemporaryDirectory() as raiz, \

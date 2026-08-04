@@ -100,6 +100,29 @@ ALVOS_VIGIADOS_FORA_DO_REPOSITORIO = (
 NAO_VIGIADO = ("todo caminho fora do repositorio e fora das fontes de "
                "config declaradas")
 
+# LAR de cada CLI de assinatura: o diretorio em que o proprio CLI grava
+# sessao, log e cache DURANTE a chamada.
+#
+# Ele NAO e vigiado, e a razao esta escrita quatro paragrafos acima —
+# vigia-lo produziria alarme por escrita LEGITIMA do CLI em toda corrida.
+# Essa decisao continua de pe. O que muda na P1-A.5, ordem 3, e que ela
+# deixa de ser silencio: o revisor da P1-A.4 manteve o achado A da P2
+# NAO-FECHADO porque *"ha escrita em CODEX_HOME fora das fontes vigiadas,
+# e o recibo ainda publica `efeito_externo: nenhum`"* — e ele esta certo.
+# Nao vigiar e uma escolha defensavel; publicar ausencia sobre o que nao
+# se vigia, nao.
+#
+# Por isso esta lista existe: para que o recibo NOMEIE, caminho por
+# caminho, onde a escrita e CONHECIDA e nao medida. Ela nao liga
+# vigilancia nenhuma — ela e o vocabulario da declaracao de alcance.
+LAR_DO_CLI = {
+    "codex": "~/.codex",
+    "claude": "~/.claude",
+    "kimi": "~/.kimi-code",
+    "google": "~/.gemini",
+    "grok": "~/.grok",
+}
+
 # Restricoes REAIS que o CLI do kimi oferece em modo headless (`-p`),
 # medidas EXERCENDO o CLI 0.30.0, nao lendo `--help`: NAO existe
 # `--sandbox read-only` como no codex.

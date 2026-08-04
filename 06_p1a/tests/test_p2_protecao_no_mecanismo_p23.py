@@ -314,6 +314,12 @@ class EfeitoExternoMedido(unittest.TestCase):
         self.assertEqual(medicao["mutacoes_fora_do_descartavel"], [])
         self.assertIn("fotografia", medicao["efeito_externo_origem"])
         self.assertIn("SHA-256", medicao["medida"])
+        # P1-A.5, ordem 3 (`P1A4-3`): a propriedade da P2.3 continua —
+        # `nenhum` e medicao, nao eco do envelope —, mas nao pode mais
+        # aparecer sem o alcance ao lado. As duas metades juntas, porque
+        # separadas foi como o achado nasceu.
+        self.assertIn("ALCANCE MEDIDO", medicao["efeito_externo_origem"])
+        self.assertIn("alcance_da_medicao", medicao)
 
     def test_escrita_plantada_no_descartavel_e_REGISTRADA_no_recibo(self):
         # Prova (c). Recibo que nao pega escrita plantada nao mede nada.
@@ -359,6 +365,113 @@ class EfeitoExternoMedido(unittest.TestCase):
                          ("indeterminado", "incerto"))
         self.assertEqual(pa.classificar(pa.RC_TIMEOUT, "", ["criado: x"]),
                          ("indeterminado", "incerto"))
+
+
+class OReciboDeclaraOAlcanceEmVezDeAfirmarAusencia(unittest.TestCase):
+    """Achado `P1A4-3`, corrigido na P1-A.5, ordem 3.
+
+    O recibo publicava `efeito_externo: "nenhum"` e, ao lado, a frase
+    *"fotografia sem nenhuma mutacao — `nenhum` aqui e medicao"*. Juntas,
+    as duas leem como ausencia de escrita no disco — e a fotografia nunca
+    cobriu o lar do proprio CLI, onde a escrita e CONHECIDA (o codex
+    grava sessao e log em `~/.codex/` durante a chamada, e `--ephemeral`
+    nao impede). O revisor da P1-A.4 chamou pelo nome: afirmar ausencia
+    sobre o que nao se vigia.
+
+    A CORRECAO E EXERCIDA, e nao afirmada: estes testes PLANTAM escrita
+    exatamente no lugar que o recibo declara nao enxergar, e medem que o
+    recibo diz a verdade sobre a propria cegueira. Um recibo que
+    prometesse alcance e nao o tivesse ficaria vermelho aqui.
+    """
+
+    def _corrida(self, provider_id="codex", escrita_em=None):
+        vigiado = tempfile.mkdtemp(prefix="p1a5-alcance-")
+        self.addCleanup(shutil.rmtree, vigiado, True)
+
+        def sensor(argv, env=None, timeout=None, cwd=None):
+            if escrita_em is not None:
+                os.makedirs(escrita_em, exist_ok=True)
+                with open(os.path.join(escrita_em, "sessao.log"), "w",
+                          encoding="utf-8") as f:
+                    f.write("log de sessao do CLI")
+            return (0, "ok", "")
+
+        p = pa.ProvedorAssinaturaReal(espec_de(provider_id), sensor=sensor,
+                                      vigia=vigia_de(vigiado))
+        return p.invocar(b"t"), p.medicoes[0]
+
+    def test_escrita_no_lar_do_CLI_NAO_e_medida_e_o_recibo_diz_isso(self):
+        # O CASO QUE OCORRE: o CLI grava no proprio lar durante a chamada.
+        # Duas metades, e nenhuma substitui a outra —
+        # (i) a cegueira e REAL: a escrita nao aparece em lugar nenhum e
+        #     o valor de contrato continua `nenhum`;
+        # (ii) e o recibo a DECLARA, nomeando o caminho.
+        lar = tempfile.mkdtemp(prefix="p1a5-lar-cli-")
+        self.addCleanup(shutil.rmtree, lar, True)
+        r, medicao = self._corrida(escrita_em=lar)
+
+        self.assertEqual(medicao["mutacoes_fora_do_descartavel"], [])
+        self.assertEqual(r.efeito_externo, "nenhum")   # (i) cegueira real
+
+        alcance = medicao["alcance_da_medicao"]        # (ii) declarada
+        self.assertIn("~/.codex", alcance["lar_do_cli"])
+        self.assertTrue(any("~/.codex" in item
+                            for item in alcance["nao_medido"]),
+                        f"o lar do CLI nao esta declarado: {alcance}")
+        self.assertIn("~/.codex", medicao["efeito_externo_origem"])
+
+    def test_o_recibo_nunca_apresenta_nenhum_como_ausencia_de_escrita(self):
+        # A frase antiga — "`nenhum` aqui e medicao, nao eco do envelope"
+        # — dizia a verdade sobre a P2.3 e mentia sobre o alcance. O que
+        # se exige agora e que a origem QUALIFIQUE o alcance, sempre.
+        _r, medicao = self._corrida()
+        origem = medicao["efeito_externo_origem"]
+        self.assertIn("ALCANCE MEDIDO", origem)
+        self.assertIn("jamais afirmacao de que nada foi escrito", origem)
+
+    def test_o_alcance_medido_nomeia_o_descartavel_e_as_raizes_vigiadas(self):
+        # A outra metade da declaracao: dizer o que NAO se mede sem dizer
+        # o que se mede seria trocar um exagero por outro.
+        _r, medicao = self._corrida()
+        medido = " | ".join(medicao["alcance_da_medicao"]["medido"])
+        self.assertIn(medicao["dir_descartavel"], medido)
+        for raiz in medicao["raizes_vigiadas"]:
+            with self.subTest(raiz=raiz):
+                self.assertIn(raiz, medido)
+
+    def test_escrita_DENTRO_do_alcance_continua_virando_aplicado(self):
+        # Contraprova, e ela e o que separa declaracao honesta de
+        # desculpa: declarar limite nao pode ter afrouxado a deteccao do
+        # que ESTA no alcance.
+        vigiado = tempfile.mkdtemp(prefix="p1a5-dentro-")
+        self.addCleanup(shutil.rmtree, vigiado, True)
+        sensor = SensorQueEscreve(alvo=vigiado, nome="plantada.txt")
+        p = pa.ProvedorAssinaturaReal(espec_de("codex"), sensor=sensor,
+                                      vigia=vigia_de(vigiado))
+        r = p.invocar(b"t")
+        self.assertEqual(r.efeito_externo, "aplicado")
+        self.assertIn("mutacao medida no disco",
+                      p.medicoes[0]["efeito_externo_origem"])
+
+    def test_provedor_sem_lar_declarado_grita_em_vez_de_calar(self):
+        # Fail-loud: um provedor novo, sem lar em `LAR_DO_CLI`, nao pode
+        # produzir um recibo que pareca completo. A ausencia da
+        # declaracao tem de aparecer NO recibo.
+        espec = dataclasses.replace(espec_de("codex"),
+                                    provider_id="provedor-sem-lar")
+        p = pa.ProvedorAssinaturaReal(
+            espec, sensor=lambda *a, **k: (0, "ok", ""),
+            vigia=vigia_de(tempfile.mkdtemp(prefix="p1a5-sem-lar-")))
+        p.invocar(b"t")
+        alcance = p.medicoes[0]["alcance_da_medicao"]
+        self.assertIn("NAO DECLARADO", alcance["lar_do_cli"])
+        self.assertIn("provedor-sem-lar", alcance["lar_do_cli"])
+
+    def test_todo_provedor_da_frota_tem_lar_declarado(self):
+        # E o outro lado: hoje, nenhum provedor real cai no ramo acima.
+        for pid in ("codex", "claude", "kimi", "google", "grok"):
+            with self.subTest(provider=pid):
+                self.assertIn(pid, contencao.LAR_DO_CLI)
 
 
 class VigilanciaDispara(unittest.TestCase):
