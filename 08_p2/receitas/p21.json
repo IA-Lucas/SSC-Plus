@@ -1,0 +1,33 @@
+{
+  "entrada": {
+    "bytes_utf8": 233,
+    "caracteres": 233,
+    "origem": "testemunho",
+    "porque": "prompt perdido com o lab da corrida: `08_p2/saidas/` nao e versionado (carrega saida crua de modelo) e as missoes seguintes limpam `labs/` antes de cada corrida. So o TAMANHO publicado sobrevive",
+    "rotulo": "prompt (identico ao despachado)"
+  },
+  "id": "p21",
+  "publicado": "08_p2/evidencias/medicao-p21-20260803T112855Z.json",
+  "resposta_alternativo": {
+    "bytes_utf8": 1236,
+    "caracteres": 1232,
+    "origem": "testemunho",
+    "porque": "resposta do canal alternativo: ela nunca foi gravada em lugar nenhum — o canal alternativo nao tem EventLog nem recibo neste repositorio. Nenhuma versao dela existe para recontar",
+    "rotulo": "resposta produzida pelo canal alternativo"
+  },
+  "resposta_assinatura": {
+    "caminho": "08_p2/evidencias/execucao-20260803T112708Z.json",
+    "campo": "saida",
+    "origem": "recibo",
+    "rotulo": "resposta do codex (recibo da corrida)"
+  },
+  "sessao_id": "36f0258a471e4d83b83c4c6f5644c14d",
+  "titulo": "P2.1 — turno interno pesado (eventlog.py)",
+  "turno_interno": [
+    {
+      "caminho": "05_p0/ssc_p0/eventlog.py",
+      "origem": "arquivo"
+    }
+  ],
+  "work_unit_id": "4315dcf5b2a046b9ac3fb17593663b63"
+}

@@ -48,10 +48,15 @@ runner ja aplica ao placar. Um medidor que lesse do proprio processo
 mediria o que ele acha que enviou, e nao o que ficou gravado.
 """
 
+import argparse
+import glob
+import json
 import os
+import sys
 
-import caminhos  # noqa: F401  (insere 05_p0/06_p1a/08_p2 no sys.path)
+import caminhos  # (insere 05_p0/06_p1a/08_p2/evidencias no sys.path)
 
+from console import no_codec_do_console
 from ssc_p0.evidence import EvidencePlane
 
 PROXY = "carga-de-fronteira"
@@ -179,6 +184,54 @@ def item_de_arquivo(caminho: str, papel: str, rotulo: str | None = None,
             "procedencia": "medido-arquivo", **tamanhos(brutos)}
 
 
+def compor_assinatura(entrada_unitaria: dict, tentativas: list, *,
+                      fonte: str, procedencia_entrada: str,
+                      sessao_id=None, work_unit_id=None,
+                      truncamento: dict | None = None) -> dict:
+    """A ARITMETICA do lado da assinatura, uma vez so.
+
+    Extraida de `medir_assinatura` na P2.4 e usada pelos DOIS caminhos —
+    o que le a cadeia verificada e o que reproduz a corrida a partir de
+    insumos versionados (`reproduzir`). Duas somas em modulos vizinhos
+    seriam a duplicacao de leitor que este acervo ja tem em aberto: a
+    receita poderia passar a devolver um numero que a cadeia nao devolve,
+    e o revisor nao teria como saber qual das duas mudou.
+
+    Ela nao sabe de onde vieram os numeros. Quem sabe e a `procedencia`
+    que cada chamador declara, e ela viaja na saida.
+    """
+    saida_total = _somar(*[t["saida"] for t in tentativas]) if tentativas \
+        else _somar()
+    entrada_total = _escalar(entrada_unitaria, len(tentativas))
+
+    # O que o DESPACHANTE le de volta: a resposta final. Nao existindo
+    # nenhuma final (todas as tentativas falharam), ele ainda le a ultima
+    # saida — o motivo da parada tambem ocupa fronteira.
+    finais = [t for t in tentativas if t["final"]]
+    lida_de_volta = (finais[-1]["saida"] if finais
+                     else (tentativas[-1]["saida"] if tentativas
+                           else _somar()))
+
+    return {
+        "lado": "assinatura",
+        "proxy": PROXY,
+        "sessao_id": sessao_id,
+        "work_unit_id": work_unit_id,
+        "fonte": fonte,
+        "procedencia_entrada": procedencia_entrada,
+        "entrada_unitaria": dict(entrada_unitaria),
+        "truncamento": truncamento,
+        "tentativas": tentativas,
+        "n_tentativas": len(tentativas),
+        "total": _somar(entrada_total, saida_total),
+        "total_entrada": entrada_total,
+        "total_saida": saida_total,
+        # O residual sai da MESMA fonte: prompt redigido uma vez, resposta
+        # lida uma vez. As tentativas repetidas ficam com a assinatura.
+        "residual_do_despachante": _somar(entrada_unitaria, lida_de_volta),
+    }
+
+
 def medir_assinatura(raiz_lab: str, sessao_id: str,
                      work_unit_id: str | None = None,
                      entrada_real=None) -> dict:
@@ -238,40 +291,16 @@ def medir_assinatura(raiz_lab: str, sessao_id: str,
             "saida": saida,
         })
 
-    saida_total = _somar(*[t["saida"] for t in tentativas]) if tentativas \
-        else _somar()
-    entrada_total = _escalar(entrada_unitaria, len(tentativas))
-
-    # O que o DESPACHANTE le de volta: a resposta final. Nao existindo
-    # nenhuma final (todas as tentativas falharam), ele ainda le a ultima
-    # saida — o motivo da parada tambem ocupa fronteira.
-    finais = [t for t in tentativas if t["final"]]
-    lida_de_volta = (finais[-1]["saida"] if finais
-                     else (tentativas[-1]["saida"] if tentativas
-                           else _somar()))
-
-    return {
-        "lado": "assinatura",
-        "proxy": PROXY,
-        "sessao_id": sessao_id,
-        "work_unit_id": work_unit_id,
-        "fonte": "cadeia-verificada (EventLog + CAS via EvidencePlane)",
-        "procedencia_entrada": procedencia_entrada,
-        "entrada_unitaria": dict(entrada_unitaria),
-        "truncamento": {
+    return compor_assinatura(
+        entrada_unitaria, tentativas,
+        fonte="cadeia-verificada (EventLog + CAS via EvidencePlane)",
+        procedencia_entrada=procedencia_entrada,
+        sessao_id=sessao_id, work_unit_id=work_unit_id,
+        truncamento={
             "teto_chars": TETO_INTENCAO_CHARS,
             "possivel": da_cadeia["caracteres"] >= TETO_INTENCAO_CHARS,
             "divergencia_medida": divergencia,
-        },
-        "tentativas": tentativas,
-        "n_tentativas": len(tentativas),
-        "total": _somar(entrada_total, saida_total),
-        "total_entrada": entrada_total,
-        "total_saida": saida_total,
-        # O residual sai da MESMA cadeia: prompt redigido uma vez, resposta
-        # lida uma vez. As tentativas repetidas ficam com a assinatura.
-        "residual_do_despachante": _somar(entrada_unitaria, lida_de_volta),
-    }
+        })
 
 
 def medir_alternativo(itens) -> dict:
@@ -368,3 +397,362 @@ def comparar(assinatura: dict, alternativo: dict) -> dict:
         "avisos": list(alternativo.get("avisos") or []),
         "nao_captura": [dict(x) for x in NAO_CAPTURA],
     }
+
+
+# --- A RECEITA: reproduzir uma medicao publicada (P2.4, achado C) -------------
+#
+# ACHADO C, medido em 2026-08-03: *"`08_p2/medidor.py` nao tem entrada de
+# linha de comando; os numeros da fronteira sairam de script de sessao
+# ausente do repositorio. O revisor recebe `medicao-p2*.json` e nao a
+# receita."* E o mesmo defeito do MAJOR #5 / N6 — pacote que pede
+# julgamento e omite o objeto julgado.
+#
+# O que a receita PODE e o que ela NAO PODE fazer, medido antes de
+# escrita uma linha de codigo:
+#
+# | insumo | reproduzivel? |
+# |---|---|
+# | turno interno (arquivo do repositorio) | **SIM** — recontado do disco |
+# | resposta da assinatura | **SIM em 4 das 5**, do recibo versionado |
+# | prompt | **so na classe (c)**, recuperado do unico lab sobrevivente |
+# | resposta do canal alternativo | **NAO** — nunca foi gravada |
+#
+# Por isso cada insumo declara ORIGEM, e o comando publica quantos bytes
+# da comparacao foram RECONTADOS e quantos sao TESTEMUNHO. Um relatorio
+# que dissesse apenas "confere" esconderia que parte do "confere" e a
+# propria testemunha se conferindo — e essa e a familia (F).
+
+DIR_RECEITAS = os.path.join(caminhos.RAIZ, "08_p2", "receitas")
+
+ORIGENS = ("arquivo", "recibo", "testemunho")
+
+
+class ReceitaInvalida(Exception):
+    """Insumo que a receita declara e o repositorio nao sustenta."""
+
+
+def _resolver_insumo(spec: dict, raiz: str | None = None) -> dict:
+    """Um insumo declarado -> tamanhos + de onde eles vieram.
+
+    Fail-closed: origem desconhecida, arquivo ausente ou testemunho sem
+    numero levantam. Insumo que nao se resolve nao vira zero — zero
+    silencioso mudaria o resultado sem mudar o relatorio.
+    """
+    base = raiz or caminhos.RAIZ
+    origem = spec.get("origem")
+    if origem not in ORIGENS:
+        raise ReceitaInvalida(f"origem invalida: {origem!r}; use {ORIGENS}")
+
+    if origem == "arquivo":
+        caminho = os.path.join(base, spec["caminho"])
+        if not os.path.isfile(caminho):
+            raise ReceitaInvalida(f"insumo ausente do repositorio: "
+                                  f"{spec['caminho']}")
+        with open(caminho, "rb") as f:
+            medida = tamanhos(f.read())
+        return {"rotulo": spec.get("rotulo") or spec["caminho"],
+                "procedencia": "medido-arquivo", "reproduzido": True,
+                "fonte": spec["caminho"], **medida}
+
+    if origem == "recibo":
+        caminho = os.path.join(base, spec["caminho"])
+        if not os.path.isfile(caminho):
+            raise ReceitaInvalida(f"recibo ausente: {spec['caminho']}")
+        with open(caminho, encoding="utf-8") as f:
+            recibo = json.load(f)
+        texto = recibo.get(spec.get("campo", "saida"))
+        if texto is None:
+            raise ReceitaInvalida(
+                f"{spec['caminho']}: campo {spec.get('campo', 'saida')!r} "
+                "ausente — o recibo nao carrega a resposta")
+        return {"rotulo": spec.get("rotulo") or spec["caminho"],
+                "procedencia": "medido-recibo", "reproduzido": True,
+                "fonte": spec["caminho"], **tamanhos(texto)}
+
+    # testemunho: o numero publicado, sem objeto no repositorio que o
+    # sustente. Ele entra na conta e NAO entra na cobertura reproduzida.
+    faltando = [u for u in UNIDADES if not isinstance(spec.get(u), int)]
+    if faltando:
+        raise ReceitaInvalida(
+            f"testemunho sem {faltando}: numero declarado precisa das duas "
+            "unidades, ou a conta fecha com zero inventado")
+    if not spec.get("porque"):
+        raise ReceitaInvalida(
+            "testemunho sem `porque`: um numero que ninguem pode recontar "
+            "tem de dizer por que nao pode")
+    return {"rotulo": spec.get("rotulo") or "testemunho",
+            "procedencia": "testemunho-nao-reproduzivel", "reproduzido": False,
+            "porque": spec["porque"],
+            **{u: int(spec[u]) for u in UNIDADES}}
+
+
+def _tentativas_da_receita(spec: dict, entrada_unitaria: dict,
+                           raiz: str | None = None):
+    """As tentativas do lado da assinatura, do recibo ou por testemunho.
+
+    LIMITE MEDIDO, e por isso fail-closed no caminho do recibo: ele guarda
+    UMA `saida` — a final — e a lista de attempts. Numa corrida com
+    fallback, a saida da tentativa que falhou nao esta la, e a conta
+    sub-contaria o gasto. As cinco corridas publicadas tem
+    `n_tentativas = 1`; qualquer outra levanta, em vez de devolver um
+    numero menor que o real.
+
+    O caminho do TESTEMUNHO existe por um fato desta fase: a corrida (c)
+    da P2.2 **nao tem recibo** (sessao `dd4567c7…` nao aparece em
+    `08_p2/evidencias/`). Foi ela que caiu no `UnicodeEncodeError` do
+    console medido na propria P2.2 — o attempt deu sucesso, a franquia foi
+    gasta, e o artefato de registro nunca existiu. A resposta dela vive
+    apenas no lab, que nao e versionado. Declarar isso e o unico caminho
+    honesto; inventar o texto para caber em 438 B seria o oposto.
+    """
+    base = raiz or caminhos.RAIZ
+    if spec.get("origem") == "testemunho":
+        saida = _resolver_insumo(spec, base)
+        return [{
+            "attempt_id": None,
+            "executor": spec.get("executor"),
+            "resultado": "sucesso",
+            "final": True,
+            "entrada": dict(entrada_unitaria),
+            "saida": {u: saida[u] for u in UNIDADES},
+            "procedencia_saida": saida["procedencia"],
+            "fonte_saida": None,
+        }], saida
+    caminho = os.path.join(base, spec["caminho"])
+    with open(caminho, encoding="utf-8") as f:
+        recibo = json.load(f)
+    concluidos = [a for a in recibo.get("attempts", [])
+                  if a.get("resultado") is not None]
+    if len(concluidos) != 1:
+        raise ReceitaInvalida(
+            f"{spec['caminho']}: {len(concluidos)} tentativas concluidas. O "
+            "recibo carrega SO a saida final; com fallback a receita "
+            "sub-contaria o gasto da assinatura")
+    saida = _resolver_insumo(spec, base)
+    att = concluidos[0]
+    resolvido = att.get("executor_resolvido") or {}
+    return [{
+        "attempt_id": att.get("attempt_id"),
+        "executor": f"{resolvido.get('provedor')}/{resolvido.get('modelo')}",
+        "resultado": att.get("resultado"),
+        "final": att.get("resultado") == "sucesso",
+        "entrada": dict(entrada_unitaria),
+        "saida": {u: saida[u] for u in UNIDADES},
+        "procedencia_saida": saida["procedencia"],
+        "fonte_saida": saida.get("fonte"),
+    }], saida
+
+
+def carregar_receita(caminho: str) -> dict:
+    """Le uma receita do disco. `caminho` pode ser o id (`p22-a`)."""
+    if not os.path.isfile(caminho):
+        candidato = os.path.join(DIR_RECEITAS, f"{caminho}.json")
+        if os.path.isfile(candidato):
+            caminho = candidato
+        else:
+            raise ReceitaInvalida(f"receita nao encontrada: {caminho}")
+    with open(caminho, encoding="utf-8") as f:
+        return json.load(f)
+
+
+def reproduzir(receita: dict, raiz: str | None = None) -> dict:
+    """Refaz uma medicao publicada a partir dos insumos versionados.
+
+    Devolve a comparacao recalculada, os numeros publicados, a conferencia
+    campo a campo e — o campo que impede a leitura ingenua — a
+    **cobertura reproduzida**: quantos dos bytes comparados foram
+    RECONTADOS do repositorio, e quantos sao testemunho que so pode ser
+    aceito ou recusado.
+    """
+    base = raiz or caminhos.RAIZ
+    entrada = _resolver_insumo(receita["entrada"], base)
+    entrada_unitaria = {u: entrada[u] for u in UNIDADES}
+
+    tentativas, saida_assinatura = _tentativas_da_receita(
+        receita["resposta_assinatura"], entrada_unitaria, base)
+
+    assinatura = compor_assinatura(
+        entrada_unitaria, tentativas,
+        fonte="insumos versionados do repositorio (receita)",
+        procedencia_entrada=entrada["procedencia"],
+        sessao_id=receita.get("sessao_id"),
+        work_unit_id=receita.get("work_unit_id"),
+        truncamento={"teto_chars": TETO_INTENCAO_CHARS,
+                     "possivel": entrada["caracteres"] >= TETO_INTENCAO_CHARS,
+                     "divergencia_medida": None})
+
+    internos = [_resolver_insumo(x, base)
+                for x in receita.get("turno_interno") or []]
+    alternativa = _resolver_insumo(receita["resposta_alternativo"], base)
+    itens = ([{**entrada, "papel": "entrada"}]
+             + [{**x, "papel": "interno"} for x in internos]
+             + [{**alternativa, "papel": "saida"}])
+    alternativo = medir_alternativo(itens)
+    comparacao = comparar(assinatura, alternativo)
+
+    insumos = [entrada, saida_assinatura, alternativa] + internos
+    recontados = sum(x["bytes_utf8"] for x in insumos if x["reproduzido"])
+    testemunho = sum(x["bytes_utf8"] for x in insumos if not x["reproduzido"])
+
+    publicado = {}
+    caminho_publicado = receita.get("publicado")
+    if caminho_publicado:
+        with open(os.path.join(base, caminho_publicado), encoding="utf-8") as f:
+            publicado = json.load(f)
+
+    return {
+        "id": receita.get("id"),
+        "titulo": receita.get("titulo"),
+        "publicado": caminho_publicado,
+        "insumos": insumos,
+        "assinatura": assinatura,
+        "alternativo": alternativo,
+        "comparacao": comparacao,
+        "cobertura_reproduzida": {
+            "bytes_recontados_do_repositorio": recontados,
+            "bytes_de_testemunho": testemunho,
+            "fracao": round(recontados / (recontados + testemunho), 4)
+            if (recontados + testemunho) else None,
+            "porque_importa": "testemunho nao se verifica sozinho. O que "
+                              "esta linha diz e quanto do 'confere' foi "
+                              "RECONTADO e quanto foi aceito",
+        },
+        "conferencia": conferir(comparacao, assinatura, publicado),
+    }
+
+
+# Os campos conferidos contra a medicao publicada. Cada um e um numero que
+# o README ou o registro CITAM — conferir o que ninguem cita provaria que
+# o programa e determinista, e nao que ele reproduz o publicado.
+CAMPOS_CONFERIDOS = (
+    ("razao", ("comparacao", "razao_alternativo_sobre_residual")),
+    ("residual_bytes", ("comparacao", "residual_do_despachante",
+                        "bytes_utf8")),
+    ("poupanca_bytes", ("comparacao", "poupanca", "bytes_utf8")),
+    ("alternativo_bytes", ("comparacao", "alternativo_sozinho",
+                           "bytes_utf8")),
+    ("assinatura_bytes", ("comparacao", "assinatura_absorveu", "bytes_utf8")),
+    ("saida_assinatura_bytes", ("assinatura", "total_saida", "bytes_utf8")),
+)
+
+
+def _cavar(dados: dict, trilha: tuple):
+    for chave in trilha:
+        if not isinstance(dados, dict) or chave not in dados:
+            return None
+        dados = dados[chave]
+    return dados
+
+
+def conferir(comparacao: dict, assinatura: dict, publicado: dict) -> dict:
+    """Recalculado x publicado, campo a campo, sem ajustar nada.
+
+    A regra da ordem: **nao ajustar o comando para caber no numero
+    publicado**. Por isso esta funcao so COMPARA — ela nao tem margem, nao
+    tem tolerancia e nao arredonda nada que nao esteja ja arredondado na
+    fonte. Divergencia sai como divergencia.
+    """
+    recalculado = {"comparacao": comparacao, "assinatura": assinatura}
+    linhas = []
+    for nome, trilha in CAMPOS_CONFERIDOS:
+        obtido = _cavar(recalculado, trilha)
+        esperado = _cavar(publicado, trilha) if publicado else None
+        linhas.append({"campo": nome, "recalculado": obtido,
+                       "publicado": esperado,
+                       "confere": (esperado is not None and obtido == esperado)})
+    return {
+        "confere": bool(linhas) and all(x["confere"] for x in linhas),
+        "campos": linhas,
+    }
+
+
+def receitas_do_repositorio() -> list:
+    """Todas as receitas versionadas, em ordem estavel."""
+    return sorted(glob.glob(os.path.join(DIR_RECEITAS, "*.json")))
+
+
+def relatar(resultado: dict) -> None:
+    """Uma corrida reproduzida, em texto que cabe num terminal.
+
+    TUDO passa por `no_codec_do_console`, e nao so o que parece
+    arriscado. O que este relato imprime vem de ARQUIVO — titulo de
+    receita, rotulo de insumo, motivo de testemunho —, e arquivo carrega
+    o caractere que alguem escreveu nele. Foi um `→` vindo de fora que
+    derrubou a corrida da P2.2 depois de a franquia ja ter sido gasta.
+    Separar "o que precisa" de "o que nao precisa" criaria dois caminhos
+    de impressao, e um deles voltaria a ser o cru.
+    """
+    conf = resultado["conferencia"]
+    cob = resultado["cobertura_reproduzida"]
+    marca = "CONFERE" if conf["confere"] else "DIVERGE"
+    eco = lambda texto: print(no_codec_do_console(texto))   # noqa: E731
+    eco(f"\n[{marca}] {resultado['id']} — {resultado['titulo']}")
+    eco(f"  publicado: {resultado['publicado']}")
+    for linha in conf["campos"]:
+        sinal = "ok " if linha["confere"] else "!! "
+        eco(f"    {sinal}{linha['campo']:<24} recalculado="
+            f"{linha['recalculado']!s:<10} publicado={linha['publicado']}")
+    eco(f"  cobertura: {cob['bytes_recontados_do_repositorio']} B "
+        f"recontados do repositorio, {cob['bytes_de_testemunho']} B de "
+        f"testemunho ({cob['fracao']:.1%} recontado)")
+    for insumo in resultado["insumos"]:
+        if not insumo["reproduzido"]:
+            eco(f"    testemunho: {insumo['rotulo']} "
+                f"({insumo['bytes_utf8']} B) — {insumo['porque']}")
+
+
+def main(argv=None) -> int:
+    """Entry point CLI — o objeto do achado C.
+
+        python 08_p2/medidor.py --todas
+        python 08_p2/medidor.py --receita p22-a
+        python 08_p2/medidor.py --todas --json saida.json
+
+    Codigo de saida **1** quando qualquer corrida diverge do publicado. A
+    receita nao existe para dizer "confere": existe para que a divergencia
+    apareca sozinha, sem depender de alguem conferir a olho.
+    """
+    p = argparse.ArgumentParser(
+        description="Reproduz as medicoes de fronteira publicadas a partir "
+                    "dos insumos versionados neste repositorio.")
+    grupo = p.add_mutually_exclusive_group(required=True)
+    grupo.add_argument("--receita", help="id (ex.: p22-a) ou caminho")
+    grupo.add_argument("--todas", action="store_true",
+                       help="todas as receitas de 08_p2/receitas/")
+    p.add_argument("--json", dest="json_saida",
+                   help="grava o resultado completo neste caminho")
+    args = p.parse_args(argv)
+
+    caminhos_receitas = (receitas_do_repositorio() if args.todas
+                         else [args.receita])
+    if not caminhos_receitas:
+        print(f"nenhuma receita em {DIR_RECEITAS}", file=sys.stderr)
+        return 2
+
+    resultados = []
+    for caminho in caminhos_receitas:
+        resultado = reproduzir(carregar_receita(caminho))
+        relatar(resultado)
+        resultados.append(resultado)
+
+    if args.json_saida:
+        with open(args.json_saida, "w", encoding="utf-8") as f:
+            json.dump(resultados, f, ensure_ascii=False, indent=2,
+                      sort_keys=True)
+        print(f"\njson: {args.json_saida}")
+
+    divergem = [r["id"] for r in resultados if not r["conferencia"]["confere"]]
+    total_recontado = sum(
+        r["cobertura_reproduzida"]["bytes_recontados_do_repositorio"]
+        for r in resultados)
+    total_testemunho = sum(
+        r["cobertura_reproduzida"]["bytes_de_testemunho"] for r in resultados)
+    print(f"\n{len(resultados)} receita(s); {len(divergem)} divergente(s)"
+          + (f": {divergem}" if divergem else ""))
+    print(f"no conjunto: {total_recontado} B recontados do repositorio, "
+          f"{total_testemunho} B de testemunho")
+    return 1 if divergem else 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

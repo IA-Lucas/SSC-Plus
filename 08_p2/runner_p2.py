@@ -48,6 +48,7 @@ sys.path.insert(0, os.path.join(caminhos.RAIZ, "05_p0", "cenarios"))
 
 import frota_medida                                          # noqa: E402
 from capsula import exigir_capsula_limpa, verificar_capsula   # noqa: E402
+from console import no_codec_do_console                       # noqa: E402
 from comum import Lab                                         # noqa: E402
 from contencao import redigir, verificar_lock                 # noqa: E402
 from preflight.frota_real import ESPECIFICACOES               # noqa: E402
@@ -72,20 +73,11 @@ def agora_utc() -> datetime:
     return datetime.now(timezone.utc)
 
 
-def _no_codec_do_console(texto: str) -> str:
-    """Texto de procedencia de MODELO, reduzido ao que o console aceita.
-
-    Degradacao de EXIBICAO, declarada: caractere fora do codec do console
-    sai como substituto. O byte gravado no CAS nao e tocado — a mesma
-    separacao que o achado 5.3 da P2.1 mediu (dano de exibicao, nunca
-    perda gravada).
-    """
-    codec = getattr(sys.stdout, "encoding", None) or "utf-8"
-    try:
-        return texto.encode(codec, errors="replace").decode(codec,
-                                                            errors="replace")
-    except LookupError:                     # codec do console desconhecido
-        return texto.encode("ascii", errors="replace").decode("ascii")
+# A primitiva mudou-se para `console.py` na P2.4, quando o medidor ganhou
+# um comando que imprime texto de arquivo e ficou exposto a MESMA falha.
+# O nome local permanece para nao espalhar a troca por todas as linhas de
+# `relatar` — o objeto e um so, e ha teste de varredura que o exige.
+_no_codec_do_console = no_codec_do_console
 
 
 def relatar(registro: dict) -> None:

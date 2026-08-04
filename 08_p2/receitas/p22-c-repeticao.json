@@ -1,0 +1,31 @@
+{
+  "entrada": {
+    "caminho": "08_p2/receitas/prompt-p22-c.txt",
+    "origem": "arquivo",
+    "rotulo": "prompt (recuperado do lab desta corrida)"
+  },
+  "id": "p22-c-repeticao",
+  "publicado": "08_p2/evidencias/medicao-p22-c-repeticao-20260803T135136Z.json",
+  "resposta_alternativo": {
+    "bytes_utf8": 1249,
+    "caracteres": 1245,
+    "origem": "testemunho",
+    "porque": "resposta do canal alternativo: ela nunca foi gravada em lugar nenhum — o canal alternativo nao tem EventLog nem recibo neste repositorio. Nenhuma versao dela existe para recontar",
+    "rotulo": "resposta produzida pelo canal alternativo"
+  },
+  "resposta_assinatura": {
+    "caminho": "08_p2/evidencias/execucao-20260803T135121Z.json",
+    "campo": "saida",
+    "origem": "recibo",
+    "rotulo": "resposta do codex (recibo da corrida)"
+  },
+  "sessao_id": "4bf725b0132d4bcc9c5f81392af09440",
+  "titulo": "P2.2 classe (c) — a unica repeticao de MESMO prompt do acervo",
+  "turno_interno": [
+    {
+      "caminho": "05_p0/ssc_p0/estados.py",
+      "origem": "arquivo"
+    }
+  ],
+  "work_unit_id": "39dd7ebbe9c2429790e576f056242353"
+}

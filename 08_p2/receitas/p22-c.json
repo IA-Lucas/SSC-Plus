@@ -1,0 +1,32 @@
+{
+  "entrada": {
+    "caminho": "08_p2/receitas/prompt-p22-c.txt",
+    "origem": "arquivo",
+    "rotulo": "prompt (recuperado do lab da repeticao)"
+  },
+  "id": "p22-c",
+  "publicado": "08_p2/evidencias/medicao-p22-c-20260803T133346Z.json",
+  "resposta_alternativo": {
+    "bytes_utf8": 1249,
+    "caracteres": 1245,
+    "origem": "testemunho",
+    "porque": "resposta do canal alternativo: ela nunca foi gravada em lugar nenhum — o canal alternativo nao tem EventLog nem recibo neste repositorio. Nenhuma versao dela existe para recontar",
+    "rotulo": "resposta produzida pelo canal alternativo"
+  },
+  "resposta_assinatura": {
+    "bytes_utf8": 438,
+    "caracteres": 416,
+    "executor": "codex/gpt-5.6-sol",
+    "origem": "testemunho",
+    "porque": "esta corrida NAO tem recibo em `08_p2/evidencias/`: a sessao `dd4567c703d3497fae7269ebfd5d1ca7` nao aparece la. Foi a corrida que caiu no `UnicodeEncodeError` do console medido na propria P2.2 — o attempt deu sucesso, a franquia foi gasta e o artefato de registro nunca existiu",
+    "rotulo": "resposta do codex (SEM recibo)"
+  },
+  "sessao_id": "dd4567c703d3497fae7269ebfd5d1ca7",
+  "titulo": "P2.2 classe (c) — intermediaria (estados.py), 1a corrida",
+  "turno_interno": [
+    {
+      "caminho": "05_p0/ssc_p0/estados.py",
+      "origem": "arquivo"
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "entrada": {
+    "bytes_utf8": 213,
+    "caracteres": 213,
+    "origem": "testemunho",
+    "porque": "prompt perdido com o lab da corrida: `08_p2/saidas/` nao e versionado (carrega saida crua de modelo) e as missoes seguintes limpam `labs/` antes de cada corrida. So o TAMANHO publicado sobrevive",
+    "rotulo": "prompt (identico ao despachado)"
+  },
+  "id": "p22-b",
+  "publicado": "08_p2/evidencias/medicao-p22-b-20260803T131528Z.json",
+  "resposta_alternativo": {
+    "bytes_utf8": 1181,
+    "caracteres": 1177,
+    "origem": "testemunho",
+    "porque": "resposta do canal alternativo: ela nunca foi gravada em lugar nenhum — o canal alternativo nao tem EventLog nem recibo neste repositorio. Nenhuma versao dela existe para recontar",
+    "rotulo": "resposta produzida pelo canal alternativo"
+  },
+  "resposta_assinatura": {
+    "caminho": "08_p2/evidencias/execucao-20260803T131456Z.json",
+    "campo": "saida",
+    "origem": "recibo",
+    "rotulo": "resposta do codex (recibo da corrida)"
+  },
+  "sessao_id": "37ab6da4488e41b3ba6c6cfc4137f04d",
+  "titulo": "P2.2 classe (b) — SEM turno interno",
+  "turno_interno": []
+}
