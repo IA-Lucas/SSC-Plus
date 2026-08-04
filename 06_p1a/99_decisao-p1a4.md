@@ -34,6 +34,12 @@ O portao da missao (*zero CRITICAL e zero MAJOR nos DOIS vereditos*)
 falhou nas duas metades, por causas independentes: o codex REPROVOU, e o
 kimi nao produziu veredito. Fechar uma nao abre a outra.
 
+**Nao e BLOCKED**, e a §4.1 dispoe disso formalmente: a quota nao e
+afericao do portao de pre-condicoes (o preflight devolve `desconhecida`
+para os cinco provedores), o proprietario decidiu medir na chamada em vez
+de parar antes, ha precedente identico na P1-A.3.6 — e, sobretudo,
+BLOCKED significa *"nao houve medicao"*, quando houve medicao completa.
+
 ## SUMARIO — 10 linhas
 
 1. Pacote **NOVO** sobre o HEAD atual: `a36471a3…`, **1.312.291 bytes**,
@@ -316,6 +322,57 @@ abre a outra: ainda que o kimi respondesse APROVADO, os seis MAJOR novos
 do codex reprovariam o portao; ainda que o codex nao tivesse achado nada,
 a ausencia do kimi deixaria o portao com **uma** medicao onde o ato exige
 duas.
+
+### 4.1 Por que NAO e BLOCKED — disposicao formal
+
+A leitura contraria existe e precisa de resposta escrita, nao de
+silencio: o ato diz, nas PRE-CONDICOES, *"Declaracao vencida ou quota
+ausente: BLOCKED"*, e a quota do kimi **estava** ausente. Por que, entao,
+a decisao nao e BLOCKED?
+
+**Primeiro: a quota nao e afericao daquele portao.** A frase esta na
+secao PRE-CONDICOES, e o mecanismo que as afere e o preflight. Ele
+devolveu, nesta corrida, `quota: "desconhecida"` para **todos os cinco
+provedores** — inclusive o codex, que depois respondeu por 448 s. Quota
+ausente nao foi medida no portao porque **nao e mensuravel nele**; ela so
+aparece quando o provedor responde. Tratar "desconhecida" como "ausente"
+reprovaria toda missao ja na abertura, inclusive as que deram certo.
+
+**Segundo: o proprietario decidiu explicitamente o contrario.** Antes do
+envio, perguntado se a cota havia sido renovada, ele respondeu *"nao sei
+— mede na hora"*, escolhendo entre duas saidas oferecidas: parar por
+quota ausente, ou medir na chamada. Ele escolheu medir. A quota foi
+medida, e o resultado esta na §3.2.
+
+**Terceiro: ha precedente no proprio repositorio, na mesma situacao.** A
+P1-A.3.6 recebeu o kimi recusado por cota de ciclo esgotada, ficou com um
+so veredito, e decidiu **ADJUST** — nao BLOCKED. Mais que precedente: o
+criterio de parada hoje gravado no `CLAUDE.md` **se funda naquela
+medicao**. Se a ausencia do kimi tivesse tornado aquela missao BLOCKED,
+o criterio que agora dispara nao existiria.
+
+**Quarto, e decisivo: BLOCKED significa "nao houve medicao", e houve.**
+Esta missao obteve um veredito completo — doze pronunciamentos por MAJOR,
+quatro por achado, defeito novo, familia em cada achado. Rotular isso
+BLOCKED **descartaria a medicao** e, com ela, esconderia que o criterio
+de parada disparou. O `CLAUDE.md` diz, com todas as letras, que relatorio
+sem classificacao por familia *"equivale a manter a trilha aberta por
+falta de medicao, que e exatamente o que este criterio existe para
+impedir"*. BLOCKED aqui produziria esse efeito **tendo a medicao em
+maos** — o pior dos casos.
+
+**O que o portao da missao registra, e nao se apaga:** ele falhou nas
+duas metades, e a §4 mede isso. BLOCKED e STOP nao sao graus do mesmo
+eixo — BLOCKED diz *"nao deu para medir"*; STOP diz *"mediu-se, e a
+medicao manda parar"*. O segundo e o caso.
+
+**Ambiguidade real do ato, para o Fundador decidir em despachos
+futuros.** A frase *"quota ausente: BLOCKED"* pode ser lida como portao
+de abertura (a leitura aplicada aqui, e a do precedente) ou como
+condicao que vale em qualquer instante da missao. As duas leituras sao
+defensaveis pelo texto. Esta missao aplicou a primeira, declara que o
+fez, e registra que a segunda existe — quem escreve o proximo ato pode
+fecha-la numa frase.
 
 ## 5. O criterio de parada do `CLAUDE.md` — medido e classificado
 
