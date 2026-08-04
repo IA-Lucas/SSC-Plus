@@ -41,6 +41,32 @@ As familias em uso, na definicao do atestado da P1-A.3.6 (§9.2):
 - **fora de ambas** — quando o objeto nao e guarda do acervo (por
   exemplo, defeito de composicao de um pacote de revisao).
 
+## BLOCKED E PORTAO DE ABERTURA — nao de execucao
+
+**Decisao do Fundador, gravada na missao P1-A.4.** Fecha a ambiguidade
+que a §4.1 do registro da P1-A.4 declarou em aberto.
+
+> **Quota ausente e declaracao vencida sao portao de ABERTURA. Uma vez
+> aberta a missao, quota que se revela ausente durante a execucao NAO
+> produz BLOCKED: produz o veredito que a medicao sustentar, com a
+> ausencia declarada. BLOCKED significa que nao houve medicao; se houve
+> medicao, ela nao se descarta.**
+
+**Fundamento, medido e nao suposto:** o preflight da P1-A.4
+(`07_p1b/evidencias/preflight-20260804T024301Z.json`) devolveu quota
+`desconhecida` para os **cinco** provedores — inclusive o `codex`, que
+depois respondeu por **448 s**. No portao, quota **nao e mensuravel**;
+ela so aparece quando o provedor responde. Tratar `desconhecida` como
+`ausente` reprovaria toda missao ja na abertura, inclusive as que deram
+certo.
+
+**Precedente:** P1-A.3.6 — kimi recusado por cota de ciclo esgotada, um
+so veredito, decisao **ADJUST** e nao BLOCKED. Mais que precedente: o
+criterio de parada acima **se funda naquela medicao**.
+
+BLOCKED e STOP nao sao graus do mesmo eixo: **BLOCKED diz "nao deu para
+medir"; STOP diz "mediu-se, e a medicao manda parar"**.
+
 ## REGRA DE PROVA (endurecida na P1-A.3.7)
 
 Toda correcao neste repositorio exige, por escrito:
