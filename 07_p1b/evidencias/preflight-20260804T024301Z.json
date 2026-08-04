@@ -1,0 +1,115 @@
+{
+  "tipo": "preflight-atual-p1b",
+  "gerado_em_utc": "2026-08-04T02:43:01Z",
+  "lock_escritor_unico": {
+    "sessao": "p1a4-ops",
+    "pid_titular": 58184,
+    "fence": 1,
+    "expira_em": 1785811493.7752173
+  },
+  "lock_verificado_antes_da_persistencia": true,
+  "custo_variavel": 0,
+  "chamadas_de_modelo": 0,
+  "nota": "somente sondas de diagnostico (versao/login/modelos); nenhuma invocacao de modelo; env das sondas sanitizado pela canonica preflight.economia.ambiente_sanitizado",
+  "emenda_p1a3_item_1": {
+    "tiers_declarados": {
+      "codex": "ChatGPT Pro 5x",
+      "kimi": "Allegretto"
+    },
+    "limite": "SHADOW_ELIGIBLE somente; validade maxima 24 h; NAO autoriza P2 nem execucao autonoma",
+    "nota": "declaracao vencida e reportada como esta (DeclaracaoExpirada); renovar e ato do proprietario"
+  },
+  "capsula": {
+    "mecanismo": "entrada por capsula.iniciar_em_capsula + guarda exigir_capsula_limpa no processo + ambiente derivado por capsula.ambiente_capsula",
+    "violacoes_no_env_do_processo": [],
+    "violacoes_no_env_classificado": [],
+    "politica": "subscription-only; qualquer credencial de modelo visivel dentro da capsula = bloqueio"
+  },
+  "sondas_medidas": {
+    "claude": 2,
+    "codex": 3,
+    "google": 0,
+    "grok": 0,
+    "kimi": 3
+  },
+  "violacoes_ambiente_nomes": [],
+  "env_sanitizado_remove_nomes": [],
+  "frota": [
+    {
+      "provider_id": "codex",
+      "resultado": "SHADOW_ELIGIBLE",
+      "caminho": "~/AppData/Local/Programs/OpenAI/Codex/bin/codex.exe",
+      "versao": "0.145.0",
+      "plano": null,
+      "origem_credencial": "subscription-oauth",
+      "quota": "desconhecida",
+      "modelos": [
+        "gpt-5.6-sol"
+      ],
+      "sombra": {
+        "tier_declarado": "ChatGPT Pro 5x",
+        "declarado_por": "proprietario",
+        "declarado_em_utc": "2026-08-04T02:40:33Z",
+        "expira_em_utc": "2026-08-05T02:40:33Z",
+        "autorizacao": "somente observacao-sombra de diagnostico; NAO autoriza P2 nem execucao autonoma"
+      },
+      "erros": []
+    },
+    {
+      "provider_id": "claude",
+      "resultado": "SUPERVISED",
+      "caminho": "~/.local/bin/claude",
+      "versao": "2.1.221",
+      "plano": "max",
+      "origem_credencial": "subscription-oauth",
+      "quota": "desconhecida",
+      "modelos": [],
+      "sombra": null,
+      "erros": []
+    },
+    {
+      "provider_id": "kimi",
+      "resultado": "SHADOW_ELIGIBLE",
+      "caminho": "~/.kimi-code/bin/kimi",
+      "versao": "0.30.0",
+      "plano": null,
+      "origem_credencial": "subscription-oauth",
+      "quota": "desconhecida",
+      "modelos": [
+        "kimi-code/k3"
+      ],
+      "sombra": {
+        "tier_declarado": "Allegretto",
+        "declarado_por": "proprietario",
+        "declarado_em_utc": "2026-08-04T02:40:33Z",
+        "expira_em_utc": "2026-08-05T02:40:33Z",
+        "autorizacao": "somente observacao-sombra de diagnostico; NAO autoriza P2 nem execucao autonoma"
+      },
+      "erros": []
+    },
+    {
+      "provider_id": "google",
+      "resultado": "SUPERVISED",
+      "caminho": "gemini",
+      "versao": null,
+      "plano": null,
+      "origem_credencial": "nao-sondada",
+      "quota": "desconhecida",
+      "modelos": [],
+      "sombra": null,
+      "erros": []
+    },
+    {
+      "provider_id": "grok",
+      "resultado": "SUPERVISED",
+      "caminho": "grok",
+      "versao": null,
+      "plano": null,
+      "origem_credencial": "nao-sondada",
+      "quota": "desconhecida",
+      "modelos": [],
+      "sombra": null,
+      "erros": []
+    }
+  ]
+}

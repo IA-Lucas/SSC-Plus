@@ -1,0 +1,84 @@
+{
+  "provider": "codex",
+  "ts_utc": "20260804T025106Z",
+  "tipo": "revisao-p1a4",
+  "chamadas_de_modelo": 1,
+  "custo_variavel": 0,
+  "rotulo": "assinatura-oauth; UMA chamada; enforcement read-only",
+  "enforcement_read_only": "--sandbox read-only --ephemeral (CLI)",
+  "tier_declarado_no_instante": {
+    "provider_id": "codex",
+    "tier": "ChatGPT Pro 5x",
+    "declarado_por": "proprietario",
+    "declarado_em_utc": "2026-08-04T02:40:33Z",
+    "expira_em_utc": "2026-08-05T02:40:33Z",
+    "valido_no_instante": true
+  },
+  "lock_escritor_unico": {
+    "sessao": "p1a4-ops",
+    "pid_titular": 58184,
+    "fence": 1
+  },
+  "argv_publico": [
+    "codex",
+    "exec",
+    "--sandbox",
+    "read-only",
+    "--cd",
+    "C:\\Users\\<USUARIO>\\AppData\\Local\\Temp\\p1a4-revisao-codex-lv8pbfcp",
+    "--skip-git-repo-check",
+    "--ephemeral",
+    "<PROMPT>"
+  ],
+  "prompt_sha256": "2b815ba1845013fbe88a56acee10d572bcc9c83d9e0d2662ea36e936a0902499",
+  "pacote_sha256": "a36471a34284cbcfc82efb669b3235fb57fd3dccc0aae4b024d0e9d5ca052c27",
+  "pacote_bytes_entregues": 1312291,
+  "declaracoes_sha256": "f31ad1b1af582628da84cb5de6629cbe891ddbe9f7639fb9d0323388a1f74be0",
+  "declaracoes_bytes_entregues": 7602,
+  "dir_descartavel": "C:\\Users\\<USUARIO>\\AppData\\Local\\Temp\\p1a4-revisao-codex-lv8pbfcp",
+  "dir_descartavel_arquivos_restantes": [
+    "declaracoes-obrigatorias.txt",
+    "pacote-revisao.txt"
+  ],
+  "contencao": {
+    "medida": "manifesto SHA-256 antes/depois das raizes vigiadas, com atribuicao separada da deteccao",
+    "raizes_vigiadas": [
+      "repositorio (toda a arvore sob RAIZ, inclusive locks/ e .git)",
+      "fora: ~/.codex/auth.json",
+      "fora: ~/.codex/config.toml",
+      "fora: ~/.claude/settings.json",
+      "fora: ~/.kimi-code/config.toml",
+      "fora: ~/.gemini/settings.json",
+      "fora: ~/.grok"
+    ],
+    "nao_vigiado": "todo caminho fora do repositorio e fora das fontes de config declaradas",
+    "arquivos_no_manifesto": 950,
+    "mutacoes_detectadas": [
+      "alterado: repositorio/.pytest_cache/v/cache/lastfailed",
+      "alterado: repositorio/06_p1a/__pycache__/leitores_config.cpython-314.pyc",
+      "alterado: repositorio/06_p1a/tests/__pycache__/test_redacao_operacao_p1a39.cpython-314-pytest-9.1.1.pyc",
+      "alterado: repositorio/06_p1a/tests/test_redacao_operacao_p1a39.py",
+      "alterado: repositorio/locks/p1a4-ops.lease"
+    ],
+    "mutacoes_atribuidas_ao_renovador": [
+      "alterado: repositorio/locks/p1a4-ops.lease"
+    ],
+    "mutacoes_fora_do_descartavel": [
+      "alterado: repositorio/.pytest_cache/v/cache/lastfailed",
+      "alterado: repositorio/06_p1a/__pycache__/leitores_config.cpython-314.pyc",
+      "alterado: repositorio/06_p1a/tests/__pycache__/test_redacao_operacao_p1a39.cpython-314-pytest-9.1.1.pyc",
+      "alterado: repositorio/06_p1a/tests/test_redacao_operacao_p1a39.py"
+    ],
+    "violada": true
+  },
+  "lock_verificado_antes_da_persistencia": true,
+  "env_vars_removidas_nomes": [
+    "NVIDIA_API_KEY"
+  ],
+  "returncode": 0,
+  "duracao_s": 448.182,
+  "modelo_efetivo_no_banner": "gpt-5.6-sol",
+  "resposta": "PROVIDER: OpenAI\nMODELO-OBSERVADO: GPT-5\nCANAL: API\nPACOTE-SHA256: a36471a34284cbcfc82efb669b3235fb57fd3dccc0aae4b024d0e9d5ca052c27\nDECLARACOES-SHA256: f31ad1b1af582628da84cb5de6629cbe891ddbe9f7639fb9d0323388a1f74be0\nESCOPO: revisão estática, integral e somente leitura dos dois arquivos; estado ancorado em 6a3a3f8…3f24085, sem checkout do acervo nem execução da suíte.\n\nMAJOR-1: FECHADO — `pacote-revisao.txt:7345-7402,7428-7471,19583-19869` lê SQLite por cópia incluindo WAL/SHM, propaga leitura impossível como `P1A-CONFIG-NAO-LIDA` e exercita o caminho operacional.\nMAJOR-2: FECHADO — `pacote-revisao.txt:7519-7608,24285-24446` captura e interpreta numericamente `.0`, `00`, `0.00` e `0,0`, com contraprovas positivas e teste fim a fim no pipeline.\nMAJOR-3: FECHADO — `pacote-revisao.txt:6670-6855` remove a exclusão de `locks/`, separa detecção de atribuição e amplia explicitamente a vigilância; `6865-6906` retira o rótulo de alcance integral.\nMAJOR-4: FECHADO — `pacote-revisao.txt:6914-6961,23411-23707` reverifica o mesmo fence no caminho real de `revisao_p1a2.main`, antes de `write_text`, e comprova ausência de persistência após perda do lease.\nMAJOR-5: FECHADO — `pacote-revisao.txt:12-208,15103-15223` inclui o fonte do gerador executado e seu SHA-256, mantendo o restante ancorado nos blobs dos commits.\nMAJOR-6: NAO-FECHADO — `pacote-revisao.txt:26126-26140` admite que `%`, `.format`, `join`, importação dinâmica e `getattr` ainda contornam a sentinela sem gerar negação.\nMAJOR-N1: NAO-FECHADO — `pacote-revisao.txt:14962-14966,18854-18883` declara e testa que o lock único novo não está em uso; o mecanismo vivo continua permitindo escritores de nomes distintos.\nMAJOR-N2: FECHADO — `pacote-revisao.txt:7240-7265,7285-7292,7394-7401,8347-8388` distingue fonte vazia de ausente, ilegível, inválida ou truncada e falha fechada em qualquer profundidade.\nMAJOR-N3: FECHADO — `pacote-revisao.txt:6865-6906,25457-25596` faz o rótulo declarar o alcance efetivo, os alvos vigiados, a atribuição e o restante não vigiado, sem afirmar detecção integral.\nMAJOR-N4: FECHADO — `pacote-revisao.txt:6938-6961,24448-24678` redige `dir_descartavel`, `argv_publico` e o JSON integral nos cinco runners, incluindo exercício comportamental do caso real.\nMAJOR-N5: NAO-FECHADO — a resolução cobre os contornos enumerados, mas `pacote-revisao.txt:26126-26140` documenta formas deliberadas ainda invisíveis e não negadas.\nMAJOR-N6: FECHADO — `pacote-revisao.txt:15157-15223,23025-23346` vincula pedido de julgamento, fonte auto-incluído e hash, recusando o pacote antes da criação quando o objeto falta.\n\nACHADO-A: NAO-FECHADO — `declaracoes-obrigatorias.txt:§5` comprova escrita em `CODEX_HOME` fora das fontes vigiadas, enquanto `pacote-revisao.txt:27879-27886,28026-28033` ainda publica `efeito_externo: nenhum` quando apenas o alcance parcial ficou imóvel.\nACHADO-B: NAO-FECHADO — `declaracoes-obrigatorias.txt:§3` informa que o README continua prometendo codex e kimi, embora o kimi nunca tenha completado uma corrida.\nACHADO-C: NAO-FECHADO — `pacote-revisao.txt:27331-27341,27418-27424,27511-27537` recalcula a aritmética, mas 21% dos bytes permanecem testemunho, nenhuma resposta alternativa foi gravada e uma corrida carece de recibo; não há reprodução independente integral.\nACHADO-D: NAO-FECHADO — `declaracoes-obrigatorias.txt:§3` confirma que o índice da raiz ainda omite os registros P2.1 e P2.2 usados pelos números publicados.\n\nDEFEITO-NOVO: SIM — `08_p2/provedor_assinatura.py:invocar` cria um `mkdtemp` por tentativa e nunca o remove; `06_p1a/tests/test_config_real_p1a39.py:OQueEVigiadoMasNaoEAuditado` introduz ainda um guarda falso que ignora a leitura efetiva de `~/.codex/config.toml`.\n\nMAJOR 06_p1a/escritor_repositorio.py:adoção — o escritor único correto existe apenas isoladamente; o mecanismo operacional continua sendo o defeituoso por sessão, uma falha de integração, não de afirmação ou varredura. FAMILIA: fora-de-ambas\nMAJOR 06_p1a/tests/sentinela_antip2.py:resolução — construções por `%`/`.format`/`join` e imports dinâmicos continuam atravessando a varredura sem negação. FAMILIA: (N)\nMAJOR 08_p2/provedor_assinatura.py:efeito-externo — o recibo afirma `nenhum` apesar do alcance parcial e da escrita conhecida em `CODEX_HOME`. FAMILIA: (F)\nMAJOR 08_p2/medidor.py:reprodutibilidade — a receita recompõe números com insumos testemunhais, mas não permite recontar as respostas alternativas nem a corrida sem recibo; é ausência de evidência bruta. FAMILIA: fora-de-ambas\nMAJOR 08_p2/runner_p2.py:persistência — `relatar(registro)` permanece antes da reverificação e da gravação; qualquer nova falha de saída pode consumir franquia e perder novamente o recibo, uma falha de ordenação. FAMILIA: fora-de-ambas\nMAJOR 06_p1a/tests/test_config_real_p1a39.py:acoplamento — o teste calcula “auditados” apenas por `FONTES`, embora `config_persistida(\"codex\")` leia e mescle `~/.codex/config.toml` em `pacote-revisao.txt:7456-7470`; ele afirma um buraco inexistente sem exercer a interface real. FAMILIA: (F)\nMINOR 08_p2/provedor_assinatura.py:ciclo-de-vida — bloqueante: SIM para aprovação sem ressalvas, porque cada correção cria um diretório chamado descartável, potencialmente com resíduos da tarefa, mas não executa limpeza. É falha de retenção de recursos. FAMILIA: fora-de-ambas\nMINOR README.md:provedores-produtivos — bloqueante: NAO isoladamente, pois é divergência documental de baixa severidade, mas deve restringir a promessa ao que foi medido. FAMILIA: fora-de-ambas\nMINOR README.md:índice-P2 — bloqueante: NAO isoladamente, pois afeta rastreabilidade, não o mecanismo; faltam os registros P2.1/P2.2. FAMILIA: fora-de-ambas\nOBS 08_p2/evidencias:histórico-sem-manifesto — nas nove corridas anteriores à P2.3 não se sabe se houve escrita; é lacuna histórica irrecuperável, não propriedade de guarda. FAMILIA: fora-de-ambas\nOBS 08_p2/medidor.py:tese-central — o acervo mede proxy de bytes, não tokens, e `executor_observado` permanece `None`; o limite é declarado e não pertence às duas famílias. FAMILIA: fora-de-ambas\nVEREDITO: REPROVADO",
+  "stderr_resumo": "Reading additional input from stdin...\nOpenAI Codex v0.145.0\n--------\nworkdir: C:\\Users\\<USUARIO>\\AppData\\Local\\Temp\\p1a4-revisao-codex-lv8pbfcp\nmodel: gpt-5.6-sol\nprovider: openai\napproval: never\nsandbox: read-only\nreasoning effort: high\nreasoning summaries: none\nsession id: 019fcaae-97db-7e63-a355-c80056a83c73\n--------\nuser\nRevise em modo SOMENTE LEITURA o estado atual do laboratorio SSC+. No diretorio atual ha DOIS arquivos, e voce precisa ler OS DOIS POR INTEIRO antes de avaliar:\n  ./pacote-revisao.txt          — o estado sob julgamento\n  ./declaracoes-obrigatorias.txt — sete fatos que o autor do pacote e OBRIGADO a lhe transmitir, varios contra o proprio interesse dele\n\nComece pelas declaracoes. Elas dizem quais achados seguem abertos, o que foi corrigido no mecanismo e nao foi certificado, e o que este acervo NAO mede. Julgar sem le-las e julgar contra premissa falsa.\n\nContexto: a revisao independente da P1-A.3.1 REPROVOU este trabalho com SEIS MAJOR; a revisao da P1-A.3.6 pronunciou-se sobre os seis (NAO-FECHADO nos seis) e abriu SEIS NOVOS. Sao DOZE MAJOR abertos. O pacote que voce recebe e o estado DEPOIS do trabalho das missoes P1-A.3.7, P1-A.3.8 e P1-A.3.9 sobre eles, e depois da fase P2 inteira. Quem corrigiu nao certifica: e voce quem diz se cada um fechou. Uma correcao nao fecha por ter sido feita.\n\nVoce NAO pode escrever nada: responda apenas com a revisao em texto.\n\nSua resposta precisa conter, NESTA ORDEM:\n1. as linhas PROVIDER, MODELO-OBSERVADO, CANAL, PACOTE-SHA256 (compute o SHA-256 de ./pacote-revisao.txt), DECLARACOES-SHA256 (idem para ./declaracoes-obrigatorias.txt) e ESCOPO;\n2. DOZE linhas, uma por MAJOR, exatamente nesta forma:\n   'MAJOR-<id>: FECHADO | NAO-FECHADO — <justificativa apontavel>', com <id> em 1,2,3,4,5,6,N1,N2,N3,N4,N5,N6. Nao funda os pares 3/N3, 6/N5 e 5/N6: sao doze linhas;\n3. QUATRO linhas, uma por achado da P2:\n   'ACHADO-<A|B|C|D>: FECHADO | NAO-FECHADO — <justificativa>';\n4. a linha 'DEFEITO-NOVO: SIM | NAO — <o que, onde>', que responde se as CORRECOES introduziram defeito novo;\n5. os achados, um por linha, prefixados por CRITICAL | MAJOR | MINOR | OBS, com arquivo:tema e descricao curta. CADA achado precisa terminar com a sua FAMILIA, obrigatoriamente, numa destas tres formas:\n   'FAMILIA: (F)' — o guarda AFIRMA a propriedade (docstring, rotulo, lista) em vez de EXERCER a interface real;\n   'FAMILIA: (N)' — classe que a varredura por alcance de linha nao media;\n   'FAMILIA: fora-de-ambas' — nem uma nem outra, com o motivo.\n   Sem a familia o criterio de parada deste repositorio nao pode ser aferido, e o relatorio nao serve para decidir. Para cada MINOR diga tambem se e bloqueante, com motivo. Se nao houver achado num nivel, NAO o invente;\n6. a linha final 'VEREDITO: APROVADO | APROVADO-COM-RESSALVAS | REPROVADO'.\ncodex\nVou começar pelas declarações obrigatórias e só depois ler o pacote integralmente. Em seguida calculo os dois SHA-256 e confronto cada um dos 12 MAJOR e quatro achados P2, sem alterar arquivo algum.\nexec\n\"C:\\\\Program Files\\\\WindowsApps\\\\Microsoft.PowerShell_7.6.4.0_x64__8wekyb3d8bbwe\\\\pwsh.exe\" -Command '$decl = Resolve-Path -LiteralPath '\"'.\\\\declaracoes-obrigatorias.txt'; \"'$text = [System.IO.File]::ReadAllText($decl); $bytes = [System.IO.File]::ReadAllBytes($decl); $sha = [System.Security.Cryptography.SHA256]::Create(); $hash = [System.BitConverter]::ToString($sha.ComputeHash($bytes)).Replace('\"'-','').ToLowerInvariant(); \\\"PATH=\"'$decl\"; \"BYTES=$($bytes.Length)\"; \"CHARS=$($text.Length)\"; \"SHA256=$hash\"; '\"'---BEGIN DECLARACOES---'; \"'$text; '\"'---END DECLARACOES---'\" in C:\\Users\\<USUARIO>\\AppData\\Local\\Temp\\p1a4-revisao-codex-lv8pbfcp\n2026-08-04T02:51:19.950564Z ERROR codex_core::exec: exec error: windows sandbox: orchestrator_helper_launch_failed: setup refresh failed to launch helper: helper=codex-windows-sandbox-setup.exe, cwd=C:\\Users\\<USUARIO>\\AppData\\Local\\Temp\\p1a4-revisao-codex-lv8pbfcp, log=C:\\Users\\<USUARIO>\\.codex\\.sandbox\\sandbox.2026-08-04.log, error=p",
+  "quota_observavel": "nao-exposta-pelo-cli"
+}

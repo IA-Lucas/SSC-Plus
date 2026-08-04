@@ -1,0 +1,67 @@
+{
+  "provider": "kimi",
+  "ts_utc": "20260804T030243Z",
+  "tipo": "revisao-p1a4",
+  "chamadas_de_modelo": 1,
+  "custo_variavel": 0,
+  "rotulo": "assinatura-oauth; UMA chamada; enforcement read-only",
+  "enforcement_read_only": "sem sandbox de filesystem no CLI (nao ha equivalente ao `--sandbox read-only` do codex) e sem plan mode em headless (o CLI recusa `--plan` com `-p`): restricao PARCIAL por `--skills-dir` vazio, sem `-y/--yolo/--auto`; cwd descartavel; e DETECCAO DE ALCANCE DECLARADO por manifesto SHA-256 antes/depois da chamada, sobre duas raizes — a arvore do repositorio (inclusive `locks/` e `.git`) e as fontes de config declaradas (~/.codex/auth.json, ~/.codex/config.toml, ~/.claude/settings.json, ~/.kimi-code/config.toml, ~/.gemini/settings.json, ~/.grok). NAO detecta escrita em todo caminho fora do repositorio e fora das fontes de config declaradas. A mutacao detectada passa por ATRIBUICAO: o lease da sessao operacional tem escritor esperado (o renovador); o que nao tem escritor esperado reprova a corrida",
+  "tier_declarado_no_instante": {
+    "provider_id": "kimi",
+    "tier": "Allegretto",
+    "declarado_por": "proprietario",
+    "declarado_em_utc": "2026-08-04T02:40:33Z",
+    "expira_em_utc": "2026-08-05T02:40:33Z",
+    "valido_no_instante": true
+  },
+  "lock_escritor_unico": {
+    "sessao": "p1a4-ops",
+    "pid_titular": 58184,
+    "fence": 1
+  },
+  "argv_publico": [
+    "C:\\Users\\<USUARIO>/.kimi-code/bin/kimi",
+    "--skills-dir",
+    "C:\\Users\\<USUARIO>\\AppData\\Local\\Temp\\p1a4-skills-vazio-kimi-zp5w5yp0",
+    "-p",
+    "<PROMPT>"
+  ],
+  "prompt_sha256": "2b815ba1845013fbe88a56acee10d572bcc9c83d9e0d2662ea36e936a0902499",
+  "pacote_sha256": "a36471a34284cbcfc82efb669b3235fb57fd3dccc0aae4b024d0e9d5ca052c27",
+  "pacote_bytes_entregues": 1312291,
+  "declaracoes_sha256": "f31ad1b1af582628da84cb5de6629cbe891ddbe9f7639fb9d0323388a1f74be0",
+  "declaracoes_bytes_entregues": 7602,
+  "dir_descartavel": "C:\\Users\\<USUARIO>\\AppData\\Local\\Temp\\p1a4-revisao-kimi-5kkz7_9l",
+  "dir_descartavel_arquivos_restantes": [
+    "declaracoes-obrigatorias.txt",
+    "pacote-revisao.txt"
+  ],
+  "contencao": {
+    "medida": "manifesto SHA-256 antes/depois das raizes vigiadas, com atribuicao separada da deteccao",
+    "raizes_vigiadas": [
+      "repositorio (toda a arvore sob RAIZ, inclusive locks/ e .git)",
+      "fora: ~/.codex/auth.json",
+      "fora: ~/.codex/config.toml",
+      "fora: ~/.claude/settings.json",
+      "fora: ~/.kimi-code/config.toml",
+      "fora: ~/.gemini/settings.json",
+      "fora: ~/.grok"
+    ],
+    "nao_vigiado": "todo caminho fora do repositorio e fora das fontes de config declaradas",
+    "arquivos_no_manifesto": 951,
+    "mutacoes_detectadas": [],
+    "mutacoes_atribuidas_ao_renovador": [],
+    "mutacoes_fora_do_descartavel": [],
+    "violada": false
+  },
+  "lock_verificado_antes_da_persistencia": true,
+  "env_vars_removidas_nomes": [
+    "NVIDIA_API_KEY"
+  ],
+  "returncode": 1,
+  "duracao_s": 5.6,
+  "modelo_efetivo_no_banner": "DESCONHECIDO (nao exposto pelo CLI)",
+  "resposta": "",
+  "stderr_resumo": "error: failed to run prompt: provider.api_error: 403 You've reached your usage limit for this billing cycle. Your quota will be refreshed in the next cycle. To continue now, purchase extra usage or upgrade your plan: https://www.kimi.com/code/#pricing\nSee log: C:/Users/<USUARIO>/.kimi-code/logs/kimi-code.log",
+  "quota_observavel": "nao-exposta-pelo-cli"
+}
