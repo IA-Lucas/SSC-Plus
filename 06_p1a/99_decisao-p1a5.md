@@ -60,8 +60,21 @@ por fazer.
    campo-sentinela e pergunta ao leitor. O buraco era **inexistente**, e
    `VIGIADO_MAS_NAO_AUDITADO` fica **vazio por medicao**.
 10. Suites: **344+256** e **894+1217** na abertura, **344+256** e
-    **914+1241** no fechamento. Prova central **18/20**. Custo variavel
-    **0**; sem tag e sem remoto; lease `p1a5-ops` vivo do inicio ao fim.
+    **914+1241** no fechamento. Prova central **18 assercoes, 20
+    eventos**. Custo variavel **0**; sem tag e sem remoto; lease
+    `p1a5-ops` vivo do inicio ao fim.
+
+> **Correcao desta linha, feita depois e declarada.** Ate 2026-08-04 ela
+> dizia *"Prova central **18/20**"*. Era erro **desta** missao, e so
+> desta linha: a §1 e a §1.2 deste mesmo documento sempre registraram o
+> par correto. `18` e `20` sao **duas grandezas** — assercoes e eventos
+> —, e escreve-las como fracao inventa um denominador e faz ler como
+> *"duas assercoes falhando"*. Medido na apuracao: o fonte
+> `05_p0/cenarios/prova_central.py` tem **um unico commit em toda a
+> historia** (`33bc963`) e o blob no HEAD e byte a byte igual ao da
+> baseline — **nenhuma assercao apareceu**. A regra que impede a
+> repeticao esta no `CLAUDE.md` da raiz. Nenhum outro documento foi
+> tocado: `18/20` nunca existiu fora daqui.
 
 ## 1. Identidade e pre-condicoes (medidas na abertura)
 

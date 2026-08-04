@@ -186,6 +186,31 @@ esta solta. Lista se classifica mutando **CADA membro isoladamente**:
 (nenhum prende). `TERMINAIS_WORK_UNIT` era meio solta e foi lida como
 solta porque so o ultimo membro havia sido mutado.
 
+### Duas grandezas nunca viram fracao (P1-A.5.1)
+
+**Assercoes e eventos sao grandezas DIFERENTES, e nao se escrevem como
+fracao.** A prova central imprime `18 assercoes, 20 eventos`. Escrever
+**`18/20`** inventa um denominador que nao existe e faz o par ler como
+*"vinte assercoes, duas falhando"*.
+
+A forma correta e o **par**: `18 assercoes, 20 eventos`. A fracao so vale
+entre a mesma grandeza — `18/18 assercoes` significa *dezoito de dezoito
+passaram*, e essa forma esta certa e e a que dezoito documentos do acervo
+usam.
+
+**Fundamento, medido e nao suposto:** `18/20` apareceu **uma unica vez em
+todo o acervo**, no sumario da P1-A.5, e o **mesmo documento** registrava
+o par correto catorze linhas abaixo. A apuracao mediu que
+`05_p0/cenarios/prova_central.py` tem **um so commit em toda a historia**
+(`33bc963`) e blob identico ao da baseline: **nenhuma assercao apareceu**.
+Um numero que muda de notacao sem explicacao vira numero herdado, e este
+repositorio ja pagou tres vezes por isso.
+
+**A regra geral, que vale alem deste par:** ao registrar duas medicoes de
+naturezas distintas, escreva **as duas com o nome de cada uma**. Se a
+notacao economizar um caractere e custar uma leitura errada, ela custou
+mais do que economizou.
+
 ## QUEM CORRIGE NAO CERTIFICA
 
 Nenhuma missao fecha o proprio conserto. Um achado so fecha quando um
