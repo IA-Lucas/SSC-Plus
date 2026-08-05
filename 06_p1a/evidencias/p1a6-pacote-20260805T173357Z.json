@@ -1,0 +1,80 @@
+{
+  "tipo": "pacote-e-ancoragem-p1a6",
+  "gerado_em_utc": "2026-08-05T17:33:57Z",
+  "pacote": {
+    "gerador": "06_p1a/evidencias/pacote_p1a37.py — reusado sem uma linha alterada",
+    "base": "3f24085",
+    "base_razao": "ALVO do ultimo pacote efetivamente julgado (P1-A.4)",
+    "alvo": "b6f6048",
+    "commits_entre_base_e_alvo": 12,
+    "sha256": "a3c8e07484b1cc6d00b94f5a75eb00cb108bcbf8bd94aeefd25a4925b1865e3f",
+    "bytes": 141301,
+    "py_julgados_por_diff": 21,
+    "corpo_versionado": false,
+    "corpo_versionado_razao": "regeneravel byte a byte a partir de (BASE, ALVO) por gerador cuja determinacao esta provada abaixo; versionar 141 KB reproduziveis seria duplicar o banco de objetos"
+  },
+  "determinismo": {
+    "metodo": "dois CLONES independentes (`git clone --no-hardlinks`), ambos em checkout de b6f6048, gerador rodado em cada um",
+    "sha256_identicos": true,
+    "bytes_identicos": true
+  },
+  "prova_de_ancoragem": {
+    "defeito_que_ela_corrige": "P1-A.5 §5.6 — a prova da P1-A.4 passou VAZIA: os arquivos escolhidos nao existiam no commit, o `>>` falhou e o `cmp` passou verde sobre NENHUMA mutacao",
+    "degrau_acrescentado": "hashear o alvo ANTES e DEPOIS e EXIGIR que mudou, antes de conferir que o hash do pacote nao mudou",
+    "mutacao_ocorreu_na_arvore_viva": false,
+    "onde": "clone descartavel; a arvore vigiada nao foi tocada",
+    "por_que_sem_MUTANTE_ATIVO": "o registro existe para que a retomada apos queda ache mutante esquecido na arvore VIGIADA; nenhum mutante a tocou",
+    "alvos": [
+      {
+        "caminho": "06_p1a/escritor_repositorio.py",
+        "existe": true,
+        "julgado_pelo_pacote": true,
+        "mutacao_comprovada": true,
+        "pacote_inalterado": true
+      },
+      {
+        "caminho": "06_p1a/evidencias/contencao.py",
+        "existe": true,
+        "julgado_pelo_pacote": true,
+        "mutacao_comprovada": true,
+        "pacote_inalterado": true
+      },
+      {
+        "caminho": "08_p2/provedor_assinatura.py",
+        "existe": true,
+        "julgado_pelo_pacote": true,
+        "mutacao_comprovada": true,
+        "pacote_inalterado": true
+      },
+      {
+        "caminho": "06_p1a/99_decisao-p1a5.md",
+        "existe": true,
+        "julgado_pelo_pacote": true,
+        "mutacao_comprovada": true,
+        "pacote_inalterado": true,
+        "nota": "entra so como SHA-256 do blob, nao como conteudo"
+      }
+    ],
+    "veredito": "VALIDA E VERDE"
+  },
+  "varredura_de_conteudo_proibido": {
+    "pii_nome_usuario_forma_longa": 0,
+    "pii_nome_usuario_forma_8_3": 0,
+    "prefixo_de_caminho_local": 0,
+    "uuid": 0,
+    "credencial": 0,
+    "hex_40_encontrados": "SHA-1 de BASE, ALVO e tree — a propria ancora",
+    "hex_64_encontrados": "SHA-256 de blob — exigidos por desenho",
+    "timestamp_iso_encontrados": 1,
+    "timestamp_iso_nota": "dentro de comentario do codigo sob revisao, nao injetado pelo gerador"
+  },
+  "enviado_a_revisor": false,
+  "enviado_a_revisor_razao": "portao de abertura BLOCKED: sem tier declarado nao ha trilha SHADOW_ELIGIBLE, e chamar revisor seria operar fora do envelope economico autorizado",
+  "custo_variavel": 0,
+  "chamadas_de_modelo": 0,
+  "lock_escritor_unico": {
+    "sessao": "p1a6-ops",
+    "pid_titular": 93396,
+    "fence": 10
+  }
+}

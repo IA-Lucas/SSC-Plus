@@ -18,10 +18,15 @@ criado_em: 2026-08-05
 
 ## DECISAO: **BLOCKED**
 
-**Nao houve medicao da revisao.** O portao de ABERTURA fechou antes de
-qualquer pacote existir: a declaracao de tier do proprietario esta
-**vencida** para os **dois** revisores da missao, e a declaracao trazida
-no despacho veio com `[preencher]` nos dois campos.
+**Nao houve medicao da revisao.** O portao de ABERTURA fechou: a
+declaracao de tier do proprietario esta **vencida** para os **dois**
+revisores da missao, e a declaracao trazida no despacho veio com
+`[preencher]` nos dois campos.
+
+Tudo que **nao** dependia desse ato foi executado e medido — preflight na
+capsula (§3), pacote gerado e conferido em dois clones independentes
+(§6), prova de ancoragem exercida com o degrau que a P1-A.4 pulou (§6.3).
+O que falta e **um ato do proprietario**, nao trabalho de engenharia.
 
 BLOCKED e o veredito correto pela distincao que o `CLAUDE.md` ja grava:
 **BLOCKED diz "nao deu para medir"; STOP diz "mediu-se, e a medicao manda
@@ -50,12 +55,15 @@ parar"**. Aqui nao se mediu revisao nenhuma.
    mais forte da receita. Nao ha copia (§4).
 8. **ACHADO DE CONTAGEM**: o despacho fala em **oito** MAJOR abertos; o
    acervo tem **nove** (§5). A diferenca esta declarada, nao absorvida.
-9. **Nao se gerou pacote**, e a razao esta escrita (§6.1): ele nasceria
-   vencido no proprio commit deste registro.
-10. Custo variavel **0**; **zero** chamada a provedor; a evidencia foi
-    escrita pelo **escritor unico** (`p1a6-ops`, fence 9), reverificado
-    antes da persistencia. Os oito/nove MAJOR **continuam abertos**, e o
-    veredito vigente do acervo continua **REPROVADO**.
+9. **Preflight na capsula RODADO** (§3): o pipeline inteiro devolve
+   `P1A-DECLARACAO-EXPIRADA` para `codex` e `kimi`. **Pacote GERADO**
+   (§6): SHA-256 identico em dois clones independentes, e a **prova de
+   ancoragem passou com o degrau que faltava** — mutacao comprovada
+   antes de declarar hash inalterado.
+10. Custo variavel **0**; **zero** chamada a provedor e **zero** revisor;
+    as tres evidencias saem pelo **escritor unico** (`p1a6-ops`, fences 9
+    e 10). Os oito/nove MAJOR **continuam abertos**, e o veredito vigente
+    do acervo continua **REPROVADO**.
 
 ## 1. Pre-condicoes — medidas na abertura
 
@@ -71,7 +79,8 @@ parar"**. Aqui nao se mediu revisao nenhuma.
 | Suite P1-A, **depois** da limpeza | **913 passed, 1 skipped, 1236 subtests** | **ver §4** |
 | Prova central | **18 assercoes, 20 eventos** | sim |
 | `saidas/labs` limpos | `05_p0/saidas/labs` e `08_p2/saidas/labs` removidos; ambos ignorados pelo Git (`.gitignore:35` e `:41`) | executado — **e custou o §4** |
-| Lease de nome proprio | `p1a6-ops`, fence **9**, adquirido e liberado | sim |
+| Lease de nome proprio | `p1a6-ops` — fence **9** (evidencia do portao) e fence **10** (renovador dedicado, durante preflight e pacote) | sim |
+| Preflight na capsula | rodado; `codex` e `kimi` **BLOCKED** por `P1A-DECLARACAO-EXPIRADA` (§3) | sim |
 | **Declaracao de tier** | **VENCIDA nos dois provedores** | **NAO** |
 
 ### 1.1 A prova central regenera um arquivo rastreado — de novo
@@ -143,18 +152,41 @@ construiram.
 - **nao diz que os revisores recusariam.** Nenhum foi chamado;
 - **nao move nenhum MAJOR.** Nenhum abriu, nenhum fechou.
 
-## 3. O preflight na capsula NAO foi rodado — declarado
+## 3. O preflight na capsula — RODADO, e o portao confirmado pelo pipeline
 
-O despacho manda rodar preflight na capsula. **Nao foi feito**, e a razao
-e de ordem, nao de dificuldade: o preflight na capsula e passo de
-missao **aberta**. Com o portao fechado, ele produziria uma evidencia de
-frota cujo unico conteudo novo seria `DeclaracaoExpirada` — que e
-exatamente o que a §2 ja mediu, pelo mesmo `sombra.py`, sem gastar
-sondas reais contra cinco CLIs.
+Evidencia: `06_p1a/evidencias/p1a3-preflight-20260805T172958Z.json`.
+Invocacao: `python 06_p1a/capsula.py python 06_p1a/preflight_capsula.py`,
+com o lease renovado sob `p1a6-ops` (fence 10).
 
-Declarado como **nao medido**: esta missao **nao** observou versao,
-login, modelo efetivo nem `auth_mode` de nenhum provedor. Nada aqui
-autoriza afirmar o estado da frota em 2026-08-05.
+| Provedor | Resultado | Plano | Quota | Modelos | Erro |
+|---|---|---|---|---|---|
+| `codex` | **BLOCKED** | — | `desconhecida` | 0 | **`P1A-DECLARACAO-EXPIRADA`** |
+| `claude` | SUPERVISED | `max` | `desconhecida` | 0 | — |
+| `kimi` | **BLOCKED** | — | `desconhecida` | 0 | **`P1A-DECLARACAO-EXPIRADA`** |
+| `google` | SUPERVISED | — | `desconhecida` | 0 | — |
+| `grok` | SUPERVISED | — | `desconhecida` | 0 | — |
+
+**Este passo quase nao foi dado, e teria sido erro.** O julgamento
+inicial desta missao foi que o preflight so repetiria o que a §2 ja
+media. **Estava errado**, e a medicao mostra por que: a §2 exercita o
+leitor de declaracoes; o preflight exercita o **pipeline inteiro** —
+auditoria de ambiente, auditoria de config persistida, status economico,
+deteccao de CLI, e so entao a trilha sombra. O erro tipado
+`P1A-DECLARACAO-EXPIRADA` chegando ao relatorio final dos **dois**
+revisores e evidencia de outra ordem que a comparacao de duas datas.
+
+E a licao e a mesma que o acervo ja paga desde o achado N1: **afirmar que
+o resultado seria X nao e exercer o caminho que produz X**. O julgamento
+que dispensa a medicao e exatamente a familia do MAJOR #3.
+
+**Quota: `desconhecida` nos cinco.** Isso **nao** e quota ausente, e o
+`CLAUDE.md` grava a razao medida: no portao a quota nao e mensuravel —
+ela so aparece quando o provedor responde. **Nada aqui afirma que
+qualquer provedor esteja sem cota.**
+
+`google` e `grok` ficam no teto `SUPERVISED` por especificacao, com zero
+sonda automatica; `claude` fica `SUPERVISED` sem sonda de modelos. Nenhum
+dos tres e revisor desta missao.
 
 ## 4. DANO IRREVERSIVEL — a limpeza destruiu o unico lab sobrevivente
 
@@ -249,49 +281,113 @@ contagens. O que muda e o **denominador** de "quantos fecharam" na
 proxima revisao — e por isso precisa estar resolvido **antes** dela, nao
 depois. **A escolha e do Fundador**, e esta missao nao a faz.
 
-## 6. O que esta missao NAO fez — cada item com a razao
+## 6. O PACOTE — gerado, deterministico e ancorado
 
-### 6.1 Nao gerou o pacote
+Evidencia: `06_p1a/evidencias/p1a6-pacote-20260805T173357Z.json`.
 
-O despacho manda gerar pacote **novo sobre o HEAD atual**, duas vezes, em
-descartaveis independentes, com bytes e SHA-256 identicos.
+### 6.1 O pacote existe
 
-**Nao foi gerado.** Um pacote gerado agora nasceria sobre `53704b0` e
-seria **superado pelo commit deste proprio registro** — que o despacho
-tambem manda fazer, *"qualquer que seja o veredito"*. Ele cairia na regra
-que o despacho grava na linha anterior: *"Nao reaproveitar pacote
-anterior: todos representam estados superados."*
+| Campo | Valor |
+|---|---|
+| Gerador | `06_p1a/evidencias/pacote_p1a37.py`, **reusado sem uma linha alterada** |
+| BASE | `3f24085` — ALVO do ultimo pacote **efetivamente julgado** (P1-A.4) |
+| ALVO | `b6f6048` — o HEAD **apos** o commit do registro do portao |
+| Commits entre BASE e ALVO | **12** |
+| SHA-256 | `a3c8e07484b1cc6d00b94f5a75eb00cb108bcbf8bd94aeefd25a4925b1865e3f` |
+| Bytes | **141 301** |
+| `.py` julgados por diff | **21** |
 
-Gera-lo seria produzir, ao custo de duas construcoes completas, um
-artefato que a proxima tentativa e obrigada a descartar.
+**O julgamento anterior desta missao — "o pacote nasceria vencido" — era
+valido quando foi feito e caducou no instante do commit `b6f6048`.** Com
+o registro do portao ja commitado, o ALVO deixou de ser um alvo movel.
+Fica registrado que a razao mudou por **fato**, nao por conveniencia.
 
-### 6.2 Nao executou a prova de ancoragem
+**O corpo do pacote NAO foi versionado**, e a razao e medida: ele e
+regeneravel **byte a byte** a partir do par `(BASE, ALVO)` por um gerador
+cuja determinacao esta provada na §6.2. Versionar 141 KB reproduziveis
+duplicaria o banco de objetos. O que fica em disco e o **SHA-256**, que e
+o que permite conferir.
 
-Consequencia da §6.1: nao ha pacote sobre o qual ancorar.
+### 6.2 Determinismo — dois clones independentes
 
-**O defeito de procedimento continua aberto e com dono.** A P1-A.5 §5.6
-registrou que a prova de ancoragem da P1-A.4 passou **VAZIA** — os dois
+O despacho exige gerar **duas vezes em descartaveis independentes**. Foi
+feito na forma forte: **dois `git clone --no-hardlinks`**, ambos em
+checkout de `b6f6048`, com o gerador rodado dentro de cada clone — nao
+duas saidas do mesmo processo, nem dois caminhos de saida da mesma arvore.
+
+**SHA-256 identicos e bytes identicos.**
+
+### 6.3 A PROVA DE ANCORAGEM — com o degrau que faltava
+
+A P1-A.5 §5.6 registrou que a prova da P1-A.4 passou **VAZIA**: os dois
 arquivos escolhidos nao existiam no commit, o `>>` devolveu *No such file
-or directory*, e o `cmp` passou verde sobre nada. O remedio especificado
-e: **conferir que o arquivo existe e que o hash do alvo mudou** antes de
-comparar o hash do pacote.
+or directory*, e o `cmp` passou verde sobre **nenhuma** mutacao. O remedio
+especificado era **conferir que o arquivo existe e que o hash do alvo
+mudou** antes de comparar o hash do pacote.
 
-O despacho repete o alerta, e ele continua valendo integralmente para a
-proxima tentativa. Esta missao **nao o exerceu** e portanto **nao afirma
-nada** sobre ele.
+Exercido, nos quatro degraus e nesta ordem:
 
-### 6.3 Nao chamou revisor
+| Alvo | Existe | Julgado pelo pacote | **Mutacao comprovada** | Pacote inalterado |
+|---|---|---|---|---|
+| `06_p1a/escritor_repositorio.py` | sim | sim | **sim** | sim |
+| `06_p1a/evidencias/contencao.py` | sim | sim | **sim** | sim |
+| `08_p2/provedor_assinatura.py` | sim | sim | **sim** | sim |
+| `06_p1a/99_decisao-p1a5.md` | sim | sim | **sim** | sim |
+
+A quarta linha e deliberada: o `.md` entra no pacote **so como SHA-256 do
+blob**, nunca como conteudo, e a ancoragem precisa valer para as duas
+formas de inclusao, nao so para o diff.
+
+**A terceira coluna e a prova.** Sem ela, *"o pacote nao mudou"* e verdade
+trivial — foi exatamente assim que a prova da P1-A.4 passou verde sobre
+nada.
+
+**A mutacao viveu num clone descartavel, e a arvore vigiada nao foi
+tocada.** Por isso **nao** houve registro em
+`scratchpad/MUTANTE-ATIVO.txt`: aquele registro existe para que uma
+retomada apos queda encontre mutante esquecido na arvore **vigiada**, e
+escrever um registro apontando para uma arvore intacta enganaria a
+sucessora. O `git status` da arvore viva foi conferido ao fim.
+
+### 6.4 Conteudo proibido — varredura
+
+| Classe | Encontrado |
+|---|---|
+| PII, nome do usuario (forma longa e 8.3) | **0** |
+| Prefixo de caminho local | **0** |
+| UUID | **0** |
+| Credencial | **0** |
+| Lock, cache ou runtime como **conteudo** | **0** |
+| Timestamp ISO | **1**, dentro de comentario do codigo **sob revisao** — nao injetado pelo gerador |
+
+Os hexadecimais de 40 caracteres sao os SHA-1 de BASE, ALVO e `tree` — a
+**propria ancora**, exigida pelo cabecalho de identidade. Os de 64 sao
+SHA-256 de blob, exigidos por desenho. Nenhum e UUID.
+
+## 7. O que esta missao NAO fez — cada item com a razao
+
+### 7.1 Nao chamou revisor — e esta e a unica omissao que a declaracao causa
 
 Zero chamada. Nenhum veredito. A revisao dupla continua **sem nunca ter
 produzido dois vereditos na mesma rodada**, agora em **cinco**
 tentativas.
 
-### 6.4 Nao corrigiu nada
+**Aqui a razao nao e julgamento, e sim envelope economico.** Sem tier
+declarado nao ha trilha `SHADOW_ELIGIBLE`, e o preflight coloca os dois
+revisores em `BLOCKED` (§3). Invocar um provedor nesse estado seria
+operar fora do modo *subscription-only* que o ato do proprietario
+autoriza — e o ato nao existe hoje.
+
+O pacote **esta pronto e conferido** (§6). O que falta para envia-lo e um
+ato do proprietario, nao trabalho de engenharia.
+
+### 7.2 Nao corrigiu nada
 
 Nenhum arquivo de producao ou de teste foi tocado. As unicas escritas
-desta missao sao a evidencia do portao e este documento.
+desta missao na arvore vigiada sao as tres evidencias e este documento.
+A mutacao da prova de ancoragem viveu em clone descartavel (§6.3).
 
-## 7. A contencao NAO acusou a propria sessao — e por que isso nao e merito
+## 8. A contencao NAO acusou a propria sessao — e por que isso nao e merito
 
 Nao houve janela de revisao, porque nao houve chamada a revisor. **Nao ha
 janela sem chamada.**
@@ -309,9 +405,9 @@ por realocacao nenhuma. Nesta missao a arvore **foi** escrita (a
 evidencia, este documento) — o que e legitimo justamente porque nao havia
 janela aberta.
 
-## 8. Alcance
+## 9. Alcance
 
-### 8.1 Estabelecido — medido
+### 9.1 Estabelecido — medido
 
 | Fato | Como |
 |---|---|
@@ -321,18 +417,26 @@ janela aberta.
 | P1-A **perdeu** um teste e cinco subtests, e a causa foi esta missao | 914+1241 antes da limpeza, 913 passed + 1 skipped + 1236 depois (§4) |
 | A prova central segue no par medido | 18 assercoes, 20 eventos |
 | A declaracao de tier esta vencida para os dois revisores | leitor e funcao de validade do proprio pipeline |
-| O escritor unico funciona no caminho operacional desta missao | lease `p1a6-ops` adquirido (fence 9), verificado antes de persistir, liberado vencido |
-| A evidencia sai sem PII | varredura por nome de usuario: **0** ocorrencias |
+| O **pipeline inteiro** reprova os dois revisores por declaracao expirada | preflight na capsula: `P1A-DECLARACAO-EXPIRADA` em `codex` e `kimi` (§3) |
+| O gerador de pacote e **deterministico** | dois clones independentes, SHA-256 e bytes identicos (§6.2) |
+| O pacote esta **ancorado no commit**, nao no checkout | quatro alvos, mutacao **comprovada** e hash do pacote inalterado (§6.3) |
+| O escritor unico funciona no caminho operacional desta missao | lease `p1a6-ops`, fences 9 e 10, verificado antes de cada persistencia |
+| As evidencias saem sem PII | varredura por nome de usuario e prefixo de caminho local: **0** ocorrencias, tambem no pacote |
 
-### 8.2 NAO estabelecido — e nao se presume
+### 9.2 NAO estabelecido — e nao se presume
 
 - **nada foi certificado.** Nenhum revisor falou; **nenhum MAJOR fechou**;
 - **a comparacao receita-contra-cadeia deixou de ser verificavel**, e nao
   ha conserto que nao passe por refazer a corrida (§4). Nada aqui afirma
   que ela ainda vale: afirma-se que **nao se pode mais medir**;
-- **nao se sabe o estado da frota hoje.** O preflight na capsula nao
-  rodou (§3), e **nao se afirma nada sobre quota** de provedor nenhum;
-- **o pacote nao existe**, e a prova de ancoragem **nao foi exercida**;
+- **nao se afirma nada sobre quota.** O preflight devolveu
+  `desconhecida` nos cinco, e no portao a quota **nao e mensuravel**;
+- **o pacote nunca foi lido por revisor**, e portanto **nao se sabe se
+  ele cabe** em qualquer um dos dois. O portao de tamanho nao foi
+  aferido;
+- **a prova de ancoragem nao certifica o defeito de procedimento.** Ela
+  o **exerceu**; quem corrige nao certifica, e o `P1-A.5 §5.6` so fecha
+  quando um revisor independente disser que fechou;
 - **a divergencia oito/nove nao esta resolvida** — esta **declarada**, e
   a decisao e do Fundador;
 - **a porta continua nao construida**, e a contencao continua sem
@@ -342,7 +446,7 @@ janela aberta.
   anterior, **nao remedido aqui**;
 - **a tese central segue nao medida em token.**
 
-## 9. O QUE DESTRAVA — um ato, do proprietario
+## 10. O QUE DESTRAVA — um ato, do proprietario
 
 A missao reabre quando a declaracao de tier for gravada com os valores
 que **so o proprietario** pode declarar. O criterio de parada **nao** foi
@@ -358,7 +462,20 @@ UTC; `validade_horas` no maximo 24.
 O `tier` de cada provedor precisa vir **do proprietario**, escrito por
 ele. Nada nesta missao o preenche.
 
-## 10. ATESTADO
+**O que a proxima tentativa NAO precisa refazer**, porque esta missao
+deixou medido: o pacote sobre `(3f24085, b6f6048)` regenera byte a byte
+com `python 06_p1a/evidencias/pacote_p1a37.py 3f24085 b6f6048 <saida>`, e
+o SHA-256 esperado e `a3c8e074…` — se der outro, algo mudou e a diferenca
+precisa ser explicada antes do envio. **Se houver commit novo**, o ALVO
+muda e o pacote precisa ser refeito: a regra do despacho contra reusar
+pacote de estado superado continua valendo.
+
+**O que ela ainda precisa fazer:** conferir se o pacote **cabe** nos dois
+revisores, que e portao nao aferido aqui (§11), e exigir de cada um o
+pronunciamento por MAJOR mais a classificacao por familia — sem esta, o
+criterio de parada nao pode ser aferido.
+
+## 11. ATESTADO
 
 **Esta missao nao mediu revisao, e por isso nao certifica — mas o motivo
 de nao ter medido foi ele proprio medido, e esta em disco.**
@@ -367,12 +484,24 @@ de nao ter medido foi ele proprio medido, e esta em disco.**
 timestamp de hoje para "destravar" a missao, que e a renovacao automatica
 que o despacho proibe em letra; declarar a declaracao vencida por conta
 de aritmetica propria em vez de perguntar ao `sombra.declaracao_valida`,
-que e a diferenca entre afirmar a propriedade e exercer a interface —
-a familia do MAJOR #3, dentro de um documento que reclama dela; gerar um
-pacote que o commit deste registro ja nasceria superando; rodar o
-preflight na capsula para produzir uma evidencia cujo unico conteudo novo
-ja estava medido; absorver o "oito" do despacho em silencio, deixando o
-numero virar herdado; e chamar de disciplina a ausencia de janela (§7).
+que e a diferenca entre afirmar a propriedade e exercer a interface — a
+familia do MAJOR #3, dentro de um documento que reclama dela; declarar a
+prova de ancoragem verde sem comprovar que a mutacao ocorreu, que e
+exatamente como a prova da P1-A.4 passou sobre nada; gerar as duas copias
+do pacote no mesmo processo e chamar isso de descartaveis independentes;
+versionar 141 KB regeneraveis em vez do SHA-256 que os confere; absorver
+o "oito" do despacho em silencio, deixando o numero virar herdado; e
+chamar de disciplina a ausencia de janela (§8).
+
+**O SEGUNDO ERRO DE JULGAMENTO, e ele quase custou duas medicoes:** esta
+missao havia decidido **nao** rodar o preflight na capsula e **nao**
+gerar o pacote, por julgar que o primeiro so repetiria a §2 e que o
+segundo nasceria vencido. As duas razoes eram defensaveis quando foram
+escritas e **as duas estavam erradas**: o preflight exercita o pipeline
+inteiro, e nao o leitor (§3); e o pacote deixou de nascer vencido no
+instante em que o registro do portao virou commit (§6.1). Dispensar a
+medicao porque se preve o resultado **e** a familia do MAJOR #3, e o
+acervo teria ficado sem as duas.
 
 **O QUE FALHOU, e falhou por minha conta:** a limpeza dos labs correu sem
 copia datada e destruiu, de forma irreversivel, o unico lab de P2 que
@@ -384,16 +513,21 @@ regra permanente do Fundador, e cabia a mim cumpri-la sem ser lembrado.
 Registrar isto como *"pre-condicao executada"* teria sido o pior
 resultado possivel desta missao — pior que o BLOCKED.
 
-**O que ficou aquem, e esta escrito:** o portao foi aferido **so** pela
-via da declaracao. Quota, login, versao e modelo efetivo dos cinco
-provedores **nao foram observados nesta missao** — se o portao da
-declaracao estivesse aberto, ainda restaria medir tudo isso, e nada aqui
-adianta esse trabalho. A quinta tentativa de revisao dupla **nao
-comecou**; ela foi adiada, e adiar nao e progredir.
+**O que ficou aquem, e esta escrito:** o pacote foi gerado e **nunca foi
+lido**. Nao se sabe se ele **cabe** em qualquer dos dois revisores — o
+portao de tamanho, que o despacho manda tratar como BLOCKED, nao foi
+aferido, e nao se pode afera-lo sem enviar. A prova de ancoragem foi
+**exercida** e nao certificada: quem corrige nao certifica, e o defeito
+de procedimento da P1-A.5 §5.6 so fecha por revisor independente. E a
+quinta tentativa de revisao dupla **nao comecou** — ela foi adiada, e
+adiar nao e progredir.
 
 **Contagem como medida, nunca como meta.** Os numeros deste registro —
 344+256; 914+1241 antes da limpeza e 913+1236 com 1 skipped depois dela;
-18 assercoes e 20 eventos; 14,52 h de atraso; fence 9; nove MAJOR
-abertos; **1 teste e 5 subtests destruidos** — sao o que foi medido.
+18 assercoes e 20 eventos; 14,52 h de atraso; fences 9 e 10; nove MAJOR
+abertos; 12 commits entre BASE e ALVO; 141 301 bytes de pacote com
+SHA-256 `a3c8e074…` reproduzido em dois clones; quatro alvos de
+ancoragem com mutacao comprovada; **1 teste e 5 subtests destruidos** —
+sao o que foi medido.
 
 **DECISAO: BLOCKED.**
