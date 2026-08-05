@@ -363,9 +363,14 @@ tudo" e "cobri tudo e disse o que joguei fora".
 > num blob **inalcancavel**, e o clone do bundle prova que ele **nao
 > viaja**.
 >
-> **Peso que sobe, ja incluido o commit desta ordem: 1,548 MiB
-> (1.623.609 B), 149 commits, 364 arquivos rastreados, 612 blobs, zero
-> inalcancaveis** (§12; antes desta ordem eram 1,526 MiB e 361 arquivos).
+> **Peso que sobe, ja incluidos os dois commits desta ordem: 1,551 MiB
+> (1.626.159 B), 150 commits, 364 arquivos rastreados, 613 blobs, zero
+> inalcancaveis** — medido em `43577de`, o ultimo commit desta ordem.
+> Antes dela: 1,526 MiB, 148 commits, 361 arquivos. **A regressao e
+> conhecida e fica declarada:** cada commit muda o proprio numero que ele
+> registra, e o unico jeito de fecha-la seria nao registrar nada. O que
+> vale para a decisao e a ordem de grandeza — **um MiB e meio** —, nao o
+> ultimo digito.
 >
 > As tres cegueiras que sobrevivem a esta varredura estao na §7, linhas
 > 6, 7 e 8, e nenhuma delas se resolve por leitura: exigem instrumento
