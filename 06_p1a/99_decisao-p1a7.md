@@ -363,16 +363,65 @@ tudo" e "cobri tudo e disse o que joguei fora".
 > num blob **inalcancavel**, e o clone do bundle prova que ele **nao
 > viaja**.
 >
-> **Peso que sobe: 1,53 MiB em 1.290 objetos, 148 commits, 361 arquivos
-> rastreados.**
+> **Peso que sobe, ja incluido o commit desta ordem: 1,548 MiB
+> (1.623.609 B), 149 commits, 364 arquivos rastreados, 612 blobs, zero
+> inalcancaveis** (§12; antes desta ordem eram 1,526 MiB e 361 arquivos).
 >
 > As tres cegueiras que sobrevivem a esta varredura estao na §7, linhas
 > 6, 7 e 8, e nenhuma delas se resolve por leitura: exigem instrumento
 > que esta ordem nao construiu.
 
+## 12. O PESO FINAL, MEDIDO DEPOIS DO COMMIT — e o efeito colateral que a propria ordem produziu
+
+A §8 mediu `1f45fdd`. Esta secao mede `f4399e4`, o commit desta ordem, e
+so pode existir depois dele.
+
+| Grandeza | Em `1f45fdd` | Em `f4399e4` | Delta |
+|---|---|---|---|
+| Arquivos rastreados em HEAD | 361 | **364** | +3 |
+| Bytes da arvore de HEAD | 4.011.134 | **4.110.113** = **3,920 MB** | +98.979 B |
+| Blobs em toda a historia | 617 | **620** | +3 |
+| **Carga do push** | 1.600.613 B | **1.623.609 B** = **1,548 MiB** | **+22.996 B** |
+| Blobs na carga (inalcancaveis) | 609 (0) | **612 (0)** | +3 |
+
+**Os tres arquivos custam 98.979 bytes na arvore e 22.996 bytes na carga
+— 22 KiB.** O empacotamento absorve os outros 76 KB porque o JSON
+reduzido e texto repetitivo. **O peso do push subiu 1,4%.**
+
+### O efeito colateral, medido e nao escondido
+
+A varredura, ao ser versionada, **virou a maior fonte de casamentos do
+repositorio**. Rodada sobre `f4399e4`, a carga do push devolve **365
+casamentos nao-hex**, contra 39 em `1f45fdd`. A atribuicao e exata:
+
+| Casamentos nao-hex | Arquivo |
+|---|---|
+| **304** | `06_p1a/evidencias/p1a7-varredura-segredo-...json` — a evidencia **ecoa cada valor casado** |
+| **20** | `06_p1a/99_decisao-p1a7.md` — este documento **cita as nove fixtures pelo nome** (§5) |
+| **2** | `06_p1a/evidencias/varredura_segredo_p1a7.py` — o varredor **carrega as 34 regras** |
+| **39** | os oito arquivos de sempre, inalterados |
+
+**326 dos 365 nasceram desta ordem.** Nenhum e credencial: sao a fixture
+`sk-teste-payg-nao-usar-123456` e as oito irmas dela, agora citadas em
+tres lugares a mais. Mas a consequencia e concreta e fica registrada:
+**quem rodar esta varredura na proxima vez vera o numero saltar de 39
+para 365 sem que nada tenha vazado.** Um varredor de terceiros — o do
+GitHub, por exemplo — vai apontar para estes tres arquivos. A resposta
+esta escrita aqui, com a atribuicao linha a linha, e nao precisara ser
+reconstruida no susto.
+
+**Alternativa que existia e foi recusada:** redigir os valores casados na
+evidencia. Ela reduziria os 304 a zero — e destruiria a unica coisa que
+faz a evidencia servir: **o valor literal e o que permite a um terceiro
+conferir que aquilo e fixture**. Evidencia de varredura que esconde o que
+achou pede fe, e este acervo nao trabalha com fe. O preco esta medido
+acima: 22 KiB e 326 casamentos explicados.
+
 **Contagem como medida, nunca como meta.** Os numeros deste registro —
 34 regras; 7 achados no portao contra 1.714 na crua; 74 casamentos
 nao-hex reduzidos a 48 combinacoes e a 9 fixtures; 281 valores hexa
 distintos; 1 chave real fora da historia; 1 blob inalcancavel com PII que
-nao viaja; 1.600.613 bytes de carga — sao o que foi medido, e valem sobre
-o estado que os produziu.
+nao viaja; 1.600.613 bytes de carga em `1f45fdd` e **1.623.609 bytes em
+`f4399e4`** — sao o que foi medido, e valem sobre o estado que os
+produziu. Duas medicoes de estados diferentes ficam **com o nome do
+estado ao lado de cada uma**, e nunca viram uma so.
