@@ -1,0 +1,1278 @@
+{
+  "missao": "P1-A.7 ordem 6 — varredura de segredo antes do push",
+  "raiz": "<RAIZ-DO-REPOSITORIO>",
+  "head": "1f45fddf82ff02fb7a66ce7c5d8fcde786d63451",
+  "commits": 148,
+  "regras": [
+    {
+      "nome": "anthropic_sk_ant",
+      "so_na_crua": false
+    },
+    {
+      "nome": "openai_sk",
+      "so_na_crua": false
+    },
+    {
+      "nome": "openrouter_sk_or",
+      "so_na_crua": false
+    },
+    {
+      "nome": "deepseek_moonshot_sk",
+      "so_na_crua": false
+    },
+    {
+      "nome": "sk_com_hifen",
+      "so_na_crua": false
+    },
+    {
+      "nome": "xai_com_hifen",
+      "so_na_crua": false
+    },
+    {
+      "nome": "ghp_generico",
+      "so_na_crua": false
+    },
+    {
+      "nome": "aiza_generico",
+      "so_na_crua": false
+    },
+    {
+      "nome": "aws_access_key_id",
+      "so_na_crua": false
+    },
+    {
+      "nome": "aws_secret_access_key",
+      "so_na_crua": false
+    },
+    {
+      "nome": "github_token",
+      "so_na_crua": false
+    },
+    {
+      "nome": "github_pat_fino",
+      "so_na_crua": false
+    },
+    {
+      "nome": "google_api_key",
+      "so_na_crua": false
+    },
+    {
+      "nome": "slack_token",
+      "so_na_crua": false
+    },
+    {
+      "nome": "stripe_key",
+      "so_na_crua": false
+    },
+    {
+      "nome": "groq_gsk",
+      "so_na_crua": false
+    },
+    {
+      "nome": "huggingface_hf",
+      "so_na_crua": false
+    },
+    {
+      "nome": "xai_key",
+      "so_na_crua": false
+    },
+    {
+      "nome": "npm_token",
+      "so_na_crua": false
+    },
+    {
+      "nome": "pypi_token",
+      "so_na_crua": false
+    },
+    {
+      "nome": "telegram_bot",
+      "so_na_crua": false
+    },
+    {
+      "nome": "azure_storage",
+      "so_na_crua": false
+    },
+    {
+      "nome": "bloco_chave_privada",
+      "so_na_crua": false
+    },
+    {
+      "nome": "ssh_rsa_publica_longa",
+      "so_na_crua": false
+    },
+    {
+      "nome": "jwt_tres_partes",
+      "so_na_crua": false
+    },
+    {
+      "nome": "url_com_senha",
+      "so_na_crua": false
+    },
+    {
+      "nome": "bearer_literal",
+      "so_na_crua": false
+    },
+    {
+      "nome": "header_authorization",
+      "so_na_crua": false
+    },
+    {
+      "nome": "atribuicao_en",
+      "so_na_crua": false
+    },
+    {
+      "nome": "env_maiusculo",
+      "so_na_crua": false
+    },
+    {
+      "nome": "atribuicao_pt",
+      "so_na_crua": true
+    },
+    {
+      "nome": "nome_de_arquivo",
+      "so_na_crua": true
+    },
+    {
+      "nome": "hex_sem_contexto",
+      "so_na_crua": true
+    },
+    {
+      "nome": "entropia_alta_b64",
+      "so_na_crua": true
+    }
+  ],
+  "passagem_a_portao": {
+    "arquivos_rastreados": 361,
+    "arquivos_lidos": 338,
+    "pulados_por_extensao": 18,
+    "pulados_por_diretorio": 5,
+    "achados": [
+      {
+        "regra": "sk_com_hifen",
+        "origem": "arvore:05_p0/tests/test_frota.py",
+        "linha": 59,
+        "casado": "sk-teste-payg-nao-usar-123456",
+        "contexto": ")\\n        env_host[\"OPENAI_API_KEY\"] = \"sk-teste-payg-nao-usar-123456\"\\n        # Ambiente sanitizado: a chave"
+      },
+      {
+        "regra": "sk_com_hifen",
+        "origem": "arvore:05_p0/tests/test_frota.py",
+        "linha": 65,
+        "casado": "sk-teste-payg-nao-usar-123456",
+        "contexto": "AI_API_KEY\"],\\n                         \"sk-teste-payg-nao-usar-123456\")\\n        # Mesmo com a chave PAYG pres"
+      },
+      {
+        "regra": "bloco_chave_privada",
+        "origem": "arvore:05_p0/tests/test_p0_kernel_p1a37.py",
+        "linha": 171,
+        "casado": "-----BEGIN PRIVATE KEY-----",
+        "contexto": "A\" + b\"B\" * 16,\\n                      b\"-----BEGIN PRIVATE KEY-----\",\\n                      b'api_key: \"abc"
+      },
+      {
+        "regra": "atribuicao_en",
+        "origem": "arvore:05_p0/tests/test_p0_kernel_p1a37.py",
+        "linha": 172,
+        "casado": "api_key: \"abcdefgh12345678\"",
+        "contexto": "VATE KEY-----\",\\n                      b'api_key: \"abcdefgh12345678\"'):\\n            with self.subTest(amostr"
+      },
+      {
+        "regra": "aws_access_key_id",
+        "origem": "arvore:05_p0/tests/test_seguranca.py",
+        "linha": 34,
+        "casado": "AKIA1234567890ABCDEF",
+        "contexto": ",\\n                 \"rotulo\": 'api_key: \"AKIA1234567890ABCDEF\"'}, None)\\n\\n    def test_ic4_segredo_pad"
+      },
+      {
+        "regra": "bloco_chave_privada",
+        "origem": "arvore:05_p0/tests/test_seguranca.py",
+        "linha": 50,
+        "casado": "-----BEGIN PRIVATE KEY-----",
+        "contexto": "rbatim\",\\n                  \"conteudo\": \"-----BEGIN PRIVATE KEY-----\\nabc\"}])\\n\\n    def test_ic4_contexto_lim"
+      },
+      {
+        "regra": "atribuicao_en",
+        "origem": "arvore:05_p0/tests/test_seguranca.py",
+        "linha": 34,
+        "casado": "api_key: \"AKIA1234567890ABCDEF\"",
+        "contexto": ": \"sessao\",\\n                 \"rotulo\": 'api_key: \"AKIA1234567890ABCDEF\"'}, None)\\n\\n    def test_ic4_segredo_padr"
+      }
+    ],
+    "por_regra": {
+      "atribuicao_en": 2,
+      "aws_access_key_id": 1,
+      "bloco_chave_privada": 2,
+      "sk_com_hifen": 2
+    },
+    "total_de_achados": 7,
+    "hex_sem_contexto_colapsado": {
+      "total": 0,
+      "valores_distintos": 0,
+      "por_tamanho": {},
+      "por_origem": {},
+      "o_que_se_largou": "linha, valor e contexto de cada casamento de `hex_sem_contexto`; preservados o total, o numero de valores distintos, a distribuicao por tamanho e a contagem por arquivo de origem"
+    }
+  },
+  "passagem_b_crua": {
+    "blobs_no_banco": 617,
+    "blobs_inalcancaveis": 8,
+    "arquivos_em_disco": 737,
+    "bytes_lidos": 15845052,
+    "nomes_de_arquivo_suspeitos": [
+      "05_p0/saidas/labs/prova_central/chave_selo.bin"
+    ],
+    "achados": [
+      {
+        "regra": "aws_access_key_id",
+        "origem": "blob:02fcadb4c357:05_p0/tests/test_seguranca.py",
+        "linha": 28,
+        "casado": "AKIA1234567890ABCDEF",
+        "contexto": ",\\n                 \"rotulo\": 'api_key: \"AKIA1234567890ABCDEF\"'}, None)\\n\\n    def test_ic4_segredo_pad"
+      },
+      {
+        "regra": "bloco_chave_privada",
+        "origem": "blob:02fcadb4c357:05_p0/tests/test_seguranca.py",
+        "linha": 44,
+        "casado": "-----BEGIN PRIVATE KEY-----",
+        "contexto": "rbatim\",\\n                  \"conteudo\": \"-----BEGIN PRIVATE KEY-----\\nabc\"}])\\n\\n    def test_ic4_contexto_lim"
+      },
+      {
+        "regra": "atribuicao_en",
+        "origem": "blob:02fcadb4c357:05_p0/tests/test_seguranca.py",
+        "linha": 28,
+        "casado": "api_key: \"AKIA1234567890ABCDEF\"",
+        "contexto": ": \"sessao\",\\n                 \"rotulo\": 'api_key: \"AKIA1234567890ABCDEF\"'}, None)\\n\\n    def test_ic4_segredo_padr"
+      },
+      {
+        "regra": "aws_access_key_id",
+        "origem": "blob:0f2a9ae9ef93:05_p0/tests/test_seguranca.py",
+        "linha": 34,
+        "casado": "AKIA1234567890ABCDEF",
+        "contexto": ",\\n                 \"rotulo\": 'api_key: \"AKIA1234567890ABCDEF\"'}, None)\\n\\n    def test_ic4_segredo_pad"
+      },
+      {
+        "regra": "bloco_chave_privada",
+        "origem": "blob:0f2a9ae9ef93:05_p0/tests/test_seguranca.py",
+        "linha": 50,
+        "casado": "-----BEGIN PRIVATE KEY-----",
+        "contexto": "rbatim\",\\n                  \"conteudo\": \"-----BEGIN PRIVATE KEY-----\\nabc\"}])\\n\\n    def test_ic4_contexto_lim"
+      },
+      {
+        "regra": "atribuicao_en",
+        "origem": "blob:0f2a9ae9ef93:05_p0/tests/test_seguranca.py",
+        "linha": 34,
+        "casado": "api_key: \"AKIA1234567890ABCDEF\"",
+        "contexto": ": \"sessao\",\\n                 \"rotulo\": 'api_key: \"AKIA1234567890ABCDEF\"'}, None)\\n\\n    def test_ic4_segredo_padr"
+      },
+      {
+        "regra": "sk_com_hifen",
+        "origem": "blob:3fe8398fca14:05_p0/tests/test_frota.py",
+        "linha": 59,
+        "casado": "sk-teste-payg-nao-usar-123456",
+        "contexto": ")\\n        env_host[\"OPENAI_API_KEY\"] = \"sk-teste-payg-nao-usar-123456\"\\n        # Ambiente sanitizado: a chave"
+      },
+      {
+        "regra": "sk_com_hifen",
+        "origem": "blob:3fe8398fca14:05_p0/tests/test_frota.py",
+        "linha": 65,
+        "casado": "sk-teste-payg-nao-usar-123456",
+        "contexto": "AI_API_KEY\"],\\n                         \"sk-teste-payg-nao-usar-123456\")\\n        # Mesmo com a chave PAYG pres"
+      },
+      {
+        "regra": "bloco_chave_privada",
+        "origem": "blob:526fffe0f4e9:05_p0/tests/test_p0_kernel_p1a37.py",
+        "linha": 171,
+        "casado": "-----BEGIN PRIVATE KEY-----",
+        "contexto": "A\" + b\"B\" * 16,\\n                      b\"-----BEGIN PRIVATE KEY-----\",\\n                      b'api_key: \"abc"
+      },
+      {
+        "regra": "atribuicao_en",
+        "origem": "blob:526fffe0f4e9:05_p0/tests/test_p0_kernel_p1a37.py",
+        "linha": 172,
+        "casado": "api_key: \"abcdefgh12345678\"",
+        "contexto": "VATE KEY-----\",\\n                      b'api_key: \"abcdefgh12345678\"'):\\n            with self.subTest(amostr"
+      },
+      {
+        "regra": "atribuicao_pt",
+        "origem": "blob:5cf97e50a64f:06_p1a/tests/test_estabilizacao_p1a1.py",
+        "linha": 162,
+        "casado": "chave: \"https://api.anthropic.com/v1\"",
+        "contexto": " = auditar_config(\\n                    {chave: \"https://api.anthropic.com/v1\"})\\n                self.assertEqual(_cod"
+      },
+      {
+        "regra": "atribuicao_pt",
+        "origem": "blob:5cf97e50a64f:06_p1a/tests/test_estabilizacao_p1a1.py",
+        "linha": 172,
+        "casado": "chave: \"https://api.openai.com/v1\"",
+        "contexto": " = auditar_config(\\n                    {chave: \"https://api.openai.com/v1\"})\\n                self.assertEqual(_cod"
+      },
+      {
+        "regra": "atribuicao_pt",
+        "origem": "blob:6befc0026dc4:06_p1a/tests/test_estabilizacao_p1a1.py",
+        "linha": 161,
+        "casado": "chave: \"https://api.anthropic.com/v1\"",
+        "contexto": " = auditar_config(\\n                    {chave: \"https://api.anthropic.com/v1\"})\\n                self.assertEqual(_cod"
+      },
+      {
+        "regra": "atribuicao_pt",
+        "origem": "blob:6befc0026dc4:06_p1a/tests/test_estabilizacao_p1a1.py",
+        "linha": 171,
+        "casado": "chave: \"https://api.openai.com/v1\"",
+        "contexto": " = auditar_config(\\n                    {chave: \"https://api.openai.com/v1\"})\\n                self.assertEqual(_cod"
+      },
+      {
+        "regra": "atribuicao_pt",
+        "origem": "blob:8c550fd390ad:06_p1a/tests/test_estabilizacao_p1a1.py",
+        "linha": 159,
+        "casado": "chave: \"https://api.anthropic.com/v1\"",
+        "contexto": " = auditar_config(\\n                    {chave: \"https://api.anthropic.com/v1\"})\\n                self.assertEqual(_cod"
+      },
+      {
+        "regra": "atribuicao_pt",
+        "origem": "blob:8c550fd390ad:06_p1a/tests/test_estabilizacao_p1a1.py",
+        "linha": 169,
+        "casado": "chave: \"https://api.openai.com/v1\"",
+        "contexto": " = auditar_config(\\n                    {chave: \"https://api.openai.com/v1\"})\\n                self.assertEqual(_cod"
+      },
+      {
+        "regra": "atribuicao_pt",
+        "origem": "blob:8e0931dad191:06_p1a/tests/test_estabilizacao_p1a1.py",
+        "linha": 161,
+        "casado": "chave: \"https://api.anthropic.com/v1\"",
+        "contexto": " = auditar_config(\\n                    {chave: \"https://api.anthropic.com/v1\"})\\n                self.assertEqual(_cod"
+      },
+      {
+        "regra": "atribuicao_pt",
+        "origem": "blob:8e0931dad191:06_p1a/tests/test_estabilizacao_p1a1.py",
+        "linha": 171,
+        "casado": "chave: \"https://api.openai.com/v1\"",
+        "contexto": " = auditar_config(\\n                    {chave: \"https://api.openai.com/v1\"})\\n                self.assertEqual(_cod"
+      },
+      {
+        "regra": "bloco_chave_privada",
+        "origem": "blob:92ce38786348:logs/diff-0.2.1-hardening.patch",
+        "linha": 2946,
+        "casado": "-----BEGIN PRIVATE KEY-----",
+        "contexto": "batim\",\\n                   \"conteudo\": \"-----BEGIN PRIVATE KEY-----\\nabc\"}])\\n \\n     def test_ic4_contexto_l"
+      },
+      {
+        "regra": "sk_com_hifen",
+        "origem": "blob:c5d343d21095:logs/diff-0.3-frota.patch",
+        "linha": 1420,
+        "casado": "sk-teste-payg-nao-usar-123456",
+        "contexto": "\\n+        env_host[\"OPENAI_API_KEY\"] = \"sk-teste-payg-nao-usar-123456\"\\n+        # Ambiente sanitizado: a chav"
+      },
+      {
+        "regra": "sk_com_hifen",
+        "origem": "blob:c5d343d21095:logs/diff-0.3-frota.patch",
+        "linha": 1426,
+        "casado": "sk-teste-payg-nao-usar-123456",
+        "contexto": "I_API_KEY\"],\\n+                         \"sk-teste-payg-nao-usar-123456\")\\n+        # Mesmo com a chave PAYG pre"
+      },
+      {
+        "regra": "atribuicao_pt",
+        "origem": "blob:cf2d125de3ea:05_p0/tests/test_p0_adaptador_assinatura_p1a37.py",
+        "linha": 115,
+        "casado": "chave: \"valor-ficticio\"",
+        "contexto": "                   self._adaptador(env={chave: \"valor-ficticio\"})\\n                    self.assertIn(\"am"
+      },
+      {
+        "regra": "atribuicao_pt",
+        "origem": "blob:fd35c608fbd1:06_p1a/evidencias/revisao-p1a31/pacote-p1a31.txt",
+        "linha": 7175,
+        "casado": "chave: \"https://api.anthropic.com/v1\"",
+        "contexto": " = auditar_config(\\n                    {chave: \"https://api.anthropic.com/v1\"})\\n                self.assertEqual(_cod"
+      },
+      {
+        "regra": "atribuicao_pt",
+        "origem": "blob:fd35c608fbd1:06_p1a/evidencias/revisao-p1a31/pacote-p1a31.txt",
+        "linha": 7185,
+        "casado": "chave: \"https://api.openai.com/v1\"",
+        "contexto": " = auditar_config(\\n                    {chave: \"https://api.openai.com/v1\"})\\n                self.assertEqual(_cod"
+      },
+      {
+        "regra": "sk_com_hifen",
+        "origem": "disco:05_p0/tests/__pycache__/test_frota.cpython-314-pytest-9.1.1.pyc",
+        "linha": 24,
+        "casado": "sk-teste-payg-nao-usar-123456",
+        "contexto": "+\u0000'\u0000\u0000\u0000\u0000\u0000\u0000\u0000g\u0002\u0000\u0000\u001c\u0000i\u0002\u001f\u0000\u001d\u0000\u001f\u0000\u001f\u0000\u001f\u0000L_;\u0003\u001d\u0000i\u0001)\fz\u001dsk-teste-payg-nao-usar-123456Ú\u000eOPENAI_API_KEY)\u0001r!\u0000\u0000\u0000Ú\bprovedorÚ\u0005codex"
+      },
+      {
+        "regra": "xai_com_hifen",
+        "origem": "disco:05_p0/tests/__pycache__/test_frota.cpython-314-pytest-9.1.1.pyc",
+        "linha": 44,
+        "casado": "xai-nao-usar-123456rJ",
+        "contexto": "ura©\u0004r\u0019\u0000\u0000\u0000r\u001a\u0000\u0000\u0000r\u001c\u0000\u0000\u0000r!\u0000\u0000\u0000Ú\u000bXAI_API_KEYz\u0013xai-nao-usar-123456rJ\u0000\u0000\u0000rL\u0000\u0000\u0000rN\u0000\u0000\u0000rO\u0000\u0000\u0000rP\u0000\u0000\u0000rR\u0000\u0000\u0000z\u0006grok-4r\u0000\u0000"
+      },
+      {
+        "regra": "sk_com_hifen",
+        "origem": "disco:05_p0/tests/__pycache__/test_frota.cpython-314.pyc",
+        "linha": 26,
+        "casado": "sk-teste-payg-nao-usar-123456",
+        "contexto": "+\u0000'\u0000\u0000\u0000\u0000\u0000\u0000\u0000g\u0002\u0000\u0000\u001c\u0000i\u0002\u001f\u0000\u001d\u0000\u001f\u0000\u001f\u0000\u001f\u0000L_;\u0003\u001d\u0000i\u0001)\fz\u001dsk-teste-payg-nao-usar-123456Ú\u000eOPENAI_API_KEY)\u0001r\"\u0000\u0000\u0000Ú\bprovedorÚ\u0005codex"
+      },
+      {
+        "regra": "xai_com_hifen",
+        "origem": "disco:05_p0/tests/__pycache__/test_frota.cpython-314.pyc",
+        "linha": 44,
+        "casado": "xai-nao-usar-123456rK",
+        "contexto": "ura©\u0004r\u001a\u0000\u0000\u0000r\u001b\u0000\u0000\u0000r\u001d\u0000\u0000\u0000r\"\u0000\u0000\u0000Ú\u000bXAI_API_KEYz\u0013xai-nao-usar-123456rK\u0000\u0000\u0000rM\u0000\u0000\u0000rO\u0000\u0000\u0000rP\u0000\u0000\u0000rQ\u0000\u0000\u0000rS\u0000\u0000\u0000z\u0006grok-4r\u0000\u0000"
+      },
+      {
+        "regra": "openai_sk",
+        "origem": "disco:05_p0/tests/__pycache__/test_p0_kernel_p1a37.cpython-314-pytest-9.1.1.pyc",
+        "linha": 64,
+        "casado": "sk-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaas",
+        "contexto": "\u001d\u0000\u0000\u0000texto qualquer sem credencial)\u0004s#\u0000\u0000\u0000sk-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaas\u0014\u0000\u0000\u0000AKIABBBBBBBBBBBBBBBBs\u001b\u0000\u0000\u0000-----BEGIN "
+      },
+      {
+        "regra": "sk_com_hifen",
+        "origem": "disco:05_p0/tests/__pycache__/test_p0_kernel_p1a37.cpython-314-pytest-9.1.1.pyc",
+        "linha": 64,
+        "casado": "sk-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaas",
+        "contexto": "\u001d\u0000\u0000\u0000texto qualquer sem credencial)\u0004s#\u0000\u0000\u0000sk-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaas\u0014\u0000\u0000\u0000AKIABBBBBBBBBBBBBBBBs\u001b\u0000\u0000\u0000-----BEGIN "
+      },
+      {
+        "regra": "bloco_chave_privada",
+        "origem": "disco:05_p0/tests/__pycache__/test_p0_kernel_p1a37.cpython-314-pytest-9.1.1.pyc",
+        "linha": 64,
+        "casado": "-----BEGIN PRIVATE KEY-----",
+        "contexto": "aaaaaaaaaas\u0014\u0000\u0000\u0000AKIABBBBBBBBBBBBBBBBs\u001b\u0000\u0000\u0000-----BEGIN PRIVATE KEY-----s\u001b\u0000\u0000\u0000api_key: \"abcdefgh12345678\")\br\u0000\u0000\u0000r"
+      },
+      {
+        "regra": "atribuicao_en",
+        "origem": "disco:05_p0/tests/__pycache__/test_p0_kernel_p1a37.cpython-314-pytest-9.1.1.pyc",
+        "linha": 64,
+        "casado": "api_key: \"abcdefgh12345678\"",
+        "contexto": "BBBs\u001b\u0000\u0000\u0000-----BEGIN PRIVATE KEY-----s\u001b\u0000\u0000\u0000api_key: \"abcdefgh12345678\")\br\u0000\u0000\u0000r \u0000\u0000\u0000rR\u0000\u0000\u0000rS\u0000\u0000\u0000r\u0003\u0000\u0000\u0000rV\u0000\u0000\u0000rW\u0000\u0000\u0000rX\u0000"
+      },
+      {
+        "regra": "openai_sk",
+        "origem": "disco:05_p0/tests/__pycache__/test_p0_kernel_p1a37.cpython-314.pyc",
+        "linha": 65,
+        "casado": "sk-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaas",
+        "contexto": "\u001d\u0000\u0000\u0000texto qualquer sem credencial)\u0004s#\u0000\u0000\u0000sk-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaas\u0014\u0000\u0000\u0000AKIABBBBBBBBBBBBBBBBs\u001b\u0000\u0000\u0000-----BEGIN "
+      },
+      {
+        "regra": "sk_com_hifen",
+        "origem": "disco:05_p0/tests/__pycache__/test_p0_kernel_p1a37.cpython-314.pyc",
+        "linha": 65,
+        "casado": "sk-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaas",
+        "contexto": "\u001d\u0000\u0000\u0000texto qualquer sem credencial)\u0004s#\u0000\u0000\u0000sk-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaas\u0014\u0000\u0000\u0000AKIABBBBBBBBBBBBBBBBs\u001b\u0000\u0000\u0000-----BEGIN "
+      },
+      {
+        "regra": "bloco_chave_privada",
+        "origem": "disco:05_p0/tests/__pycache__/test_p0_kernel_p1a37.cpython-314.pyc",
+        "linha": 65,
+        "casado": "-----BEGIN PRIVATE KEY-----",
+        "contexto": "aaaaaaaaaas\u0014\u0000\u0000\u0000AKIABBBBBBBBBBBBBBBBs\u001b\u0000\u0000\u0000-----BEGIN PRIVATE KEY-----s\u001b\u0000\u0000\u0000api_key: \"abcdefgh12345678\")\br\u0000\u0000\u0000r"
+      },
+      {
+        "regra": "atribuicao_en",
+        "origem": "disco:05_p0/tests/__pycache__/test_p0_kernel_p1a37.cpython-314.pyc",
+        "linha": 65,
+        "casado": "api_key: \"abcdefgh12345678\"",
+        "contexto": "BBBs\u001b\u0000\u0000\u0000-----BEGIN PRIVATE KEY-----s\u001b\u0000\u0000\u0000api_key: \"abcdefgh12345678\")\br\u0000\u0000\u0000r¡\u0000\u0000\u0000rS\u0000\u0000\u0000rT\u0000\u0000\u0000r\u0004\u0000\u0000\u0000rW\u0000\u0000\u0000rX\u0000\u0000\u0000rY\u0000"
+      },
+      {
+        "regra": "aws_access_key_id",
+        "origem": "disco:05_p0/tests/__pycache__/test_seguranca.cpython-314-pytest-9.1.1.pyc",
+        "linha": 13,
+        "casado": "AKIA1234567890ABCDEF",
+        "contexto": "teÚ\bvalidadeÚ\u0006sessaoÚ\u0006rotuloz\u001fapi_key: \"AKIA1234567890ABCDEF\"N)\u0004Ú\fassertRaisesr\u0006\u0000\u0000\u0000r\u0010\u0000\u0000\u0000Ú\u0011registrar_"
+      },
+      {
+        "regra": "bloco_chave_privada",
+        "origem": "disco:05_p0/tests/__pycache__/test_seguranca.cpython-314-pytest-9.1.1.pyc",
+        "linha": 19,
+        "casado": "-----BEGIN PRIVATE KEY-----",
+        "contexto": "videnciaÚ\binclusaoÚ\bverbatimÚ\bconteudoz\u001f-----BEGIN PRIVATE KEY-----\\nabcN)\u0005r!\u0000\u0000\u0000r\u0006\u0000\u0000\u0000r\u0010\u0000\u0000\u0000Ú\u000fmontar_contextor"
+      },
+      {
+        "regra": "atribuicao_en",
+        "origem": "disco:05_p0/tests/__pycache__/test_seguranca.cpython-314-pytest-9.1.1.pyc",
+        "linha": 13,
+        "casado": "api_key: \"AKIA1234567890ABCDEF\"",
+        "contexto": "fonteÚ\u0005testeÚ\bvalidadeÚ\u0006sessaoÚ\u0006rotuloz\u001fapi_key: \"AKIA1234567890ABCDEF\"N)\u0004Ú\fassertRaisesr\u0006\u0000\u0000\u0000r\u0010\u0000\u0000\u0000Ú\u0011registrar_m"
+      },
+      {
+        "regra": "aws_access_key_id",
+        "origem": "disco:05_p0/tests/__pycache__/test_seguranca.cpython-314.pyc",
+        "linha": 13,
+        "casado": "AKIA1234567890ABCDEF",
+        "contexto": "teÚ\bvalidadeÚ\u0006sessaoÚ\u0006rotuloz\u001fapi_key: \"AKIA1234567890ABCDEF\"N)\u0004Ú\fassertRaisesr\u0007\u0000\u0000\u0000r\u0011\u0000\u0000\u0000Ú\u0011registrar_"
+      },
+      {
+        "regra": "bloco_chave_privada",
+        "origem": "disco:05_p0/tests/__pycache__/test_seguranca.cpython-314.pyc",
+        "linha": 19,
+        "casado": "-----BEGIN PRIVATE KEY-----",
+        "contexto": "videnciaÚ\binclusaoÚ\bverbatimÚ\bconteudoz\u001f-----BEGIN PRIVATE KEY-----\\nabcN)\u0005r\"\u0000\u0000\u0000r\u0007\u0000\u0000\u0000r\u0011\u0000\u0000\u0000Ú\u000fmontar_contextor"
+      },
+      {
+        "regra": "atribuicao_en",
+        "origem": "disco:05_p0/tests/__pycache__/test_seguranca.cpython-314.pyc",
+        "linha": 13,
+        "casado": "api_key: \"AKIA1234567890ABCDEF\"",
+        "contexto": "fonteÚ\u0005testeÚ\bvalidadeÚ\u0006sessaoÚ\u0006rotuloz\u001fapi_key: \"AKIA1234567890ABCDEF\"N)\u0004Ú\fassertRaisesr\u0007\u0000\u0000\u0000r\u0011\u0000\u0000\u0000Ú\u0011registrar_m"
+      },
+      {
+        "regra": "sk_com_hifen",
+        "origem": "disco:05_p0/tests/test_frota.py",
+        "linha": 59,
+        "casado": "sk-teste-payg-nao-usar-123456",
+        "contexto": ")\\n        env_host[\"OPENAI_API_KEY\"] = \"sk-teste-payg-nao-usar-123456\"\\n        # Ambiente sanitizado: a chave"
+      },
+      {
+        "regra": "sk_com_hifen",
+        "origem": "disco:05_p0/tests/test_frota.py",
+        "linha": 65,
+        "casado": "sk-teste-payg-nao-usar-123456",
+        "contexto": "AI_API_KEY\"],\\n                         \"sk-teste-payg-nao-usar-123456\")\\n        # Mesmo com a chave PAYG pres"
+      },
+      {
+        "regra": "atribuicao_pt",
+        "origem": "disco:05_p0/tests/test_p0_adaptador_assinatura_p1a37.py",
+        "linha": 115,
+        "casado": "chave: \"valor-ficticio\"",
+        "contexto": "                   self._adaptador(env={chave: \"valor-ficticio\"})\\n                    self.assertIn(\"am"
+      },
+      {
+        "regra": "bloco_chave_privada",
+        "origem": "disco:05_p0/tests/test_p0_kernel_p1a37.py",
+        "linha": 171,
+        "casado": "-----BEGIN PRIVATE KEY-----",
+        "contexto": "A\" + b\"B\" * 16,\\n                      b\"-----BEGIN PRIVATE KEY-----\",\\n                      b'api_key: \"abc"
+      },
+      {
+        "regra": "atribuicao_en",
+        "origem": "disco:05_p0/tests/test_p0_kernel_p1a37.py",
+        "linha": 172,
+        "casado": "api_key: \"abcdefgh12345678\"",
+        "contexto": "VATE KEY-----\",\\n                      b'api_key: \"abcdefgh12345678\"'):\\n            with self.subTest(amostr"
+      },
+      {
+        "regra": "aws_access_key_id",
+        "origem": "disco:05_p0/tests/test_seguranca.py",
+        "linha": 34,
+        "casado": "AKIA1234567890ABCDEF",
+        "contexto": ",\\n                 \"rotulo\": 'api_key: \"AKIA1234567890ABCDEF\"'}, None)\\n\\n    def test_ic4_segredo_pad"
+      },
+      {
+        "regra": "bloco_chave_privada",
+        "origem": "disco:05_p0/tests/test_seguranca.py",
+        "linha": 50,
+        "casado": "-----BEGIN PRIVATE KEY-----",
+        "contexto": "rbatim\",\\n                  \"conteudo\": \"-----BEGIN PRIVATE KEY-----\\nabc\"}])\\n\\n    def test_ic4_contexto_lim"
+      },
+      {
+        "regra": "atribuicao_en",
+        "origem": "disco:05_p0/tests/test_seguranca.py",
+        "linha": 34,
+        "casado": "api_key: \"AKIA1234567890ABCDEF\"",
+        "contexto": ": \"sessao\",\\n                 \"rotulo\": 'api_key: \"AKIA1234567890ABCDEF\"'}, None)\\n\\n    def test_ic4_segredo_padr"
+      },
+      {
+        "regra": "atribuicao_pt",
+        "origem": "disco:06_p1a/evidencias/revisao-p1a31/pacote-p1a31.txt",
+        "linha": 7175,
+        "casado": "chave: \"https://api.anthropic.com/v1\"",
+        "contexto": " = auditar_config(\\n                    {chave: \"https://api.anthropic.com/v1\"})\\n                self.assertEqual(_cod"
+      },
+      {
+        "regra": "atribuicao_pt",
+        "origem": "disco:06_p1a/evidencias/revisao-p1a31/pacote-p1a31.txt",
+        "linha": 7185,
+        "casado": "chave: \"https://api.openai.com/v1\"",
+        "contexto": " = auditar_config(\\n                    {chave: \"https://api.openai.com/v1\"})\\n                self.assertEqual(_cod"
+      },
+      {
+        "regra": "sk_com_hifen",
+        "origem": "disco:06_p1a/evidencias/varredura_segredo_p1a7.py",
+        "linha": 56,
+        "casado": "sk-teste-payg-nao-usar-123456",
+        "contexto": "acima, so-alfanumerica,\\n    # nao casa `sk-teste-payg-nao-usar-123456` nem `sk-proj-...-...`:\\n    # medido em"
+      },
+      {
+        "regra": "openai_sk",
+        "origem": "disco:06_p1a/tests/__pycache__/test_isolamento.cpython-314-pytest-9.1.1.pyc",
+        "linha": 35,
+        "casado": "sk-aaaaaaaaaaaaaaaaaaaaaaaaz",
+        "contexto": "Ð\u0017FÑ3E¨a\b\b \u0017×\u0018)Ð\u0018)Ó3Eùs\u0004\u0000\u0000\u0000\u001d \u0001TFN)\u0007z\u001bsk-aaaaaaaaaaaaaaaaaaaaaaaaz\u001cxai-bbbbbbbbbbbbbbbbbbbbbbbbÚ\u001cAIzaccccc"
+      },
+      {
+        "regra": "sk_com_hifen",
+        "origem": "disco:06_p1a/tests/__pycache__/test_isolamento.cpython-314-pytest-9.1.1.pyc",
+        "linha": 35,
+        "casado": "sk-aaaaaaaaaaaaaaaaaaaaaaaaz",
+        "contexto": "Ð\u0017FÑ3E¨a\b\b \u0017×\u0018)Ð\u0018)Ó3Eùs\u0004\u0000\u0000\u0000\u001d \u0001TFN)\u0007z\u001bsk-aaaaaaaaaaaaaaaaaaaaaaaaz\u001cxai-bbbbbbbbbbbbbbbbbbbbbbbbÚ\u001cAIzaccccc"
+      },
+      {
+        "regra": "xai_com_hifen",
+        "origem": "disco:06_p1a/tests/__pycache__/test_isolamento.cpython-314-pytest-9.1.1.pyc",
+        "linha": 35,
+        "casado": "xai-bbbbbbbbbbbbbbbbbbbbbbbb",
+        "contexto": "\u001d \u0001TFN)\u0007z\u001bsk-aaaaaaaaaaaaaaaaaaaaaaaaz\u001cxai-bbbbbbbbbbbbbbbbbbbbbbbbÚ\u001cAIzaccccccccccccccccccccccccÚ\u001cghp_dddd"
+      },
+      {
+        "regra": "ghp_generico",
+        "origem": "disco:06_p1a/tests/__pycache__/test_isolamento.cpython-314-pytest-9.1.1.pyc",
+        "linha": 35,
+        "casado": "ghp_ddddddddddddddddddddddddz",
+        "contexto": "bbbbbbbbÚ\u001cAIzaccccccccccccccccccccccccÚ\u001cghp_ddddddddddddddddddddddddz!eyJhbGciOiJIUzI1.eyJzdWIiOiIxMj.xz\u001fBear"
+      },
+      {
+        "regra": "aiza_generico",
+        "origem": "disco:06_p1a/tests/__pycache__/test_isolamento.cpython-314-pytest-9.1.1.pyc",
+        "linha": 35,
+        "casado": "AIzacccccccccccccccccccccccc",
+        "contexto": "aaaaaaaaz\u001cxai-bbbbbbbbbbbbbbbbbbbbbbbbÚ\u001cAIzaccccccccccccccccccccccccÚ\u001cghp_ddddddddddddddddddddddddz!eyJhbGci"
+      },
+      {
+        "regra": "bearer_literal",
+        "origem": "disco:06_p1a/tests/__pycache__/test_isolamento.cpython-314-pytest-9.1.1.pyc",
+        "linha": 35,
+        "casado": "Bearer eeeeeeeeeeeeeeeeeeeeeeeez",
+        "contexto": "dddz!eyJhbGciOiJIUzI1.eyJzdWIiOiIxMj.xz\u001fBearer eeeeeeeeeeeeeeeeeeeeeeeez#api_key: \"ffffffffffffffffffffffff\")\u0004rJ"
+      },
+      {
+        "regra": "atribuicao_en",
+        "origem": "disco:06_p1a/tests/__pycache__/test_isolamento.cpython-314-pytest-9.1.1.pyc",
+        "linha": 35,
+        "casado": "api_key: \"ffffffffffffffffffffffff\"",
+        "contexto": "xMj.xz\u001fBearer eeeeeeeeeeeeeeeeeeeeeeeez#api_key: \"ffffffffffffffffffffffff\")\u0004rJ\u0000\u0000\u0000rd\u0000\u0000\u0000r\u0000\u0000\u0000r\u0000\u0000\u0000)\u0003rL\u0000\u0000\u0000Ú\bamostrasr"
+      },
+      {
+        "regra": "openai_sk",
+        "origem": "disco:06_p1a/tests/__pycache__/test_isolamento.cpython-314.pyc",
+        "linha": 33,
+        "casado": "sk-aaaaaaaaaaaaaaaaaaaaaaaaz",
+        "contexto": "Ð\u0017FÑ3E¨a\b\b \u0017×\u0018)Ð\u0018)Ó3Eùs\u0004\u0000\u0000\u0000\u001d \u0001TFN)\u0007z\u001bsk-aaaaaaaaaaaaaaaaaaaaaaaaz\u001cxai-bbbbbbbbbbbbbbbbbbbbbbbbÚ\u001cAIzaccccc"
+      },
+      {
+        "regra": "sk_com_hifen",
+        "origem": "disco:06_p1a/tests/__pycache__/test_isolamento.cpython-314.pyc",
+        "linha": 33,
+        "casado": "sk-aaaaaaaaaaaaaaaaaaaaaaaaz",
+        "contexto": "Ð\u0017FÑ3E¨a\b\b \u0017×\u0018)Ð\u0018)Ó3Eùs\u0004\u0000\u0000\u0000\u001d \u0001TFN)\u0007z\u001bsk-aaaaaaaaaaaaaaaaaaaaaaaaz\u001cxai-bbbbbbbbbbbbbbbbbbbbbbbbÚ\u001cAIzaccccc"
+      },
+      {
+        "regra": "xai_com_hifen",
+        "origem": "disco:06_p1a/tests/__pycache__/test_isolamento.cpython-314.pyc",
+        "linha": 33,
+        "casado": "xai-bbbbbbbbbbbbbbbbbbbbbbbb",
+        "contexto": "\u001d \u0001TFN)\u0007z\u001bsk-aaaaaaaaaaaaaaaaaaaaaaaaz\u001cxai-bbbbbbbbbbbbbbbbbbbbbbbbÚ\u001cAIzaccccccccccccccccccccccccÚ\u001cghp_dddd"
+      },
+      {
+        "regra": "ghp_generico",
+        "origem": "disco:06_p1a/tests/__pycache__/test_isolamento.cpython-314.pyc",
+        "linha": 33,
+        "casado": "ghp_ddddddddddddddddddddddddz",
+        "contexto": "bbbbbbbbÚ\u001cAIzaccccccccccccccccccccccccÚ\u001cghp_ddddddddddddddddddddddddz!eyJhbGciOiJIUzI1.eyJzdWIiOiIxMj.xz\u001fBear"
+      },
+      {
+        "regra": "aiza_generico",
+        "origem": "disco:06_p1a/tests/__pycache__/test_isolamento.cpython-314.pyc",
+        "linha": 33,
+        "casado": "AIzacccccccccccccccccccccccc",
+        "contexto": "aaaaaaaaz\u001cxai-bbbbbbbbbbbbbbbbbbbbbbbbÚ\u001cAIzaccccccccccccccccccccccccÚ\u001cghp_ddddddddddddddddddddddddz!eyJhbGci"
+      },
+      {
+        "regra": "bearer_literal",
+        "origem": "disco:06_p1a/tests/__pycache__/test_isolamento.cpython-314.pyc",
+        "linha": 33,
+        "casado": "Bearer eeeeeeeeeeeeeeeeeeeeeeeez",
+        "contexto": "dddz!eyJhbGciOiJIUzI1.eyJzdWIiOiIxMj.xz\u001fBearer eeeeeeeeeeeeeeeeeeeeeeeez#api_key: \"ffffffffffffffffffffffff\")\u0004rK"
+      },
+      {
+        "regra": "atribuicao_en",
+        "origem": "disco:06_p1a/tests/__pycache__/test_isolamento.cpython-314.pyc",
+        "linha": 33,
+        "casado": "api_key: \"ffffffffffffffffffffffff\"",
+        "contexto": "xMj.xz\u001fBearer eeeeeeeeeeeeeeeeeeeeeeeez#api_key: \"ffffffffffffffffffffffff\")\u0004rK\u0000\u0000\u0000re\u0000\u0000\u0000r \u0000\u0000\u0000r\u0000\u0000\u0000)\u0003rM\u0000\u0000\u0000Ú\bamostrasr"
+      },
+      {
+        "regra": "sk_com_hifen",
+        "origem": "disco:06_p1a/tests/__pycache__/test_preflight.cpython-314-pytest-9.1.1.pyc",
+        "linha": 88,
+        "casado": "sk-segredo-que-jamais-deve-vazar-123456",
+        "contexto": "\u0010\u00050ò$\u000f\u00058÷\"\t\u0005%ð\u0000\t\u0005%r!\u0000\u0000\u0000rÅ\u0000\u0000\u0000Ú\b__main__z'sk-segredo-que-jamais-deve-vazar-123456)\u0003r\u0000\u0000\u0000z-Logged in using ChatGPT\\nPlano: "
+      },
+      {
+        "regra": "sk_com_hifen",
+        "origem": "disco:06_p1a/tests/__pycache__/test_preflight.cpython-314.pyc",
+        "linha": 86,
+        "casado": "sk-segredo-que-jamais-deve-vazar-123456",
+        "contexto": "\u0010\u00050ò$\u000f\u00058÷\"\t\u0005%ð\u0000\t\u0005%r\"\u0000\u0000\u0000rÆ\u0000\u0000\u0000Ú\b__main__z'sk-segredo-que-jamais-deve-vazar-123456)\u0003r\u0000\u0000\u0000z-Logged in using ChatGPT\\nPlano: "
+      },
+      {
+        "regra": "atribuicao_pt",
+        "origem": "disco:06_p1a/tests/test_estabilizacao_p1a1.py",
+        "linha": 162,
+        "casado": "chave: \"https://api.anthropic.com/v1\"",
+        "contexto": " = auditar_config(\\n                    {chave: \"https://api.anthropic.com/v1\"})\\n                self.assertEqual(_cod"
+      },
+      {
+        "regra": "atribuicao_pt",
+        "origem": "disco:06_p1a/tests/test_estabilizacao_p1a1.py",
+        "linha": 172,
+        "casado": "chave: \"https://api.openai.com/v1\"",
+        "contexto": " = auditar_config(\\n                    {chave: \"https://api.openai.com/v1\"})\\n                self.assertEqual(_cod"
+      },
+      {
+        "regra": "bloco_chave_privada",
+        "origem": "disco:logs/diff-0.2.1-hardening.patch",
+        "linha": 2946,
+        "casado": "-----BEGIN PRIVATE KEY-----",
+        "contexto": "batim\",\\n                   \"conteudo\": \"-----BEGIN PRIVATE KEY-----\\nabc\"}])\\n \\n     def test_ic4_contexto_l"
+      },
+      {
+        "regra": "sk_com_hifen",
+        "origem": "disco:logs/diff-0.3-frota.patch",
+        "linha": 1420,
+        "casado": "sk-teste-payg-nao-usar-123456",
+        "contexto": "\\n+        env_host[\"OPENAI_API_KEY\"] = \"sk-teste-payg-nao-usar-123456\"\\n+        # Ambiente sanitizado: a chav"
+      },
+      {
+        "regra": "sk_com_hifen",
+        "origem": "disco:logs/diff-0.3-frota.patch",
+        "linha": 1426,
+        "casado": "sk-teste-payg-nao-usar-123456",
+        "contexto": "I_API_KEY\"],\\n+                         \"sk-teste-payg-nao-usar-123456\")\\n+        # Mesmo com a chave PAYG pre"
+      }
+    ],
+    "por_regra": {
+      "aiza_generico": 2,
+      "atribuicao_en": 11,
+      "atribuicao_pt": 16,
+      "aws_access_key_id": 5,
+      "bearer_literal": 2,
+      "bloco_chave_privada": 11,
+      "ghp_generico": 2,
+      "hex_sem_contexto": 1640,
+      "openai_sk": 4,
+      "sk_com_hifen": 17,
+      "xai_com_hifen": 4
+    },
+    "total_de_achados": 1714,
+    "hex_sem_contexto_colapsado": {
+      "total": 1640,
+      "valores_distintos": 281,
+      "por_tamanho": {
+        "32": 369,
+        "40": 54,
+        "63": 2,
+        "64": 1215
+      },
+      "por_origem": {
+        "01_fontes/snapshots/canonico-2026-07-30-pos-incidente.sha256": 182,
+        "01_fontes/snapshots/canonico-2026-07-30-fechamento.sha256": 182,
+        "01_fontes/snapshots/canonico-2026-07-30-abertura-ssc02.sha256": 182,
+        "01_fontes/snapshots/canonico-2026-07-30-fechamento-ssc02.sha256": 182,
+        "01_fontes/snapshots/canonico-BL-2026-07-29-08.sha256": 178,
+        "05_p0/saidas/prova_central.json": 150,
+        "logs/diff-0.2.1-hardening.patch": 100,
+        "logs/diff-0.3-frota.patch": 94,
+        "06_p1a/evidencias/p1a1-estabilizacao/05_prova_central.json": 60,
+        "06_p1a/evidencias/backups/prova_central-2026-07-30-pre-p1a-fechamento.json": 60,
+        "01_fontes/03_baseline-supercondutor.md": 20,
+        "05_p0/saidas/labs/prova_central/logs/88b062c9f83c42eeb0333b88c7137f0b.jsonl": 14,
+        "06_p1a/evidencias/p1a1-estabilizacao/02_testes_p0.txt": 12,
+        "08_p2/evidencias/execucao-20260803T023846Z.json": 12,
+        "08_p2/evidencias/execucao-20260803T023110Z.json": 12,
+        "08_p2/evidencias/execucao-20260803T115622Z.json": 12,
+        "08_p2/evidencias/execucao-20260803T135121Z.json": 10,
+        "08_p2/evidencias/execucao-20260803T130829Z.json": 10,
+        "08_p2/evidencias/execucao-20260803T112708Z.json": 10,
+        "08_p2/evidencias/execucao-20260803T131456Z.json": 10,
+        "08_p2/evidencias/execucao-20260803T022952Z.json": 10,
+        "06_p1a/99_decisao-p1a33.md": 8,
+        "06_p1a/evidencias/pacote_p1a31.py": 6,
+        "06_p1a/99_decisao-p1a38.md": 6,
+        "05_p0/saidas/to1.json": 6,
+        "05_p0/saidas/to2.json": 6,
+        "05_p0/saidas/labs/prova_central/cas/objetos/41/77/4177096ab59c7cb419a95eabd50c44fda6e2b3df8a67952832ba9664e5c12555": 5,
+        "<inalcancavel>": 4,
+        "05_p0/saidas/to4.json": 4,
+        "06_p1a/evidencias/pacote_p1a36.py": 4,
+        "06_p1a/evidencias/pacote_p1a33.py": 4,
+        "05_p0/tests/__pycache__/test_p0_kernel_p1a37.cpython-314-pytest-9.1.1.pyc": 4,
+        "05_p0/tests/__pycache__/test_p0_kernel_p1a37.cpython-314.pyc": 4,
+        "06_p1a/evidencias/__pycache__/pacote_p1a36.cpython-314.pyc": 4,
+        "locks/registro-commit-p1a35.txt": 4,
+        "06_p1a/99_decisao-p1a31.md": 3,
+        "05_p0/saidas/labs/prova_central/cas/objetos/e0/b3/e0b33be4ccfe7568928b0d5edb3ef27d61447e149b5675793b49d23a2d75ad00": 3,
+        "05_p0/saidas/labs/prova_central/sessoes/88b062c9f83c42eeb0333b88c7137f0b.envelope.json": 3,
+        "06_p1a/evidencias/__pycache__/pacote_p1a33.cpython-314.pyc": 3,
+        "locks/registro-commit-p1a32.txt": 3,
+        "locks/registro-commit-p1a33.txt": 3,
+        "06_p1a/evidencias/revisao-p1a6/codex-20260805T194137Z.json": 2,
+        "06_p1a/99_decisao-p1a34.md": 2,
+        "00_governanca-experimental/01_carta-experimental.md": 2,
+        "07_p1b/01_parada-preflight.md": 2,
+        "05_p0/saidas/to3.json": 2,
+        "06_p1a/evidencias/revisao-p1a31/pacote-p1a31.txt": 2,
+        "05_p0/saidas/labs/prova_central/cas/objetos/1a/a5/1aa59d7d755993c0d5a7b413afd117925dff62228f6bb4329a6b7e54250c957c": 2,
+        "05_p0/tests/__pycache__/test_juiz.cpython-314-pytest-9.1.1.pyc": 2,
+        "05_p0/tests/__pycache__/test_juiz.cpython-314.pyc": 2,
+        "05_p0/tests/__pycache__/test_p0_cas_classe_p1a37.cpython-314-pytest-9.1.1.pyc": 2,
+        "05_p0/tests/__pycache__/test_p0_cas_classe_p1a37.cpython-314.pyc": 2,
+        "05_p0/tests/__pycache__/test_p0_eventlog_p1a37.cpython-314-pytest-9.1.1.pyc": 2,
+        "05_p0/tests/__pycache__/test_p0_eventlog_p1a37.cpython-314.pyc": 2,
+        "06_p1a/evidencias/__pycache__/pacote_p1a31.cpython-314.pyc": 2,
+        "locks/registro-commit-p1a34.txt": 2,
+        ".pytest_cache/CACHEDIR.TAG": 1,
+        "05_p0/.pytest_cache/CACHEDIR.TAG": 1,
+        "05_p0/saidas/labs/prova_central/cas/objetos/25/33/2533519494243345efa4f319977adf283de65e98d2bab61eebd6dc883d08bdae": 1,
+        "05_p0/saidas/labs/prova_central/cas/objetos/54/63/5463e7bcd5f1d0bcc8d2aa5d6b5bd4cae373f04f226c3594a6594f177d60354f": 1,
+        "05_p0/saidas/labs/prova_central/cas/objetos/90/9c/909cca3eb5ceb3f5945c9a945ea1aec9fa75b9211c0d468126e7739d00094a5d": 1,
+        "05_p0/tests/__pycache__/test_crash.cpython-314-pytest-9.1.1.pyc": 1,
+        "05_p0/tests/__pycache__/test_crash.cpython-314.pyc": 1,
+        "05_p0/tests/__pycache__/test_eventlog.cpython-314-pytest-9.1.1.pyc": 1,
+        "05_p0/tests/__pycache__/test_eventlog.cpython-314.pyc": 1,
+        "05_p0/tests/__pycache__/test_p0_kernel_veredito_p1a38.cpython-314-pytest-9.1.1.pyc": 1,
+        "05_p0/tests/__pycache__/test_p0_kernel_veredito_p1a38.cpython-314.pyc": 1,
+        "05_p0/tests/__pycache__/test_p0_seq_booleana_p1a38.cpython-314-pytest-9.1.1.pyc": 1,
+        "05_p0/tests/__pycache__/test_p0_seq_booleana_p1a38.cpython-314.pyc": 1,
+        "06_p1a/.pytest_cache/CACHEDIR.TAG": 1,
+        "06_p1a/tests/__pycache__/test_pacote_autoinclusao_p1a37.cpython-314-pytest-9.1.1.pyc": 1,
+        "06_p1a/tests/__pycache__/test_pacote_autoinclusao_p1a37.cpython-314.pyc": 1,
+        "06_p1a/tests/__pycache__/test_pacote_p1a33.cpython-314-pytest-9.1.1.pyc": 1,
+        "06_p1a/tests/__pycache__/test_pacote_p1a33.cpython-314.pyc": 1,
+        "06_p1a/tests/__pycache__/test_pedido_de_julgamento_p1a37.cpython-314-pytest-9.1.1.pyc": 1,
+        "06_p1a/tests/__pycache__/test_pedido_de_julgamento_p1a37.cpython-314.pyc": 1,
+        "locks/registro-commit-p1a1.txt": 1
+      },
+      "o_que_se_largou": "linha, valor e contexto de cada casamento de `hex_sem_contexto`; preservados o total, o numero de valores distintos, a distribuicao por tamanho e a contagem por arquivo de origem"
+    }
+  },
+  "carga_do_push": {
+    "blobs_no_banco": 609,
+    "blobs_inalcancaveis": 0,
+    "arquivos_em_disco": 361,
+    "bytes_lidos": 11220503,
+    "nomes_de_arquivo_suspeitos": [],
+    "achados": [
+      {
+        "regra": "aws_access_key_id",
+        "origem": "blob:02fcadb4c357:05_p0/tests/test_seguranca.py",
+        "linha": 28,
+        "casado": "AKIA1234567890ABCDEF",
+        "contexto": ",\\n                 \"rotulo\": 'api_key: \"AKIA1234567890ABCDEF\"'}, None)\\n\\n    def test_ic4_segredo_pad"
+      },
+      {
+        "regra": "bloco_chave_privada",
+        "origem": "blob:02fcadb4c357:05_p0/tests/test_seguranca.py",
+        "linha": 44,
+        "casado": "-----BEGIN PRIVATE KEY-----",
+        "contexto": "rbatim\",\\n                  \"conteudo\": \"-----BEGIN PRIVATE KEY-----\\nabc\"}])\\n\\n    def test_ic4_contexto_lim"
+      },
+      {
+        "regra": "atribuicao_en",
+        "origem": "blob:02fcadb4c357:05_p0/tests/test_seguranca.py",
+        "linha": 28,
+        "casado": "api_key: \"AKIA1234567890ABCDEF\"",
+        "contexto": ": \"sessao\",\\n                 \"rotulo\": 'api_key: \"AKIA1234567890ABCDEF\"'}, None)\\n\\n    def test_ic4_segredo_padr"
+      },
+      {
+        "regra": "aws_access_key_id",
+        "origem": "blob:0f2a9ae9ef93:05_p0/tests/test_seguranca.py",
+        "linha": 34,
+        "casado": "AKIA1234567890ABCDEF",
+        "contexto": ",\\n                 \"rotulo\": 'api_key: \"AKIA1234567890ABCDEF\"'}, None)\\n\\n    def test_ic4_segredo_pad"
+      },
+      {
+        "regra": "bloco_chave_privada",
+        "origem": "blob:0f2a9ae9ef93:05_p0/tests/test_seguranca.py",
+        "linha": 50,
+        "casado": "-----BEGIN PRIVATE KEY-----",
+        "contexto": "rbatim\",\\n                  \"conteudo\": \"-----BEGIN PRIVATE KEY-----\\nabc\"}])\\n\\n    def test_ic4_contexto_lim"
+      },
+      {
+        "regra": "atribuicao_en",
+        "origem": "blob:0f2a9ae9ef93:05_p0/tests/test_seguranca.py",
+        "linha": 34,
+        "casado": "api_key: \"AKIA1234567890ABCDEF\"",
+        "contexto": ": \"sessao\",\\n                 \"rotulo\": 'api_key: \"AKIA1234567890ABCDEF\"'}, None)\\n\\n    def test_ic4_segredo_padr"
+      },
+      {
+        "regra": "sk_com_hifen",
+        "origem": "blob:3fe8398fca14:05_p0/tests/test_frota.py",
+        "linha": 59,
+        "casado": "sk-teste-payg-nao-usar-123456",
+        "contexto": ")\\n        env_host[\"OPENAI_API_KEY\"] = \"sk-teste-payg-nao-usar-123456\"\\n        # Ambiente sanitizado: a chave"
+      },
+      {
+        "regra": "sk_com_hifen",
+        "origem": "blob:3fe8398fca14:05_p0/tests/test_frota.py",
+        "linha": 65,
+        "casado": "sk-teste-payg-nao-usar-123456",
+        "contexto": "AI_API_KEY\"],\\n                         \"sk-teste-payg-nao-usar-123456\")\\n        # Mesmo com a chave PAYG pres"
+      },
+      {
+        "regra": "bloco_chave_privada",
+        "origem": "blob:526fffe0f4e9:05_p0/tests/test_p0_kernel_p1a37.py",
+        "linha": 171,
+        "casado": "-----BEGIN PRIVATE KEY-----",
+        "contexto": "A\" + b\"B\" * 16,\\n                      b\"-----BEGIN PRIVATE KEY-----\",\\n                      b'api_key: \"abc"
+      },
+      {
+        "regra": "atribuicao_en",
+        "origem": "blob:526fffe0f4e9:05_p0/tests/test_p0_kernel_p1a37.py",
+        "linha": 172,
+        "casado": "api_key: \"abcdefgh12345678\"",
+        "contexto": "VATE KEY-----\",\\n                      b'api_key: \"abcdefgh12345678\"'):\\n            with self.subTest(amostr"
+      },
+      {
+        "regra": "atribuicao_pt",
+        "origem": "blob:5cf97e50a64f:06_p1a/tests/test_estabilizacao_p1a1.py",
+        "linha": 162,
+        "casado": "chave: \"https://api.anthropic.com/v1\"",
+        "contexto": " = auditar_config(\\n                    {chave: \"https://api.anthropic.com/v1\"})\\n                self.assertEqual(_cod"
+      },
+      {
+        "regra": "atribuicao_pt",
+        "origem": "blob:5cf97e50a64f:06_p1a/tests/test_estabilizacao_p1a1.py",
+        "linha": 172,
+        "casado": "chave: \"https://api.openai.com/v1\"",
+        "contexto": " = auditar_config(\\n                    {chave: \"https://api.openai.com/v1\"})\\n                self.assertEqual(_cod"
+      },
+      {
+        "regra": "atribuicao_pt",
+        "origem": "blob:6befc0026dc4:06_p1a/tests/test_estabilizacao_p1a1.py",
+        "linha": 161,
+        "casado": "chave: \"https://api.anthropic.com/v1\"",
+        "contexto": " = auditar_config(\\n                    {chave: \"https://api.anthropic.com/v1\"})\\n                self.assertEqual(_cod"
+      },
+      {
+        "regra": "atribuicao_pt",
+        "origem": "blob:6befc0026dc4:06_p1a/tests/test_estabilizacao_p1a1.py",
+        "linha": 171,
+        "casado": "chave: \"https://api.openai.com/v1\"",
+        "contexto": " = auditar_config(\\n                    {chave: \"https://api.openai.com/v1\"})\\n                self.assertEqual(_cod"
+      },
+      {
+        "regra": "atribuicao_pt",
+        "origem": "blob:8c550fd390ad:06_p1a/tests/test_estabilizacao_p1a1.py",
+        "linha": 159,
+        "casado": "chave: \"https://api.anthropic.com/v1\"",
+        "contexto": " = auditar_config(\\n                    {chave: \"https://api.anthropic.com/v1\"})\\n                self.assertEqual(_cod"
+      },
+      {
+        "regra": "atribuicao_pt",
+        "origem": "blob:8c550fd390ad:06_p1a/tests/test_estabilizacao_p1a1.py",
+        "linha": 169,
+        "casado": "chave: \"https://api.openai.com/v1\"",
+        "contexto": " = auditar_config(\\n                    {chave: \"https://api.openai.com/v1\"})\\n                self.assertEqual(_cod"
+      },
+      {
+        "regra": "atribuicao_pt",
+        "origem": "blob:8e0931dad191:06_p1a/tests/test_estabilizacao_p1a1.py",
+        "linha": 161,
+        "casado": "chave: \"https://api.anthropic.com/v1\"",
+        "contexto": " = auditar_config(\\n                    {chave: \"https://api.anthropic.com/v1\"})\\n                self.assertEqual(_cod"
+      },
+      {
+        "regra": "atribuicao_pt",
+        "origem": "blob:8e0931dad191:06_p1a/tests/test_estabilizacao_p1a1.py",
+        "linha": 171,
+        "casado": "chave: \"https://api.openai.com/v1\"",
+        "contexto": " = auditar_config(\\n                    {chave: \"https://api.openai.com/v1\"})\\n                self.assertEqual(_cod"
+      },
+      {
+        "regra": "bloco_chave_privada",
+        "origem": "blob:92ce38786348:logs/diff-0.2.1-hardening.patch",
+        "linha": 2946,
+        "casado": "-----BEGIN PRIVATE KEY-----",
+        "contexto": "batim\",\\n                   \"conteudo\": \"-----BEGIN PRIVATE KEY-----\\nabc\"}])\\n \\n     def test_ic4_contexto_l"
+      },
+      {
+        "regra": "sk_com_hifen",
+        "origem": "blob:c5d343d21095:logs/diff-0.3-frota.patch",
+        "linha": 1420,
+        "casado": "sk-teste-payg-nao-usar-123456",
+        "contexto": "\\n+        env_host[\"OPENAI_API_KEY\"] = \"sk-teste-payg-nao-usar-123456\"\\n+        # Ambiente sanitizado: a chav"
+      },
+      {
+        "regra": "sk_com_hifen",
+        "origem": "blob:c5d343d21095:logs/diff-0.3-frota.patch",
+        "linha": 1426,
+        "casado": "sk-teste-payg-nao-usar-123456",
+        "contexto": "I_API_KEY\"],\\n+                         \"sk-teste-payg-nao-usar-123456\")\\n+        # Mesmo com a chave PAYG pre"
+      },
+      {
+        "regra": "atribuicao_pt",
+        "origem": "blob:cf2d125de3ea:05_p0/tests/test_p0_adaptador_assinatura_p1a37.py",
+        "linha": 115,
+        "casado": "chave: \"valor-ficticio\"",
+        "contexto": "                   self._adaptador(env={chave: \"valor-ficticio\"})\\n                    self.assertIn(\"am"
+      },
+      {
+        "regra": "atribuicao_pt",
+        "origem": "blob:fd35c608fbd1:06_p1a/evidencias/revisao-p1a31/pacote-p1a31.txt",
+        "linha": 7175,
+        "casado": "chave: \"https://api.anthropic.com/v1\"",
+        "contexto": " = auditar_config(\\n                    {chave: \"https://api.anthropic.com/v1\"})\\n                self.assertEqual(_cod"
+      },
+      {
+        "regra": "atribuicao_pt",
+        "origem": "blob:fd35c608fbd1:06_p1a/evidencias/revisao-p1a31/pacote-p1a31.txt",
+        "linha": 7185,
+        "casado": "chave: \"https://api.openai.com/v1\"",
+        "contexto": " = auditar_config(\\n                    {chave: \"https://api.openai.com/v1\"})\\n                self.assertEqual(_cod"
+      },
+      {
+        "regra": "sk_com_hifen",
+        "origem": "disco:05_p0/tests/test_frota.py",
+        "linha": 59,
+        "casado": "sk-teste-payg-nao-usar-123456",
+        "contexto": "\r\\n        env_host[\"OPENAI_API_KEY\"] = \"sk-teste-payg-nao-usar-123456\"\r\\n        # Ambiente sanitizado: a chav"
+      },
+      {
+        "regra": "sk_com_hifen",
+        "origem": "disco:05_p0/tests/test_frota.py",
+        "linha": 65,
+        "casado": "sk-teste-payg-nao-usar-123456",
+        "contexto": "I_API_KEY\"],\r\\n                         \"sk-teste-payg-nao-usar-123456\")\r\\n        # Mesmo com a chave PAYG pre"
+      },
+      {
+        "regra": "atribuicao_pt",
+        "origem": "disco:05_p0/tests/test_p0_adaptador_assinatura_p1a37.py",
+        "linha": 115,
+        "casado": "chave: \"valor-ficticio\"",
+        "contexto": "                   self._adaptador(env={chave: \"valor-ficticio\"})\r\\n                    self.assertIn(\"a"
+      },
+      {
+        "regra": "bloco_chave_privada",
+        "origem": "disco:05_p0/tests/test_p0_kernel_p1a37.py",
+        "linha": 171,
+        "casado": "-----BEGIN PRIVATE KEY-----",
+        "contexto": "\" + b\"B\" * 16,\r\\n                      b\"-----BEGIN PRIVATE KEY-----\",\r\\n                      b'api_key: \"ab"
+      },
+      {
+        "regra": "atribuicao_en",
+        "origem": "disco:05_p0/tests/test_p0_kernel_p1a37.py",
+        "linha": 172,
+        "casado": "api_key: \"abcdefgh12345678\"",
+        "contexto": "ATE KEY-----\",\r\\n                      b'api_key: \"abcdefgh12345678\"'):\r\\n            with self.subTest(amost"
+      },
+      {
+        "regra": "aws_access_key_id",
+        "origem": "disco:05_p0/tests/test_seguranca.py",
+        "linha": 34,
+        "casado": "AKIA1234567890ABCDEF",
+        "contexto": "\r\\n                 \"rotulo\": 'api_key: \"AKIA1234567890ABCDEF\"'}, None)\r\\n\r\\n    def test_ic4_segredo_p"
+      },
+      {
+        "regra": "bloco_chave_privada",
+        "origem": "disco:05_p0/tests/test_seguranca.py",
+        "linha": 50,
+        "casado": "-----BEGIN PRIVATE KEY-----",
+        "contexto": "batim\",\r\\n                  \"conteudo\": \"-----BEGIN PRIVATE KEY-----\\nabc\"}])\r\\n\r\\n    def test_ic4_contexto_l"
+      },
+      {
+        "regra": "atribuicao_en",
+        "origem": "disco:05_p0/tests/test_seguranca.py",
+        "linha": 34,
+        "casado": "api_key: \"AKIA1234567890ABCDEF\"",
+        "contexto": " \"sessao\",\r\\n                 \"rotulo\": 'api_key: \"AKIA1234567890ABCDEF\"'}, None)\r\\n\r\\n    def test_ic4_segredo_pa"
+      },
+      {
+        "regra": "atribuicao_pt",
+        "origem": "disco:06_p1a/evidencias/revisao-p1a31/pacote-p1a31.txt",
+        "linha": 7175,
+        "casado": "chave: \"https://api.anthropic.com/v1\"",
+        "contexto": " = auditar_config(\\n                    {chave: \"https://api.anthropic.com/v1\"})\\n                self.assertEqual(_cod"
+      },
+      {
+        "regra": "atribuicao_pt",
+        "origem": "disco:06_p1a/evidencias/revisao-p1a31/pacote-p1a31.txt",
+        "linha": 7185,
+        "casado": "chave: \"https://api.openai.com/v1\"",
+        "contexto": " = auditar_config(\\n                    {chave: \"https://api.openai.com/v1\"})\\n                self.assertEqual(_cod"
+      },
+      {
+        "regra": "atribuicao_pt",
+        "origem": "disco:06_p1a/tests/test_estabilizacao_p1a1.py",
+        "linha": 162,
+        "casado": "chave: \"https://api.anthropic.com/v1\"",
+        "contexto": "= auditar_config(\r\\n                    {chave: \"https://api.anthropic.com/v1\"})\r\\n                self.assertEqual(_co"
+      },
+      {
+        "regra": "atribuicao_pt",
+        "origem": "disco:06_p1a/tests/test_estabilizacao_p1a1.py",
+        "linha": 172,
+        "casado": "chave: \"https://api.openai.com/v1\"",
+        "contexto": "= auditar_config(\r\\n                    {chave: \"https://api.openai.com/v1\"})\r\\n                self.assertEqual(_co"
+      },
+      {
+        "regra": "bloco_chave_privada",
+        "origem": "disco:logs/diff-0.2.1-hardening.patch",
+        "linha": 2946,
+        "casado": "-----BEGIN PRIVATE KEY-----",
+        "contexto": "atim\",\r\\n                   \"conteudo\": \"-----BEGIN PRIVATE KEY-----\\nabc\"}])\r\\n \r\\n     def test_ic4_contexto"
+      },
+      {
+        "regra": "sk_com_hifen",
+        "origem": "disco:logs/diff-0.3-frota.patch",
+        "linha": 1420,
+        "casado": "sk-teste-payg-nao-usar-123456",
+        "contexto": "\\n+        env_host[\"OPENAI_API_KEY\"] = \"sk-teste-payg-nao-usar-123456\"\r\\n+        # Ambiente sanitizado: a cha"
+      },
+      {
+        "regra": "sk_com_hifen",
+        "origem": "disco:logs/diff-0.3-frota.patch",
+        "linha": 1426,
+        "casado": "sk-teste-payg-nao-usar-123456",
+        "contexto": "_API_KEY\"],\r\\n+                         \"sk-teste-payg-nao-usar-123456\")\r\\n+        # Mesmo com a chave PAYG pr"
+      }
+    ],
+    "bytes_do_bundle": 1600613,
+    "mb_do_bundle": 1.526,
+    "por_regra": {
+      "atribuicao_en": 5,
+      "atribuicao_pt": 16,
+      "aws_access_key_id": 3,
+      "bloco_chave_privada": 7,
+      "hex_sem_contexto": 1547,
+      "sk_com_hifen": 8
+    },
+    "total_de_achados": 1586,
+    "hex_sem_contexto_colapsado": {
+      "total": 1547,
+      "valores_distintos": 247,
+      "por_tamanho": {
+        "32": 342,
+        "40": 33,
+        "64": 1172
+      },
+      "por_origem": {
+        "01_fontes/snapshots/canonico-2026-07-30-pos-incidente.sha256": 182,
+        "01_fontes/snapshots/canonico-2026-07-30-fechamento.sha256": 182,
+        "01_fontes/snapshots/canonico-2026-07-30-abertura-ssc02.sha256": 182,
+        "01_fontes/snapshots/canonico-2026-07-30-fechamento-ssc02.sha256": 182,
+        "01_fontes/snapshots/canonico-BL-2026-07-29-08.sha256": 178,
+        "05_p0/saidas/prova_central.json": 150,
+        "logs/diff-0.2.1-hardening.patch": 100,
+        "logs/diff-0.3-frota.patch": 94,
+        "06_p1a/evidencias/p1a1-estabilizacao/05_prova_central.json": 60,
+        "06_p1a/evidencias/backups/prova_central-2026-07-30-pre-p1a-fechamento.json": 60,
+        "01_fontes/03_baseline-supercondutor.md": 20,
+        "06_p1a/evidencias/p1a1-estabilizacao/02_testes_p0.txt": 12,
+        "08_p2/evidencias/execucao-20260803T023846Z.json": 12,
+        "08_p2/evidencias/execucao-20260803T023110Z.json": 12,
+        "08_p2/evidencias/execucao-20260803T115622Z.json": 12,
+        "08_p2/evidencias/execucao-20260803T135121Z.json": 10,
+        "08_p2/evidencias/execucao-20260803T130829Z.json": 10,
+        "08_p2/evidencias/execucao-20260803T112708Z.json": 10,
+        "08_p2/evidencias/execucao-20260803T131456Z.json": 10,
+        "08_p2/evidencias/execucao-20260803T022952Z.json": 10,
+        "06_p1a/99_decisao-p1a33.md": 8,
+        "06_p1a/evidencias/pacote_p1a31.py": 6,
+        "06_p1a/99_decisao-p1a38.md": 6,
+        "05_p0/saidas/to1.json": 6,
+        "05_p0/saidas/to2.json": 6,
+        "05_p0/saidas/to4.json": 4,
+        "06_p1a/evidencias/pacote_p1a36.py": 4,
+        "06_p1a/evidencias/pacote_p1a33.py": 4,
+        "06_p1a/99_decisao-p1a31.md": 3,
+        "06_p1a/evidencias/revisao-p1a6/codex-20260805T194137Z.json": 2,
+        "06_p1a/99_decisao-p1a34.md": 2,
+        "00_governanca-experimental/01_carta-experimental.md": 2,
+        "07_p1b/01_parada-preflight.md": 2,
+        "05_p0/saidas/to3.json": 2,
+        "06_p1a/evidencias/revisao-p1a31/pacote-p1a31.txt": 2
+      },
+      "o_que_se_largou": "linha, valor e contexto de cada casamento de `hex_sem_contexto`; preservados o total, o numero de valores distintos, a distribuicao por tamanho e a contagem por arquivo de origem"
+    }
+  },
+  "peso": {
+    "arquivos_rastreados_em_head": 361,
+    "bytes_da_arvore_head": 4011134,
+    "mb_da_arvore_head": 3.825,
+    "blobs_em_toda_a_historia": 617,
+    "bytes_somados_dos_blobs_descompactados": 7295110,
+    "mb_somados_dos_blobs_descompactados": 6.957,
+    "vinte_maiores_em_head": [
+      {
+        "bytes": 447693,
+        "caminho": "06_p1a/evidencias/revisao-p1a31/pacote-p1a31.txt"
+      },
+      {
+        "bytes": 139986,
+        "caminho": "logs/diff-0.2.1-hardening.patch"
+      },
+      {
+        "bytes": 88511,
+        "caminho": "06_p1a/evidencias/revisao-p1a38/pacote-p1a38.txt"
+      },
+      {
+        "bytes": 75599,
+        "caminho": "logs/diff-0.3-frota.patch"
+      },
+      {
+        "bytes": 54943,
+        "caminho": "05_p0/ssc_p0/kernel.py"
+      },
+      {
+        "bytes": 47736,
+        "caminho": "06_p1a/99_decisao-p1a6.md"
+      },
+      {
+        "bytes": 47673,
+        "caminho": "06_p1a/evidencias/p1a39-varredura-listas.json"
+      },
+      {
+        "bytes": 41200,
+        "caminho": "06_p1a/99_decisao-p1a36.md"
+      },
+      {
+        "bytes": 36028,
+        "caminho": "06_p1a/tests/test_p2_protecao_no_mecanismo_p23.py"
+      },
+      {
+        "bytes": 35326,
+        "caminho": "06_p1a/99_varredura-guardas-p1a35.md"
+      },
+      {
+        "bytes": 35171,
+        "caminho": "06_p1a/tests/test_emendas_p1a3.py"
+      },
+      {
+        "bytes": 33881,
+        "caminho": "08_p2/medidor.py"
+      },
+      {
+        "bytes": 32823,
+        "caminho": "06_p1a/evidencias/pacote_p1a36.py"
+      },
+      {
+        "bytes": 32618,
+        "caminho": "06_p1a/99_decisao-p1a5.md"
+      },
+      {
+        "bytes": 31560,
+        "caminho": "06_p1a/99_decisao-p1a33.md"
+      },
+      {
+        "bytes": 30410,
+        "caminho": "06_p1a/tests/test_correcoes_p1a32.py"
+      },
+      {
+        "bytes": 29410,
+        "caminho": "02_alvo/diffs/d5-v0.1.0-v0.2.0.diff"
+      },
+      {
+        "bytes": 29097,
+        "caminho": "06_p1a/evidencias/p1a1-estabilizacao/03_testes_p1a.txt"
+      },
+      {
+        "bytes": 28742,
+        "caminho": "06_p1a/99_decisao-p1a4.md"
+      },
+      {
+        "bytes": 27308,
+        "caminho": "05_p0/saidas/prova_central.json"
+      }
+    ]
+  }
+}
