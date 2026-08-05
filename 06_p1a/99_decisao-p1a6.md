@@ -364,6 +364,60 @@ Os hexadecimais de 40 caracteres sao os SHA-1 de BASE, ALVO e `tree` — a
 **propria ancora**, exigida pelo cabecalho de identidade. Os de 64 sao
 SHA-256 de blob, exigidos por desenho. Nenhum e UUID.
 
+### 6.5 O portao de tamanho — aferido por precedente para UM dos dois
+
+O despacho manda tratar como BLOCKED o pacote que **nao couber** em
+qualquer revisor. Enviar e a unica aferição definitiva, e o portao
+fechado impede o envio. O que **se pode** medir sem enviar e o
+precedente, e ele foi medido:
+
+| Pacote | Bytes | Foi lido por revisor? |
+|---|---|---|
+| `pacote-p1a31.txt` | 447 693 | sim |
+| `pacote-p1a38.txt` | 88 511 | sim |
+| **P1-A.4** | **1 312 291** | **sim — o codex leu e devolveu veredito completo** |
+| **P1-A.6, sobre `79a17f3`** | **141 556** | **nao enviado** |
+
+O pacote desta missao e **9,3 vezes menor** que um que o `codex`
+demonstravelmente leu e julgou. Para o `codex`, portanto, o risco de nao
+caber e **baixo por precedente medido** — e precedente **nao e prova**:
+janela de contexto e propriedade do provedor num dia, nao do acervo.
+
+**Para o `kimi` nao ha precedente nenhum.** Ele **nunca leu um pacote**,
+em quatro tentativas — todas morreram em cota antes da leitura. O portao
+de tamanho do segundo revisor segue **integralmente desconhecido**, e
+nada aqui autoriza supor que ele passa.
+
+### 6.6 As declaracoes aos revisores — preparadas e conferidas, NAO enviadas
+
+`06_p1a/99_declaracoes-obrigatorias-p1a6.md`.
+
+O instrumento vigente guarda as declaracoes **no fonte do runner**, nunca
+no pacote (o pacote e funcao exclusiva de commits — correcao do MAJOR
+#5), e as entrega ao descartavel de cada revisor como
+`declaracoes-obrigatorias.txt`, mesmos bytes para os dois.
+
+Os oito itens que o despacho exige declarar foram **conferidos contra o
+acervo** nesta missao, e nao copiados de memoria:
+
+| Afirmacao | Conferida em |
+|---|---|
+| `abc75e8` corrige o read-only **no mecanismo** | commit existe: *"a protecao sai do texto e entra no argv, no cwd e na medicao"* |
+| argv com `--sandbox read-only --cd --skip-git-repo-check --ephemeral` | `08_p2/99_registro-p23.md:49` |
+| cobertura classe (a) **89,7 %** | `08_p2/99_registro-p24.md:94`, `README.md:254` |
+| cobertura classe (b) **17,3 %** | `08_p2/99_registro-p24.md:95`, `README.md:255` |
+| `--ephemeral` **nao** impede escrita em `CODEX_HOME` | `08_p2/99_achados-divergencias-20260803.md` |
+
+**Um `revisao_p1a6.py` NAO foi escrito, e a omissao e deliberada.** Com o
+portao fechado ele nasceria **sem nunca ter rodado** — que e exatamente a
+classe dos achados **7, 10 e 14** da P1-A.3.5, *a copia que ninguem
+exercita fica para tras*. Adiantar codigo nao exercitado nao e adiantar
+trabalho: e criar defeito novo com aparencia de progresso, numa missao
+cujo veredito e BLOCKED.
+
+O que se adiantou e **dado conferido**, que nao corre esse risco. E quem
+o preparou **nao o certifica**: a missao seguinte reconfere.
+
 ## 7. O que esta missao NAO fez — cada item com a razao
 
 ### 7.1 Nao chamou revisor — e esta e a unica omissao que a declaracao causa
@@ -421,6 +475,8 @@ janela aberta.
 | O gerador de pacote e **deterministico** | dois clones independentes, SHA-256 e bytes identicos (§6.2) |
 | O pacote esta **ancorado no commit**, nao no checkout | quatro alvos, mutacao **comprovada** e hash do pacote inalterado (§6.3) |
 | O escritor unico funciona no caminho operacional desta missao | lease `p1a6-ops`, fences 9 e 10, verificado antes de cada persistencia |
+| O lease **expira sozinho** apos a morte do renovador | medido apos a janela: `titular_atual` devolve `None`, escritor livre para o sucessor |
+| O pacote e **9,3x menor** que um que o codex ja leu e julgou | 141 556 contra 1 312 291 bytes (§6.5) |
 | As evidencias saem sem PII | varredura por nome de usuario e prefixo de caminho local: **0** ocorrencias, tambem no pacote |
 
 ### 9.2 NAO estabelecido — e nao se presume
@@ -431,9 +487,10 @@ janela aberta.
   que ela ainda vale: afirma-se que **nao se pode mais medir**;
 - **nao se afirma nada sobre quota.** O preflight devolveu
   `desconhecida` nos cinco, e no portao a quota **nao e mensuravel**;
-- **o pacote nunca foi lido por revisor**, e portanto **nao se sabe se
-  ele cabe** em qualquer um dos dois. O portao de tamanho nao foi
-  aferido;
+- **o pacote nunca foi lido por revisor.** Para o **kimi** o portao de
+  tamanho segue **desconhecido** — ele nunca leu pacote nenhum, em quatro
+  tentativas. Para o **codex** ha precedente medido (§6.5), que e
+  indicio forte e **nao** e prova: so o envio afere;
 - **a prova de ancoragem nao certifica o defeito de procedimento.** Ela
   o **exerceu**; quem corrige nao certifica, e o `P1-A.5 §5.6` so fecha
   quando um revisor independente disser que fechou;
