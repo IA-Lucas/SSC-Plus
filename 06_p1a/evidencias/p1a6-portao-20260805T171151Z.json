@@ -1,0 +1,45 @@
+{
+  "tipo": "portao-de-abertura-p1a6",
+  "medido_em_utc": "2026-08-05T17:11:51Z",
+  "regra_aplicada": "CLAUDE.md, secao BLOCKED E PORTAO DE ABERTURA: quota ausente e declaracao vencida sao portao de ABERTURA",
+  "mecanismo_da_medicao": "leitor_tiers.carregar_tiers + preflight.sombra.declaracao_valida — o MESMO leitor e a MESMA funcao de validade que o pipeline usa; nao e aritmetica do operador",
+  "declaracao_do_despacho": {
+    "codex": "[preencher] — NAO PREENCHIDA pelo proprietario",
+    "kimi": "[preencher] — NAO PREENCHIDA pelo proprietario",
+    "consequencia": "nao ha ato do proprietario a gravar: o tier e declaracao humana, nunca inferida pelo codigo (preflight/sombra.py, docstring)"
+  },
+  "declaracao_em_disco": {
+    "arquivo": "06_p1a/tiers_declarados.json",
+    "inalterada_por_esta_missao": true,
+    "medidas": [
+      {
+        "provider_id": "codex",
+        "tier_declarado": "ChatGPT Pro 5x",
+        "declarado_por": "proprietario",
+        "declarado_em_utc": "2026-08-04T02:40:33Z",
+        "expira_em_utc": "2026-08-05T02:40:33Z",
+        "vencida_ha_horas": 14.52,
+        "valida": false
+      },
+      {
+        "provider_id": "kimi",
+        "tier_declarado": "Allegretto",
+        "declarado_por": "proprietario",
+        "declarado_em_utc": "2026-08-04T02:40:33Z",
+        "expira_em_utc": "2026-08-05T02:40:33Z",
+        "vencida_ha_horas": 14.52,
+        "valida": false
+      }
+    ]
+  },
+  "trilha_sombra_disponivel": false,
+  "veredito_do_portao": "BLOCKED",
+  "por_que_nao_se_renovou": "'Renovacao automatica proibida' (despacho). Copiar os tiers de 2026-08-04 com timestamp de hoje E renovacao automatica, e forjaria ato do proprietario",
+  "custo_variavel": 0,
+  "chamadas_de_modelo": 0,
+  "lock_escritor_unico": {
+    "sessao": "p1a6-ops",
+    "fence": 9,
+    "verificado_antes_da_persistencia": true
+  }
+}
