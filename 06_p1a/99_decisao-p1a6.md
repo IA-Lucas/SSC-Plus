@@ -1,6 +1,6 @@
 ---
 id: SSC-DEC-P1A6
-titulo: Registro e Decisao da Missao SSC+ P1-A.6 — a quinta tentativa nao abriu, e o portao foi medido pelo mecanismo
+titulo: Registro e Decisao da Missao SSC+ P1-A.6 — o portao fechou, o proprietario declarou, e a revisao dupla finalmente aconteceu
 tipo: decisao-experimental
 versao: 1.0.0
 status: ativo
@@ -13,26 +13,61 @@ criado_em: 2026-08-05
 # Registro e Decisao — Missao SSC+ P1-A.6
 
 > Laboratorio experimental. Nada aqui e norma; nada foi promovido ao
-> canonico. Registro **aditivo**. Esta missao **nao revisou**, **nao
-> corrigiu** e **nao certifica** coisa alguma.
+> canonico. Registro **aditivo**, e em **DUAS PARTES**: a Parte I e a
+> missao sob o portao FECHADO, escrita quando BLOCKED era a decisao
+> correta; a Parte II e o que veio depois do ato do proprietario. Nada da
+> Parte I foi reescrito. Esta missao **nao corrigiu** nada e **nao
+> certifica** nada — quem se pronunciou foram os revisores.
 
-## DECISAO: **BLOCKED**
+## DECISAO FINAL: **ADJUST**
 
-**Nao houve medicao da revisao.** O portao de ABERTURA fechou: a
-declaracao de tier do proprietario esta **vencida** para os **dois**
-revisores da missao, e a declaracao trazida no despacho veio com
-`[preencher]` nos dois campos.
+**A revisao dupla ACONTECEU** — pela primeira vez em cinco tentativas,
+**dois vereditos na mesma rodada**, sobre **os mesmos bytes**. Os dois
+disseram **REPROVADO**. O portao (*zero CRITICAL e zero MAJOR nos dois*)
+**nao passa**, e os achados exigem alteracao: por ordem expressa do
+despacho, isso encerra em **ADJUST**, sem corrigir nesta missao. §13.
 
-Tudo que **nao** dependia desse ato foi executado e medido — preflight na
-capsula (§3), pacote gerado e conferido em dois clones independentes
-(§6), prova de ancoragem exercida com o degrau que a P1-A.4 pulou (§6.3).
-O que falta e **um ato do proprietario**, nao trabalho de engenharia.
+### O BLOCKED que vigorou antes, e que NAO se apaga
 
-BLOCKED e o veredito correto pela distincao que o `CLAUDE.md` ja grava:
-**BLOCKED diz "nao deu para medir"; STOP diz "mediu-se, e a medicao manda
-parar"**. Aqui nao se mediu revisao nenhuma.
+Esta missao abriu **BLOCKED**, e o registro daquele veredito fica inteiro
+nas §§1-11 porque **ele estava correto enquanto vigeu**: a declaracao de
+tier estava vencida ha 14,52 h para os dois revisores, e o despacho manda
+BLOCKED nesse caso. Foram tres commits (`b6f6048`, `79a17f3`, `eb01be6`).
 
-## SUMARIO — 10 linhas
+**O que mudou nao foi o julgamento: foi o fato.** O proprietario declarou
+o tier em `2026-08-05T19:34:20Z` — ato dele, nao renovacao automatica do
+runner —, o portao abriu e a missao prosseguiu (§12). Apagar o BLOCKED
+esconderia que ele foi a decisao certa sob o estado que existia, e este
+repositorio ja decidiu, na P1-A.5, que criterio superado **se preserva
+com a razao da superacao** em vez de ser reescrito.
+
+Enquanto vigeu, BLOCKED foi correto pela distincao que o `CLAUDE.md`
+grava: **BLOCKED diz "nao deu para medir"; STOP diz "mediu-se, e a
+medicao manda parar"**. Naquele estado nao havia revisao a medir.
+
+## SUMARIO DA PARTE II — o que a revisao devolveu
+
+| | Medido |
+|---|---|
+| Vereditos na mesma rodada | **DOIS**, sobre os **mesmos bytes** — inedito em cinco tentativas |
+| `codex` | REPROVADO, 0 CRITICAL, 6 MAJOR, 287,3 s, `gpt-5.6-sol` |
+| `kimi` | REPROVADO, 0 CRITICAL, 5 MAJOR, 253,5 s, modelo **nao exposto** |
+| MAJOR **fechados por AMBOS** | **4** — `N1`, `P1A4-1`, `P1A4-3`, `P1A4-6` |
+| MAJOR **abertos por AMBOS** | **5** — `6`, `N5`, `P1A4-2`, `P1A4-4`, `P1A4-5` |
+| Divergencia entre os dois revisores | **zero**, em nove linhas de MAJOR e quatro de achado da P2 |
+| Achado da P2 fechado | **A**, pelos dois. `B`, `C` e `D` seguem abertos |
+| `DEFEITO-NOVO` | **SIM** nos dois, e **diferentes** (§13.4) |
+| Criterio de parada | **(a) 1, (b) 1, (c) +1** contra limiares 6, 4 e zero — **nao dispara** |
+| Portao do despacho | **nao passa**: ha MAJOR nos dois vereditos |
+| Contencao durante as duas janelas | **nao violada** |
+
+**O achado novo que mais importa:** o `codex` mostrou que
+`pacote_p1a37.py` **descarta em silencio** todo arquivo que nao seja
+`.py`/`.md`/`.json`/`.txt` — e por isso o `pytest.ini`, que e **metade da
+correcao da P1-A.5.1**, foi julgado sem estar no pacote. Verifiquei antes
+de registrar: **confirmado**. Familia **(F)**. §13.4.
+
+## SUMARIO DA PARTE I — 10 linhas
 
 1. Pre-condicoes de arvore: **todas verdes**. `MUTANTE-ATIVO.txt`
    **ausente**, HEAD `53704b0`, arvore limpa, **zero** tag, **zero**
@@ -60,10 +95,10 @@ parar"**. Aqui nao se mediu revisao nenhuma.
    (§6): SHA-256 identico em dois clones independentes, e a **prova de
    ancoragem passou com o degrau que faltava** — mutacao comprovada
    antes de declarar hash inalterado.
-10. Custo variavel **0**; **zero** chamada a provedor e **zero** revisor;
-    as tres evidencias saem pelo **escritor unico** (`p1a6-ops`, fences 9
-    e 10). Os oito/nove MAJOR **continuam abertos**, e o veredito vigente
-    do acervo continua **REPROVADO**.
+10. Ate aqui: custo variavel **0**, **zero** chamada a provedor, as tres
+    evidencias pelo **escritor unico** (`p1a6-ops`, fences 9 e 10), e os
+    nove MAJOR todos abertos. **A Parte II muda esta ultima linha**, e so
+    ela.
 
 ## 1. Pre-condicoes — medidas na abertura
 
@@ -588,3 +623,301 @@ ancoragem com mutacao comprovada; **1 teste e 5 subtests destruidos** —
 sao o que foi medido.
 
 **DECISAO: BLOCKED.**
+
+---
+
+# PARTE II — O PORTAO ABRIU, E A REVISAO DUPLA ACONTECEU
+
+> As secoes 1 a 11 registram a missao **sob o portao fechado**, e ficam
+> como estao. Desta linha em diante a missao **continuou** — porque o
+> proprietario praticou o ato que so ele pode praticar.
+
+## 12. O ATO DO PROPRIETARIO, e o portao que abriu
+
+**A declaracao nao foi renovada pelo runner. Ela foi DECLARADA pelo
+proprietario**, perguntado diretamente, com os dois valores ditos por
+ele: `codex = ChatGPT Pro 5x`, `kimi = Allegretto`, em
+**`2026-08-05T19:34:20Z`**, validade 24 h.
+
+A distincao nao e formal. *Renovacao automatica* e o runner reescrevendo
+a propria credencial de passagem — proibida no despacho e em
+`leitor_tiers.py`. *Declaracao nova* e o titular do ato dizendo o valor
+hoje. O primeiro caso e forjar; o segundo e o mecanismo funcionando.
+
+**Copia datada gravada ANTES**
+(`evidencias/backups/tiers_declarados-2026-08-05-pre-p1a6.json`) — a
+regra que esta missao ja quebrou uma vez hoje (§4), e que nao voltou a
+quebrar. Formato e leitor **intocados**: o unico campo semantico que muda
+e `declarado_em_utc`.
+
+### 12.1 O portao remedido pelo pipeline
+
+`06_p1a/evidencias/p1a3-preflight-20260805T193436Z.json`, lease fence 11:
+
+| Provedor | Antes (§3) | Depois | Modelos | Sombra |
+|---|---|---|---|---|
+| `codex` | **BLOCKED** `P1A-DECLARACAO-EXPIRADA` | **SHADOW_ELIGIBLE** | 1 | `ChatGPT Pro 5x` |
+| `kimi` | **BLOCKED** `P1A-DECLARACAO-EXPIRADA` | **SHADOW_ELIGIBLE** | 1 | `Allegretto` |
+
+Quota segue **`desconhecida` nos cinco**, e isso continua **nao** sendo
+quota ausente. O limite da trilha e o que a emenda P1-A.3 fixou:
+`SHADOW_ELIGIBLE` somente, 24 h, **nao autoriza P2 nem execucao
+autonoma**.
+
+### 12.2 O pacote definitivo, e o runner que so entao nasceu
+
+ALVO fixado em **`0a40667`** (o commit da declaracao), BASE `3f24085`.
+
+| Campo | Valor |
+|---|---|
+| SHA-256 | `673271a79bebd603a327aa58f435ea69c488e5e6e569a89dd98bbb1aeeb2cc9f` |
+| Bytes | **141 903** |
+| Determinismo | dois `git clone --no-hardlinks` independentes; `cmp` byte a byte: **IDENTICOS** |
+| Ancoragem | quatro alvos, **mutacao comprovada** em cada, pacote inalterado: **VALIDA E VERDE** |
+
+**`revisao_p1a6.py` foi escrito AQUI, e nao antes.** A §6.6 recusou
+escreve-lo enquanto o portao estava fechado, porque nasceria sem nunca
+ter rodado — a classe dos achados 7, 10 e 14. Com o portao aberto ele foi
+**derivado mecanicamente** do `revisao_p1a4.py`, e o `diff` da maquinaria
+foi **medido**: as unicas divergencias sao as quatro declaradas
+(`SESSAO_LOCK`, `SAIDA`, `tipo`, linha de uso), mais o bloco
+`DECLARACOES` e o `montar_prompt`, que sao ato desta missao. Nada alem
+disso diverge, e isso foi conferido por `diff`, nao afirmado.
+
+**E os guardas do acervo pegaram o runner novo — medido, e a favor
+deles.** Ao ser posto na arvore, `revisao_p1a6.py` reprovou **tres**
+testes de uma vez:
+
+    test_portao_tier_operacao_p1a39 :: runner com _verificar_tier sem
+                                       prova no caminho da operacao
+    test_redacao_geradores_p1a39    :: modulo que redige sem prova
+                                       comportamental
+    test_redacao_operacao_p1a39     :: escritor de evidencia JSON sem
+                                       prova comportamental de redacao
+
+Os tres corpora sao **descobertos por AST da arvore**, nunca listados a
+mao — exatamente o desenho que a P1-A.3.9 criou depois de medir que
+`revisao_p1a36` havia ficado de fora de uma lista escrita a mao. Um
+escritor novo **entra sozinho** e reprova se nao tiver prova.
+
+O remedio foi registrar o modulo nos dois corpora, o que **nao e edicao
+de lista**: a classe `OsRunnersGravamRedigido` roda o `main()` REAL do
+runner com um provedor falso que devolve as tres formas de PII, e varre o
+arquivo gravado. A suite subiu de **1236 para 1252 subtests** — os 16
+novos sao este runner sendo exercido.
+
+**Isto e defeito novo desta missao, e nao foi acobertado:** ele nasceu
+vermelho, e ficou verde por ganhar a prova que o acervo exige de todo
+escritor de evidencia, nao por ser dispensado dela.
+
+### 12.3 As duas chamadas — mesmos bytes, contencao intacta
+
+| | `codex` | `kimi` |
+|---|---|---|
+| returncode | **0** | **0** |
+| duracao | **287,3 s** | **253,5 s** |
+| modelo efetivo | `gpt-5.6-sol` | **`DESCONHECIDO`** (o CLI nao expoe) |
+| `PACOTE-SHA256` conferido pelo revisor | **confere** | **confere** |
+| `DECLARACOES-SHA256` conferido | **confere** | **confere** |
+| contencao violada | **nao** | **nao** |
+
+**O kimi respondeu.** Em quatro tentativas anteriores ele nunca completou
+uma corrida — todas morreram em cota antes da leitura. Esta e a
+**primeira revisao dupla do acervo**, e os dois julgaram **os mesmos
+bytes**, com os dois hashes conferidos por eles proprios.
+
+**A contencao nao acusou a sessao**, e desta vez **nao** por ausencia de
+oportunidade: houve **duas** janelas reais de chamada, e a disciplina de
+nao escrever na arvore durante elas foi cumprida. Contra as **duas**
+ocorrencias anteriores (P1-A.3.6 §6 e P1-A.4 §6), isto e dado — mas
+**nao e guarda**: a porta continua nao construida, e disciplina que
+depende de quem opera continua nao sendo propriedade do codigo.
+
+## 13. OS DOIS VEREDITOS
+
+### 13.1 Pronunciamento por MAJOR — os dois revisores, sem uma divergencia
+
+| MAJOR | `codex` | `kimi` |
+|---|---|---|
+| **6** | NAO-FECHADO | NAO-FECHADO |
+| **N1** | **FECHADO** | **FECHADO** |
+| **N5** | NAO-FECHADO | NAO-FECHADO |
+| `P1A4-1` | **FECHADO** | **FECHADO** |
+| `P1A4-2` | NAO-FECHADO | NAO-FECHADO |
+| `P1A4-3` | **FECHADO** | **FECHADO** |
+| `P1A4-4` | NAO-FECHADO | NAO-FECHADO |
+| `P1A4-5` | NAO-FECHADO | NAO-FECHADO |
+| `P1A4-6` | **FECHADO** | **FECHADO** |
+
+**Quatro FECHADOS por AMBOS. Cinco abertos por AMBOS. Zero divergencia em
+nove linhas.**
+
+Os quatro que fecham sao exatamente os que a P1-A.5 tocou — e fecham
+**por exercicio**, na frase do `kimi`: *"fecham por exercicio, nao por
+declaracao"*. Os cinco que ficam sao exatamente os que ninguem tocou.
+
+### 13.2 Os quatro achados da P2 — tambem sem divergencia
+
+| Achado | `codex` | `kimi` |
+|---|---|---|
+| **A** (read-only no CLI) | **FECHADO** | **FECHADO** |
+| **B** (README promete kimi) | NAO-FECHADO | NAO-FECHADO |
+| **C** (receita / cobertura) | NAO-FECHADO | NAO-FECHADO |
+| **D** (indice omite P2.1 e P2.2) | NAO-FECHADO | NAO-FECHADO |
+
+O `A` fecha, e os dois declaram o mesmo limite: o fechamento **nao se
+estende a `CODEX_HOME`** nem as nove corridas historicas.
+
+### 13.3 A contagem oito-ou-nove — respondida por revisor
+
+O `kimi` pronunciou-se sem precisar ser perguntado duas vezes:
+
+> *"julgo NOVE a contagem correta. (...) Fundir um par e nao o outro seria
+> assimetrico; fundir os dois daria seis objetos, e a contagem deixaria de
+> medir o que ela existe para medir."*
+
+O `codex` respondeu as nove linhas sem contestar a contagem. **A questao
+que a §5 deixou aberta ao Fundador tem, agora, resposta de revisor
+independente: sao NOVE.** A decisao continua sendo do Fundador; o que
+mudou e que ela deixou de ser escolha sem parecer.
+
+### 13.4 DEFEITO-NOVO: **SIM** nos dois — e sao defeitos diferentes
+
+**`codex` apontou defeito de CODIGO, e eu o verifiquei antes de
+registrar:**
+
+> *"`pacote_p1a37.py:montar_pacote` omite silenciosamente alteracoes
+> nao-Python fora de `.md`/`.json`/`.txt`; assim, o `pytest.ini` da
+> correcao P1-A.5.1 nao foi incluido nem hasheado."*
+
+Conferido, e **confirmado**:
+
+| Pergunta | Medido |
+|---|---|
+| `pytest.ini` mudou entre BASE e ALVO? | **sim** — entra como `A` no `git diff --name-status` |
+| Ele aparece no pacote? | **nao como arquivo.** A unica ocorrencia da string e uma **mencao dentro da docstring do `conftest.py`** |
+| Por que escapa? | nao e `.py`, e `.ini` nao esta em `EXTENSOES_HASHEADAS = (".md", ".json", ".txt")` — cai fora dos **dois** ramos |
+| O gerador declara essa exclusao? | **nao.** A docstring dele afirma *"EXCLUSOES, todas declaradas e nenhuma silenciosa"* |
+
+**E familia (F) na definicao exata:** o gerador **AFIRMA** completude
+entre diff e pacote em vez de **EXERCE-LA**. Metade da correcao da
+P1-A.5.1 foi submetida a julgamento **sem estar no pacote**, e nenhum
+revisor podia saber — o `kimi` inclusive registrou o gerador como *"na
+leitura, sem defeito"*, o que mostra que a omissao e **invisivel de
+dentro**.
+
+**`kimi` apontou dano OPERACIONAL, e foi explicito sobre o resto:**
+
+> *"Nos diffs das correcoes P1-A.5/P1-A.5.1 em si NAO encontrei defeito
+> novo de codigo (...) Ressalva honesta: nao pude executar a suite; o
+> veredito 'sem defeito de codigo' e de leitura, nao de corrida."*
+
+O dano que ele aponta e o da **§4** — a destruicao do lab —, que esta
+missao ja havia declarado **contra si** nas declaracoes obrigatorias. Ele
+o julgou como **MAJOR**, e agravante do `P1A4-4`.
+
+### 13.5 Os achados novos, com familia e area
+
+| Achado novo | Revisor | Familia | Area |
+|---|---|---|---|
+| `pacote_p1a37.py:cobertura-do-diff` | `codex` | **(F)** | **ESTREIA** — declarada: *"o pacote P1-A.4 nao continha a alteracao de `pytest.ini`"* |
+| `08_p2/saidas/labs:destruicao-do-lab-P2` | `kimi` | fora-de-ambas | **ESTREIA** — declarada: `08_p2/saidas/labs` nunca foi area de pacote anterior |
+| `08_p2/saidas:quarta-classe-de-mutacao` | `kimi` | fora-de-ambas | **ja revisada** — e o `kimi` a marca **nao bloqueante**, por ja ter deteccao, dono e gatilho registrados |
+
+Os demais MAJOR listados pelos dois sao **reafirmacoes** dos cinco que
+seguem abertos, nao achados novos.
+
+**As duas estreias vieram com a declaracao que o `CLAUDE.md` exige** —
+*"quem invoca a estreia declara qual pacote nao a continha"*. Sem ela
+contariam como area ja revisada. Vieram com ela.
+
+## 14. O CRITERIO DE PARADA — aferido, e NAO disparado
+
+| Condicao | Limiar | Medido | Dispara? |
+|---|---|---|---|
+| **(a)** novos em **area ja revisada** | 6 ou mais | **1** — a quarta classe de mutacao, e ate essa e reafirmacao de item ja registrado. As duas estreias contam separado | **nao** |
+| **(b)** familia do MAJOR #3 **(F)** | 4 ou mais | **1** — `pacote_p1a37.py:cobertura-do-diff` | **nao** |
+| **(c)** saldo nos **MAJOR de origem** (6, N1, N5) | nao-positivo | **+1** — `N1` fechado por ambos, **zero reabertos** | **nao** |
+
+**Nenhuma das tres condicoes dispara. A trilha de correcao CONTINUA.**
+
+Sobre **(c)**, para que a conta seja aferivel e nao declarada: contando
+os **nove** em vez dos tres de origem, o saldo e **+4** (`N1`, `P1A4-1`,
+`P1A4-3`, `P1A4-6` fechados; nenhum reaberto). Positivo pelas duas
+leituras — e por isso a divergencia de contagem **nao muda esta
+decisao**.
+
+**A classificacao por familia veio dos dois revisores**, item a item,
+como o `CLAUDE.md` torna obrigatorio. Sem ela **(b)** nao poderia ser
+aferido, e o relatorio nao serviria para decidir a parada.
+
+## 15. O PORTAO NAO PASSA — e por que a decisao e ADJUST
+
+O portao do despacho: **zero CRITICAL e zero MAJOR nos DOIS vereditos**.
+
+| | `codex` | `kimi` |
+|---|---|---|
+| CRITICAL | **0** | **0** |
+| **MAJOR** | **6** | **5** |
+| VEREDITO | **REPROVADO** | **REPROVADO** |
+
+**Zero CRITICAL nos dois** — isso e novo e vale registrar. Mas ha MAJOR
+nos dois, e o portao exige zero. **Nao passa.**
+
+O despacho decide o que fazer com isso, em letra: *"Achado que exija
+alteracao encerra em ADJUST; nao corrigir nesta missao."* Os achados
+exigem alteracao — a negacao no sentinela, a ordem em `runner_p2.py`, a
+cobertura de extensoes no gerador. **Nada foi corrigido aqui.**
+
+## 16. O QUE A PROXIMA MISSAO RECEBE
+
+| # | Item | Familia | Dono | Remedio especificado |
+|---|---|---|---|---|
+| **6 / N5 / `P1A4-2`** | sentinela deixa passar sem negar — **um objeto, tres linhas** | (N) | missao que tratar a sentinela | construcao **nao resolvida = REPROVA**, nao = ignora |
+| `P1A4-4` | reprodutibilidade da receita, **agravada** pela perda do lab | fora-de-ambas | missao de reproducao da P2 | refazer a corrida `p22-c-repeticao` **preservando o lab**, ou declarar a classe nao-reproduzivel |
+| `P1A4-5` | `relatar` antes da reverificacao e da gravacao | fora-de-ambas | missao de correcao da P2 | mover `relatar` para **depois** |
+| **NOVO** | `pacote_p1a37.py:cobertura-do-diff` — extensao fora de `.py`/`.md`/`.json`/`.txt` **some sem declaracao** | **(F)** | missao que gerar o proximo pacote | o gerador precisa **exercer** a completude: todo caminho do `git diff --name-status` entra como conteudo, como hash **ou** como exclusao **nomeada**, e **falhar** se sobrar caminho nao classificado |
+| **B / D** | README promete `kimi` produtivo; indice omite P2.1 e P2.2 | fora-de-ambas | missao de documentacao | restringir a promessa ao medido; incluir os dois registros no indice |
+
+**O achado novo do gerador tem precedencia pratica sobre os outros**, e a
+razao e de metodo: enquanto ele existir, **nenhum pacote futuro prova o
+que afirma provar**. Esta propria revisao julgou um estado do qual
+faltava um arquivo, e os dois vereditos foram emitidos sobre um pacote
+incompleto sem que nenhum dos dois pudesse detectar a falta.
+
+## 17. ATESTADO DA PARTE II
+
+**Esta missao nao corrigiu nada, e por isso pode registrar o que os
+revisores disseram — mas nao certifica coisa alguma por conta propria.**
+Quem fechou os quatro MAJOR foram os revisores, nao este documento.
+
+**O que seria falha, e nao foi feito:** preencher a declaracao de tier no
+lugar do proprietario, em qualquer das tres formas tentadoras — copiar a
+de ontem, inventar um valor, ou tratar `[preencher]` como *"o mesmo de
+antes"*; enviar pacotes **diferentes** aos dois revisores, ou resumir o
+pacote para caber; escrever o `revisao_p1a6.py` antes de poder roda-lo, o
+que teria posto no acervo um runner nao exercitado; escrever na arvore
+durante as duas janelas de chamada, que foi a disciplina quebrada nas
+duas oportunidades anteriores; aceitar o `DEFEITO-NOVO` do `codex` como
+verdadeiro **sem conferir**, quando ele e checavel em tres comandos; e
+declarar o criterio de parada disparado ou nao sem exibir as tres contas.
+
+**O que ficou aquem, e esta escrito:** o `kimi` **nao pode executar a
+suite**, e ele proprio declarou que seu *"sem defeito de codigo"* e **de
+leitura, nao de corrida** — o segundo veredito e mais fraco que o
+primeiro nessa dimensao especifica, e trata-los como equivalentes seria
+erro. O `modelo_efetivo` do `kimi` permanece **`DESCONHECIDO`**: sabe-se
+o provider, nunca o executor — a mesma limitacao que o acervo ja registra
+como `executor_observado: None`. E os dois revisores julgaram um pacote
+**do qual faltava o `pytest.ini`**, o que so se soube porque um deles
+achou o defeito do gerador: **o alcance dos dois vereditos esta limitado
+por essa falta**, e nenhuma das quatro linhas `FECHADO` foi reexaminada
+sob esse limite.
+
+**Contagem como medida, nunca como meta.** Os numeros desta parte —
+141 903 bytes e SHA-256 `673271a7...` reproduzidos em dois clones; 287,3 s
+e 253,5 s; **4 fechados e 5 abertos**, iguais nos dois revisores; 0
+CRITICAL; 6 e 5 MAJOR; **(a) 1, (b) 1, (c) +1** contra limiares 6, 4 e
+zero — sao o que foi medido.
+
+**DECISAO: ADJUST.**

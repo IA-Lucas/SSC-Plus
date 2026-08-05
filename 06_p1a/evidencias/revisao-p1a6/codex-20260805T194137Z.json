@@ -1,0 +1,76 @@
+{
+  "provider": "codex",
+  "ts_utc": "20260805T194137Z",
+  "tipo": "revisao-p1a6",
+  "chamadas_de_modelo": 1,
+  "custo_variavel": 0,
+  "rotulo": "assinatura-oauth; UMA chamada; enforcement read-only",
+  "enforcement_read_only": "--sandbox read-only --ephemeral (CLI)",
+  "tier_declarado_no_instante": {
+    "provider_id": "codex",
+    "tier": "ChatGPT Pro 5x",
+    "declarado_por": "proprietario",
+    "declarado_em_utc": "2026-08-05T19:34:20Z",
+    "expira_em_utc": "2026-08-06T19:34:20Z",
+    "valido_no_instante": true
+  },
+  "lock_escritor_unico": {
+    "sessao": "p1a6-ops",
+    "pid_titular": 101464,
+    "fence": 11
+  },
+  "argv_publico": [
+    "codex",
+    "exec",
+    "--sandbox",
+    "read-only",
+    "--cd",
+    "C:\\Users\\<USUARIO>\\AppData\\Local\\Temp\\p1a4-revisao-codex-kvq1uani",
+    "--skip-git-repo-check",
+    "--ephemeral",
+    "<PROMPT>"
+  ],
+  "prompt_sha256": "0a029c37b5639d8e8b8eb85f3ddbfc7fe3151748b5551aa7b60b55f263d1ef5a",
+  "pacote_sha256": "673271a79bebd603a327aa58f435ea69c488e5e6e569a89dd98bbb1aeeb2cc9f",
+  "pacote_bytes_entregues": 141903,
+  "declaracoes_sha256": "ec9fa5a3019d610ef27bb8a29faf118ed5b82ab705d4016ad2df80d094bfc7ad",
+  "declaracoes_bytes_entregues": 7486,
+  "dir_descartavel": "C:\\Users\\<USUARIO>\\AppData\\Local\\Temp\\p1a4-revisao-codex-kvq1uani",
+  "dir_descartavel_arquivos_restantes": [
+    "declaracoes-obrigatorias.txt",
+    "pacote-revisao.txt"
+  ],
+  "contencao": {
+    "titular_do_escritor_no_fechamento": "p1a6-ops",
+    "medida": "manifesto SHA-256 antes/depois das raizes vigiadas, com atribuicao separada da deteccao",
+    "raizes_vigiadas": [
+      "repositorio (toda a arvore sob RAIZ, inclusive locks/ e .git)",
+      "fora: ~/.codex/auth.json",
+      "fora: ~/.codex/config.toml",
+      "fora: ~/.claude/settings.json",
+      "fora: ~/.kimi-code/config.toml",
+      "fora: ~/.gemini/settings.json",
+      "fora: ~/.grok"
+    ],
+    "nao_vigiado": "todo caminho fora do repositorio e fora das fontes de config declaradas",
+    "arquivos_no_manifesto": 969,
+    "mutacoes_detectadas": [
+      "alterado: repositorio/locks/repositorio.lease"
+    ],
+    "mutacoes_atribuidas_ao_renovador": [
+      "alterado: repositorio/locks/repositorio.lease"
+    ],
+    "mutacoes_fora_do_descartavel": [],
+    "violada": false
+  },
+  "lock_verificado_antes_da_persistencia": true,
+  "env_vars_removidas_nomes": [
+    "NVIDIA_API_KEY"
+  ],
+  "returncode": 0,
+  "duracao_s": 287.281,
+  "modelo_efetivo_no_banner": "gpt-5.6-sol",
+  "resposta": "PROVIDER: OpenAI\nMODELO-OBSERVADO: GPT-5\nCANAL: Codex via API\nPACOTE-SHA256: 673271a79bebd603a327aa58f435ea69c488e5e6e569a89dd98bbb1aeeb2cc9f\nDECLARACOES-SHA256: ec9fa5a3019d610ef27bb8a29faf118ed5b82ab705d4016ad2df80d094bfc7ad\nESCOPO: revisão somente leitura dos dois arquivos, sobre o ALVO 0a4066773743e4319d41c4acc882abf02677004c; sem acesso ao checkout, execução da suíte ou provedor.\n\nMAJOR-6: NAO-FECHADO — tests/sentinela_antip2.py não aparece alterado; as declarações confirmam que construções por %, .format, join e import dinâmico continuam atravessando sem negação.\nMAJOR-N1: FECHADO — 06_p1a/escritor_repositorio.py foi integrado ao renovador, prova mínima e verificadores; test_escritor_unico_adotado_p1a5.py exerce dois processos com nomes distintos, recusa sem escrita e contraprova de sucessão.\nMAJOR-N5: NAO-FECHADO — permanece o mesmo contorno deliberado não resolvido nem negado do MAJOR-6, sem correção no pacote.\nMAJOR-P1A4-1: FECHADO — o mecanismo antes isolado está no caminho operacional, com runner real, cinco pontos de chamada, titular único e teste que impede regressão para EscritorP1.\nMAJOR-P1A4-2: NAO-FECHADO — nenhuma mudança torna construção não resolvida em reprovação; %, .format, join e imports dinâmicos continuam fora da sentinela.\nMAJOR-P1A4-3: FECHADO — 08_p2/provedor_assinatura.py acrescenta alcance_da_medicao, distingue medido/não medido e nomeia o lar conhecido do CLI; os testes plantam escrita fora e dentro do alcance e verificam os dois resultados.\nMAJOR-P1A4-4: NAO-FECHADO — a evidência bruta continua insuficiente e a missão destruiu irreversivelmente o único lab P2, reduzindo a suíte de 914/1241 para 913/1236 mais um skip.\nMAJOR-P1A4-5: NAO-FECHADO — 08_p2/runner_p2.py permanece intocado, com relatar(registro) antes da reverificação e gravação; falha posterior ainda consome franquia e perde recibo.\nMAJOR-P1A4-6: FECHADO — test_config_real_p1a39.py agora planta sentinelas e chama config_persistida para cada provedor, com controles positivo/negativo e prova de que a política alcança ~/.codex/config.toml.\n\nACHADO-A: FECHADO — o CLI codex recebe sandbox read-only, cwd descartável e modo ephemeral, cercados por fotografia antes/depois; o fechamento não se estende a CODEX_HOME nem às nove corridas históricas.\nACHADO-B: NAO-FECHADO — README.md continua prometendo codex e kimi produtivos, embora kimi nunca tenha completado corrida.\nACHADO-C: NAO-FECHADO — a receita está versionada, mas a cobertura segue majoritariamente testemunhal na classe (b) e o único lab comparativo foi destruído.\nACHADO-D: NAO-FECHADO — o índice raiz continua omitindo os registros P2.1 e P2.2 usados pelos números publicados.\n\nDEFEITO-NOVO: SIM — pacote_p1a37.py:montar_pacote omite silenciosamente alterações não-Python fora de .md/.json/.txt; assim, o pytest.ini da correção P1-A.5.1 não foi incluído nem hasheado e não pode ser certificado neste pacote.\n\nMAJOR tests/sentinela_antip2.py:negação — construções deliberadamente não resolvidas continuam permitidas em vez de reprovadas. FAMILIA: (N)\nMAJOR tests/sentinela_antip2.py:alcance-N5 — os contornos invisíveis declarados seguem sem guarda negativa. FAMILIA: (N)\nMAJOR tests/sentinela_antip2.py:resolução-P1A4-2 — %, .format, join e import dinâmico permanecem fora da medição. FAMILIA: (N)\nMAJOR 08_p2/medidor.py:reprodutibilidade — faltam respostas alternativas e corrida sem recibo; a destruição do único lab piorou a lacuna de evidência. Não é afirmação de guarda nem falha de varredura por linhas. FAMILIA: fora-de-ambas\nMAJOR 08_p2/runner_p2.py:persistência — a ordem relatar-antes-de-gravar permite consumo sem recibo persistido. É defeito transacional, não de guarda ou alcance de linhas. FAMILIA: fora-de-ambas\nMAJOR pacote_p1a37.py:cobertura-do-diff — o gerador afirma que todas as exclusões são declaradas, mas descarta pytest.ini sem emitir conteúdo, hash ou remoção; não exerce a completude entre diff e pacote. FAMILIA: (F)\nMINOR README.md:provedores-produtivos — não bloqueante isoladamente, pois é divergência documental; promete kimi sem corrida produtiva concluída. Não é guarda nem varredura por linhas. FAMILIA: fora-de-ambas\nMINOR README.md:indice-P2 — não bloqueante isoladamente, pois é omissão de navegação; P2.1/P2.2 continuam fora do índice. Não é guarda nem varredura por linhas. FAMILIA: fora-de-ambas\nOBS conftest.py:contenção-residual — realocar cache e bytecode remove três classes de mutação, mas edição de fonte durante a janela continua possível e a porta não foi construída. É limite operacional declarado. FAMILIA: fora-de-ambas\nOBS 06_p1a/evidencias:histórico-sem-fotografia — nas nove corridas anteriores a abc75e8 não se sabe se houve escrita; a lacuna é histórica e irrecuperável. FAMILIA: fora-de-ambas\nOBS 08_p2/provedor_assinatura.py:alcance — CODEX_HOME e o lado remoto não são medidos; “nenhum” vale somente dentro do alcance publicado. É limite de medição, não propriedade global. FAMILIA: fora-de-ambas\nOBS 08_p2/medidor.py:limites-centrais — quota permanece desconhecida, token é apenas proxy de bytes e executor_observado permanece None. São dimensões não medidas, não guardas ou varreduras por linhas. FAMILIA: fora-de-ambas\n\nNOVO-1-AREA: ESTREIA — o pacote P1-A.4 não continha a alteração de pytest.ini introduzida pela P1-A.5.1; ela expôs agora a omissão de extensões do gerador.\n\nVEREDITO: REPROVADO",
+  "stderr_resumo": "Reading additional input from stdin...\nOpenAI Codex v0.145.0\n--------\nworkdir: C:\\Users\\<USUARIO>\\AppData\\Local\\Temp\\p1a4-revisao-codex-kvq1uani\nmodel: gpt-5.6-sol\nprovider: openai\napproval: never\nsandbox: read-only\nreasoning effort: high\nreasoning summaries: none\nsession id: 019fd372-1c7c-7801-b2bf-90ea70590c7e\n--------\nuser\nRevise em modo SOMENTE LEITURA o estado atual do laboratorio SSC+. No diretorio atual ha DOIS arquivos, e voce precisa ler OS DOIS POR INTEIRO antes de avaliar:\n  ./pacote-revisao.txt           — o estado sob julgamento\n  ./declaracoes-obrigatorias.txt — os fatos que o autor do pacote e OBRIGADO a lhe transmitir, varios contra o proprio interesse dele\n\nComece pelas declaracoes. Elas dizem quais achados seguem abertos, o que foi corrigido no mecanismo e NAO foi certificado, que dano a propria missao causou, e o que este acervo NAO mede. Julgar sem le-las e julgar contra premissa falsa.\n\nContexto: o veredito vigente do acervo e REPROVADO (P1-A.4). Estao abertos NOVE MAJOR. O pacote que voce recebe e o estado DEPOIS do trabalho das missoes P1-A.5 e P1-A.5.1 sobre eles. Quem corrigiu NAO certifica: e voce quem diz se cada um fechou. Uma correcao nao fecha por ter sido feita.\n\nVoce NAO pode escrever nada: responda apenas com a revisao em texto.\n\nSua resposta precisa conter, NESTA ORDEM:\n1. as linhas PROVIDER, MODELO-OBSERVADO, CANAL, PACOTE-SHA256 (compute o SHA-256 de ./pacote-revisao.txt), DECLARACOES-SHA256 (idem para ./declaracoes-obrigatorias.txt) e ESCOPO;\n2. NOVE linhas, uma por MAJOR, exatamente nesta forma:\n   'MAJOR-<id>: FECHADO | NAO-FECHADO — <justificativa apontavel>', com <id> em 6, N1, N5, P1A4-1, P1A4-2, P1A4-3, P1A4-4, P1A4-5, P1A4-6. NAO funda N1 com P1A4-1, nem o trio 6/N5/P1A4-2: sao nove linhas. Se julgar que a contagem correta e outra, diga-o em linha separada, com o motivo;\n3. QUATRO linhas, uma por achado da P2:\n   'ACHADO-<A|B|C|D>: FECHADO | NAO-FECHADO — <justificativa>';\n4. a linha 'DEFEITO-NOVO: SIM | NAO — <o que, onde>', que responde se as CORRECOES das missoes P1-A.5 e P1-A.5.1 introduziram defeito novo;\n5. os achados, um por linha, prefixados por CRITICAL | MAJOR | MINOR | OBS, com arquivo:tema e descricao curta. CADA achado precisa terminar com a sua FAMILIA, obrigatoriamente, numa destas tres formas:\n   'FAMILIA: (F)' — o guarda AFIRMA a propriedade (docstring, rotulo, lista) em vez de EXERCER a interface real;\n   'FAMILIA: (N)' — classe que a varredura por alcance de linha nao media;\n   'FAMILIA: fora-de-ambas' — nem uma nem outra, com o motivo.\n   Sem a familia o criterio de parada deste repositorio nao pode ser aferido, e o relatorio nao serve para decidir. Para cada MINOR diga tambem se e bloqueante, com motivo. Se nao houver achado num nivel, NAO o invente;\n6. para cada achado NOVO, diga se ele esta em AREA JA REVISADA ou em ESTREIA — e, se disser estreia, declare QUAL pacote anterior nao a continha. Sem essa declaracao ele conta como area ja revisada;\n7. a linha final 'VEREDITO: APROVADO | APROVADO-COM-RESSALVAS | REPROVADO'.\ncodex\nVou começar pelas declarações obrigatórias, depois ler o pacote integralmente e só então cruzar cada MAJOR/P2. A inspeção será estritamente somente leitura; os únicos comandos serão de leitura e cálculo de hash.\nexec\n\"C:\\\\Program Files\\\\WindowsApps\\\\Microsoft.PowerShell_7.6.4.0_x64__8wekyb3d8bbwe\\\\pwsh.exe\" -Command '$files = @('\"'.\\\\declaracoes-obrigatorias.txt','.\\\\pacote-revisao.txt'); Get-Item -LiteralPath \"'$files | Select-Object Name,Length; foreach ($f in $files) { $count = (Get-Content -LiteralPath $f).Count; Write-Output \"$f`t$count linhas\" }; Get-FileHash -Algorithm SHA256 -LiteralPath $files | Select-Object Path,Hash' in C:\\Users\\<USUARIO>\\AppData\\Local\\Temp\\p1a4-revisao-codex-kvq1uani\n2026-08-05T19:41:48.802447Z ERROR codex_core::exec: exec error: windows sandbox: orchestrator_helper_launch_failed: setup refresh failed to launch helper: helper=codex-windows-sandbox-setup.exe, cwd=C:\\Users\\<USUARIO>\\AppData\\Local\\Temp\\p1a4-revisao-co",
+  "quota_observavel": "nao-exposta-pelo-cli"
+}

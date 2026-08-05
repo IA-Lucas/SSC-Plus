@@ -257,6 +257,8 @@ _RUNNERS = {
                       "saida": "revisao-p1a36", "fontes": ()},
     "revisao_p1a4": {"sessao": "p1a4-ops", "argv": 2,
                      "saida": "revisao-p1a4", "fontes": ()},
+    "revisao_p1a6": {"sessao": "p1a6-ops", "argv": 2,
+                     "saida": "revisao-p1a6", "fontes": ()},
 }
 
 _PREFLIGHTS = {
@@ -312,7 +314,7 @@ class OCorpusEDescobertoNaoListado(unittest.TestCase):
 
 
 class OsRunnersGravamRedigido(unittest.TestCase):
-    """`main()` REAL dos cinco runners; a varredura e do arquivo gravado."""
+    """`main()` REAL dos seis runners; a varredura e do arquivo gravado."""
 
     def _rodar(self, nome: str) -> str:
         espec = _RUNNERS[nome]
