@@ -211,6 +211,43 @@ naturezas distintas, escreva **as duas com o nome de cada uma**. Se a
 notacao economizar um caractere e custar uma leitura errada, ela custou
 mais do que economizou.
 
+## LIMPAR `saidas/labs` EXIGE COPIA DATADA ANTES (P1-A.7)
+
+**Decisao do Fundador, gravada na missao P1-A.7.** Ela nao cria regra
+nova: torna LEGIVEL, onde toda sessao le, a regra permanente *"backup
+antes do risco; sem copia, nao roda"* — que existia e **nao impediu o
+dano**, porque nao estava aqui.
+
+> **Nenhuma sessao apaga `05_p0/saidas/labs`, `08_p2/saidas/` ou
+> qualquer diretorio de lab sem gravar ANTES uma copia datada fora da
+> arvore. Ordem de despacho para "limpar labs" NAO dispensa a copia: a
+> copia e degrau da limpeza, nao alternativa a ela.**
+
+**Fundamento, medido e nao suposto:** a P1-A.6 executou
+`rm -rf 05_p0/saidas/labs 08_p2/saidas/labs` como pre-condicao e
+destruiu **`08_p2/saidas/labs/20260803T135101Z/`**, o **unico** lab de
+P2 que existia — com ele foram **1 teste e 5 subtests**
+(`test_p2_receita_medidor_p24.py::UmaSomaSo`). A P1-A.7 procurou o lab
+em **cinco** lugares independentes e nao o achou em nenhum: banco de
+objetos e reflog do Git (zero), Lixeira de `E:` (zero), `backups/` do
+acervo (so tiers e prova central), `%TEMP%` (zero) e varredura de `E:`
+por `20260803T135101Z` e `chave_selo.bin` (o unico achado e o lab de
+**P0**, regenerado hoje). **Nao checado, e declarado:** copias de sombra
+(VSS) exigem elevacao que a sessao nao tem — e a unica porta que
+continua fechada por falta de permissao, nao por medicao.
+
+**O agravante que da a regra o seu peso:** o remedio especificado do
+`P1A4-4` — MAJOR **aberto** — e *gravar a evidencia bruta que falta*. A
+limpeza fez o **oposto do remedio**, e o `kimi` marcou isso como MAJOR
+na revisao seguinte.
+
+**A licao, na frase que a P1-A.6 ja escreveu contra si:** `.gitignore`
+classifica **o que o Git rastreia**, nunca **o que e dispensavel**. O
+acervo tratava `labs/` como runtime e um teste dependia dele; a etiqueta
+e a dependencia discordavam, e ninguem tinha medido. **Ignorado pelo Git
+nao e sinonimo de descartavel** — e a pergunta *"algum teste le isto?"*
+se responde **antes** do `rm`, nao depois.
+
 ## QUEM CORRIGE NAO CERTIFICA
 
 Nenhuma missao fecha o proprio conserto. Um achado so fecha quando um

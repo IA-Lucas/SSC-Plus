@@ -430,3 +430,463 @@ nao viaja; 1.600.613 bytes de carga em `1f45fdd` e **1.623.609 bytes em
 `f4399e4`** — sao o que foi medido, e valem sobre o estado que os
 produziu. Duas medicoes de estados diferentes ficam **com o nome do
 estado ao lado de cada uma**, e nunca viram uma so.
+
+---
+
+# PARTE II — ORDENS 1 A 5: O GERADOR QUE DESCARTA EM SILENCIO
+
+> **Registro aditivo.** A Parte I (ordem 6) **nao foi tocada** — nem uma
+> linha. Ela abre dizendo que *"as ordens 1 a 5 da P1-A.7, se existirem,
+> nao estao neste registro"*, e aquilo **era verdade quando foi
+> escrito**. Deixa de ser verdade a partir desta linha, e a frase fica
+> como esta: reescreve-la esconderia que o autor da ordem 6 nao tinha
+> como saber o que viria. Esta parte **nao certifica nada** e **nao
+> corrigiu MAJOR nenhum**.
+
+## DECISAO DAS ORDENS 1 A 5: **CONCLUIDO-COM-PULADOS**
+
+As cinco ordens foram executadas e medidas. O que ficou pulado esta
+nomeado na secao II.8, e nada disso era ordem desta missao: sao
+**achados novos**, dois deles **regressao da propria ordem 6**, que o
+despacho proibe corrigir aqui.
+
+## SUMARIO — 10 linhas
+
+1. O gerador descartava **por lista de extensao**, e o descarte era
+   **mudo**: o caminho nao caia em ramo nenhum e nenhuma linha o
+   registrava.
+2. Na janela do pacote **que os dois revisores julgaram**, o descarte
+   foi **1**: o `pytest.ini`. Na janela do pacote da **P1-A.4**, foram
+   **4** — e um deles e o `06_p1a/.gitattributes`, que carrega **o
+   remedio do MAJOR #5**.
+3. Dos **364** arquivos rastreados, **18** ficam fora das quatro
+   extensoes, e **zero** deles e ruido: este repositorio nao rastreia
+   lock, cache nem binario gerado. A lista de extensao **so podia
+   descartar conteudo**.
+4. O criterio novo nao e lista: e **o que o pacote precisa provar** —
+   **LIDO**, **ANCORADO** ou **EXCLUIDO NOMEADO**. O **default e
+   ancorar, nunca descartar**.
+5. A completude passou a ser **exercida** (`conferir_cobertura` levanta)
+   em vez de **afirmada** na docstring, que era a familia do MAJOR #3
+   dentro do arquivo que o pacote manda julgar.
+6. **Reversao vermelha**: o gerador revertido regenera o pacote julgado
+   **byte a byte** — `673271a7…`, **141 903 B** —, o `pytest.ini` **some
+   sem uma linha de aviso**, e o guarda novo fica **19 vermelho**.
+7. **Controle positivo nas duas polaridades**: acha (8 passed, 13
+   subtests) e acusa (19 failed); e `conferir_cobertura` **nao** levanta
+   quando a cobertura e total — sem essa metade, um `raise`
+   incondicional passaria.
+8. O mesmo commit hoje produz **153 603 B**, `41533c59…`, **42 de 42**
+   caminhos. **Nao foi reenviado.**
+9. O lab de P2 **sumiu**: procurado em cinco lugares independentes, zero
+   em todos. A regra *"limpar `saidas/labs` exige copia datada antes"*
+   esta gravada no `CLAUDE.md`.
+10. A contagem **oito ou nove** fica **aberta**, com dono e gatilho — e
+    com uma ressalva que esta missao mediu e que muda o peso do parecer
+    do `codex` (II.6).
+
+## II.1 PRE-CONDICOES — e a estacao que nao e a mesma
+
+| Pre-condicao | Medido | Reproduz? |
+|---|---|---|
+| `scratchpad/MUTANTE-ATIVO.txt` na abertura | **ausente** | sim |
+| HEAD | `8dd1470`, arvore **limpa** | sim |
+| Suite **P0** | **344 passed, 256 subtests** | **sim**, identico |
+| **Prova central** | **18 assercoes, 20 eventos** | **sim**, identico |
+| Suite **P1-A** | **10 failed, 900 passed, 6 skipped, 1195 subtests** | **NAO** |
+| Lease de nome proprio | `p1a7-ordens1a5-ops`, fences **1** e **2** | — |
+
+**A suite P1-A nao reproduz, e a causa foi medida, nao suposta.** Duas
+coisas mudaram sob o acervo, e nenhuma delas e codigo:
+
+- **o interpretador.** O acervo registra **Python 3.14.3**
+  (`coleta-20260730-092436/00_ambiente.txt`). Esta estacao tem
+  **3.11.9**, e **nao tinha `pytest`** — ele foi instalado nesta sessao
+  (9.1.1) para que houvesse medicao. Numero de suite comparado entre
+  interpretadores diferentes e numero herdado;
+- **o usuario.** O acervo foi escrito numa estacao cujo usuario era
+  `IA Lucas`; esta e `lucas`. Os guardas de PII **derivam o alvo da
+  estacao** de proposito, e o token curto `lucas` casa **dentro** de
+  `lucasia` num artefato rastreado. O guarda nao errou: ele mede outra
+  coisa aqui.
+
+**O lease criou `locks/`, e isso mudou um numero.** O diretorio nao
+existia nesta estacao; ao adquirir o escritor unico ele nasceu, e
+`test_gitignore_efetivo_p1a39::test_o_diretorio_de_locks_existe_de_fato_nesta_estacao`
+**passou a passar**. Fica declarado porque, sem isto, a diferenca entre
+10 e 9 falhas pareceria efeito das correcoes — e nao e.
+
+### II.1.1 A ORDEM 6 DEIXOU A SUITE VERMELHA, e nao soube
+
+Medicao **diferencial**, na mesma estacao e no mesmo interpretador —
+clone `--no-hardlinks` em `1f45fdd` contra `HEAD`:
+
+| Estado | Resultado |
+|---|---|
+| `1f45fdd` (**antes** da ordem 6) | **8 failed**, 902 passed, 6 skipped, 1195 subtests |
+| `8dd1470` (**depois**) | **10 failed**, 900 passed, 6 skipped, 1195 subtests |
+
+**Os dois testes a mais sao regressao da ordem 6**, causada pelos tres
+arquivos que ela commitou:
+
+| Guarda que ficou vermelho | Causa, atribuida arquivo a arquivo |
+|---|---|
+| `test_isolamento.py::ZeroSegredoNosArtefatos` | **71 casamentos**: **66** em `p1a7-varredura-segredo-*.json`, **4** em `99_decisao-p1a7.md`, **1** em `varredura_segredo_p1a7.py` |
+| `test_estabilizacao_p1a1.py::ZeroPiiNosArtefatos` | `99_decisao-p1a7.md` e o **unico** arquivo rastreado do acervo que carrega a forma literal do usuario historico (**2 ocorrencias**), escrita ao documentar o blob orfao na secao 6.2 |
+
+**Nenhum dos 71 e credencial**, e nenhuma das 2 e vazamento novo: sao as
+fixtures que a propria ordem 6 nomeou e o nome que ela transcreveu para
+registrar. **O defeito nao e vazamento — e guarda versionado vermelho**,
+que e o que impede o proximo commit de ser julgado por suite verde.
+
+A ordem 6 **declarou** que nao rodou a suite (secao 10, *"Nao rodou a
+suite"*). A razao dada era defensavel — *"nao alterou codigo de
+producao"* — e a medicao mostra o buraco dela: **os guardas deste acervo
+varrem a ARVORE, nao o codigo**. Acrescentar documento **e** alterar o
+que eles medem. Ironia registrada e nao suavizada: a ordem que mediu o
+repositorio inteiro em busca de segredo foi a que deixou o guarda de
+segredo vermelho.
+
+**Esta missao nao corrige isso** — e achado novo, e o despacho proibe.
+Fica na secao II.8 com dono e gatilho.
+
+## II.2 ORDEM 1 — O QUE FICOU DE FORA, NOMINALMENTE
+
+O gerador vigente ate aqui roteava por **lista de extensao**
+(`EXTENSOES_HASHEADAS`, linha 55): `.py` para diff ou integra,
+`.md`/`.json`/`.txt` para SHA-256, removidos para linha de remocao.
+**Todo o resto caia fora dos dois ramos e nao era registrado em lugar
+nenhum.**
+
+### II.2.1 Por janela de pacote real
+
+| Janela | Caminhos no diff | Descartados | Nominalmente |
+|---|---|---|---|
+| **P1-A.4** `6a3a3f8..3f24085` | 195 | **4** | `.gitignore`; `06_p1a/.gitattributes`; `revisao-p1a36/.gitattributes`; `revisao-p1a38/.gitattributes` |
+| **P1-A.6** `3f24085..0a40667` — *o pacote julgado* | 42 | **1** | `pytest.ini` |
+| **HEAD** `3f24085..8dd1470` | 48 | **1** | `pytest.ini` |
+
+**O pior descarte nao e o `pytest.ini`.** E o `06_p1a/.gitattributes` da
+janela da P1-A.4, e a razao esta no conteudo dele:
+
+    /evidencias/pacote_p1a37.py -text
+
+Essa linha entrou em `bd055b9` — *"o remedio do MAJOR #5 nao reproduzia:
+medido e corrigido"*. Ela e **o que faz o pacote reproduzir byte a
+byte**, marcando o fonte do proprio gerador contra normalizacao de EOL.
+**O pacote da P1-A.4 pedia julgamento sobre a sua reprodutibilidade e
+descartou, em silencio, o arquivo que a produz.**
+
+### II.2.2 Conteudo ou ruido? — a resposta e que nao havia ruido
+
+Dos **364** arquivos rastreados em HEAD, **18** ficam fora das quatro
+extensoes: 5 `.sha256` (manifestos do canonico), 3 `.patch`, 2 `.diff`,
+5 `.gitattributes`, `.gitignore`, `pytest.ini` e `coletar.sh`.
+
+**Zero e ruido.** E nao por generosidade de classificacao: este
+repositorio **nao rastreia** lock, cache, bytecode nem binario gerado —
+todos estao no `.gitignore`. Entre arquivos rastreados **nao existe
+descartavel**, e por isso o filtro por extensao **so podia descartar
+conteudo**. E o argumento mais forte contra a lista: ela nao distinguia
+nada, porque nao havia nada a distinguir.
+
+## II.3 ORDEM 2 — O FILTRO NOVO
+
+### II.3.1 (a) O criterio, declarado por escrito
+
+Esta na docstring do gerador e no cabecalho de todo pacote. A pergunta
+deixa de ser *"a extensao esta na lista?"* e passa a ser **o que o
+pacote precisa provar**:
+
+| Disposicao | Quem cai aqui | Como entra |
+|---|---|---|
+| **LIDO** | o revisor precisa **LER** para julgar se a correcao fecha o que diz fechar: o que **executa** (`.py`, `.sh`) e o que alguma **ferramenta consulta** para decidir comportamento (`pytest.ini`, `conftest.py`, `.gitattributes`, `.gitignore`, `setup.cfg`, `pyproject.toml`, `tox.ini`, `.editorconfig`) | modificado, como diff; novo, inteiro |
+| **ANCORADO** | o revisor precisa **ANCORAR**, nao ler inteiro: registro, evidencia, corpus, binario — **e toda extensao que o gerador nao conhece** | SHA-256 do blob |
+| **EXCLUIDO** | so existe se **NOMEADO** em `EXCLUSOES_NOMEADAS`, com motivo | linha declarada. **Lista vazia hoje** |
+
+**A propriedade que importa: o default e ANCORAR, nunca DESCARTAR.** A
+extensao deixou de ser o portao e passou a decidir apenas *quanto* do
+arquivo o revisor ve. Errar a classificacao custa **detalhe**; nunca
+mais custa **silencio**. Um `.parquet` que ninguem previu entra com o
+seu hash em vez de evaporar — e ha teste para isso.
+
+E a completude passou a ser **exercida**: `conferir_cobertura` levanta
+`CoberturaIncompleta` se sobrar um so caminho do `git diff
+--name-status`. A docstring anterior **afirmava** *"EXCLUSOES, todas
+declaradas e nenhuma silenciosa"* enquanto o codigo descartava — a
+familia do **MAJOR #3**, dentro do arquivo que o pacote manda julgar.
+
+### II.3.2 (b) O descartado sai DECLARADO no manifesto
+
+Toda saida agora carrega, antes do conteudo:
+
+    === MANIFESTO DE COBERTURA — todo caminho do diff, com motivo ===
+    caminhos no diff: 42  =  lidos 21+4  ancorados 17  removidos 0  excluidos 0
+      LIDO      pytest.ini  — configuracao de mecanismo (pytest.ini)
+      ANCORADO  06_p1a/99_decisao-p1a5.md  — registro, evidencia ou ...
+
+O revisor **confere a conta** em vez de acreditar nela, e o total do
+manifesto e comparado ao `git diff` por teste.
+
+### II.3.3 As duas provas
+
+**Reversao vermelha, com o mutante registrado antes** em
+`scratchpad/MUTANTE-ATIVO.txt`, conforme a P1-A.3.9:
+
+| Medicao | Com o filtro NOVO | Com o gerador REVERTIDO |
+|---|---|---|
+| `pytest.ini` no pacote | **presente**, como `LIDO` | **ausente** |
+| aviso na saida do gerador | — | **nenhum** — so `pacote/sha256/bytes` |
+| guarda `test_cobertura_pacote_p1a7` | **8 passed, 13 subtests** | **19 failed, 2 passed** |
+| suite P1-A inteira | 9 pre-existentes | **28 failed** = 19 do guarda + 9 pre-existentes |
+
+**A reversao mede o objeto certo, e isso foi provado e nao suposto:** o
+gerador revertido regenerou o pacote da P1-A.6 com **SHA-256
+`673271a79bebd603a327aa58f435ea69c488e5e6e569a89dd98bbb1aeeb2cc9f`** e
+**141 903 bytes** — **identicos** ao que a secao 12.2 da P1-A.6
+registrou e ao `pacote_sha256` que **os dois revisores conferiram e
+ecoaram** (medido tambem no JSON cru dos dois vereditos). Nao e um
+pacote parecido: e o mesmo.
+
+E a unica ocorrencia da string `pytest.ini` no pacote revertido esta na
+**linha 2828**, dentro da **docstring** do `conftest.py` — exatamente o
+que a P1-A.6 secao 13.4 havia medido. O arquivo nunca esteve la.
+
+**Controle positivo nas duas polaridades**, porque um guarda que so sabe
+dizer "esta tudo certo" nao distingue arvore sa de varredura quebrada:
+
+- **acha o que deve achar** — `pytest.ini` no pacote do par real, com
+  disposicao, motivo **e os bytes** (`addopts = -p no:cacheprovider`),
+  para que constar do manifesto sem viajar nao passe por inclusao;
+- **acusa quando o defeito volta** — `conferir_cobertura` recebe caminho
+  fora das tres disposicoes e **levanta**, com a funcao REAL e dado
+  REAL, sem duble;
+- **e nao levanta quando a cobertura e total** — sem esta terceira
+  metade, um `raise` incondicional passaria no teste anterior e o guarda
+  nao mediria nada.
+
+**O caso que OCORRE, e nao o vizinho dele.** O par `(3f24085, 0a40667)`
+nao e exemplo: e o par exato do pacote julgado. O vizinho recusado —
+afirmar que `disposicao("pytest.ini")` devolve `"lido"` — exerceria a
+**primitiva**, e o achado **N4** deste acervo existe porque primitiva
+corrigida **nao cobre ponto de chamada**.
+
+### II.3.4 O que o guarda NAO cobre, declarado
+
+- **nao prova que a classificacao LIDO/ANCORADO esteja CERTA** para cada
+  arquivo — prova que ela e **TOTAL**. Um `.md` ancorado quando o
+  revisor precisaria le-lo continua sendo perda de **detalhe**; o que se
+  fechou foi a perda **silenciosa**;
+- **nao cobre renomeacao.** O parser trata `R` como modificacao, e nada
+  aqui afirma que renomeacao esteja bem tratada;
+- **nao mede tamanho de pacote nem se ele cabe em revisor algum**;
+- **nao reabre nenhuma linha `FECHADO`** da P1-A.6.
+
+## II.4 ORDEM 3 — O QUE OS DOIS VEREDITOS NAO VIRAM
+
+Mesmo commit, `3f24085..0a40667`:
+
+| | Julgado pelos dois revisores | Regerado agora |
+|---|---|---|
+| SHA-256 | `673271a7...` | `41533c59...` |
+| Bytes | **141 903** | **153 603** |
+| Caminhos cobertos | **41** de 42 | **42** de 42 |
+| `pytest.ini` | **ausente** | **LIDO**, com bytes |
+
+**O unico arquivo que faltava era o `pytest.ini`** (1 578 B). Os outros
+11 700 bytes de diferenca sao o criterio declarado, o manifesto e a
+docstring maior do proprio gerador, que se auto-inclui.
+
+### II.4.1 Ele toca um MAJOR aberto? — sim, a familia; e nao, nao o fecha
+
+O `pytest.ini` e o **mecanismo** da correcao da P1-A.5.1: `addopts = -p
+no:cacheprovider`, que tirou o cache da arvore vigiada e fez sumir
+**tres das quatro** classes de mutacao que a contencao acusava.
+
+Ele toca a familia de **dois itens abertos**: o achado novo do `kimi`
+`08_p2/saidas:quarta-classe-de-mutacao` e o item da **P1-A.5 secao 5.5**
+(a porta que continua nao construida).
+
+**E nao fecha nenhum dos dois** — e aqui a precisao importa mais que a
+conveniencia. A **quarta** classe, *a sessao editando um fonte*, e
+justamente a que o `pytest.ini` **nao alcanca**, e a propria P1-A.5.1 diz
+isso em letra (*"nao e a porta"*). Portanto **nao houve revisor
+apontando defeito que a correcao ja resolvia**: o `kimi` apontou
+exatamente o que continua aberto.
+
+**E nenhuma linha `FECHADO` dependia do arquivo ausente.** Os quatro
+MAJOR que os dois fecharam — `N1`, `P1A4-1`, `P1A4-3`, `P1A4-6` — tratam
+do escritor unico e do acoplamento; nenhum trata do cache. **A omissao
+nao fabricou fechamento falso**, e isso limita o dano de forma aferivel.
+
+**O que se perdeu, entao, foi outra coisa, e nao e pequena:** os dois
+revisores tiveram de aceitar **por afirmacao do registro** que tres
+classes de mutacao sumiram, em vez de **ler as tres linhas do mecanismo
+que as faz sumir**. Num acervo cuja doutrina inteira e *exercer, nao
+afirmar*, a omissao transferiu para os revisores exatamente a postura
+que este repositorio recusa — e eles **nao tinham como detecta-la**. O
+`kimi` chegou a registrar o gerador como *"na leitura, sem defeito"*.
+
+**Nao foi reenviado.** O despacho proibe, e o pacote novo existe apenas
+como medicao.
+
+## II.5 ORDEM 4 — A EVIDENCIA DESTRUIDA
+
+`08_p2/saidas/labs/20260803T135101Z/` (corrida `p22-c-repeticao`).
+**Procurado em cinco lugares independentes:**
+
+| Onde | Resultado |
+|---|---|
+| Banco de objetos + `--reflog` | **zero** ocorrencias |
+| Lixeira de `E:` | **zero** (busca por `20260803`, `p22-c`, `chave_selo`, `labs`) |
+| `06_p1a/evidencias/backups/` | so `tiers_declarados` e `prova_central` |
+| `%TEMP%` | **zero** |
+| Varredura de `E:` por nome | o unico `chave_selo.bin` e o lab de **P0**, regenerado hoje |
+
+**Nao ha copia. O lab sumiu**, e isto confirma por medicao independente
+o que a P1-A.6 secao 4.1 ja declarava contra si.
+
+**Nao checado, e declarado:** copias de sombra (**VSS**) exigem elevacao
+que esta sessao nao tem — `vssadmin` recusou por permissao. E a **unica**
+porta que continua fechada por falta de privilegio, e nao por medicao.
+Quem tiver console elevado pode conferir com `vssadmin list shadows`; a
+probabilidade e baixa (o volume e `E:`, e a exclusao foi ha tres dias),
+mas **baixa nao e zero**, e afirmar "irrecuperavel" sem essa checagem
+seria afirmar mais do que se mediu.
+
+**A regra foi gravada no `CLAUDE.md`**, na secao *"LIMPAR `saidas/labs`
+EXIGE COPIA DATADA ANTES (P1-A.7)"*. Ela nao cria regra nova: torna
+legivel, onde toda sessao le, a regra permanente que **existia e nao
+impediu o dano porque nao estava la**.
+
+## II.6 ORDEM 5 — A CONTAGEM OITO OU NOVE (nao decidida)
+
+**O `kimi`**, na frase dele, do JSON cru:
+
+> *"CONTAGEM: julgo NOVE a contagem correta. A regra do acervo
+> (P1-A.3.6 §9.4) mantem separado o trio 6/N5/P1A4-2 precisamente para
+> que a fusao nao produza aparencia de progresso; aplicada com simetria
+> ao par N1/P1A4-1, da nove. Fundir um par e nao o outro seria
+> assimetrico; fundir os dois daria seis objetos, e a contagem deixaria
+> de medir o que ela existe para medir. Ficam nove linhas."*
+
+**O `codex`** respondeu as nove linhas **sem contestar a contagem**.
+
+### II.6.1 A ressalva que esta missao mediu, e que muda o peso
+
+Os dois receberam o **mesmo prompt** — `prompt_sha256` identico,
+`0a029c37...` — e esse prompt **dizia o numero antes de perguntar**:
+
+> *"**NOVE** linhas, uma por MAJOR (...) **NAO funda** N1 com P1A4-1,
+> nem o trio 6/N5/P1A4-2: sao nove linhas. Se julgar que a contagem
+> correta e outra, diga-o em linha separada, com o motivo."*
+
+**Consequencia, declarada e nao suavizada:** o silencio do `codex` e
+**evidencia fraca** — o instrumento pediu nove linhas e **antecipou a
+fusao** que a pergunta deveria testar. O parecer do `kimi` e **mais
+forte**, porque traz razao propria (a simetria), mas foi dado **dentro
+do mesmo enquadramento**.
+
+A P1-A.6 secao 13.3 escreveu que *"a questao que a secao 5 deixou aberta
+ao Fundador tem, agora, resposta de revisor independente"*. Isso
+continua verdadeiro para o `kimi` e **mais fragil do que parecia** para
+o `codex`. **Esta missao nao decide**, e registra a fragilidade para que
+a decisao nao se apoie num consenso que o proprio instrumento ajudou a
+produzir.
+
+| Campo | Valor |
+|---|---|
+| **Dono** | **Fundador** |
+| **Gatilho** | **antes da proxima revisao independente** — a contagem e o **denominador** de *"quantos fecharam"* |
+| **Recomendacao de metodo** | se a questao for reaberta, perguntar **sem** dizer o numero no prompt |
+
+## II.7 ATENCAO — OS NUMEROS QUE NAO REPRODUZEM
+
+Remedidos **neste disco**, em `8dd1470`, por `git grep`. **Nao herdei
+numero nenhum.**
+
+| Termo | Ocorrencias aqui | Leitura |
+|---|---|---|
+| `oito MAJOR` | **1** | `99_decisao-p1a6.md:282` — e **citacao de um despacho, refutada na mesma frase** (*"O acervo tem nove"*). Como **afirmacao do acervo: zero** |
+| `quarto ciclo` | **0** | o acervo escreve `quatro ciclos` (**1**) e `tres ciclos` (**5**). A forma ordinal-singular **nunca existiu** |
+| `P1A5-1` | **0** | **nao ha familia `P1A5-*`.** Os **unicos** ids de achado do acervo sao `P1A4-1..6` |
+
+**Os tres zeros da F30 REPRODUZEM**, com um so ajuste: `oito MAJOR` tem
+**uma** ocorrencia citada e refutada, e **zero** como afirmacao propria.
+
+**E o zero de `P1A5-1` tem razao estrutural, nao tipografica** — o que
+importa mais que o numero. Nao existe achado `P1A5-*` porque a **P1-A.5
+foi missao de CORRECAO**, e correcao **nao emite achado**: e a regra
+*"quem corrige nao certifica"* aparecendo na forma dos identificadores.
+`P1-A.5.1` (27 ocorrencias) e rotulo de **missao**, nunca de achado.
+Procurar `P1A5-1` e procurar uma classe de objeto que este acervo, por
+construcao, nao produz.
+
+## II.8 O QUE ESTA MISSAO **NAO** FEZ
+
+- **nao corrigiu MAJOR nenhum.** Os nove seguem como estavam;
+- **nao enviou pacote, nao invocou provedor** — **zero** chamada paga,
+  **zero** custo variavel;
+- **nao renovou cota nem tier**, e nao leu declaracao de tier;
+- **nao reescreveu Parte I** de registro nenhum;
+- **nao decidiu** a contagem oito-ou-nove;
+- **nao reexaminou** nenhuma das quatro linhas `FECHADO` da P1-A.6 sob o
+  limite do `pytest.ini` ausente;
+- **nao corrigiu a regressao da ordem 6** (II.1.1), nem os guardas de
+  PII sensiveis a estacao. **Sao achados novos**, e o despacho proibe
+  corrigir aqui.
+
+### Os achados novos que esta missao devolve ao Fundador
+
+| # | Achado | Familia | Dono | Gatilho |
+|---|---|---|---|---|
+| **P1A7-a** | A ordem 6 deixou **dois guardas versionados vermelhos** (`ZeroSegredoNosArtefatos`, `ZeroPiiNosArtefatos`) ao commitar evidencia que ecoa fixtures e transcreve o usuario historico | **(N)** — classe que a varredura dos 86 guardas nao media: guarda que fica vermelho por **conteudo de documento**, nao por codigo | missao que tratar a varredura de segredo | **imediato**: enquanto durar, "suite verde" nao e aferivel na P1-A |
+| **P1A7-b** | Os guardas de PII casam por **substring** sobre um token derivado da estacao; `lucas` casa dentro de `lucasia`. Numa estacao de nome curto o guarda acusa operacao normal | **(F)** — o guarda **afirma** *"zero PII"* e o que ele exerce e *"zero ocorrencias da substring"* | missao que tratar contencao/PII | ja ocorreu nesta estacao |
+| **P1A7-c** | `test_p2_receita_medidor_p24` falha em **6 pontos** nesta estacao, com `p22-a` recalculando **19,907** contra **19,558** publicados — e falha **tambem em `1f45fdd`**, logo **nao** e regressao da ordem 6 nem desta missao | fora de ambas | missao de reproducao da P2 (mesmo dono do `P1A4-4`) | ja ocorreu; agrava o `P1A4-4` |
+
+**Nenhum dos tres foi corrigido aqui**, e nenhum e certificado por esta
+missao.
+
+## II.9 ATESTADO DA PARTE II
+
+**Esta missao mediu um defeito de instrumento e o corrigiu; ela nao
+certifica a propria correcao.** Quem disser que o
+`pacote_p1a37.py:cobertura-do-diff` fechou tera de ser revisor
+independente — e o proximo pacote que for a revisao ja nascera com o
+manifesto que permite conferir isso **sem** confiar nesta assinatura.
+
+**O que seria falha, e nao foi feito:** medir a suite e chamar de verde
+o que esta vermelho; atribuir a esta missao as 9 falhas pre-existentes,
+ou atribuir a estacao as 2 que sao regressao da ordem 6 — as duas contas
+foram separadas por **medicao diferencial em clone**, nao por
+julgamento; declarar a reversao vermelha sem comprovar que ela regenera
+**o mesmo artefato** que os revisores leram; trocar o descarte
+silencioso por um descarte **declarado** e chamar isso de correcao,
+motivo pelo qual ha teste exigindo os **bytes** do `pytest.ini` e nao so
+o nome dele; escrever o guarda contra a **primitiva** (`disposicao`) em
+vez do **ponto de chamada** (`montar_pacote`), que e o achado `N4`;
+afirmar o lab *"irrecuperavel"* sem declarar que o **VSS nao pode ser
+checado** nesta sessao; e registrar o parecer do `codex` sobre a
+contagem **sem** dizer que o prompt lhe entregou o numero.
+
+**O que ficou aquem, e esta escrito:** a suite P1-A **nao esta verde** e
+nao ficou verde com esta missao — 9 falhas pre-existentes continuam de
+pe, e duas delas sao regressao da ordem 6 que esta missao **mediu e nao
+podia corrigir**. O interpretador desta estacao **nao e o do acervo**, e
+por isso nenhum numero de suite daqui deve ser comparado com os
+registros anteriores sem essa ressalva ao lado. E os dois vereditos da
+P1-A.6 **continuam limitados** pela falta do `pytest.ini`: esta missao
+mediu o tamanho exato da falta, e **nao reabriu** nenhuma das linhas.
+
+**Contagem como medida, nunca como meta.** Os numeros desta parte — 364
+rastreados e 18 fora das quatro extensoes, **zero** deles ruido; 4
+descartados na janela da P1-A.4 e **1** na da P1-A.6; 141 903 B e
+`673271a7...` reproduzidos byte a byte pela reversao contra 153 603 B e
+`41533c59...` do pacote corrigido; 42 de 42 caminhos cobertos; 8 passed
+e 13 subtests numa polaridade contra 19 failed na outra; 28 = 19 + 9 na
+suite sob mutante; 8 failed em `1f45fdd` contra 10 em `8dd1470`; 71
+casamentos atribuidos 66/4/1; e os tres zeros de `oito MAJOR` (como
+afirmacao), `quarto ciclo` e `P1A5-1` — sao o que foi medido, e valem
+sobre o estado e a **estacao** que os produziu.
+
+**DECISAO DAS ORDENS 1 A 5: CONCLUIDO-COM-PULADOS.**

@@ -1,0 +1,199 @@
+{
+  "missao": "SSC+ P1-A.7 — ordens 1 a 5",
+  "gerado_em_utc": "2026-08-08T03:44:31Z",
+  "head_medido": "8dd1470e2c4b6b204c0419e24c7554096774692e",
+  "o_que_isto_nao_e": "nao e atestado; quem corrige nao certifica. Nenhum MAJOR foi corrigido e nenhum pacote foi enviado.",
+  "precondicoes": {
+    "mutante_ativo_na_abertura": "ausente",
+    "arvore_na_abertura": "limpa",
+    "lease": {
+      "sessao": "p1a7-ordens1a5-ops",
+      "fence": 1,
+      "nota": "locks/ NAO existia nesta estacao; foi criado ao adquirir. Isso fez passar o teste test_gitignore_efetivo_p1a39 que falhava por ausencia do diretorio."
+    },
+    "interpretador": {
+      "de_registro_no_acervo": "Python 3.14.3 (coleta-20260730)",
+      "desta_estacao": "Python 3.11.9",
+      "pytest": "9.1.1 instalado nesta sessao; nao havia pytest",
+      "consequencia": "os numeros de suite do acervo NAO reproduzem nesta estacao, e a causa e declarada por medicao diferencial, nao suposta"
+    },
+    "usuario_local": {
+      "de_registro": "IA Lucas (inferido do blob orfao da ordem 6)",
+      "desta_estacao": "<USUARIO>",
+      "consequencia": "os guardas de PII derivam o alvo da estacao; o token curto '<USUARIO>' casa DENTRO de '<USUARIO>ia' num artefato rastreado"
+    },
+    "p0": {
+      "medido": "344 passed, 256 subtests",
+      "de_registro": "344 passed, 256 subtests",
+      "reproduz": true
+    },
+    "prova_central": {
+      "medido": "18 assercoes, 20 eventos",
+      "de_registro": "18 assercoes, 20 eventos",
+      "reproduz": true,
+      "nota": "par, nunca fracao (CLAUDE.md P1-A.5.1)"
+    },
+    "p1a": {
+      "medido_no_head": "10 failed, 900 passed, 6 skipped, 1195 subtests",
+      "de_registro_p1a6": "913 passed, 1 skipped, 1252 subtests",
+      "reproduz": false
+    }
+  },
+  "regressao_da_ordem_6_medida_por_diferencial": {
+    "metodo": "clone --no-hardlinks em 1f45fdd (pre-ordem 6) contra HEAD 8dd1470, MESMA estacao, MESMO interpretador",
+    "em_1f45fdd": "8 failed, 902 passed, 6 skipped, 1195 subtests",
+    "em_8dd1470": "10 failed, 900 passed, 6 skipped, 1195 subtests",
+    "delta": "+2 testes vermelhos, causados pelos 3 arquivos que a ordem 6 commitou",
+    "os_dois": [
+      {
+        "teste": "test_isolamento.py::ZeroSegredoNosArtefatos",
+        "causa": "71 casamentos de padrao de segredo, atribuidos: 66 em p1a7-varredura-segredo-*.json, 4 em 99_decisao-p1a7.md, 1 em varredura_segredo_p1a7.py",
+        "credencial_real": false,
+        "nota": "sao as fixtures que a propria ordem 6 nomeou; o defeito nao e vazamento, e guarda versionado vermelho"
+      },
+      {
+        "teste": "test_estabilizacao_p1a1.py::ZeroPiiNosArtefatos",
+        "causa": "99_decisao-p1a7.md e o UNICO arquivo rastreado do acervo que carrega a forma literal do usuario historico (2 ocorrencias), escrita ao documentar o blob orfao na §6.2",
+        "credencial_real": false
+      }
+    ],
+    "por_que_passou_despercebido": "a ordem 6 declarou, em §10, que NAO rodou a suite",
+    "esta_missao_corrige": false,
+    "razao": "o despacho proibe corrigir MAJOR nenhum; isto e achado novo e fica declarado para o dono"
+  },
+  "ordem_1_o_que_o_gerador_descartava": {
+    "criterio_vigente_ate_aqui": "lista de extensao (.py/.md/.json/.txt)",
+    "descarte": "silencioso — o caminho nao cai em ramo nenhum e nenhuma linha o registra",
+    "arvore_rastreada_em_head": 364,
+    "fora_das_quatro_extensoes": 18,
+    "ruido_entre_os_18": 0,
+    "nota_sobre_ruido": "nenhum dos 18 e descartavel: o repositorio nao rastreia lock, cache nem binario gerado. A lista de extensao so podia descartar CONTEUDO.",
+    "por_janela_de_pacote_real": {
+      "P1-A.4 (6a3a3f8..3f24085)": {
+        "descartados": 4,
+        "nominalmente": [
+          ".gitignore",
+          "06_p1a/.gitattributes",
+          "06_p1a/evidencias/revisao-p1a36/.gitattributes",
+          "06_p1a/evidencias/revisao-p1a38/.gitattributes"
+        ],
+        "o_mais_grave": "06_p1a/.gitattributes carrega '/evidencias/pacote_p1a37.py -text', que e O REMEDIO do MAJOR #5 (bd055b9). O pacote que devia prova-lo o descartou."
+      },
+      "P1-A.6 (3f24085..0a40667)": {
+        "descartados": 1,
+        "nominalmente": [
+          "pytest.ini"
+        ],
+        "nota": "este e o pacote que os DOIS revisores julgaram"
+      },
+      "HEAD (3f24085..8dd1470)": {
+        "descartados": 1,
+        "nominalmente": [
+          "pytest.ini"
+        ]
+      }
+    }
+  },
+  "ordem_2_o_filtro_novo": {
+    "criterio": "deixa de ser lista de extensao; passa a ser o que o pacote precisa PROVAR",
+    "tres_disposicoes": {
+      "LIDO": "o revisor precisa LER — fonte executavel e configuracao de mecanismo",
+      "ANCORADO": "o revisor precisa ANCORAR — registro, evidencia e TODA extensao desconhecida (o DEFAULT)",
+      "EXCLUIDO": "so se NOMEADO, com motivo; lista vazia hoje"
+    },
+    "propriedade_central": "o default e ANCORAR, nunca DESCARTAR — extensao nova entra com hash em vez de evaporar",
+    "completude": "EXERCIDA por conferir_cobertura, que levanta CoberturaIncompleta se sobrar caminho; antes era AFIRMADA na docstring (familia do MAJOR #3)",
+    "manifesto": "secao MANIFESTO DE COBERTURA, caminho a caminho, com disposicao e motivo",
+    "prova": {
+      "teste": "06_p1a/tests/test_cobertura_pacote_p1a7.py",
+      "caso_que_ocorre": "o par (3f24085, 0a40667) NAO e exemplo: e o par exato que os dois revisores leram",
+      "polaridade_acha": "com o filtro novo: 8 passed, 13 subtests",
+      "polaridade_acusa": "com o mutante (gerador revertido): 19 failed, 2 passed no guarda",
+      "reversao_vermelha_na_suite": "28 failed = 19 do guarda novo + 9 pre-existentes",
+      "controle_positivo_negativo": "conferir_cobertura NAO levanta quando a cobertura e total — sem isso, um raise incondicional passaria"
+    },
+    "prova_de_que_a_reversao_mede_o_objeto_certo": {
+      "sha256_do_pacote_mutante": "673271a79bebd603a327aa58f435ea69c488e5e6e569a89dd98bbb1aeeb2cc9f",
+      "bytes_do_pacote_mutante": 141903,
+      "sha256_que_os_revisores_conferiram": "673271a79bebd603a327aa58f435ea69c488e5e6e569a89dd98bbb1aeeb2cc9f",
+      "identico": true,
+      "leitura": "a reversao regenera BYTE A BYTE o artefato que foi julgado; a medicao nao e sobre um vizinho"
+    }
+  },
+  "ordem_3_o_que_os_dois_vereditos_nao_viram": {
+    "mesmo_commit": "3f24085..0a40667",
+    "julgado": {
+      "sha256": "673271a7...",
+      "bytes": 141903,
+      "caminhos_cobertos": 41,
+      "caminhos_no_diff": 42
+    },
+    "regerado_agora": {
+      "sha256": "41533c59...",
+      "bytes": 153603,
+      "caminhos_cobertos": 42,
+      "caminhos_no_diff": 42
+    },
+    "o_que_faltava": "pytest.ini (1578 B)",
+    "toca_major_aberto": {
+      "fecha_algum": false,
+      "familia_que_toca": "a quarta classe de mutacao — achado novo do kimi (08_p2/saidas:quarta-classe-de-mutacao) e item aberto da P1-A.5 §5.5",
+      "precisao": "pytest.ini e o MECANISMO que removeu TRES das quatro classes de mutacao (P1-A.5.1 §2). A quarta — a sessao editando um fonte — e justamente a que ele NAO alcanca, e a propria P1-A.5.1 diz isso. Portanto NAO ha achado que a correcao ja resolvia e o revisor apontou por engano.",
+      "o_que_se_perdeu": "os dois revisores tiveram de aceitar por AFIRMACAO do registro que tres classes sumiram, em vez de ler as tres linhas do mecanismo. Num acervo cuja doutrina e 'exercer, nao afirmar', o dano recai sobre quem nao tinha como detecta-lo.",
+      "nenhuma_linha_fechado_dependia": "os quatro MAJOR fechados por ambos (N1, P1A4-1, P1A4-3, P1A4-6) tratam do escritor unico e do acoplamento; nenhum do cache. A omissao nao fabricou fechamento falso."
+    },
+    "reenviado": false
+  },
+  "ordem_4_a_evidencia_destruida": {
+    "objeto": "08_p2/saidas/labs/20260803T135101Z/ (corrida p22-c-repeticao)",
+    "recuperavel": false,
+    "procurado_em": {
+      "banco_de_objetos_e_reflog": "zero ocorrencias",
+      "lixeira_de_E": "zero",
+      "backups_do_acervo": "so tiers e prova central",
+      "TEMP": "zero",
+      "varredura_de_E_por_nome": "o unico chave_selo.bin e o lab de P0, regenerado hoje"
+    },
+    "nao_checado_e_declarado": "copias de sombra (VSS) exigem elevacao que esta sessao nao tem — porta fechada por permissao, nao por medicao",
+    "regra_gravada_no_claude_md": true
+  },
+  "ordem_5_a_contagem_oito_ou_nove": {
+    "decidido_por_esta_missao": false,
+    "kimi": "julgo NOVE a contagem correta. (...) Fundir um par e nao o outro seria assimetrico; fundir os dois daria seis objetos, e a contagem deixaria de medir o que ela existe para medir.",
+    "codex": "respondeu as nove linhas sem contestar a contagem",
+    "ressalva_medida_nesta_missao": {
+      "prompt_sha256_identico_nos_dois": "0a029c37b5639d8e8b8eb85f3ddbfc7fe3151748b5551aa7b60b55f263d1ef5a",
+      "o_que_o_prompt_dizia": "NOVE linhas (...) NAO funda N1 com P1A4-1, nem o trio 6/N5/P1A4-2: sao nove linhas. Se julgar que a contagem correta e outra, diga-o em linha separada, com o motivo",
+      "consequencia": "o silencio do codex e evidencia FRACA: o instrumento pediu nove linhas e antecipou a fusao. O parecer do kimi e mais forte por trazer razao propria (simetria), mas foi dado dentro do mesmo enquadramento."
+    },
+    "dono": "Fundador",
+    "gatilho": "antes da proxima revisao independente — e o denominador de 'quantos fecharam'"
+  },
+  "atencao_numeros_que_nao_reproduzem": {
+    "metodo": "git grep sobre o disco desta sessao, HEAD 8dd1470",
+    "oito MAJOR": {
+      "ocorrencias": 1,
+      "onde": "06_p1a/99_decisao-p1a6.md:282",
+      "natureza": "CITACAO de um despacho, refutada na mesma frase ('O acervo tem nove')",
+      "como_afirmacao_do_acervo": 0
+    },
+    "quarto ciclo": {
+      "ocorrencias": 0,
+      "o_que_existe": "'quatro ciclos' (1), 'tres ciclos' (5)"
+    },
+    "P1A5-1": {
+      "ocorrencias": 0,
+      "razao_estrutural": "nao ha familia P1A5-*. Os UNICOS ids de achado do acervo sao P1A4-1..6, da revisao da P1-A.4. A P1-A.5 foi missao de CORRECAO, e correcao nao emite achado — 'quem corrige nao certifica'. A P1-A.5.1 e rotulo de MISSAO (27x 'P1-A.5.1'), nunca de achado."
+    },
+    "veredito": "os tres zeros da F30 REPRODUZEM neste disco; o unico ajuste e que 'oito MAJOR' tem 1 ocorrencia citada e refutada, e zero como afirmacao do acervo"
+  },
+  "o_que_esta_missao_nao_fez": [
+    "nao corrigiu MAJOR nenhum",
+    "nao enviou pacote e nao invocou provedor — zero chamada paga",
+    "nao renovou cota nem tier",
+    "nao reescreveu Parte I de registro nenhum",
+    "nao decidiu a contagem oito-ou-nove",
+    "nao corrigiu a regressao da ordem 6 nem os guardas de PII sensiveis a estacao — sao achados novos, declarados ao dono",
+    "nao certificou coisa alguma"
+  ]
+}

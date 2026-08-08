@@ -22,17 +22,54 @@ DUAS DIFERENCAS DELIBERADAS em relacao ao gerador da P1-A.3.6:
    banco de objetos para nao virar omissao silenciosa; derivada, ela nao
    pode divergir do diff que descreve.
 
-EXCLUSOES, todas declaradas e nenhuma silenciosa:
-  1. o diff cobre os `.py` que EXISTEM em BASE; os `.py` novos entrariam
-     ali como a propria integra com prefixo `+`, e por isso entram
-     inteiros, uma vez, na secao de conteudo completo;
-  2. registro (`.md`) e evidencia (`.json`) alterados entram SOMENTE
-     como SHA-256 do blob em ALVO;
-  3. arquivo REMOVIDO entre BASE e ALVO entra como linha de remocao, com
-     o SHA-256 que ele tinha em BASE — sumir seria omissao;
-  4. nao entram timestamp, UUID, caminho absoluto, credencial nem lock;
-  5. usuario local (forma longa e 8.3) e prefixo de caminho local sao
-     redigidos.
+O CRITERIO DE INCLUSAO — corrigido na P1-A.7, e ele NAO e mais uma
+lista de extensao. Ate aqui o gerador perguntava *"a extensao esta em
+`.py`/`.md`/`.json`/`.txt`?"* e, se a resposta fosse nao, o caminho
+**sumia sem uma linha de aviso**. Foi assim que o `pytest.ini` — metade
+da correcao da P1-A.5.1 — foi submetido a dois revisores sem estar no
+pacote, e assim que o `06_p1a/.gitattributes`, que e o REMEDIO do
+MAJOR #5, ficou fora do pacote da P1-A.4 que dizia prova-lo.
+
+A pergunta passa a ser **o que o pacote precisa provar**, e ela se
+responde em tres disposicoes que cobrem TODO caminho do diff:
+
+  1. **LIDO** — o revisor precisa LER o arquivo para julgar se a
+     correcao fecha o que diz fechar. E o caso do que EXECUTA ou do que
+     alguma ferramenta CONSULTA para decidir comportamento: fonte
+     (`.py`, `.sh`) e configuracao de mecanismo (`pytest.ini`,
+     `conftest.py`, `.gitattributes`, `.gitignore`, `setup.cfg`,
+     `pyproject.toml`, `tox.ini`, `.editorconfig`). Modificado entra
+     como diff; novo entra inteiro, uma vez.
+  2. **ANCORADO** — o revisor precisa ANCORAR o arquivo, nao le-lo
+     inteiro: registro, evidencia, corpus, binario, e **toda extensao
+     que este gerador nao conhece**. Entra como SHA-256 do blob (em
+     ALVO; em BASE quando removido).
+  3. **EXCLUIDO** — so existe se **NOMEADO** em `EXCLUSOES_NOMEADAS`,
+     com motivo. Lista vazia hoje: nada e excluido.
+
+**O DEFAULT E ANCORAR, NUNCA DESCARTAR.** Esta e a diferenca que
+importa. A extensao deixou de ser o portao e passou a decidir apenas
+*quanto* do arquivo o revisor ve; errar a classificacao custa detalhe,
+e nunca mais silencio. Uma extensao que ninguem previu entra com o seu
+hash em vez de evaporar.
+
+**E a completude e EXERCIDA, nao afirmada** (`conferir_cobertura`): o
+gerador PARA se sobrar um so caminho do `git diff --name-status` que
+nao esteja numa das tres disposicoes. A docstring anterior AFIRMAVA
+*"todas declaradas e nenhuma silenciosa"* enquanto o codigo descartava
+em silencio — a familia do MAJOR #3, dentro do arquivo que o pacote
+manda julgar.
+
+O `=== MANIFESTO DE COBERTURA ===` imprime caminho a caminho a
+disposicao e o motivo, para que o revisor confira a conta em vez de
+acreditar nela.
+
+O QUE CONTINUA VALENDO:
+  - arquivo REMOVIDO entre BASE e ALVO entra como linha de remocao, com
+    o SHA-256 que ele tinha em BASE — sumir seria omissao;
+  - nao entram timestamp, UUID, caminho absoluto, credencial nem lock;
+  - usuario local (forma longa e 8.3) e prefixo de caminho local sao
+    redigidos.
 
 O QUE ESTE GERADOR NAO FAZ: nao envia, nao invoca provedor e nao decide
 quem revisa. Ele monta bytes num arquivo de saida, e nada mais.
@@ -52,7 +89,67 @@ sys.path.insert(0, str(RAIZ / "06_p1a" / "evidencias"))
 from autoinclusao import conferir, secao_do_gerador  # noqa: E402
 from contencao import redigir  # noqa: E402
 
-EXTENSOES_HASHEADAS = (".md", ".json", ".txt")
+# --------------------------------------------------------------------
+# O CRITERIO, em codigo. Ver a secao "O CRITERIO DE INCLUSAO" no topo.
+# --------------------------------------------------------------------
+
+# Extensoes de coisa que EXECUTA.
+_EXTENSOES_QUE_EXECUTAM = (".py", ".sh")
+
+# Nomes de arquivo que alguma FERRAMENTA consulta para decidir
+# comportamento. E nome, nao extensao, porque e assim que a ferramenta
+# os procura: o pytest procura `pytest.ini`, o git procura
+# `.gitattributes`. `pytest.ini` esta aqui por medicao, nao por
+# simetria — a P1-A.6 julgou a correcao da P1-A.5.1 sem ele.
+_CONFIGURACAO_DE_MECANISMO = frozenset((
+    "pytest.ini", "conftest.py", ".gitattributes", ".gitignore",
+    "setup.cfg", "pyproject.toml", "tox.ini", ".editorconfig",
+))
+
+# Exclusao so existe se NOMEADA, e com motivo. Vazia hoje: o gerador
+# nao exclui nada. Quem acrescentar um item aqui esta declarando a
+# exclusao no manifesto, que e exatamente o oposto de descartar em
+# silencio.
+EXCLUSOES_NOMEADAS: dict = {}
+
+
+class CoberturaIncompleta(Exception):
+    """Sobrou caminho do diff sem disposicao — o defeito da P1-A.7.
+
+    Existe para ser LEVANTADA, nao para ser documentada: e ela que
+    transforma a completude de afirmacao em exercicio.
+    """
+
+
+def disposicao(rel: str) -> tuple:
+    """(disposicao, motivo) para UM caminho. Nunca devolve 'descartado'.
+
+    O default e ANCORADO. Uma extensao desconhecida entra com o seu
+    SHA-256; nenhuma entrada deste dicionario pode faze-la sumir.
+    """
+    if rel in EXCLUSOES_NOMEADAS:
+        return "excluido", EXCLUSOES_NOMEADAS[rel]
+    nome = rel.rsplit("/", 1)[-1]
+    if nome in _CONFIGURACAO_DE_MECANISMO:
+        return "lido", f"configuracao de mecanismo ({nome})"
+    if rel.endswith(_EXTENSOES_QUE_EXECUTAM):
+        return "lido", "fonte executavel"
+    return "ancorado", "registro, evidencia ou extensao nao-executavel"
+
+
+def conferir_cobertura(todos, lidos, ancorados, excluidos) -> None:
+    """PARA se sobrar caminho sem disposicao.
+
+    O portao que faltava. Ate a P1-A.7 o gerador AFIRMAVA na docstring
+    que nenhuma exclusao era silenciosa, e descartava em silencio todo
+    caminho fora de quatro extensoes.
+    """
+    cobertos = set(lidos) | set(ancorados) | set(excluidos)
+    sobra = sorted(set(todos) - cobertos)
+    if sobra:
+        raise CoberturaIncompleta(
+            "caminhos do diff sem disposicao — o pacote omitiria "
+            f"{len(sobra)} arquivo(s) em silencio: {sobra}")
 
 
 def _git(*args: str) -> str:
@@ -102,10 +199,35 @@ def montar_pacote(base: str, alvo: str) -> str:
         raise SystemExit(f"PARADA: {base} nao e ancestral de {alvo}")
 
     classes = _classificar(base, alvo)
-    py_modificados = [r for r in classes["modificados"] if r.endswith(".py")]
-    py_novos = [r for r in classes["novos"] if r.endswith(".py")]
-    hasheados = [(r, alvo) for r in classes["modificados"] + classes["novos"]
-                 if r.endswith(EXTENSOES_HASHEADAS)]
+
+    # Toda decisao passa por `disposicao`; nenhum caminho cai fora dela.
+    motivos = {}
+    lidos_modificados, lidos_novos, ancorados_vivos, excluidos = [], [], [], []
+    for rel in classes["modificados"] + classes["novos"]:
+        disp, motivo = disposicao(rel)
+        motivos[rel] = motivo
+        novo = rel in classes["novos"]
+        if disp == "excluido":
+            excluidos.append(rel)
+        elif disp == "lido":
+            (lidos_novos if novo else lidos_modificados).append(rel)
+        else:
+            ancorados_vivos.append(rel)
+    for rel in classes["removidos"]:
+        motivos[rel] = "removido entre BASE e ALVO — hash do blob em BASE"
+
+    # O portao: sobrou caminho sem disposicao? O pacote nao nasce.
+    todos = (classes["modificados"] + classes["novos"]
+             + classes["removidos"])
+    conferir_cobertura(
+        todos,
+        lidos_modificados + lidos_novos,
+        ancorados_vivos + classes["removidos"],
+        excluidos)
+
+    for lista in (lidos_modificados, lidos_novos, ancorados_vivos, excluidos):
+        lista.sort()
+    hasheados = [(r, alvo) for r in ancorados_vivos]
     hasheados += [(r, base) for r in classes["removidos"]]
 
     partes = [
@@ -123,24 +245,44 @@ def montar_pacote(base: str, alvo: str) -> str:
         " A arvore de trabalho NAO e lida — exceto pelo fonte do gerador,"
         " que e o objeto sob julgamento e nao pode vir do commit.\n",
         secao_do_gerador(__file__, redigir),
-        "=== EXCLUSOES DECLARADAS ===",
-        "1. diff so dos .py que existem em BASE; .py novos entram "
-        "inteiros na secao de conteudo completo, uma unica vez;",
-        "2. .md/.json/.txt alterados ou novos entram SOMENTE como "
-        "SHA-256 do blob em ALVO;",
-        "3. arquivo removido entra como linha de remocao com o SHA-256 "
-        "que tinha em BASE;",
-        "4. usuario local (forma longa e 8.3) e prefixo de caminho local "
-        "sao redigidos.\n",
-        f"=== DIFF DOS .PY MODIFICADOS ({len(py_modificados)}) ===",
+        "=== CRITERIO DE INCLUSAO (nao e lista de extensao) ===",
+        "LIDO     — o revisor precisa LER: fonte executavel e "
+        "configuracao de mecanismo. Modificado entra como diff; novo, "
+        "inteiro.",
+        "ANCORADO — o revisor precisa ANCORAR: registro, evidencia e "
+        "TODA extensao que o gerador nao conhece. Entra como SHA-256.",
+        "EXCLUIDO — so se NOMEADO, com motivo. Nenhuma exclusao "
+        "silenciosa: o gerador PARA se sobrar caminho sem disposicao.",
+        "Removido entra como linha de remocao com o SHA-256 que tinha "
+        "em BASE. Usuario local e prefixo de caminho local sao "
+        "redigidos.\n",
+        "=== MANIFESTO DE COBERTURA — todo caminho do diff, com motivo ===",
+        f"caminhos no diff: {len(todos)}  =  lidos {len(lidos_modificados)}"
+        f"+{len(lidos_novos)}  ancorados {len(ancorados_vivos)}  "
+        f"removidos {len(classes['removidos'])}  "
+        f"excluidos {len(excluidos)}",
     ]
-    if py_modificados:
-        partes.append(_git("diff", base, alvo, "--", *py_modificados))
-    else:
-        partes.append("(nenhum .py modificado entre BASE e ALVO)\n")
+    for rel in sorted(todos):
+        if rel in classes["removidos"]:
+            rotulo = "REMOVIDO"
+        elif rel in excluidos:
+            rotulo = "EXCLUIDO"
+        elif rel in lidos_novos or rel in lidos_modificados:
+            rotulo = "LIDO"
+        else:
+            rotulo = "ANCORADO"
+        partes.append(f"  {rotulo:9s} {rel}  — {motivos[rel]}")
+    partes.append("")
 
-    partes.append(f"=== CONTEUDO COMPLETO DOS .PY NOVOS ({len(py_novos)}) ===")
-    for rel in py_novos:
+    partes.append(f"=== DIFF DOS LIDOS MODIFICADOS ({len(lidos_modificados)}) ===")
+    if lidos_modificados:
+        partes.append(_git("diff", base, alvo, "--", *lidos_modificados))
+    else:
+        partes.append("(nenhum arquivo lido foi modificado entre BASE e ALVO)\n")
+
+    partes.append(
+        f"=== CONTEUDO COMPLETO DOS LIDOS NOVOS ({len(lidos_novos)}) ===")
+    for rel in lidos_novos:
         partes.append(f"--- {rel} ---")
         partes.append(_blob(alvo, rel).decode("utf-8", errors="replace"))
 
