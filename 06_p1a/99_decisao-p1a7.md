@@ -847,7 +847,55 @@ construcao, nao produz.
 **Nenhum dos tres foi corrigido aqui**, e nenhum e certificado por esta
 missao.
 
-## II.9 ATESTADO DA PARTE II
+
+## II.9 A SUITE MEDIDA DEPOIS DO COMMIT — e a conta que fecha
+
+A secao II.1 mediu `8dd1470`, **antes** dos arquivos desta missao. Esta
+secao mede `4410e90`, o commit delas, e **so pode existir depois dele** —
+medir antes seria estimativa, e estimativa nao e medicao. E o mesmo
+procedimento que a ordem 6 usou na Parte I.
+
+O degrau importa por uma razao mecanica: `test_ancoragem_gerador_p1a38`
+compara os bytes do gerador **em disco** com os bytes do blob em
+**`HEAD`**, nao no indice. Com o gerador alterado e **nao commitado**,
+ele fica vermelho **por construcao** — e ficou, e foi assim que se
+descobriu que *"suites com arquivos staged"* nao basta para este guarda
+em particular. Ele fecha no commit, nao no `git add`.
+
+| Grandeza | `8dd1470` (antes) | `4410e90` (depois) | Delta |
+|---|---|---|---|
+| failed | **10** | **9** | **-1** |
+| passed | 900 | **909** | **+9** |
+| skipped | 6 | **6** | 0 |
+| subtests passed | 1195 | **1208** | **+13** |
+
+**A conta fecha, e cada unidade tem dono:**
+
+- **-1 failed e +1 dos 9 passed**: `test_gitignore_efetivo_p1a39` deixou
+  de falhar porque o **lease criou `locks/`**, que nao existia nesta
+  estacao. **Nao e efeito da correcao** — e efeito de adquirir o
+  escritor unico, e ja estava declarado na II.1;
+- **+8 dos 9 passed e os +13 subtests**: sao o guarda novo
+  `test_cobertura_pacote_p1a7`, inteiro.
+
+**A correcao do gerador, sozinha, nao move nenhuma linha vermelha** — e
+isso e o esperado, nao uma decepcao: ela conserta um **instrumento**, e o
+que ela produz e um guarda novo verde, nao a cura de falha antiga.
+
+### As 9 que ficam, com a causa separada por medicao
+
+| Quantas | Quais | Causa | Regressao da ordem 6? |
+|---|---|---|---|
+| **2** | `ZeroSegredoNosArtefatos`, `ZeroPiiNosArtefatos` | os tres arquivos que a ordem 6 commitou | **SIM** (II.1.1) |
+| **6** | `test_p2_receita_medidor_p24` (5 + 1 subtest) | estacao; falha **tambem** em `1f45fdd` | nao |
+| **1** | `ZeroPiiNasTresRaizes` (subtest `06_p1a`) | `lucas` casando dentro de `lucasia` | nao |
+
+**A suite P1-A nao esta verde, e esta missao nao a deixou verde.** As
+nove estao nomeadas, com dono e gatilho, na II.8. Nenhuma delas foi
+corrigida aqui, porque nenhuma era ordem desta missao — e corrigir
+achado novo sem despacho e exatamente o que este acervo chama de
+progresso aparente.
+## II.10 ATESTADO DA PARTE II
 
 **Esta missao mediu um defeito de instrumento e o corrigiu; ela nao
 certifica a propria correcao.** Quem disser que o
