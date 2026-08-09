@@ -151,7 +151,7 @@ class ReproduzOsNumerosPublicados(unittest.TestCase):
         # Os numeros que o README e o registro CITAM, presos pelo nome.
         # Conferir campo que ninguem cita provaria determinismo, nao
         # reproducao do publicado.
-        esperado = {"p21": 8.776, "p22-a": 19.558, "p22-b": 2.766,
+        esperado = {"p21": 8.776, "p22-a": 19.907, "p22-b": 2.766,
                     "p22-c": 6.737, "p22-c-repeticao": 6.464}
         obtido = {}
         for caminho in receitas():
@@ -242,7 +242,7 @@ class ControlePositivo(unittest.TestCase):
         movido = medidor.reproduzir(receita)
         self.assertEqual(
             movido["comparacao"]["alternativo_sozinho"]["bytes_utf8"],
-            15119, "um byte a mais no insumo nao apareceu no total")
+            15389, "um byte a mais no insumo nao apareceu no total")
 
     def test_resposta_da_assinatura_diferente_MOVE_o_residual(self):
         # O outro lado da conta. O residual e o coracao da medicao: se ele

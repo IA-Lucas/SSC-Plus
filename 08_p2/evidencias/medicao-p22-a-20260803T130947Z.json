@@ -10,8 +10,8 @@
         "rotulo": "prompt (identico ao despachado)"
       },
       {
-        "bytes_utf8": 13508,
-        "caracteres": 13493,
+        "bytes_utf8": 13778,
+        "caracteres": 13763,
         "papel": "interno",
         "procedencia": "medido-arquivo",
         "rotulo": "05_p0/ssc_p0/execution.py"
@@ -31,8 +31,8 @@
         "caracteres": 226
       },
       "interno": {
-        "bytes_utf8": 13508,
-        "caracteres": 13493
+        "bytes_utf8": 13778,
+        "caracteres": 13763
       },
       "saida": {
         "bytes_utf8": 1384,
@@ -41,8 +41,8 @@
     },
     "proxy": "carga-de-fronteira",
     "total": {
-      "bytes_utf8": 15118,
-      "caracteres": 15101
+      "bytes_utf8": 15388,
+      "caracteres": 15371
     }
   },
   "assinatura": {
@@ -101,8 +101,8 @@
   "classe": "a",
   "comparacao": {
     "alternativo_sozinho": {
-      "bytes_utf8": 15118,
-      "caracteres": 15101
+      "bytes_utf8": 15388,
+      "caracteres": 15371
     },
     "assinatura_absorveu": {
       "bytes_utf8": 773,
@@ -145,11 +145,11 @@
       }
     ],
     "poupanca": {
-      "bytes_utf8": 14345,
-      "caracteres": 14340
+      "bytes_utf8": 14615,
+      "caracteres": 14610
     },
     "proxy": "carga-de-fronteira",
-    "razao_alternativo_sobre_residual": 19.558,
+    "razao_alternativo_sobre_residual": 19.907,
     "residual_do_despachante": {
       "bytes_utf8": 773,
       "caracteres": 761
@@ -162,6 +162,85 @@
   },
   "execucao_consumida": "execucao-20260803T130829Z.json",
   "gerado_em_utc": "2026-08-03T13:09:47Z",
+  "recarimbo": {
+    "missao": "SSC+ P1-A.9, ordem 2",
+    "o_que_NAO_mudou": "nada da corrida: `sessao_id`, `attempt_id`, `executor`, `residual_do_despachante` (773 B), `saida` da assinatura (547 B), o prompt (226 B) e a resposta do canal alternativo (1 384 B) seguem identicos ao original. Nenhum provedor foi invocado e nenhuma corrida foi refeita.",
+    "o_que_mudou": [
+      {
+        "campo": "alternativo/itens/1/bytes_utf8",
+        "de": 13508,
+        "para": 13778
+      },
+      {
+        "campo": "alternativo/itens/1/caracteres",
+        "de": 13493,
+        "para": 13763
+      },
+      {
+        "campo": "alternativo/por_papel/interno/bytes_utf8",
+        "de": 13508,
+        "para": 13778
+      },
+      {
+        "campo": "alternativo/por_papel/interno/caracteres",
+        "de": 13493,
+        "para": 13763
+      },
+      {
+        "campo": "alternativo/total/bytes_utf8",
+        "de": 15118,
+        "para": 15388
+      },
+      {
+        "campo": "alternativo/total/caracteres",
+        "de": 15101,
+        "para": 15371
+      },
+      {
+        "campo": "comparacao/alternativo_sozinho/bytes_utf8",
+        "de": 15118,
+        "para": 15388
+      },
+      {
+        "campo": "comparacao/alternativo_sozinho/caracteres",
+        "de": 15101,
+        "para": 15371
+      },
+      {
+        "campo": "comparacao/poupanca/bytes_utf8",
+        "de": 14345,
+        "para": 14615
+      },
+      {
+        "campo": "comparacao/poupanca/caracteres",
+        "de": 14340,
+        "para": 14610
+      },
+      {
+        "campo": "comparacao/razao_alternativo_sobre_residual",
+        "de": 19.558,
+        "para": 19.907
+      }
+    ],
+    "plataforma_do_recarimbo": {
+      "core_autocrlf": "true",
+      "fim_de_linha": "CRLF, fixado por 05_p0/ssc_p0/.gitattributes (`* text eol=crlf`) — ja nao depende da estacao",
+      "pytest": "9.1.1",
+      "python": "3.11.9",
+      "usuario": "lucas"
+    },
+    "por_que": "o valor publicado saiu de arvore de trabalho MISTA: `execution.py` lido em LF (13 508 B) enquanto `estados.py` era lido em CRLF. A P1-A.8 mediu que esse arranjo nao existe em nenhum checkout limpo. Fixado o fim de linha em CRLF pela ordem 1 desta missao, a recontagem de `execution.py` passa a 13 778 B (+270 B = as 270 linhas do arquivo).",
+    "procedencia_preservada": "as etiquetas `procedencia` e `assinatura.fonte` do original NAO foram substituidas pelas que o comando da receita produz. As da receita descrevem a REPLICA a partir de insumos versionados; as do original descrevem a corrida real daquele dia, que saiu de cadeia verificada.",
+    "recarimbado_em_utc": "2026-08-09T02:31:39Z",
+    "recarimbo_em_lugar": "Este arquivo foi corrigido NO PROPRIO LUGAR, e nao copiado para um arquivo novo. A razao e um guarda do acervo: `test_toda_medicao_publicada_TEM_receita` exige que TODA medicao publicada tenha receita que a produza. Criar um segundo arquivo deixaria o original orfao — publicado sem receita —, que e exatamente o achado C que aquele guarda existe para impedir. O valor antigo nao se perde: esta em `o_que_mudou`, campo a campo.",
+    "valores_superados": {
+      "alternativo_total_bytes_utf8": 15118,
+      "execution_py_bytes_utf8": 13508,
+      "nota": "medidos em 2026-08-03 sob plataforma NAO declarada, com `execution.py` lido em LF. Continuam citados, intocados, nos registros historicos 99_registro-p22.md e 99_registro-p24.md, que sao registros datados e nao se reescrevem.",
+      "poupanca_bytes_utf8": 14345,
+      "razao_alternativo_sobre_residual": 19.558
+    }
+  },
   "tarefa": "Leia o arquivo 05_p0/ssc_p0/execution.py deste repositorio e responda em no maximo 8 linhas: (1) que propriedade o modulo garante sobre execucao de attempt; (2) que erro de operacao ele torna impossivel, e qual ele NAO impede.",
   "tipo": "medicao-comparada-p22 (NAO e atestado)",
   "turno_interno_declarado": [

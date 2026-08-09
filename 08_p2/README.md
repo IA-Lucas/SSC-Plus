@@ -21,7 +21,7 @@ O prompt foi byte a byte igual nos dois canais.
 
 | corrida | turno interno | razao | razao com a MESMA resposta nos dois lados |
 |---|---|---|---|
-| (a) P2.2 | `execution.py`, 13.508 B | **19,558** | 18,475 |
+| (a) P2.2 | `execution.py`, 13.778 B | **19,907** | 18,475 *(nao recarimbada — ver [MEDIDAS.md](MEDIDAS.md))* |
 | (a) P2.1 | `eventlog.py`, 6.184 B | **8,776** | 8,092 |
 | (c) P2.2 #1 | `estados.py`, 2.987 B | **6,737** | 5,512 |
 | (c) P2.2 #2 | `estados.py`, 2.987 B (mesmo prompt) | **6,464** | 5,329 |
@@ -49,7 +49,7 @@ em que a poupanca medida e majoritariamente economia: na corrida (a) o
 turno interno foi 94% dela.
 
 **A razao acompanha o tamanho do turno interno, e nao a classe.** Os
-`8,78x` da P2.1 e os `19,56x` da P2.2 sao a MESMA classe de tarefa com
+`8,78x` da P2.1 e os `19,91x` da P2.2 sao a MESMA classe de tarefa com
 arquivos diferentes. Citar a razao sem citar o arquivo e citar a escolha
 do arquivo.
 
@@ -144,7 +144,7 @@ proxy declarada, apontando na direcao dela.
 **Emenda da P2.2 (2026-08-03).** Os `8,78x` acima continuam verdadeiros
 sobre a corrida que os produziu, e a P2.2 mediu duas coisas que mudam como
 eles se leem: a razao **acompanha o tamanho do arquivo lido** (a mesma
-classe de tarefa, com um arquivo de 13.508 B, deu 19,558) e parte da
+classe de tarefa, com um arquivo de 13.778 B, deu 19,907) e parte da
 poupanca **nao vem de despachar**, e sim de um canal responder mais curto
 que o outro. Antes de citar qualquer razao daqui, ler
 [A FRONTEIRA](#a-fronteira--quando-despachar-poupa-e-quando-nao-poupa),
@@ -235,7 +235,7 @@ python 08_p2/medidor.py --todas
 Ele refaz as cinco medicoes publicadas a partir de insumos versionados
 ([`08_p2/receitas/`](receitas/)) e confere contra
 `08_p2/evidencias/medicao-*.json`. **30 de 30 campos conferem** —
-`8,776`, `19,558`, `2,766`, `6,737`, `6,464` e os residuais `872`, `773`,
+`8,776`, `19,907`, `2,766`, `6,737`, `6,464` e os residuais `872`, `773`,
 `504`, `662`, `690`. Codigo de saida **1** em qualquer divergencia.
 
 **O que voce reproduz, e o que tera de aceitar como testemunho.** Esta e
