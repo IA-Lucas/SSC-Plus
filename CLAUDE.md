@@ -248,6 +248,64 @@ e a dependencia discordavam, e ninguem tinha medido. **Ignorado pelo Git
 nao e sinonimo de descartavel** — e a pergunta *"algum teste le isto?"*
 se responde **antes** do `rm`, nao depois.
 
+## ONDE O SSC+ SE MEDE — em qualquer estacao limpa (P1-A.8)
+
+**Decisao do Fundador, gravada na missao P1-A.8.** Ela responde a
+pergunta que a P1-A.7 deixou em aberto ao medir que a suite P1-A nao
+estava verde numa estacao secundaria.
+
+> **O SSC+ NAO se mede so na maquina principal. Ele se mede em qualquer
+> estacao com CHECKOUT LIMPO. O que nao reproduz nao e a estacao: e
+> numero publicado sem plataforma declarada, e evidencia publicada a
+> partir de arvore de trabalho MISTA.**
+
+**Fundamento, medido e nao suposto.** As nove falhas da P1-A.7 foram
+classificadas uma a uma: **oito sao CODIGO** (falhariam em qualquer
+lugar), **uma e MISTA**, e **nenhuma e AMBIENTE puro**. As duas guardas
+de conteudo casam **literais escritos dentro do proprio teste** e regex
+literais — literal nao muda de estacao. E as seis do `p24` falham nos
+**dois** unicos estados de checkout limpo que existem: em CRLF diverge
+`p22-a`, em LF divergem `p22-c` e `p22-c-repeticao`. **Nenhum checkout
+limpo reproduz as cinco receitas.**
+
+**O verde da principal era mascara, e as quatro causas estao medidas.**
+No commit `53704b0`, a principal registrou `914 passed, 1241 subtests` e
+esta estacao devolve `902 passed, 8 failed, 6 skipped, 1179 subtests` —
+**mesmos bytes**. As oito nao ocorriam la porque: a arvore de trabalho
+dela era **mista** (`execution.py` em LF e `estados.py` em CRLF ao mesmo
+tempo — o unico estado que faz as receitas conferirem, e nao e limpo);
+o `locks/` era de corridas anteriores; o usuario e `IA Lucas` e o
+literal ainda nao existia rastreado. **Duas dessas quatro causas sao
+estado de runtime nao versionado.**
+
+### O que isso obriga, daqui para frente
+
+1. **Todo numero de suite gravado no acervo vem com a PLATAFORMA na
+   mesma linha:** interpretador e versao, versao do `pytest`, e o valor
+   de `core.autocrlf`. Medido: **nenhuma evidencia posterior a
+   2026-07-30 registra qualquer um dos tres**, e por isso o proprio
+   `Python 3.14.3` e hoje **numero herdado** — ele descreve a estacao de
+   30 de julho e foi aplicado por continuidade a uma medicao de 5 de
+   agosto.
+2. **Arvore de trabalho mista nao e plataforma de medicao.** Antes de
+   publicar numero que reconta bytes de arquivo, conferir que o checkout
+   e uniforme. Um arquivo que precisa de bytes estaveis leva regra em
+   `.gitattributes` — foi assim que o `pacote_p1a37.py` ganhou `-text`,
+   e e por isso que o `eventlog.py`, cujo blob ja carrega CRLF, **confere
+   nos dois checkouts** enquanto os outros dois nao.
+3. **Numero que nao reproduz nao se herda nem se repete.** Ele se
+   remede, ou se declara irreproduzivel com a razao ao lado.
+
+**O que NAO se conclui disto:** que a principal seja dispensavel, ou que
+os numeros dela fossem falsos. O `914` era **verdadeiro sobre um estado
+que nao se pode reconstruir** — e a licao nao e sobre a maquina, e sobre
+**publicar numero sem publicar o estado que o produziu**.
+
+**Os dois numeros que REPRODUZEM exato** em estacao diferente,
+interpretador diferente e `pytest` diferente, e que por isso sao hoje os
+mais fortes do acervo: **P0 = 344 de 344, com 256 subtests**; **prova
+central = 18 assercoes, 20 eventos**.
+
 ## QUEM CORRIGE NAO CERTIFICA
 
 Nenhuma missao fecha o proprio conserto. Um achado so fecha quando um

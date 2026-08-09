@@ -496,3 +496,56 @@ independente: sao NOVE"*, e isso **continua verdadeiro no singular**.
   como a P1-A.6 os deixou;
 - **nao decidiu** a contagem, e **nao aferiu** o criterio de parada;
 - **nao redigiu** o token de PII deste registro, pela razao da §1.5.
+
+## ORDEM 5 — ONDE O SSC+ SE MEDE
+
+**A resposta e o segundo ramo do despacho, e ele estava previsto em
+letra:** *"Se forem de codigo, o oposto: a principal e que estava
+mascarando."*
+
+**Foi o que se mediu.** Oito das nove sao CODIGO, uma e MISTA, **nenhuma
+e AMBIENTE puro**. Logo:
+
+> **Trabalhar no SSC+ nesta estacao NAO produz numero que nao vale.**
+> Produz, em tres casos, numero que a principal escondia.
+
+### 5.1 A regra foi gravada no `CLAUDE.md`
+
+Secao **"ONDE O SSC+ SE MEDE — em qualquer estacao limpa (P1-A.8)"**,
+com as tres obrigacoes que a medicao sustenta:
+
+1. todo numero de suite vem com **interpretador, versao do `pytest` e
+   `core.autocrlf`** na mesma linha;
+2. **arvore mista nao e plataforma de medicao** — arquivo que precisa de
+   bytes estaveis leva regra em `.gitattributes`;
+3. numero que nao reproduz **se remede ou se declara irreproduzivel**,
+   nunca se herda.
+
+### 5.2 O que a estacao secundaria mostrou que a principal escondia
+
+| # | O que so apareceu aqui | Por que a principal nao mostrava |
+|---|---|---|
+| **1** | as duas guardas de conteudo vermelhas desde `f4399e4` | a ordem 6 **declarou que nao rodou a suite**; ninguem olhou |
+| **2** | os numeros da P2 **nao reproduzem em checkout limpo** | a arvore de trabalho da principal era **mista**, e a mistura fazia as cinco conferirem |
+| **3** | o `locks/` como **dependencia nao declarada** de um teste | la o diretorio existia de corridas anteriores, e o teste nunca teve de dizer que dependia dele |
+
+**Uma segunda estacao e instrumento, e nao obstaculo.** Os tres itens
+acima sao exatamente do tipo que **so** aparece quando o acervo sai da
+maquina que o criou — estado de runtime tomado por permanente. E a mesma
+licao que a P1-A.6 ja pagou com o lab destruido: *"`.gitignore`
+classifica o que o Git rastreia, nunca o que e dispensavel"*.
+
+### 5.3 O limite desta conclusao, declarado
+
+- **a principal nao foi medida.** Tudo que se afirma sobre ela e
+  **deducao de mecanismo** a partir de bytes versionados — literal nao
+  muda de estacao; blob LF sem `.gitattributes` so tem dois checkouts
+  limpos. **Rodar a suite la e o unico modo de confirmar**, e continua
+  sendo o passo que fecharia a questao;
+- **nao se afirma que a principal esteja errada** como maquina. O que se
+  afirma e que **os numeros publicados dela nao carregavam o estado que
+  os produziu**, e por isso nao se reconstroem;
+- **nao se afirma que qualquer estacao sirva.** Serve **estacao com
+  checkout limpo** — e esta missao mediu que os dois checkouts limpos
+  dao resultados **diferentes** para o `p24`, o que e precisamente o
+  achado `P1A8-a` e continua **aberto**.
