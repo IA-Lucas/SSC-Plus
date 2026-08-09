@@ -549,3 +549,99 @@ classifica o que o Git rastreia, nunca o que e dispensavel"*.
   checkout limpo** — e esta missao mediu que os dois checkouts limpos
   dao resultados **diferentes** para o `p24`, o que e precisamente o
   achado `P1A8-a` e continua **aberto**.
+
+## 6. A MEDICAO FINAL, DEPOIS DOS CINCO COMMITS — e o que esta missao custou
+
+Medido apos os cinco commits das ordens, sobre a arvore que eles
+deixaram. **Plataforma declarada ao lado, que e a obrigacao que a
+ORDEM 5 acabou de gravar:**
+
+> **Python 3.11.9 · pytest 9.1.1 · `core.autocrlf=true` · commit
+> `b96b13b` · estacao com usuario `lucas`**
+
+| Grandeza | Antes desta missao (`27c4a7f`) | Depois (`b96b13b`) |
+|---|---|---|
+| failed | **9** | **9** |
+| passed | **909** | **909** |
+| skipped | **6** | **6** |
+| subtests passed | **1208** | **1208** |
+
+**Nenhum numero mudou, e isso era o esperado:** esta missao **classifica
+e nao corrige**. Ela nao acrescentou teste nem consertou falha; se
+qualquer um dos quatro tivesse mudado, seria sinal de que a missao
+tinha feito o que o despacho proibiu.
+
+### 6.1 O custo que ela teve, medido e nao escondido
+
+O numero de testes vermelhos nao mudou, mas **o conteudo de duas guardas
+mudou**, e na direcao errada:
+
+| Guarda | Antes | Depois | Delta desta missao |
+|---|---|---|---|
+| `ZeroSegredoNosArtefatos` | **71** casamentos, 3 arquivos | **71**, 3 arquivos | **0** |
+| `ZeroPiiNosArtefatos` | **4** ocorrencias, 2 arquivos | **11**, 3 arquivos | **+7**, todas em `99_decisao-p1a8.md` |
+
+**A §1.5 previu isto por escrito, antes de acontecer, e aconteceu na
+medida prevista.** Este registro precisou nomear o token para explicar
+por que a guarda esta vermelha, e ao nomea-lo tornou-se a **maior fonte
+isolada** do casamento que descreve — sete das onze ocorrencias.
+
+**O zero na guarda de segredo nao e sorte:** este registro discute os 71
+casamentos **sem transcrever um so valor de fixture**, ao contrario da
+evidencia da ordem 6, que os ecoava por desenho. As duas escolhas sao
+defensaveis pelo mesmo criterio — *o valor literal e o que permite
+conferir* — e aqui ele nao era necessario, porque o que se confere sao
+**contagens por arquivo**, nao valores.
+
+**Nao ha como escrever este documento sem o custo acima**, e a
+alternativa (redigir o token) tornaria ilegivel a unica explicacao que o
+dono tem do defeito. O custo fica **medido, atribuido e declarado** — que
+e tudo o que esta missao pode fazer com ele sem corrigir o que o
+despacho proibiu corrigir.
+
+## 7. ATESTADO
+
+**Esta missao nao corrigiu nada e nao certifica nada.** Ela classificou
+nove falhas e devolveu tres achados novos, e quem disser que qualquer um
+deles fechou tera de ser revisor independente.
+
+**O que seria falha, e nao foi feito:** classificar por **mensagem de
+erro** em vez de por medicao — o despacho avisa em letra, e teria sido
+facil: `AssertionError: PII em [...]` parece ambiente numa estacao de
+nome diferente, e **nao e**, porque o alvo e literal no proprio teste;
+concluir "fim de linha, logo ambiente" ao ver o `p22-a` fechar em LF, e
+parar antes de rodar o **segundo** checkout — foi exatamente parando
+cedo assim que a P1-A.7 classificou o `P1A7-c` como AMBIENTE, e este
+registro **reclassifica contra a missao anterior**; afirmar o que a
+maquina principal faz sem declarar que ela **nao foi medida**; instalar
+Python 3.14 para responder por corrida uma pergunta que a sintaxe, a API
+e a aritmetica ja respondiam, deixando dois interpretadores na estacao;
+e esconder que **este proprio registro** acrescenta sete ocorrencias a
+guarda que ele denuncia.
+
+**O que ficou aquem, e esta escrito:** a **maquina principal nao foi
+medida** — todas as afirmacoes sobre ela sao deducao de mecanismo sobre
+bytes versionados, e rodar a suite la continua sendo o unico passo que
+fecha a questao. A **suite nao foi rodada sob 3.14**, e o "nenhuma das
+nove depende de versao" e conclusao de mecanismo, nao de corrida
+comparada. Os **62 subtests** de diferenca em `53704b0` **nao foram
+atribuidos um a um**, e a parcela que cabe a versao do `pytest` continua
+sem separacao. E **nenhuma das nove foi corrigida**, por ordem expressa.
+
+**Contagem como medida, nunca como meta.** Os numeros deste registro —
+9 falhas classificadas em **8 CODIGO, 1 MISTA, 0 AMBIENTE puro, 0 nao
+determinado**; 71 casamentos de segredo atribuidos **66/4/1**; 11
+ocorrencias de PII literal atribuidas **3/7/1**; `execution.py` com
+**270** linhas e **+270** bytes, `estados.py` com **89** e **+89**,
+`eventlog.py` com blob **CR=156** e delta **0**; **1** receita
+divergente em CRLF contra **2** em LF; **0** arquivos que nao compilam
+em 3.11.9 e **0** usos de API alterada entre 3.11 e 3.14; `53704b0`
+dando **914 passed / 1241 subtests** na principal contra **902 / 8
+failed / 6 skipped / 1179** aqui; e o estado final **9 failed, 909
+passed, 6 skipped, 1208 subtests** — sao o que foi medido, e valem sobre
+**Python 3.11.9, pytest 9.1.1, `core.autocrlf=true`, commit `b96b13b`**.
+
+**DECISAO: CONCLUIDO-COM-NAO-MEDIDOS.**
+
+Os nao-medidos, nomeados: a **maquina principal**; a **suite sob 3.14**;
+e a **separacao dos 62 subtests** entre falha e versao de ferramenta.
