@@ -233,3 +233,80 @@ que o dono pode escolher.
 - **nao se afirma que a principal esteja vermelha hoje**: afirma-se que
   **ficaria** vermelha ao rodar a suite sobre este commit, e que a
   ordem 6 declarou nao te-la rodado.
+
+## ORDEM 2 — O QUE DEPENDE DA VERSAO
+
+**Resposta medida: NENHUMA das nove.** Zero tocam sintaxe, stdlib ou
+comportamento que tenha mudado entre 3.11.9 e 3.14.3.
+
+### 2.1 As quatro medicoes que sustentam o "nenhuma"
+
+| # | Medicao | Resultado |
+|---|---|---|
+| **1** | **Sintaxe**: compilar TODO `.py` do repositorio sob 3.11.9 (`py_compile`, `doraise=True`) | **0 arquivos falham**. Nao ha sintaxe de 3.12+ (PEP 695, `type` statement, generics novos) em lugar nenhum |
+| **2** | **Stdlib removida**: `distutils`, `imp`, `asynchat`, `asyncore`, `smtpd`, `cgi`, `telnetlib`, `crypt`, `nntplib`, `pipes`, `audioop`, `uu`, `xdrlib`, `lib2to3` e outros | **0 usos** |
+| **3** | **Comportamento alterado**: `datetime.utcnow`, `utcfromtimestamp`, `tarfile`/`zipfile` (filtro de extracao), `locale.getdefaultlocale`, `ast.Str`/`ast.Num`, `unittest.makeSuite`, `importlib.resources`, `asyncio.get_event_loop`, `typing.ByteString` | **0 usos de cada** |
+| **4** | **Declaracao de versao minima**: `python_requires`, `requires-python`, `sys.version_info` | **nenhuma, em lugar nenhum do acervo** |
+
+### 2.2 E a causa de cada uma das nove ja e conhecida, e nenhuma e de versao
+
+O argumento nao se apoia so na ausencia de gatilhos: cada falha tem
+**mecanismo medido** na ORDEM 1, e nenhum deles passa pela versao.
+
+| Falha | Mecanismo | Depende da versao? |
+|---|---|---|
+| guardas 1 e 2 | `substring in texto` e `re.finditer` sobre literais | **nao** — semantica estavel desde muito antes de 3.11 |
+| as seis do `p24` | contagem de bytes de `open(..., "rb").read()`, e a diferenca fecha **exatamente** no numero de linhas (270 e 89) | **nao** — a aritmetica e exata e nao sobra residuo para atribuir a interpretador |
+| a nona | `substring in texto` | **nao** |
+
+**O criterio que se usou para dizer "nao":** uma causa de versao deixaria
+**residuo inexplicado**. Aqui nao sobra nada — 270 bytes sao 270 linhas,
+89 sao 89, e os literais sao os que estao escritos nos arquivos. Um
+interpretador diferente nao muda nenhum desses numeros.
+
+### 2.3 O 3.11 nao e exotico — o proprio objeto de estudo roda nele
+
+Medido no acervo, e vale registrar porque inverte a intuicao do
+despacho: o **canonico que este laboratorio estuda** declara, em
+`01_fontes/03_baseline-supercondutor.md:32`, a stack
+
+> *"Python **stdlib-only** (zero `pip`; CI proibe dependencia nova),
+> Windows-first, matriz CI ubuntu+windows × **Python 3.11/3.13**"*
+
+Ou seja: **o supercondutor tem CI em 3.11.** Quem fixou `3.14` foi a
+`05_p0/README.md` do laboratorio, por declaracao — e o `05_p0` e
+`stdlib apenas`, que e justamente o codigo com menos superficie de
+incompatibilidade possivel. **Rodar em 3.11.9 esta dentro da matriz que
+o objeto de estudo suporta**, e a suite P0 confirma: **344 passed, 256
+subtests**, identico ao registro.
+
+### 2.4 Instalar 3.14 aqui: VIAVEL, com custo pequeno e beneficio ZERO
+
+| Item | Medido |
+|---|---|
+| Disponibilidade | **sim** — `winget` oferece `Python.Python.3.14` |
+| Versao ofertada | **3.14.6**, e o acervo registra **3.14.3** |
+| Custo direto | download e instalacao (~30 MB), mais reinstalar `pytest` no interpretador novo |
+| Custo indireto | **dois interpretadores na estacao**, e o risco de uma sessao futura medir com o errado sem perceber — que e a classe de defeito que esta missao existe para evitar |
+| Beneficio para as nove | **zero**, pelas medicoes 2.1 e 2.2 |
+
+**Nao foi instalado, e a razao e de metodo:** instalar mudaria a estacao
+para responder uma pergunta que **ja foi respondida por outro caminho**,
+e introduziria a ambiguidade de interpretador que o acervo nao tem hoje.
+Se um dia se quiser a reproducao exata, o alvo e **3.14.3**, e o
+`winget` **nao o oferece** — teria de vir do instalador arquivado do
+`python.org`.
+
+### 2.5 O QUE A ORDEM 2 NAO MEDIU, declarado
+
+- **a suite NAO foi rodada sob 3.14.** O "nenhuma depende de versao" e
+  conclusao de **mecanismo** — sintaxe, API e aritmetica —, nao de
+  corrida comparada. Rodar sob 3.14 e o unico modo de transformar isto
+  em medicao direta, e ele nao foi percorrido;
+- **o `pytest` e um eixo separado, e esta sem registro.** Esta estacao
+  usa **9.1.1**; o acervo **nao registra em lugar nenhum** qual versao
+  produziu os numeros anteriores. Contagem de `subtests` e reportada
+  pelo `pytest`, nao pelo Python — logo **parte da diferenca de
+  subtests pode ser de ferramenta**, e isso **nao foi separado**;
+- **nada se afirma sobre 3.12 e 3.13**: mediu-se o par 3.11 contra
+  3.14, que e o par que o despacho nomeia.
