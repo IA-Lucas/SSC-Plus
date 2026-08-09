@@ -59,6 +59,7 @@ por escrito. Tres propriedades a impedem de virar tapete:
 """
 
 import os
+import re
 
 # --------------------------------------------------------------------
 # PII — o nome de usuario HISTORICO desta fabrica, citado para ser
@@ -101,6 +102,52 @@ ARTEFATOS_QUE_CITAM_FIXTURE = {
         "registro da P1-A.7: a §5 da Parte I nomeia as nove familias de "
         "fixture uma a uma, que e o que sustenta o veredito PUSH LIBERADO",
 }
+
+
+# --------------------------------------------------------------------
+# PII derivada da ESTACAO — os registros que citam o usuario de quem
+# roda. Lista SEPARADA da de cima, e por uma razao de fato: esta e
+# **relativa a estacao**. Numa maquina com outro usuario ela pode nao
+# casar com nada, e isso NAO e declaracao morta — e declaracao
+# inaplicavel. Por isso `declaracoes_mortas` NAO e cobrada sobre ela.
+# --------------------------------------------------------------------
+REGISTROS_QUE_CITAM_USUARIO_DA_ESTACAO = {
+    "99_decisao-p1a7.md":
+        "registro da P1-A.7: compara a estacao secundaria com a de "
+        "registro, e nomear o usuario e o que torna a comparacao aferivel",
+    "99_decisao-p1a8.md":
+        "registro da P1-A.8: a nona falha SO se explica dizendo qual e o "
+        "token desta estacao e por que ele casa dentro de outra palavra",
+    "99_decisao-p1a9.md":
+        "registro da P1-A.9: esta correcao, que precisa exibir o token "
+        "para mostrar a fronteira que o passou a delimitar",
+}
+
+
+def casa_com_fronteira(texto: str, token: str) -> bool:
+    """O token como PALAVRA, nao como pedaco de outra palavra.
+
+    O DEFEITO que isto corrige (P1-A.8, achado `P1A7-b`): a varredura
+    casava **substring crua**. O usuario desta estacao tem nome CURTO, e
+    o acervo carrega o prefixo de caminho local `E:\\LucasIA` — que em
+    minuscula vira `lucasia`. O token da estacao caia **dentro** dessa
+    palavra, e o guarda acusava operacao normal.
+
+    (Esta docstring NAO escreve o token isolado, de proposito: e a
+    licao da ordem 3 aplicada a si mesma — documentar a guarda sem
+    reproduzir o que ela procura. `lucasia` nao casa, porque a
+    fronteira exige que nao haja letra colada ao token.)
+
+    Um guarda que acusa operacao normal e desligado por ruido, e um
+    guarda desligado nao guarda nada.
+
+    A fronteira e alfanumerica e NAO usa `\\b`: `\\b` depende da classe
+    do primeiro e do ultimo caractere do token, e estes tokens comecam e
+    terminam em coisas como `~` e `1`. Aqui a regra e explicita — nao
+    pode haver letra nem digito colado em nenhum dos dois lados.
+    """
+    padrao = (r"(?<![A-Za-z0-9])" + re.escape(token) + r"(?![A-Za-z0-9])")
+    return re.search(padrao, texto) is not None
 
 
 def nao_declarados(por_arquivo, autorizados) -> list:

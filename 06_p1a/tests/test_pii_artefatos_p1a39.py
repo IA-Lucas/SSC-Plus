@@ -68,6 +68,7 @@ _DIR_P1A = os.path.dirname(_DIR_TESTS)
 _RAIZ_REPO = os.path.dirname(_DIR_P1A)
 sys.path.insert(0, os.path.join(_DIR_P1A, "evidencias"))
 
+import citacoes_declaradas  # noqa: E402
 import contencao  # noqa: E402
 
 PADRAO_EMAIL = re.compile(
@@ -114,7 +115,12 @@ def varrer(raiz: str) -> tuple:
             rel = os.path.relpath(caminho, raiz)
             lidos.append(rel)
             for rotulo, token in alvos.items():
-                if token in texto:
+                # P1-A.9 ordem 4: FRONTEIRA, e nao substring crua. O
+                # token curto desta estacao caia DENTRO de `lucasia`,
+                # o prefixo de caminho local em minuscula, e o guarda
+                # acusava operacao normal. Ver
+                # `citacoes_declaradas.casa_com_fronteira`.
+                if citacoes_declaradas.casa_com_fronteira(texto, token):
                     achados.append(f"{rel}: {rotulo}")
             if PADRAO_EMAIL.search(texto):
                 achados.append(f"{rel}: email")
@@ -125,10 +131,44 @@ class ZeroPiiNasTresRaizes(unittest.TestCase):
     """A propriedade afirmada, agora sobre o acervo inteiro."""
 
     def test_nenhuma_raiz_do_acervo_carrega_pii(self):
+        # P1-A.9 ordem 4: a parte de CODIGO foi corrigida em duas frentes
+        # — fronteira em vez de substring, e citacao forense declarada
+        # em vez de vazamento. A parte de USUARIO fica declarada e nao
+        # se corrige: ver `test_o_resultado_depende_do_usuario_da_estacao`.
         for raiz in RAIZES:
-            with self.subTest(raiz=os.path.basename(raiz)):
+            nome = os.path.basename(raiz)
+            with self.subTest(raiz=nome):
                 achados, _ = varrer(raiz)
-                self.assertEqual(achados, [], f"PII em: {achados}")
+                por_arquivo = {a.rsplit(":", 1)[0].replace(os.sep, "/")
+                               for a in achados}
+                autorizados = (
+                    citacoes_declaradas.REGISTROS_QUE_CITAM_USUARIO_DA_ESTACAO
+                    if nome == "06_p1a" else {})
+                self.assertEqual(
+                    citacoes_declaradas.nao_declarados(
+                        {r: 1 for r in por_arquivo}, autorizados),
+                    [], f"PII de estacao em arquivo NAO declarado: {achados}")
+
+    def test_o_resultado_depende_do_usuario_da_estacao(self):
+        """A parte que NAO se corrige, exercida para ficar visivel.
+
+        O nome de usuario **nao e plataforma de medicao**: o mesmo
+        commit devolve conjuntos de achados diferentes conforme quem
+        roda. Isto nao e defeito a consertar — e propriedade do desenho,
+        que deriva o alvo da estacao de proposito para nao ficar cego
+        noutra maquina. O que este teste faz e **impedir que a
+        dependencia seja esquecida**.
+        """
+        self.assertIn("usuario-local", alvos_de_usuario())
+        self.assertEqual(alvos_de_usuario()["usuario-local"],
+                         contencao._USUARIO_LOCAL)
+        # E a consequencia, exercida: trocado o usuario, troca o alvo.
+        original = contencao._USUARIO_LOCAL
+        try:
+            contencao._USUARIO_LOCAL = "OutroNome"
+            self.assertEqual(alvos_de_usuario()["usuario-local"], "OutroNome")
+        finally:
+            contencao._USUARIO_LOCAL = original
 
 
 class AVarreduraDetectaOQuePlanta(unittest.TestCase):

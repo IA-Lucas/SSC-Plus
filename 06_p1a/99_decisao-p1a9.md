@@ -353,3 +353,95 @@ usuario `lucas`.**
 | `ZeroPiiNosArtefatos` | **vermelha** — 11 ocorrencias, 7 delas do registro que a explicava | **verde**, com 3 registros declarados e 1 ocorrencia redigida |
 | `ZeroSegredoNosArtefatos` | **vermelha** — 71 casamentos em 3 arquivos | **verde**, com os 3 artefatos de varredura declarados |
 | Testes novos | — | **6**: dois de declaracao-morta, dois de controle positivo, e as duas assercoes principais |
+
+## ORDEM 4 — A NONA, MISTA
+
+### 4.1 A separacao, medida antes de corrigir
+
+`ZeroPiiNasTresRaizes` falhava **nos dois usuarios**, por arquivos
+diferentes. A P1-A.8 mediu isso por simulacao; aqui a medicao vira a
+divisao do trabalho:
+
+| Achado | E do CODIGO ou do USUARIO? | Destino nesta ordem |
+|---|---|---|
+| `evidencias/p1a1-estabilizacao/03_testes_p1a.txt` | **CODIGO** — casava porque a varredura usava **substring crua**, e o token curto desta estacao cai dentro de `lucasia`, o prefixo de caminho local em minuscula | **CORRIGIDO** — fronteira |
+| `99_decisao-p1a7.md`, `-p1a8.md`, `-p1a9.md` | **CODIGO** — citacao forense tratada como vazamento, o mesmo defeito da ordem 3 | **CORRIGIDO** — declaracao |
+| *o alvo mudar conforme quem roda* | **USUARIO** | **NAO se corrige. Fica declarado** (§4.4) |
+
+### 4.2 A parte de codigo, frente 1 — fronteira em vez de substring
+
+`casa_com_fronteira` exige que **nao haja letra nem digito colado** ao
+token, dos dois lados. Sete casos conferidos um a um:
+
+| Token | Texto | Casa? | Por que esta certo |
+|---|---|---|---|
+| curto | `…\lucasia\proj` | **nao** | o token e pedaco de outra palavra — era o falso positivo |
+| curto | `C:\Users\<token>\x` | **sim** | vazamento real continua pego |
+| curto | `` `<token>` `` | **sim** | citacao em cratese continua pega |
+| curto | `x<token>y` | **nao** | nome diferente |
+| curto | `<token>/projeto` | **sim** | e a forma do controle positivo |
+| 8.3 | `` `<8.3>~1` `` | **sim** | a forma curta continua pega |
+| 8.3 sem sufixo | `` `<8.3>~1` `` | **sim** | e prefixo legitimo da forma longa |
+
+**Nao se usou `\b`**, e a razao e tecnica: `\b` depende da classe do
+primeiro e do ultimo caractere do token, e estes tokens terminam em `~1`
+— `\b` se comportaria de forma diferente para cada forma. A regra
+explicita nao tem esse problema.
+
+**O controle positivo nao foi afrouxado.** Ele planta `{token}/projeto`,
+e a fronteira **continua detectando** — conferido: os cinco testes de
+`AVarreduraDetectaOQuePlanta` seguem verdes, inclusive o que exige que
+`<USUARIO>` redigido **nao** seja confundido com PII.
+
+### 4.3 A parte de codigo, frente 2 — e a armadilha caiu sobre mim outra vez
+
+Aplicada a declaracao, a suite reprovou **dois arquivos novos**:
+
+    tests/citacoes_declaradas.py
+    tests/test_pii_artefatos_p1a39.py
+
+**O proprio conserto citava o token** — as docstrings que explicavam a
+fronteira escreviam o nome isolado para dar o exemplo. **Setima
+ocorrencia do padrao**, e desta vez dentro do codigo que existe para
+resolve-lo.
+
+**Nao foi declarada: foi reescrita.** As duas docstrings passaram a
+descrever o caso **sem o token isolado** — falam do *"usuario desta
+estacao"* e citam `lucasia`, que **nao casa** justamente por causa da
+fronteira nova. A licao da ordem 3 aplicada a si mesma, e a prova de que
+ela funciona: **o texto explica a guarda, e a guarda o aprova**.
+
+### 4.4 A parte de USUARIO — declarada, e exercida para nao ser esquecida
+
+> **Nome de usuario nao e plataforma de medicao.**
+
+O guarda deriva o alvo de `contencao._USUARIO_LOCAL` **de proposito** —
+foi a correcao da P1-A.3.9 contra o alvo literal, que ficava cego noutra
+maquina. A consequencia e inevitavel e **nao se conserta**: o mesmo
+commit devolve **conjuntos de achados diferentes** conforme quem roda.
+
+Isso **nao e defeito**: e o preco de um guarda que acompanha a estacao.
+O que esta ordem acrescenta e `test_o_resultado_depende_do_usuario_da_estacao`,
+que **exerce** a dependencia — troca o usuario e exige que o alvo mude.
+A dependencia deixa de ser folclore e passa a ser propriedade medida.
+
+**Corolario que a ORDEM 5 grava no `CLAUDE.md`:** o usuario entra na
+declaracao de plataforma de toda medicao, ao lado de interpretador,
+`pytest` e `autocrlf`.
+
+### 4.5 A medicao — a suite fechou
+
+**Plataforma: Python 3.11.9 · pytest 9.1.1 · `core.autocrlf=true` ·
+usuario `<o desta estacao>`.**
+
+| Suite | Abertura da P1-A.9 | Depois da ordem 4 |
+|---|---|---|
+| **P0** | 344 passed, 256 subtests | **344 passed, 256 subtests** |
+| **P1-A** | **9 failed**, 909 passed, 6 skipped, 1208 subtests | **0 failed**, **921 passed**, 6 skipped, **1210 subtests** |
+
+**As nove fecharam: seis na ordem 2, duas na ordem 3, uma aqui.**
+
+**O que isso NAO significa**, e a ressalva vale mais que o numero: suite
+verde **nao** e acervo certificado. Nenhum MAJOR foi tocado, os nove
+seguem abertos, e `QUEM CORRIGE NAO CERTIFICA` vale inteiro — quem
+consertou as nove foi quem as mediu.
