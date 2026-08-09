@@ -521,3 +521,121 @@ proximos.
   processo, escrita onde toda sessao le, e **nao ha teste que a
   imponha** — quem quiser fecha-la tera de exercer a interface real, nao
   afirmar a propriedade. Fica como achado aberto desta missao.
+
+## 6. A MEDICAO FINAL — e a ressalva que ela revelou
+
+Medido apos os **cinco** commits, em **clone limpo** do HEAD, sob os
+**dois** valores de `core.autocrlf`. A plataforma vai junto, como a
+ordem 5 acabou de tornar obrigatorio:
+
+> **Python 3.11.9 · pytest 9.1.1 · usuario `<o desta estacao>` ·
+> `core.autocrlf` = `true` E `false`, os dois medidos**
+
+| Medicao | `autocrlf=true` | `autocrlf=false` |
+|---|---|---|
+| `execution.py` / `estados.py` / `eventlog.py` | 13 778 / 2 987 / 6 184 B | **identicos** |
+| Receitas | **5, 0 divergentes** | **5, 0 divergentes** |
+| P1-A | 920 passed, **1 failed**, 6 skipped, 1210 subtests | **identico** |
+
+**O pino funciona: bytes e vereditos iguais nos dois.** Era o objetivo da
+ordem 1, e esta medido em clone limpo, nao na arvore de trabalho que a
+missao usou.
+
+### 6.1 A suite esta verde AQUI e NAO num clone novo — e a diferenca tem nome
+
+| Onde | P1-A |
+|---|---|
+| arvore de trabalho desta estacao | **0 failed**, 921 passed |
+| **clone limpo do mesmo commit** | **1 failed**, 920 passed |
+
+A falha e uma so, e e sempre a mesma:
+
+    test_gitignore_efetivo_p1a39::test_o_diretorio_de_locks_existe_de_fato_nesta_estacao
+
+O `locks/` **nao existe num clone novo**. Ele existe nesta arvore porque
+a **P1-A.7 o criou ao adquirir o escritor unico**, e aquele registro ja
+declarou o efeito. **Nenhuma das nove era esta**, e esta missao **nao a
+corrigiu** — mas seria desonesto anunciar *"suite verde"* sem dizer que o
+verde depende de um diretorio que **nenhum clone carrega**.
+
+**E o mesmo erro de classe que esta missao veio consertar**, agora do
+lado do teste em vez do lado do numero: *estado de runtime tomado por
+permanente*. Fica como **achado aberto**, com dono e gatilho na §7.
+
+## 7. O QUE ESTA MISSAO NAO FEZ, e o que ela devolve
+
+- **nao tocou MAJOR nenhum.** Os nove seguem exatamente como a P1-A.6 os
+  deixou;
+- **nao invocou provedor.** **Zero** chamada paga, custo variavel
+  **zero**;
+- **nao instalou 3.14**, por restricao expressa e por beneficio medido
+  zero na P1-A.8;
+- **nao retroagiu a regra de plataforma** aos numeros ja publicados;
+- **nao criou guarda que exija os quatro campos de plataforma.**
+
+### Os achados que esta missao devolve
+
+| # | Achado | Familia | Dono | Gatilho |
+|---|---|---|---|---|
+| **P1A9-a** | `test_o_diretorio_de_locks_existe_de_fato_nesta_estacao` depende de `locks/`, que **nenhum clone carrega**. A suite e verde na estacao que ja rodou algo e vermelha em maquina nova | fora de ambas | missao que tratar estado de runtime | **imediato**: qualquer clone novo |
+| **P1A9-b** | A regra dos **quatro campos de plataforma** e de processo e **nenhum teste a impoe**. Afirmar a propriedade sem exercer a interface e a familia do MAJOR #3, e ela esta dentro da propria regra que a denuncia | **(F)** | missao que tratar publicacao de numero | proxima medicao publicada |
+| **P1A9-c** | A coluna *"razao com a MESMA resposta nos dois lados"* (`18,475`) **nao tem instrumento** que a calcule, e por isso **nao foi recarimbada** enquanto a razao ao lado dela mudou. Ficou um numero antigo ao lado de um numero novo, marcado mas nao resolvido | fora de ambas | missao de reproducao da P2 | ja ocorreu |
+
+## 8. ATESTADO
+
+**Esta missao corrigiu, e por isso nao certifica nada do que corrigiu.**
+As nove falhas fecharam — seis na ordem 2, duas na ordem 3, uma na ordem
+4 —, mas quem as consertou foi quem as mediu, e `QUEM CORRIGE NAO
+CERTIFICA` vale inteiro. **Suite verde nao e acervo certificado.**
+
+**O que seria falha, e nao foi feito:** escolher o fim de linha por gosto
+quando havia medicao — CRLF entrou por reproduzir **4 de 5** contra **3
+de 5**, e a conta esta na §1.1; **aceitar o arranjo que reproduzia as
+CINCO** so porque reproduzia as cinco, quando ele e a propria arvore
+mista que a P1-A.8 condenou — ele foi medido (`5 receitas, 0
+divergentes`), **recusado**, e a medicao ficou registrada para que a
+recusa possa ser contestada com dados; quebrar o `p21`, que era a
+testemunha e foi conferido nas **quatro** celulas; editar o publicado sem
+preservar o valor antigo; **criar um segundo arquivo de medicao** e
+deixar o original orfao — foi tentado, e **um guarda do acervo o pegou**,
+e fica registrado que a correcao veio de teste vermelho e nao de bom
+senso; **declarar** a citacao de PII no artefato **gerado** em vez de
+redigi-la, quando a distincao entre artefato e registro e justamente o
+que esta missao construiu; e anunciar *"suite verde"* sem dizer que num
+clone novo ela **nao** e.
+
+**A armadilha caiu sobre mim duas vezes, e as duas estao escritas.** Na
+ordem 3, ao declarar `99_decisao-p1a9.md` como autorizado a citar quando
+ele **nao citava** — declaracao decorativa, pega pelo guarda que eu
+acabara de escrever. Na ordem 4, ao descobrir que **o proprio conserto**
+citava o token nas docstrings que explicavam a fronteira — setima
+ocorrencia do padrao, dentro do codigo que existe para resolve-lo. Nas
+duas a resposta foi **reescrever, nao declarar**, e dai saiu a licao que
+vale mais que o mecanismo: **documentar a guarda sem reproduzir o token
+e possivel, e quando e, e melhor.**
+
+**O que ficou aquem, e esta escrito:** a suite **nao e verde em clone
+limpo** (§6.1); **nenhum dos nove MAJOR foi tocado**; a regra dos quatro
+campos **nao tem guarda**; e o `18,475` do README ficou **marcado como
+nao recarimbado** ao lado de uma razao que mudou — um numero antigo
+convivendo com um novo, o que e melhor que apaga-lo e pior que
+resolve-lo.
+
+**Contagem como medida, nunca como meta.** Os numeros deste registro —
+**4 de 5** contra **3 de 5** na escolha do fim de linha; **5 receitas, 0
+divergentes** no arranjo recusado e tambem no adotado depois do
+recarimbo; `p21` CONFERE nas **4** celulas; **+270 B** = **270 linhas**
+de `execution.py`; razao de `p22-a` de **19,558** para **19,907**; **11**
+ocorrencias de PII reduzidas a **2 registros declarados** e **1
+redacao**; **71** casamentos de fixture em **3** artefatos declarados;
+**7** casos conferidos da fronteira; P0 **344 passed, 256 subtests**; e
+P1-A de **9 failed / 909 passed / 1208 subtests** para **0 failed / 921
+passed / 6 skipped / 1210 subtests** na arvore e **1 failed / 920
+passed** em clone limpo — sao o que foi medido, e valem sobre **Python
+3.11.9, pytest 9.1.1, `core.autocrlf` medido nos dois valores**.
+
+**DECISAO: CONCLUIDO.**
+
+As cinco ordens foram executadas e medidas. **Nada ficou pulado** — os
+tres itens da §7 sao **achados novos** desta missao, e nenhum deles era
+ordem dela.
