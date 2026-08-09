@@ -28,6 +28,7 @@ import time
 import unittest
 
 import apoio
+import citacoes_declaradas
 from apoio import SENTINELA, espec_com, sensores_dict
 from escritor import EscritorP1
 from preflight import (OAuthAusente, QuotaEsgotada, ambiente_sanitizado,
@@ -397,12 +398,13 @@ class EscritorUnicoP1(unittest.TestCase):
 class ZeroPiiNosArtefatos(unittest.TestCase):
     """Curadoria P1-A.1: nenhum e-mail nem usuario local versionado."""
 
-    def test_nenhum_email_nem_usuario_local_em_06_p1a(self):
+    def _varrer(self):
+        """(por_arquivo, achados_de_email) — a varredura, sem julgar."""
         # Tokens montados por concatenacao para este arquivo nao casar
         # consigo mesmo na varredura.
         usuario = "IA " + "Lucas"
         usuario_curto = "IA" + "LUCA"
-        achados = []
+        por_arquivo, emails = {}, []
         for base, dirs, arquivos in os.walk(DIR_P1A):
             dirs[:] = [d for d in dirs if d != "__pycache__"]
             for nome in sorted(arquivos):
@@ -413,12 +415,44 @@ class ZeroPiiNosArtefatos(unittest.TestCase):
                 with open(caminho, encoding="utf-8",
                           errors="replace") as f:
                     texto = f.read()
-                rel = os.path.relpath(caminho, DIR_P1A)
+                rel = os.path.relpath(caminho, DIR_P1A).replace(os.sep, "/")
                 if _PADRAO_EMAIL.search(texto):
-                    achados.append(f"{rel}: email")
+                    emails.append(f"{rel}: email")
                 if usuario in texto or usuario_curto in texto:
-                    achados.append(f"{rel}: usuario-local")
-        self.assertEqual(achados, [], f"PII em: {achados}")
+                    por_arquivo[rel] = por_arquivo.get(rel, 0) + 1
+        return por_arquivo, emails
+
+    def test_nenhum_email_nem_usuario_local_em_06_p1a(self):
+        # P1-A.9 ordem 3: o alvo continua o mesmo; o que mudou e que
+        # CITACAO FORENSE DECLARADA deixa de contar como vazamento. Sem
+        # isso, o guarda crescia a cada registro que o explicava — 7 das
+        # 11 ocorrencias eram do documento que descrevia o proprio
+        # defeito. Ver `citacoes_declaradas`.
+        por_arquivo, emails = self._varrer()
+        self.assertEqual(emails, [], f"e-mail em: {emails}")
+        self.assertEqual(
+            citacoes_declaradas.nao_declarados(
+                por_arquivo, citacoes_declaradas.REGISTROS_QUE_CITAM_PII),
+            [], "PII em arquivo NAO declarado — o default e zero")
+
+    def test_declaracao_de_citacao_nao_pode_ser_decorativa(self):
+        # A metade que impede a lista de virar tapete: um caminho
+        # declarado que sumiu, ou que ja nao casa, e declaracao morta.
+        por_arquivo, _ = self._varrer()
+        self.assertEqual(
+            citacoes_declaradas.declaracoes_mortas(
+                por_arquivo, citacoes_declaradas.REGISTROS_QUE_CITAM_PII,
+                DIR_P1A),
+            [], "declaracao que nao casa mais e decoracao")
+
+    def test_arquivo_NAO_declarado_com_pii_e_pego(self):
+        # CONTROLE POSITIVO. Sem ele, a varredura poderia estar quebrada
+        # e os dois testes acima passariam sobre nada.
+        plantado = {"evidencias/inventado-que-nao-existe.md": 1}
+        self.assertEqual(
+            citacoes_declaradas.nao_declarados(
+                plantado, citacoes_declaradas.REGISTROS_QUE_CITAM_PII),
+            ["evidencias/inventado-que-nao-existe.md"])
 
 
 if __name__ == "__main__":

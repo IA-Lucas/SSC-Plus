@@ -16,6 +16,7 @@ import re
 import unittest
 
 import apoio
+import citacoes_declaradas
 from apoio import sensores_dict
 from preflight import ambiente_sanitizado, executar_preflight, frota_real
 
@@ -150,16 +151,42 @@ class VarreduraNaoTocaOSistemaDeArquivos(unittest.TestCase):
 class ZeroSegredoNosArtefatos(unittest.TestCase):
     """Nenhum valor de credencial em codigo, doc, log ou evidencia."""
 
-    def test_nenhum_padrao_de_segredo_em_06_p1a(self):
-        achados = []
+    def _varrer(self) -> dict:
+        """rel -> n casamentos. Varre e nao julga."""
+        por_arquivo = {}
         for caminho in _arquivos_de_texto(DIR_P1A):
             texto = _ler(caminho)
-            for padrao in PADROES_DE_SEGREDO:
-                for achado in padrao.finditer(texto):
-                    achados.append(
-                        f"{os.path.relpath(caminho, DIR_P1A)}: "
-                        f"{padrao.pattern[:28]}… @ {achado.start()}")
-        self.assertEqual(achados, [], "possivel segredo em artefato")
+            n = sum(len(p.findall(texto)) for p in PADROES_DE_SEGREDO)
+            if n:
+                rel = os.path.relpath(caminho, DIR_P1A).replace(os.sep, "/")
+                por_arquivo[rel] = n
+        return por_arquivo
+
+    def test_nenhum_padrao_de_segredo_em_06_p1a(self):
+        # P1-A.9 ordem 3: os padroes continuam os mesmos. O que mudou e
+        # que ARTEFATO DE VARREDURA declarado — que ecoa o valor casado
+        # de proposito, para que um terceiro confira que e fixture —
+        # deixa de contar como segredo. Ver `citacoes_declaradas`.
+        self.assertEqual(
+            citacoes_declaradas.nao_declarados(
+                self._varrer(),
+                citacoes_declaradas.ARTEFATOS_QUE_CITAM_FIXTURE),
+            [], "possivel segredo em artefato NAO declarado")
+
+    def test_declaracao_de_fixture_nao_pode_ser_decorativa(self):
+        self.assertEqual(
+            citacoes_declaradas.declaracoes_mortas(
+                self._varrer(),
+                citacoes_declaradas.ARTEFATOS_QUE_CITAM_FIXTURE, DIR_P1A),
+            [], "declaracao que nao casa mais e decoracao")
+
+    def test_arquivo_NAO_declarado_com_segredo_e_pego(self):
+        # CONTROLE POSITIVO do lado da declaracao.
+        self.assertEqual(
+            citacoes_declaradas.nao_declarados(
+                {"evidencias/inventado.json": 3},
+                citacoes_declaradas.ARTEFATOS_QUE_CITAM_FIXTURE),
+            ["evidencias/inventado.json"])
 
     def test_a_varredura_realmente_le_arquivos(self):
         # Guarda contra teste vazio: a varredura precisa ter alcance real.

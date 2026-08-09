@@ -18,7 +18,7 @@
       "consequencia": "os numeros de suite do acervo NAO reproduzem nesta estacao, e a causa e declarada por medicao diferencial, nao suposta"
     },
     "usuario_local": {
-      "de_registro": "IA Lucas (inferido do blob orfao da ordem 6)",
+      "de_registro": "<USUARIO-HISTORICO> (inferido do blob orfao da ordem 6; forma literal redigida na P1-A.9 ordem 3 — artefato gerado nao carrega PII, quem a documenta e o registro)",
       "desta_estacao": "<USUARIO>",
       "consequencia": "os guardas de PII derivam o alvo da estacao; o token curto '<USUARIO>' casa DENTRO de '<USUARIO>ia' num artefato rastreado"
     },

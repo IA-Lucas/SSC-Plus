@@ -245,3 +245,111 @@ que o acervo registrou em `53704b0`. **Nao sao a mesma medicao** — outro
 commit, outra estacao, outro interpretador, outra versao de `pytest`, e
 uma delas tem 6 skipped e 3 failed. Numero igual nao e numero
 reproduzido.
+
+## ORDEM 3 — AS DUAS GUARDAS DE CONTEUDO
+
+### 3.1 O defeito, na frase do despacho
+
+As duas sao **CODIGO**: montam os alvos dentro do proprio teste
+(`"IA " + "Lucas"`, `"IA" + "LUCA"`) e casam regex literais. Ficaram
+vermelhas em `f4399e4` e estariam vermelhas na principal — que nunca as
+viu porque a ordem 6 declarou nao ter rodado a suite.
+
+E o agravante que o despacho nomeia: **o guarda denuncia 11 ocorrencias
+e conta 7 das proprias**. Instrumento que se conta a si mesmo — a
+**sexta** vez que este acervo encontra o padrao.
+
+### 3.2 A distincao que faltava, e que agora esta em codigo
+
+Havia **duas coisas diferentes** debaixo de *"PII num arquivo"*, e a
+guarda tratava as duas como uma so:
+
+| | O que e | Politica correta |
+|---|---|---|
+| **Artefato gerado** que carrega PII | vazamento — pacote, evidencia, log escrito por um escritor | **REDIGIR**. Tolerancia **zero** |
+| **Registro** que CITA a PII | o oposto de vazamento: e o acervo dizendo o que achou | **DECLARAR** a citacao, com motivo |
+
+Redigir o registro destruiria a unica explicacao que o Fundador tem do
+defeito — que e **a mesma razao pela qual a ordem 6 recusou redigir os
+valores casados** na propria evidencia de varredura. A politica que
+faltava nao era mais rigor: era **a separacao**.
+
+O modulo novo e `06_p1a/tests/citacoes_declaradas.py`, e ele aplica a
+**mesma doutrina** que a P1-A.7 pos no gerador de pacote: *exclusao so
+existe se NOMEADA, com motivo*.
+
+### 3.3 Uma ocorrencia nao foi declarada — foi REDIGIDA
+
+Das 11, uma estava em `06_p1a/evidencias/p1a7-cobertura-pacote-….json`,
+que e **artefato gerado**, e nao registro. Pela distincao da §3.2 ela
+nao tinha direito a declaracao: **foi redigida** para
+`<USUARIO-HISTORICO>`, com a razao no proprio campo.
+
+**Fica registrado que a ocorrencia era minha**, escrita pela P1-A.7
+ordens 1-5 ao descrever a regressao da ordem 6. A missao que denunciou o
+padrao o repetiu, e a correcao dela e apagar o proprio rastro do lugar
+onde ele nao devia estar — nao declara-lo.
+
+### 3.4 As tres propriedades que impedem a declaracao de virar tapete
+
+1. **arquivo nao declarado com uma so ocorrencia REPROVA** — o default
+   continua sendo zero, e ha controle positivo para isso nas duas
+   guardas;
+2. **declaracao que nao casa mais REPROVA** (`declaracoes_mortas`): um
+   caminho que sumiu, ou que existe e ja nao contem o token, e
+   **decoracao**. E a classe dos achados 7, 10 e 14 da P1-A.3.5 — *a
+   copia que ninguem exercita fica para tras*;
+3. **o motivo e obrigatorio**, e vai no dicionario, nao num comentario.
+
+**A propriedade (2) foi exercida DUAS vezes durante esta propria ordem,
+e nenhuma por encomenda.** Declarei `99_decisao-p1a9.md` como autorizado
+a citar, e a suite reprovou **as duas vezes**:
+
+    99_decisao-p1a9.md: ja nao casa — declaracao decorativa
+
+A primeira reprovacao foi porque a secao ainda nao existia. **A segunda
+foi a interessante:** mesmo escrita, esta secao **nao contem o literal**
+— ela explica a guarda escrevendo o alvo na forma **concatenada**,
+`"IA " + "Lucas"`, que e exatamente como o proprio teste o monta para
+nao casar consigo mesmo.
+
+**A declaracao foi entao REMOVIDA**, porque era falsa. E dai sai a licao
+mais util desta ordem, que vale mais que o mecanismo:
+
+> **Documentar a guarda sem reproduzir o token e possivel — e quando e
+> possivel, e melhor que declarar a citacao.**
+
+A tecnica ja estava no acervo desde a P1-A.1, dentro do proprio teste, e
+ninguem a havia aplicado aos REGISTROS. Se a ordem 6 e a P1-A.7 a
+tivessem usado, **nenhuma das duas guardas teria ficado vermelha** e esta
+ordem nao existiria. A declaracao continua no acervo para o caso em que
+a concatenacao **nao** resolve — por exemplo, quando o valor precisa
+aparecer literal para um terceiro conferir, que e o caso dos tres
+artefatos de fixture.
+
+### 3.5 O que a correcao NAO afrouxa, declarado
+
+- **nao afrouxa a redacao de artefato gerado.** Os guardas
+  comportamentais dos escritores (`test_redacao_operacao_p1a39`,
+  `test_redacao_geradores_p1a39`) seguem intactos e **nao leem** o
+  modulo novo. Nenhum escritor passa a poder gravar PII;
+- **nao conta ocorrencias dentro de arquivo declarado.** Autoriza a
+  **citacao**, nao um numero. **Um vazamento real escondido dentro de um
+  registro declarado passaria** — o preco esta declarado aqui em vez de
+  descoberto depois. A contencao e que a lista e **curta, nominal e so
+  contem registros de decisao**: tres para PII, tres para fixture;
+- **nao muda nenhum alvo.** Os literais e as sete regex continuam onde
+  estavam. O que mudou foi **quem julga o achado**, nao o que a
+  varredura acha;
+- **nao toca a guarda da nona** — `ZeroPiiNasTresRaizes` e a ORDEM 4.
+
+### 3.6 A medicao
+
+**Plataforma: Python 3.11.9 · pytest 9.1.1 · `core.autocrlf=true` ·
+usuario `lucas`.**
+
+| Guarda | Antes | Depois |
+|---|---|---|
+| `ZeroPiiNosArtefatos` | **vermelha** — 11 ocorrencias, 7 delas do registro que a explicava | **verde**, com 3 registros declarados e 1 ocorrencia redigida |
+| `ZeroSegredoNosArtefatos` | **vermelha** — 71 casamentos em 3 arquivos | **verde**, com os 3 artefatos de varredura declarados |
+| Testes novos | — | **6**: dois de declaracao-morta, dois de controle positivo, e as duas assercoes principais |
