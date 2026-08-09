@@ -1,0 +1,41 @@
+# SSC+ P1-A.9 — o fim de linha da ARVORE DE TRABALHO, fixado aqui e nao
+# no `core.autocrlf` da estacao.
+#
+# POR QUE ESTE ARQUIVO EXISTE. As receitas da P2 recontam bytes de
+# arquivos deste diretorio lendo o DISCO em binario
+# (`medidor.item_de_arquivo`, `open(caminho, "rb")`). Sem regra aqui, a
+# forma em disco depende de `core.autocrlf`, que e configuracao de
+# ESTACAO — e o mesmo commit passava a devolver numeros diferentes em
+# maquinas diferentes. Medido na P1-A.8: em CRLF divergia `p22-a`; em LF
+# divergiam `p22-c` e `p22-c-repeticao`.
+#
+# A ESCOLHA FOI MEDIDA, NAO PREFERIDA. Dos dois estados limpos
+# possiveis, CRLF reproduz MAIS receitas publicadas: 4 de 5 contra 3 de
+# 5. Nenhum dos dois reproduz as cinco.
+#
+# O QUE ESTA LINHA FAZ, medido e nao suposto:
+#   - a arvore de trabalho fica UNIFORMEMENTE CRLF, em qualquer estacao
+#     e sob qualquer `core.autocrlf`;
+#   - nenhum blob muda hoje. Os 9 blobs que ja estao em CRLF
+#     (`kernel.py`, `eventlog.py`, `contratos.py`, `frota.py`,
+#     `router.py`, `cas.py`, `catalogo.py`, `judge.py`, `writelock.py`)
+#     continuam como estao ate serem reescritos por outro motivo, e
+#     quando forem, normalizam para LF no banco de objetos SEM mudar os
+#     bytes em disco — que sao os que a receita reconta;
+#   - `eventlog.py` NAO e convertido duas vezes. Conferido: com esta
+#     regra, sob `core.autocrlf=false`, ele sai com 6 184 B, identicos ao
+#     blob. Ele e a TESTEMUNHA do acervo — confere nos dois checkouts — e
+#     a regra foi escolhida para nao quebra-lo.
+#
+# ALTERNATIVA RECUSADA, e ela reproduzia MAIS: pinar `execution.py` em
+# LF e `estados.py` em CRLF faz as CINCO receitas conferirem (medido: 5
+# receitas, 0 divergentes). Foi recusada porque e exatamente a ARVORE
+# MISTA que a P1-A.8 mediu e condenou — ela existia por acidente, e
+# grava-la aqui tornaria o acidente permanente. Fixar por medicao vale
+# mais que preservar um numero que saiu de um estado que ninguem
+# escolheu. O preco esta declarado: o valor publicado de `p22-a` muda.
+#
+# LIMITE DECLARADO: esta regra cobre `05_p0/ssc_p0/`, que e onde vivem
+# TODOS os insumos recontados hoje. Um insumo futuro fora deste
+# diretorio nasce sem pino, e o `CLAUDE.md` grava a obrigacao de pina-lo.
+* text eol=crlf
