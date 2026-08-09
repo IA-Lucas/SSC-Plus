@@ -445,3 +445,79 @@ usuario `<o desta estacao>`.**
 verde **nao** e acervo certificado. Nenhum MAJOR foi tocado, os nove
 seguem abertos, e `QUEM CORRIGE NAO CERTIFICA` vale inteiro — quem
 consertou as nove foi quem as mediu.
+
+## ORDEM 5 — A CAUSA-RAIZ, QUE E MAIOR QUE AS NOVE
+
+### 5.1 O que se gravou, e onde
+
+`CLAUDE.md`, na secao **"ONDE O SSC+ SE MEDE"**, que a P1-A.8 abriu com
+**tres** campos de plataforma. A P1-A.9 a **endurece para quatro** e
+acrescenta a consequencia que faltava:
+
+> **Sem os quatro, o numero NAO e reproduzivel e NAO deve ser
+> publicado.**
+
+| # | Campo | Por que este, medido |
+|---|---|---|
+| 1 | interpretador e versao | o acervo registra `3.14.3` e roda-se hoje em `3.11.9` |
+| 2 | versao do `pytest` | quem conta `subtests` e a ferramenta, nao o Python |
+| 3 | `core.autocrlf` | mudava o byte recontado, e com ele a razao publicada |
+| 4 | **usuario da estacao** | **novo** — os guardas de PII derivam o alvo dele |
+
+### 5.2 O quarto campo nasceu de medicao, e nao de simetria
+
+Seria facil acrescentar "usuario" por parecer que combina com os outros
+tres. Ele entra por um fato medido nesta missao: `ZeroPiiNasTresRaizes`
+deriva o alvo de `contencao._USUARIO_LOCAL`, de modo que **o mesmo
+commit devolve conjuntos de achados diferentes conforme quem roda** —
+e isso foi **exercido** por teste na ordem 4, nao suposto.
+
+O nome de usuario e uma **propriedade de quem roda**, e entra na
+declaracao **justamente por nao poder entrar no codigo**. Fixa-lo no
+teste foi o que a P1-A.3.9 corrigiu, com razao: o alvo literal ficava
+cego noutra maquina.
+
+### 5.3 O `3.14.3` nao se reproduz nem instalando
+
+O `winget` oferece `Python.Python.3.14` na versao **3.14.6**. O acervo
+registra **3.14.3**. **Nem instalar reproduz o registro** — exigiria o
+instalador arquivado do `python.org`.
+
+Isto reforca a regra em vez de enfraquece-la: se **nem a plataforma de
+registro se reconstroi por instalacao**, publicar numero sem ela e
+publicar algo que ninguem podera conferir. **A P1-A.8 ja media beneficio
+zero em instalar 3.14, e esta missao nao o instalou** — a restricao do
+despacho e a medicao anterior apontam para o mesmo lado.
+
+### 5.4 A causa-raiz, dita inteira
+
+As nove falhas eram **sintoma**. A causa e uma so, e maior que elas:
+
+> **O acervo publicava numero sem publicar o estado que o produziu.**
+
+Ela aparece nas tres formas que esta missao tocou:
+
+| Forma | Onde doeu | Ordem que tratou |
+|---|---|---|
+| **fim de linha nao declarado** | a razao de `p22-a` dependia do `autocrlf` da estacao | 1 e 2 |
+| **plataforma nao declarada** | `914 passed` sem interpretador, `pytest` nem usuario ao lado | 5 |
+| **guarda que se conta a si mesma** | o instrumento entrava na propria medicao | 3 e 4 |
+
+As tres sao a mesma coisa vista de tres angulos: **medida sem contexto
+de medida**. E por isso a regra gravada no `CLAUDE.md` vale mais que as
+nove correcoes — as nove eram deste commit; a regra e de todos os
+proximos.
+
+### 5.5 O que a ORDEM 5 NAO fez
+
+- **nao instalou 3.14**, por restricao expressa e por beneficio medido
+  zero na P1-A.8;
+- **nao retroagiu a regra.** Os numeros ja publicados sem plataforma
+  **continuam sem ela**: recarimbar todos exigiria remedir tudo, e
+  remedir o que depende de lab destruido e impossivel. O que se fez foi
+  **carimbar os cinco da P2** (ordem 2) e **declarar a regra** para os
+  proximos;
+- **nao criou guarda que exija os quatro campos.** A regra e de
+  processo, escrita onde toda sessao le, e **nao ha teste que a
+  imponha** — quem quiser fecha-la tera de exercer a interface real, nao
+  afirmar a propriedade. Fica como achado aberto desta missao.

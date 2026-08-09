@@ -281,12 +281,32 @@ estado de runtime nao versionado.**
 ### O que isso obriga, daqui para frente
 
 1. **Todo numero de suite gravado no acervo vem com a PLATAFORMA na
-   mesma linha:** interpretador e versao, versao do `pytest`, e o valor
-   de `core.autocrlf`. Medido: **nenhuma evidencia posterior a
-   2026-07-30 registra qualquer um dos tres**, e por isso o proprio
-   `Python 3.14.3` e hoje **numero herdado** — ele descreve a estacao de
-   30 de julho e foi aplicado por continuidade a uma medicao de 5 de
-   agosto.
+   mesma linha — e sao QUATRO campos, endurecido na P1-A.9:**
+
+   | # | Campo | Por que este, medido |
+   |---|---|---|
+   | 1 | **interpretador e versao** | o acervo registra `3.14.3` e roda-se hoje em `3.11.9` |
+   | 2 | **versao do `pytest`** | quem conta `subtests` e a ferramenta, nao o Python |
+   | 3 | **`core.autocrlf`** | mudava o byte recontado, e com ele a razao publicada |
+   | 4 | **usuario da estacao** | **acrescentado na P1-A.9**: os guardas de PII derivam o alvo dele, e o mesmo commit devolve achados diferentes conforme quem roda |
+
+   > **Sem os quatro, o numero NAO e reproduzivel e NAO deve ser
+   > publicado.**
+
+   Medido: **nenhuma evidencia posterior a 2026-07-30 registra qualquer
+   um dos quatro**, e por isso o proprio `Python 3.14.3` e hoje **numero
+   herdado** — ele descreve a estacao de 30 de julho e foi aplicado por
+   continuidade a uma medicao de 5 de agosto. **E nem ele se reproduz
+   por instalacao:** o `winget` oferece `Python.Python.3.14` na versao
+   **3.14.6**, nao **3.14.3**. Reproduzir o registro exigiria o
+   instalador arquivado do `python.org` — outra razao para o numero vir
+   com a plataforma em vez de com a promessa dela.
+
+   **O quarto campo nasceu de medicao, nao de simetria:** a P1-A.9
+   mediu que `ZeroPiiNasTresRaizes` deriva o alvo de
+   `contencao._USUARIO_LOCAL`, e por isso *nome de usuario nao e
+   plataforma de medicao* — e uma **propriedade de quem roda**, que
+   entra na declaracao justamente por nao poder entrar no codigo.
 2. **Arvore de trabalho mista nao e plataforma de medicao.** Antes de
    publicar numero que reconta bytes de arquivo, conferir que o checkout
    e uniforme. Um arquivo que precisa de bytes estaveis leva regra em
