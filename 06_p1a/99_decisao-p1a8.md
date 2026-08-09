@@ -310,3 +310,103 @@ Se um dia se quiser a reproducao exata, o alvo e **3.14.3**, e o
   subtests pode ser de ferramenta**, e isso **nao foi separado**;
 - **nada se afirma sobre 3.12 e 3.13**: mediu-se o par 3.11 contra
   3.14, que e o par que o despacho nomeia.
+
+## ORDEM 3 — O QUE ISSO INVALIDA
+
+Tres numeros circulam. **Dois reproduzem exatamente. Um nao reproduz — e
+a razao de ele nao reproduzir e o achado da missao.**
+
+| Numero que circula | Origem | Medido AQUI | Reproduz? |
+|---|---|---|---|
+| **P0: 344 de 344**, com **256 subtests** | acervo | **344 passed, 256 subtests** | **SIM — exato** |
+| **Prova central: 18 assercoes, 20 eventos** | acervo | **18 assercoes, 20 eventos** | **SIM — exato** |
+| **P1-A: 914 passed, 1241 subtests** | `99_decisao-p1a6.md` §1, no commit `53704b0` | **902 passed, 8 failed, 6 skipped, 1179 subtests** | **NAO** |
+
+**Nota de notacao:** o despacho escreve *"344/344 em P0"*. A forma esta
+**correta** e nao viola a regra da P1-A.5.1 — `344/344` e fracao **da
+mesma grandeza** (*"344 de 344 passaram"*), que e exatamente a forma que
+o `CLAUDE.md` autoriza. O que a regra proibe e cruzar grandezas
+diferentes, e por isso o par completo se escreve **`344 passed, 256
+subtests`**, nunca `344/256`.
+
+### 3.1 A comparacao foi feita NO MESMO COMMIT — o desvio nao e de codigo
+
+Comparar o `914` do acervo com o `909` de hoje seria comparar **commits
+diferentes** e atribuir a estacao um desvio que e de conteudo. Para
+separar as duas coisas, clonou-se o **mesmo commit** que produziu o
+numero publicado:
+
+| | `53704b0` na principal (registro) | `53704b0` **nesta estacao** |
+|---|---|---|
+| failed | **0** (implicito) | **8** |
+| passed | **914** | **902** |
+| skipped | nao reportado | **6** |
+| subtests | **1241** | **1179** |
+
+**Mesmos bytes, maquinas diferentes, resultados diferentes.** O desvio
+**nao e de commit**.
+
+### 3.2 E por que a principal estava verde ali — as quatro causas, todas ja medidas
+
+Esta e a parte que fecha a missao, porque explica o verde da principal
+**sem precisar roda-la**. Em `53704b0`, cada uma das oito falhas daqui
+tem, na principal daquele dia, uma razao para **nao** ocorrer:
+
+| Falha aqui em `53704b0` | Por que a principal nao a via |
+|---|---|
+| **6** do `p24` | a arvore de trabalho dela era **MISTA** — `execution.py` em LF e `estados.py` em CRLF ao mesmo tempo. E o unico estado que faz as cinco receitas conferirem, e **nao e um estado limpo** (§1.2) |
+| **1** `ZeroPiiNasTresRaizes` | o usuario dela e `IA Lucas`, e em `53704b0` **nenhum arquivo rastreado continha esse literal** — a ordem 6 so o escreveria depois |
+| **1** `test_gitignore_efetivo_p1a39` (locks) | a principal tinha `locks/` de corridas anteriores; um clone novo nao tem |
+
+E as **duas guardas de conteudo** nao aparecem nessa lista porque em
+`53704b0` elas estavam **verdes nas duas maquinas**: os tres arquivos
+que as derrubam so entraram na arvore em `f4399e4`, na ordem 6.
+
+> **O `914` nao era um numero errado — era um numero verdadeiro sobre um
+> estado que nao se pode reconstruir.** Duas das quatro causas do verde
+> (arvore mista, `locks/` de corrida anterior) sao **estado de runtime
+> nao versionado**; a terceira (o usuario da estacao) e propriedade da
+> maquina; e a quarta caducou por commit.
+
+### 3.3 O que isso invalida, item a item
+
+| Afirmacao | Situacao |
+|---|---|
+| *"a suite P1-A esta verde"* | **invalidada como propriedade do acervo.** Ela era verdadeira **daquela estacao, naquele instante, com aquela arvore de trabalho** — e nenhum dos tres se reconstroi |
+| *"914 passed, 1241 subtests"* | **nao reproduzivel.** Nao e herdado por engano de transcricao: e herdado por **falta de plataforma declarada** ao lado dele |
+| *"P0: 344 de 344, 256 subtests"* | **VALIDA e reproduzida.** E o numero mais forte do acervo hoje |
+| *"prova central: 18 assercoes, 20 eventos"* | **VALIDA e reproduzida**, na forma de par que o `CLAUDE.md` exige |
+| *"os cinco numeros da receita P2 reproduzem"* | **invalidada**, e por exaustao: nenhum checkout limpo os reproduz (§1.2) |
+
+### 3.4 A causa-raiz da nao-reproducao: numero sem plataforma ao lado
+
+Medido, e e um achado por si: **nenhuma evidencia do acervo posterior a
+2026-07-30 registra a versao do interpretador.** O `Python 3.14.3` vem
+de `coleta-20260730-*/00_ambiente.txt` e **so de la**. A corrida que
+produziu `914 passed, 1241 subtests` (2026-08-05) **nao registrou** sob
+qual Python nem sob qual `pytest` rodou.
+
+Logo o proprio `3.14.3` e, hoje, **um numero herdado**: ele descreve a
+estacao de **30 de julho**, e foi aplicado por continuidade a uma
+medicao de **5 de agosto**. Esta missao **nao pode afirmar** que o `914`
+saiu de 3.14.3 — so que saiu de uma maquina que nao registrou o que era.
+
+**O remedio de processo, que esta missao NAO implementa** (nao e ordem
+dela, e implementar seria corrigir): todo numero de suite gravado no
+acervo deveria vir com **interpretador, versao do `pytest` e estado de
+`core.autocrlf`** ao lado. Os tres sao uma linha, e os tres estao
+faltando em todas as medicoes que nao reproduzem.
+
+### 3.5 O QUE A ORDEM 3 NAO MEDIU
+
+- **nao se remediu o `913 passed, 1 skipped, 1236 subtests`** nem o
+  `1252 subtests` da Parte II da P1-A.6: o primeiro depende do estado
+  **pos-limpeza dos labs**, que e irreversivel, e o segundo de um commit
+  cujo estado de arvore nao se reconstroi;
+- **os 62 subtests de diferenca em `53704b0` nao foram atribuidos um a
+  um.** Parte e consequencia direta das 8 falhas (subtest que falha nao
+  conta como passado), e parte **pode** ser da versao do `pytest`, que o
+  acervo nunca registrou. **A separacao nao foi feita**, e afirmar qual
+  parcela e de qual seria supor;
+- **a suite P0 nao foi remedida em `53704b0`** — o `344 passed, 256
+  subtests` foi conferido no HEAD atual, onde reproduz exato.
