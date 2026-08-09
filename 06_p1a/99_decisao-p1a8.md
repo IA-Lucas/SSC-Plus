@@ -410,3 +410,89 @@ faltando em todas as medicoes que nao reproduzem.
   parcela e de qual seria supor;
 - **a suite P0 nao foi remedida em `53704b0`** — o `344 passed, 256
   subtests` foi conferido no HEAD atual, onde reproduz exato.
+
+## ORDEM 4 — REGISTRAR, SEM CORRIGIR
+
+**Nada nesta secao foi consertado.** Ela existe para que o dono decida
+com a medicao na mao.
+
+### 4.1 Os tres achados da P1-A.7 — situacao apos a medicao desta missao
+
+| # | Achado | Situacao agora | Mudou? |
+|---|---|---|---|
+| **P1A7-a** | a ordem 6 deixou duas guardas versionadas vermelhas | **ABERTO.** Confirmado **CODIGO**: os alvos sao literais e regex literais, sem leitura de estacao. Ficaria vermelha **na principal tambem**, no commit `f4399e4` | **confirmado**, nao mudou de classe |
+| **P1A7-b** | as guardas de PII casam por **substring** | **ABERTO.** Medido **dos dois lados** por simulacao do usuario: falha com `lucas` **e** com `IA Lucas`, por **arquivos diferentes**. A metade "so acontece aqui" e **menor** do que a P1-A.7 supos | **precisado** — era "defeito de estacao curta", e e tambem defeito de conteudo |
+| **P1A7-c** | `p24` falhando em 6 pontos | **ABERTO, e mais grave do que se registrou.** A P1-A.7 o classificou "da estacao, falha tambem em `1f45fdd`". **Estava incompleto**: falha nos **dois** checkouts limpos possiveis, logo **nao e da estacao** — e numero publicado a partir de arvore **mista** | **reclassificado**: de AMBIENTE para **CODIGO** |
+
+**O `P1A7-c` foi reclassificado contra a missao que o registrou.** A
+P1-A.7 mediu que ele falhava tambem em `1f45fdd` e concluiu "logo nao e
+regressao" — o que era verdade e **nao era a pergunta toda**. Faltou o
+segundo checkout. **Uma medicao correta que responde menos do que
+parece responder e o modo mais silencioso de errar**, e fica registrado
+como tal.
+
+### 4.2 O que esta missao acrescenta — com a familia, que e obrigatoria
+
+O `CLAUDE.md` torna a classificacao por familia **obrigatoria em todo
+relatorio**, sem a qual o criterio **(b)** de parada nao pode ser
+aferido.
+
+| # | Achado desta missao | Familia | Razao da familia |
+|---|---|---|---|
+| **P1A8-a** | Os numeros publicados da P2 **exigem uma arvore de trabalho mista** e **nao reproduzem em nenhum checkout limpo**. Nao e "parte dos insumos e testemunho" (que o `P1A4-4` ja dizia): e que **a parte recontavel tambem nao reconta** | **fora de ambas** | o objeto nao e um guarda: e a **evidencia publicada**. O guarda `p24` exerce a recontagem de verdade — ele esta certo, e por isso e ele que denuncia |
+| **P1A8-b** | Nenhuma evidencia posterior a 2026-07-30 registra **interpretador, versao do `pytest` ou `core.autocrlf`** ao lado do numero de suite. O numero nasce sem plataforma, e por isso nasce irreproduzivel | **(N)** | classe que a varredura dos 86 guardas **nao media**: o eixo dela era alcance de linha em guardas existentes, e aqui **nao ha guarda** — ha um campo que nunca foi gravado |
+| **P1A8-c** | A guarda de PII varre a arvore inteira por **substring literal**, e por isso **todo registro que a discuta a viola**. A ordem 6 caiu; a P1-A.7 caiu ao descrever a ordem 6; **este registro cai ao descrever as duas** | **(F)** | a guarda **AFIRMA** *"zero PII"* e o que ela **EXERCE** e *"zero ocorrencias da substring"*. E a mesma familia do MAJOR #3 |
+
+**Sobre a contagem do `P1A8-c`, e declarado em vez de escolhido:** ele e
+o **mesmo objeto** do `P1A7-b` visto de outro angulo — a substring. Pela
+regra da P1-A.3.6 §9.4, que mantem o trio `6`/`N5`/`P1A4-2` separado,
+ele **contaria como linha propria**. Esta missao **nao decide** se conta
+um ou dois: registra os dois angulos e deixa a soma para quem for
+aferir, **porque somar por conveniencia e exatamente o que a §9.4
+existe para impedir**.
+
+**O criterio de parada NAO e aferido aqui, e a razao e de forma:** as
+tres condicoes se aferem sobre o que uma **revisao independente**
+devolve. Esta missao **nao e revisao independente** — e auto-medicao, e
+`QUEM CORRIGE NAO CERTIFICA` vale com o agravante de que quem mede e
+quem escreve. Os achados acima **entram na conta da proxima revisao**,
+nao nesta.
+
+### 4.3 A contagem 8/9 — o que mudou, e o que continua do Fundador
+
+A P1-A.7 §II.6.1 mediu que os dois revisores receberam **o mesmo
+prompt** (`prompt_sha256` `0a029c37…`) e que esse prompt dizia:
+
+> *"**NOVE** linhas, uma por MAJOR (…) **NAO funda** N1 com P1A4-1, nem
+> o trio 6/N5/P1A4-2: sao nove linhas. Se julgar que a contagem correta
+> e outra, diga-o em linha separada, com o motivo."*
+
+O despacho desta missao tira a conclusao, e ela e a correta:
+
+> **O silencio do `codex` foi OBEDIENCIA, nao concordancia.**
+
+Fica registrado com a distincao que importa para o valor de cada
+parecer:
+
+| Revisor | O que fez | Peso |
+|---|---|---|
+| `kimi` | **pronunciou-se**, com razao propria: *"Fundir um par e nao o outro seria assimetrico; fundir os dois daria seis objetos, e a contagem deixaria de medir o que ela existe para medir."* | **parecer**, ainda que dado dentro do enquadramento |
+| `codex` | **cumpriu o formato pedido** e nao abriu a linha separada que o proprio prompt oferecia | **nao e parecer** — e conformidade com instrucao |
+
+**Consequencia pratica:** ha **um** parecer de revisor independente sobre
+a contagem, nao dois. A P1-A.6 §13.3 registrou *"resposta de revisor
+independente: sao NOVE"*, e isso **continua verdadeiro no singular**.
+
+| Campo | Valor |
+|---|---|
+| **Decisao** | **do Fundador**, e **nao tomada aqui** |
+| **Gatilho** | antes da proxima revisao independente — a contagem e o **denominador** de *"quantos fecharam"* |
+| **Metodo recomendado** | se reaberta, perguntar **sem** dizer o numero e **sem** proibir a fusao; o enquadramento atual nao consegue distinguir concordancia de obediencia |
+
+### 4.4 O que a ORDEM 4 NAO fez
+
+- **nao corrigiu nenhum dos seis itens** acima;
+- **nao fechou, nao reabriu e nao moveu** nenhum MAJOR — os nove seguem
+  como a P1-A.6 os deixou;
+- **nao decidiu** a contagem, e **nao aferiu** o criterio de parada;
+- **nao redigiu** o token de PII deste registro, pela razao da §1.5.
