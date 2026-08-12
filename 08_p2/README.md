@@ -2,9 +2,11 @@
 
 > Laboratorio experimental. Nada aqui e norma. A P2 foi aberta pelo ato
 > soberano de 2026-08-03 ([`00_ato-soberano-p2.md`](00_ato-soberano-p2.md)),
-> que autoriza invocacao produtiva por **codex** e **kimi**, dentro da
-> capsula, em modo supervisionado. **Chamada de API paga continua
-> PROIBIDA** — a politica economica nao foi tocada.
+> que abriu a invocacao produtiva dentro da capsula, em modo
+> supervisionado. A confirmacao operacional do proprietario em
+> **2026-08-11** incluiu **Claude** e **Google Antigravity** na selecao e
+> no fallback automaticos; Grok continua fora. **Chamada de API paga
+> continua PROIBIDA** — a politica economica nao foi tocada.
 
 ## A FRONTEIRA — quando despachar poupa, e quando NAO poupa
 
@@ -112,10 +114,11 @@ Estao aqui, e nao no rodape, porque quem vem usar a P2 segue os tres
 passos abaixo e pode nunca rolar ate o fim. Os cinco sao **medidos**, com
 data e evidencia; nenhum e precaucao generica.
 
-### 1. A economia de TOKEN nao esta medida
+### 1. A economia de TOKEN nao esta comparada entre os provedores
 
-Nenhum dos dois CLIs reporta contagem de token. `tokens_reportados` sai
-`None` em toda invocacao — por honestidade, jamais zero por conveniencia.
+Codex, Claude e Kimi nao reportam aqui uma contagem estruturada comparavel.
+O Google Antigravity reporta `usage.total_tokens`, agora preservado no
+recibo, mas essa metrica isolada nao torna comparaveis os quatro canais.
 
 O que existe e uma **proxy**, que nao e a medicao: `08_p2/medidor.py`
 conta a **carga de fronteira** em bytes e caracteres. **Uma** corrida
@@ -151,7 +154,7 @@ que o outro. Antes de citar qualquer razao daqui, ler
 acima: e la que esta escrito em que tipo de tarefa despachar **nao poupa
 nada**. `NAO_CAPTURA` tem hoje **nove** limites, nao oito.
 
-### 2. A frota e codex-only enquanto a franquia do kimi estiver esgotada
+### 2. A indisponibilidade historica do Kimi nao define a frota atual
 
 Medido em **2026-08-03T11:56Z**
 (`08_p2/evidencias/execucao-20260803T115622Z.json`): com `--capacidade
@@ -159,12 +162,10 @@ volume`, que puxa o kimi primeiro, o kimi devolveu `falha-quota` e a
 maquina rerroteou sozinha para o codex, que concluiu. Mesma medicao de
 2026-08-03T02:38Z, agora repetida.
 
-Consequencia pratica: **`kimi -p` nunca foi validado num caminho de
-sucesso**. Sabe-se que o argv chega ao provedor — o erro veio do
-provedor, nao do parser — e nada alem disso. Enquanto isso valer, pedir
-`--capacidade volume`, `contexto-extenso` ou `engenharia-reversa` custa
-uma tentativa perdida antes do fallback; nao e erro, e o preco do
-mecanismo funcionando.
+Essa continua sendo a evidencia historica: **`kimi -p` nao foi validado
+ali num caminho de sucesso**. Ela nao autoriza concluir que a quota atual
+esta esgotada: o preflight de 2026-08-11 reavaliou a frota e deve ser a
+fonte da decisao corrente.
 
 ### 3. Ninguem certificou a P2
 
@@ -270,33 +271,63 @@ a receita reproduz os NUMEROS, nunca o que a corrida fez no disco.
 Detalhes, incluindo o controle positivo que prova que o comando le mesmo
 os insumos: [`99_registro-p24.md`](99_registro-p24.md).
 
-## Os tres passos, em PowerShell
+## Abrir e usar sem montar comandos
 
-### 1. Declarar o tier (ato do proprietario, vale 24 h)
-
-O codigo **nunca** infere o tier. Edite `06_p1a/tiers_declarados.json` e
-ponha o instante atual em `declarado_em_utc` das duas declaracoes:
+No Explorer, de duplo clique em `SSC-Plus.cmd`. No PowerShell, o comando
+equivalente e uma linha curta:
 
 ```powershell
-cd E:\LucasIA\Projetos\SSC-Plus
-Copy-Item 06_p1a\tiers_declarados.json `
-  "06_p1a\evidencias\backups\tiers_declarados-$(Get-Date -Format 'yyyy-MM-dd')-pre-renovacao.json"
-python -c "import datetime;print(datetime.datetime.now(datetime.timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ'))"
+.\SSC-Plus.cmd
 ```
 
-Declaracao vencida = `P1A-DECLARACAO-EXPIRADA` e a frota volta a BLOCKED,
-sozinha. Isso e o mecanismo funcionando, nao defeito.
+O menu principal oferece `Analisar projeto`, `Corrigir problema`, `Implementar
+funcionalidade` e `Revisar alteracao`. Essas opcoes usam o fluxo controlado
+completo: Kimi contextualiza, Codex planeja e propoe, Claude revisa, Google
+julga e a suite local testa. Para mudancas, o patch e testado numa copia e
+fica pendente; aplicar na arvore real exige um segundo ato com `fluxo_id` e o
+token de aprovacao exibido uma unica vez. Detalhes e limites em
+[`102_fluxo-controlado-20260811.md`](102_fluxo-controlado-20260811.md).
 
-### 2. Segurar o lease e rodar o preflight
+O lancador segura e renova o lease no proprio processo, reutiliza um preflight
+autenticado ainda valido ou produz outro, pede confirmacao explicita se os
+tiers venceram e pergunta tarefa/capacidade. Ao sair, expira o lease. O snapshot
+read-only do workspace e montado automaticamente; arquivos com padrao de
+segredo sao omitidos, e o recibo guarda apenas caminhos, hashes e contagens.
 
-O lease e **escritor unico** e precisa ficar vivo durante toda a operacao.
-Abra um terminal so para ele:
+Uso nao interativo continua curto:
 
 ```powershell
+python .\ssc_plus.py --tarefa "Analise os riscos do SSC Plus"
+```
+
+### Fluxo manual avancado
+
+### 1. Segurar o lease e declarar o tier (ato do proprietario, vale 24 h)
+
+O codigo **nunca** infere o tier. Primeiro, num terminal proprio, segure o
+lease e deixe o processo aberto:
+
+```powershell
+cd H:\SSC-Plus
 python 06_p1a\evidencias\renovador_lock.py p2-ops
 ```
 
-Noutro terminal, o preflight — so diagnostico, zero chamada de modelo:
+Noutro terminal, e somente se os dois valores forem verdadeiros agora:
+
+```powershell
+cd H:\SSC-Plus
+$env:SSC_LOCK_SESSAO = "p2-ops"
+python 06_p1a\renovar_tiers.py --confirmo-proprietario `
+  --codex-tier "ChatGPT Pro 5x" --kimi-tier "Allegretto" `
+  --google-tier "Google AI Pro"
+```
+
+O comando valida os tiers contra a especificacao, cria backup atomico,
+reverifica o mesmo fence e so entao publica a declaracao. Sem a flag de
+confirmacao, tier divergente ou lease perdido, nada e renovado. Declaracao
+vencida = `P1A-DECLARACAO-EXPIRADA`; isso e o mecanismo funcionando.
+
+### 2. Rodar o preflight sob o mesmo lease
 
 ```powershell
 $env:SSC_LOCK_SESSAO = "p2-ops"
@@ -316,12 +347,33 @@ python 06_p1a\capsula.py python 08_p2\runner_p2.py `
 
 | flag | efeito |
 |---|---|
-| `--tarefa` / `--tarefa-arquivo` | o prompt (um dos dois, nunca os dois) |
+| `--tarefa` / `--tarefa-arquivo` | o prompt (um dos dois, nunca os dois); arquivo deve estar contido neste repositorio e ter no maximo 1 MiB |
 | `--criterio` | criterio de aceite, **CONGELADO** na WorkUnit |
-| `--capacidade` | preferencia de rota: `implementacao`/`operacao-repo` puxam codex; `volume`/`contexto-extenso`/`engenharia-reversa` puxam kimi |
+| `--capacidade` | preferencia de rota: implementacao/operacao → Codex; arquitetura/specs/revisao profunda → Claude; volume/contexto extenso/engenharia reversa → Kimi; multimodal/julgamento transversal → Google |
 | `--papel` | `autor` (padrao), `revisor`, `juiz` |
 | `--timeout` | teto de parede por invocacao (padrao 900 s) |
-| `--validade-h` | idade maxima do preflight (padrao 24 h) |
+| `--validade-h` | pode estreitar a janela para 1..24 h; valores acima de 24 h sao recusados |
+
+### Divisao de trabalho da frota ativa
+
+Os papeis nao sao cargos fixos por LLM. `--papel autor|revisor|juiz` e um
+eixo separado da capacidade: os quatro provedores ativos podem exercer os tres
+papeis. Em trabalho critico, revisor ou juiz precisa usar provedor **e** modelo
+distintos dos usados pelo autor.
+
+| provedor ativo | modelo descoberto no preflight | preferencia de capacidade | uso recomendado |
+|---|---|---|---|
+| Codex (`ChatGPT Pro 5x`) | `gpt-5.6-sol` | `implementacao`, `operacao-repo` | mudancas de codigo, testes e operacao do repositorio |
+| Claude (`Claude Max 5x`) | `claude-fable-5[1m]` | `arquitetura`, `specs`, `revisao-profunda` | arquitetura, especificacoes e revisao independente profunda |
+| Kimi (`Allegretto`) | `kimi-code/k3` | `volume`, `contexto-extenso`, `engenharia-reversa` | leitura ampla, inventario, rastreamento entre muitos arquivos e segunda leitura independente |
+| Google (`Google AI Pro`) | `gemini-3.1-pro-high` | `multimodal`, `julgamento-transversal` | inspecao multimodal e julgamento cruzado entre artefatos |
+
+Sem `--capacidade`, a ordem medida do preflight prevalece e Codex e tentado
+primeiro. Pedir uma capacidade reordena a fila; nao reserva o provedor. Se a
+primeira assinatura falhar por quota, o SSC+ cria nova decisao para a proxima.
+Para mudanca critica, uma divisao inicial util e Codex como autor, Claude como
+revisor e Google como juiz; Kimi assume a leitura extensa. A independencia
+continua obrigatoria: revisor/juiz nao reutilizam provedor e modelo do autor.
 
 ## O que acontece sozinho
 
@@ -335,31 +387,34 @@ python 06_p1a\capsula.py python 08_p2\runner_p2.py `
 - **preflight velho** → PARADA. Veredito de ontem nao autoriza gasto de
   hoje.
 
-Cada corrida grava evidencia redigida em `08_p2/evidencias/` (caminho do
-usuario vira `<CAMINHO-LOCAL>`) e um laboratorio proprio em
-`08_p2/saidas/labs/` (fora do Git — carrega saida crua de modelo).
+Cada corrida grava primeiro, de forma atomica, um recibo redigido em
+`08_p2/evidencias/`. O recibo contem apenas tamanho e SHA-256 da resposta,
+nunca o texto. O laboratorio proprio em `08_p2/saidas/labs/` fica fora do
+Git e carrega o CAS bruto; diretorios descartaveis de subprocesso sao
+removidos depois da medicao. Preflight antigo ou editado e recusado: o
+produtor o assina com chave HMAC local em `locks/`, e o consumidor valida
+assinatura e schema fechado antes de confiar nos campos.
 
 ## Limites que voce precisa saber antes de confiar
 
-1. **claude, google e grok nao entram.** Teto `SUPERVISED` de
-   especificacao; google e grok nunca foram sequer sondados;
+1. **Claude e Google entram; Grok nao.** Os dois primeiros exigem login de
+   assinatura, quota/canal aceitos e modelo exato observado. Grok permanece
+   `SUPERVISED`, sem rota automatica;
 2. **`executor_observado` e sempre `None`.** O CLI nao ecoa qual modelo
    serviu a chamada, entao o guarda de divergencia da P0 (0.2.1-9) **nao
    dispara** para a P2. Voce sabe qual modelo foi *resolvido*, nao qual
    respondeu;
-3. **nao ha contagem de token.** Nenhum dos dois CLIs reporta, e o campo
-   sai `None`. O placar da EvidencePlane conta ausencia como zero e rotula
-   o total `simulado` — divergencia registrada, nao corrigida. A P2.1 nao
-   corrigiu isso: ela construiu uma PROXY de bytes ao lado
-   (`08_p2/medidor.py`), com os proprios limites declarados. Ver o item 1
-   do bloco no topo;
-4. **o contexto nao e enviado.** O prompt e a `--tarefa`; o
-   `ContextPackage` da WorkUnit nao vai ao CLI;
+3. **token nao e comparavel entre canais.** Google informa
+   `usage.total_tokens`; os demais continuam sem telemetria equivalente. A
+   proxy de bytes em `08_p2/medidor.py` mantem seus limites declarados;
+4. **o contexto e seletivo, nao integral.** O snapshot tem teto de 384 KiB,
+   prioriza codigo central e omite binarios, evidencias, labs, arquivos grandes
+   e qualquer arquivo recusado pela politica de segredos. O recibo declara
+   inclusoes e exclusoes, mas nao persiste o conteudo;
 5. **read-only.** O envelope nasce `pode_escrever: False`. A P2 responde;
    nao aplica patch;
-6. **a franquia do kimi estava ACABADA** nas medicoes de 2026-08-03
-   (02:38Z e 11:56Z), entao `kimi -p` nunca foi validado num caminho de
-   sucesso. Ver o item 2 do bloco no topo;
+6. **a franquia do Kimi estava esgotada nas medicoes de 2026-08-03**;
+   isso e historico, nao substitui o preflight atual;
 7. **quem construiu nao certificou.** Nenhuma revisao independente foi
    feita sobre a P2 — nem sobre a P2.0, nem sobre a P2.1. Ver o item 3
    do bloco no topo;

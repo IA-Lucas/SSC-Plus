@@ -65,58 +65,34 @@ quer tirar uma tarefa do canal caro e por na franquia ja paga.
 
 ## 3. O que voce digita
 
-**1) Renovar a declaracao de plano (vale 24 h):**
+Abra `H:\SSC-Plus` no Explorer e de duplo clique em `SSC-Plus.cmd`. Ou use
+uma unica linha no PowerShell:
 
 ```powershell
-cd E:\LucasIA\Projetos\SSC-Plus
-Copy-Item 06_p1a\tiers_declarados.json `
-  "06_p1a\evidencias\backups\tiers_declarados-$(Get-Date -Format 'yyyy-MM-dd')-pre-renovacao.json"
-python -c "import datetime;print(datetime.datetime.now(datetime.timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ'))"
+.\SSC-Plus.cmd
 ```
 
-Copie o instante impresso para os dois campos `declarado_em_utc` de
-`06_p1a\tiers_declarados.json`. **Confira:** os dois com a data de hoje.
+O programa pergunta a tarefa e o tipo de trabalho. Lease, tier, preflight,
+capsula, snapshot do workspace, selecao do provedor e recibo acontecem
+automaticamente. Se os tiers venceram, o programa mostra os tres planos e so
+renova depois de voce digitar `SIM`.
 
-**2) Segurar a vez — terminal proprio, deixe aberto:**
-
-```powershell
-python 06_p1a\evidencias\renovador_lock.py p2-ops
-```
-
-**Confira:** ele nao volta ao prompt. Se voltou, nao ha vez.
-
-**3) A checagem previa — noutro terminal:**
+Tambem e possivel passar a tarefa em uma linha:
 
 ```powershell
-cd E:\LucasIA\Projetos\SSC-Plus
-$env:SSC_LOCK_SESSAO = "p2-ops"
-python 06_p1a\capsula.py python 07_p1b\preflight_atual.py
-```
-
-**Confira:** a linha `evidencia: 07_p1b/evidencias/preflight-<data>.json`
-(guarde o caminho) e `SHADOW_ELIGIBLE: ['codex', 'kimi']` no resumo. Se os
-dois sairem `BLOCKED`, pare: o passo 1 nao pegou.
-
-**4) Despachar:**
-
-```powershell
-python 06_p1a\capsula.py python 08_p2\runner_p2.py `
-  --preflight 07_p1b\evidencias\preflight-<data>.json `
-  --tarefa "o que voce quer feito" `
-  --criterio "como saber se ficou bom"
+python .\ssc_plus.py --tarefa "Analise os riscos do SSC Plus"
 ```
 
 **Confira:** `status: sucesso`, o bloco `--- saida ---` e a ultima linha
-`evidencia: ...execucao-<data>.json`. **Se a linha da evidencia nao
-apareceu, a corrida ainda pode ter ocorrido** — ver limite 3 da secao 5.
+`evidencia: ...execucao-<data>.json`.
 
 ### Os tres erros mais provaveis
 
 | Aparece | Significa | Faca |
 |---|---|---|
-| `erros=P1A-DECLARACAO-EXPIRADA`, provedores em `BLOCKED` | passou das 24 h — **e o mecanismo funcionando** | refaca o passo 1 |
-| `PARADA: preflight ... acima da janela de 24h` | checagem velha; veredito de ontem nao autoriza gasto de hoje | refaca o passo 3 |
-| `PARADA: lease da sessao operacional morto` | o terminal do passo 2 fechou ou nunca abriu | reabra o passo 2 |
+| tiers vencidos | passou das 24 h — **e o mecanismo funcionando** | confirme com `SIM` no lancador |
+| preflight vencido | veredito de ontem nao autoriza gasto de hoje | o lancador gera outro automaticamente |
+| escritor unico ocupado | outra operacao SSC+ ainda esta aberta | encerre a operacao anterior e abra novamente |
 
 **Isto NAO e erro:** `attempt kimi/...: falha-quota` seguido de
 `attempt codex/...: sucesso` — a franquia do kimi acabou e a maquina trocou
@@ -143,9 +119,9 @@ a 890 bytes** nas cinco corridas — e independe do tipo de tarefa: em tarefa
 grande some no meio, em tarefa pequena **e** o numero inteiro. E resposta
 curta nao e resposta melhor: a medicao nao olha o conteudo.
 
-**Custa uma tentativa perdida** pedir `--capacidade volume`,
-`contexto-extenso` ou `engenharia-reversa`: puxam o kimi, cuja franquia
-acabou.
+Se uma capacidade preferida apontar para uma assinatura sem quota, ela pode
+custar uma tentativa antes do fallback. O preflight atual, e nao a medicao
+historica de 2026-08-03, define essa disponibilidade.
 
 ## 5. O que ele ainda nao e
 
@@ -160,14 +136,16 @@ acabou.
    resposta e antes de gravar — franquia gasta, recibo inexistente. Foi
    consertado, mas a ordem entre "imprimir" e "gravar" segue sem guarda:
    outro imprevisto no mesmo ponto abre o mesmo buraco.
-4. **A franquia do kimi esta esgotada** — `kimi -p` nunca foi validado num
-   caminho de sucesso. Na pratica, a frota e **so codex**.
-5. **Nao ha contagem de token** — nenhum CLI reporta; o campo sai vazio e o
-   placar interno conta ausencia como zero, rotulando o total `simulado`.
+4. **A evidencia de sucesso do Kimi continua faltando** — as corridas de
+   2026-08-03 encontraram quota esgotada; isso nao descreve a quota atual.
+5. **Nao ha metrica de token comparavel** — Google reporta sua telemetria;
+   Codex, Claude e Kimi nao entregam aqui o mesmo campo estruturado.
 6. **Voce sabe qual modelo foi escolhido, nao qual respondeu** — o CLI nao
    ecoa isso, e o guarda de divergencia nao dispara.
-7. **claude, google e grok nao entram**; google e grok nunca foram sondados.
-8. **A tarefa vai sozinha** — nenhum contexto adicional acompanha o prompt.
+7. **Claude e Google entram automaticamente em modo supervisionado e
+   somente leitura**; Grok continua fora da rota automatica.
+8. **O snapshot e parcial** — tem teto de 384 KiB e declara quais arquivos
+   entraram ou ficaram de fora; nao equivale a acesso integral ao disco.
 
 ## 6. Onde vive cada coisa
 
@@ -180,27 +158,24 @@ acabou.
 | `08_p2/frota_medida.py` | veredito → rotas, com o que ficou de fora |
 | `08_p2/provedor_assinatura.py` | chama o CLI e classifica a falha |
 | `08_p2/runner_p2.py` | o comando que voce digita; grava o recibo |
+| `ssc_plus.py` / `SSC-Plus.cmd` | lancador unico: lease, preflight e runner |
+| `08_p2/contexto_workspace.py` | snapshot read-only limitado e redigido |
 | `08_p2/medidor.py` | a medicao em bytes, com os 9 limites embutidos |
 | `08_p2/README.md` | a fronteira medida, antes dos comandos |
 | `08_p2/evidencias/` · `07_p1b/evidencias/` | recibos de corridas e preflights |
 
-## 7. Onde o texto promete mais que o codigo entrega
+## 7. Onde a garantia ainda termina
 
-1. **"read-only" e sobre o SSC+, nao sobre o CLI.** O envelope interno nasce
-   `pode_escrever: False` e o runner nunca aplica patch. Mas o SSC+ **nao
-   passa nenhuma restricao de escrita ao programa invocado**: o comando e
-   `<executavel> exec <sua tarefa>`, rodando na pasta do repositorio. Se o
-   CLI resolver escrever arquivo, nada aqui o impede.
-2. **O README da raiz promete codex *e* kimi; a medicao entrega so codex.**
-   Ele nao registra que o kimi jamais completou uma corrida; o README da P2
-   registra.
-3. **Nao existe comando para reproduzir a medicao.** `08_p2/medidor.py` e
-   biblioteca, sem entrada de linha de comando; os numeros sairam de script
-   de sessao que **nao esta no repositorio**. Os `medicao-p2*.json` guardam
-   o resultado, nao a receita.
-4. **O indice da raiz esta desatualizado** — lista so
-   `08_p2/99_registro-p2.md`, e os registros da P2.1 e da P2.2, de onde vem
-   os numeros da fronteira, nao aparecem.
+1. **A restricao nao e uniforme.** Codex recebe sandbox read-only; Claude,
+   plan mode; Google, plan+sandbox. O Kimi medido nao oferece flag equivalente
+   e depende do diretorio descartavel e da vigilancia por manifesto.
+2. **Modelo escolhido nao e modelo atestado.** O SSC+ fixa o ID no argv, mas
+   Claude e Google nao devolvem uma identidade estruturada do modelo realmente
+   servido.
+3. **O contexto tem orcamento.** Arquivo fora dos 384 KiB selecionados, acima
+   do limite individual, binario ou recusado por segredo nao chega ao modelo.
+4. **Nao existe certificacao independente.** Testes, reversoes e corridas
+   comprovam o comportamento observado; nao fecham os achados por autoridade.
 
 > Documento descritivo: nao certifica, nao corrige, nao abre missao.
 > Nenhum provedor foi invocado para escreve-lo; custo variavel zero.

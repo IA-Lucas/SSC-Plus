@@ -1,4 +1,4 @@
-# Threat Model — SSC+ P0 (0.2.1)
+# Threat Model — SSC+ P0/P2
 
 > Declaração explícita do que os mecanismos de integridade da P0 **fazem** e
 > **não fazem**. Escopo: laboratório offline, isolado, sem rede, sem
@@ -56,3 +56,27 @@ ambiente lida no momento do uso):
 | HMAC selo | edição por quem não tem a chave | atacante com a chave |
 | Lock + fencing token | escritor concorrente/obsoleto | titular malicioso do lock |
 | Scanner IC-4 | padrões conhecidos de segredo | segredos fora dos padrões |
+
+## 5. Extensao P2 (2026-08-11)
+
+- O scanner IC-4 roda sobre a **entrada integral** antes do primeiro
+  attempt, sobre a **saida integral** antes do CAS e dentro do proprio
+  `CAS.gravar`. O resumo de 4.000 caracteres da WorkUnit nao e fronteira
+  de seguranca.
+- Entrada e saida produtivas tem teto de 1 MiB. A captura do subprocesso
+  drena stdout/stderr em paralelo, conserva no maximo 1 MiB por canal e
+  devolve falha de contrato quando excede o teto.
+- Recibos rastreados nao persistem texto da resposta: somente tamanho e
+  SHA-256. O CAS do lab ainda persiste conteudo aceito em claro, dentro de
+  `08_p2/saidas/`, ignorado pelo Git. **Nao ha criptografia em repouso.**
+- O preflight tem schema fechado e HMAC SHA-256 com chave local em
+  `locks/preflight-hmac.key`; a janela nunca excede 24 h. Isso detecta
+  edicao casual ou por processo sem a chave. Nao autentica contra outro
+  processo do mesmo usuario, que pode ler a chave.
+- Um mutex de arquivo separado serializa runners P2, e nomes incluem
+  microssegundos mais aleatoriedade. Isso evita colisao/concorrencia
+  acidental; nao impede um titular malicioso do mesmo usuario.
+- `--tarefa-arquivo` aceita somente arquivo contido na raiz real do
+  repositorio e recusa symlink/junction. Texto passado diretamente pela
+  CLI continua visivel ao sistema operacional e ao historico do shell;
+  para conteudo sensivel, a P2 nao oferece canal seguro e deve ser parada.

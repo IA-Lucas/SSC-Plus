@@ -37,7 +37,7 @@ repositorio e `experimental / provisorio / sem autoridade`.
 | D8 | [04_integracao/08_protocolo-de-integracao.md](04_integracao/08_protocolo-de-integracao.md) | Snapshot canonico → SSC+ → evidencia → Goal competente → promocao |
 | — | [99_decisao-ssc-01.md](99_decisao-ssc-01.md) | Validacao da missao e decisao (READY-FOR-SSC-0.2 / ADJUST / BLOCKED / STOP) |
 
-## Fase P2 — a frota executa (aberta em 2026-08-03)
+## Fase P2 — frota supervisionada ativa
 
 | Documento | Conteudo |
 |---|---|
@@ -45,10 +45,35 @@ repositorio e `experimental / provisorio / sem autoridade`.
 | [08_p2/README.md](08_p2/README.md) | **Como usar**: declarar tier → lease + preflight → despachar tarefa |
 | [08_p2/99_registro-p2.md](08_p2/99_registro-p2.md) | Registro da missao, achados por familia e limites declarados |
 
-Invocacao produtiva por `codex` e `kimi`, dentro da capsula, em modo
-supervisionado, com custo variavel externo **zero**. `claude`, `google` e
-`grok` permanecem `SUPERVISED`. Nenhuma revisao independente foi feita
-sobre a P2 — quem construiu nao certifica.
+O mecanismo admite `codex`, `claude`, `kimi` e `google` dentro da capsula,
+em modo supervisionado e somente leitura, com custo variavel externo
+**zero**. Em **2026-08-11**, tiers e preflight foram renovados e Claude e
+Google tiveram caminho produtivo medido. Renovar declaracoes continua sendo
+ato do proprietario; codigo nenhum o faz por conta propria. `grok` permanece
+`SUPERVISED`, fora da rota automatica. Nenhuma revisao independente
+certificou este hardening — quem corrigiu nao certifica.
+
+Entrada recomendada no Windows: duplo clique em `SSC-Plus.cmd` ou, no
+PowerShell, `.\SSC-Plus.cmd`. O lancador administra lease, validade de tiers,
+preflight, snapshot read-only do workspace, roteamento e recibo; confirmacao de
+tier vencido continua sendo ato humano explicito.
+
+O menu agora expoe quatro operacoes: analisar projeto, corrigir problema,
+implementar funcionalidade e revisar alteracao. O fluxo usa Kimi para contexto
+extenso, Codex como autor, Claude como revisor e Google como juiz, seguido de
+testes locais. Mudancas sao propostas e testadas em copia; a aplicacao exige
+aprovacao explicita separada por token.
+
+## Verificacao unica
+
+```powershell
+python scripts/verificar.py
+```
+
+O comando registra os quatro campos de plataforma, roda P0 e P1-A/P2 em
+processos separados, executa a prova central e confere as cinco receitas.
+Python suportado: `>=3.14,<3.15`; dependencias de teste estao fixadas em
+`requirements-dev.txt`. A mesma entrada e usada pela CI do repositorio.
 
 ## Fontes (somente leitura)
 
@@ -69,9 +94,11 @@ Snapshots de hash reproduziveis em [01_fontes/snapshots/](01_fontes/snapshots/).
    API paga, instalacao de dependencias, execucao de codigo legado, agente
    oficial. **Emendado em 2026-08-03** pelo ato soberano
    [08_p2/00_ato-soberano-p2.md](08_p2/00_ato-soberano-p2.md), que abre a fase
-   P2 e libera runtime e invocacao produtiva **somente** por `codex` e `kimi`,
-   somente dentro da capsula, somente em modo supervisionado. **Chamada de API
-   paga continua PROIBIDA** — a politica economica nao foi tocada.
+   P2 e libera runtime e invocacao produtiva na capsula, em modo
+   supervisionado. Confirmacao operacional do proprietario em 2026-08-11
+   acrescentou `claude` e `google` a `codex` e `kimi`; `grok` continua fora.
+   **Chamada de API paga continua PROIBIDA** — a politica economica nao foi
+   tocada.
 4. Nenhum ID canonico (FND/ADR/RFC/CAP/DEP/...) e criado aqui. Prefixos `SSC-*` sao
    locais e nao existem no espaco canonico.
 5. Nada experimental sobe para o canonico automaticamente — ver D8.
