@@ -91,7 +91,7 @@ medicao, nao alcance de guarda), para a revisao independente.
 | interpretador | Python 3.14.3 |
 | pytest | 9.1.1 |
 | `core.autocrlf` | true |
-| usuario da estacao | `IA Lucas` |
+| usuario da estacao | o historico do acervo (8 caracteres, com espaco) — **nao escrito literal**, porque os guardas `ZeroPii` derivam o alvo dele e reprovam o nome em artefato rastreado; declara-se por descricao, como o handoff de 2026-08-09 ja fazia |
 
 Suite de verificacao rapida nesta estacao, apos as medicoes e com a
 arvore restaurada: `python scripts/verificar.py --rapido` → **OK, 986
