@@ -1,0 +1,1195 @@
+{
+  "aplicado": false,
+  "capsula_violacoes": [],
+  "fluxo_id": "20260812T125405426105Z",
+  "gerado_em_utc": "2026-08-12T12:54:05.426130+00:00",
+  "lease": {
+    "fence": 30,
+    "sessao": "ssc-plus-ui"
+  },
+  "motivo": "contextualizar/kimi nao concluiu: assinaturas esgotadas/indisponiveis; STOP_WAIT_RESET, nunca PAYG",
+  "operacao": "analisar",
+  "pedido_sha256": "fd341aac91bb26de46067bb0c9aa96dc5ae69828bcfaa0f0ccb362b3b97b7310",
+  "preflight_idade_s": 55879,
+  "preflight_origem": "preflight-20260811T211742052426Z.json",
+  "qualidade_aprovada": false,
+  "registros_etapas": [
+    {
+      "attempts": [
+        {
+          "attempt_id": "0bc376fd388f42649fedcd7ebaa0d088",
+          "custo_medido": {
+            "rotulo": "medido-assinatura",
+            "tokens_reportados": null,
+            "valor": 0.0
+          },
+          "efeito_externo": "aplicado",
+          "executor_resolvido": {
+            "modelo": "kimi-code/k3",
+            "provedor": "kimi"
+          },
+          "resultado": "falha-contrato"
+        }
+      ],
+      "conteudo_saida_persistido": false,
+      "contexto_workspace": {
+        "arquivos_incluidos": [
+          {
+            "bytes": 1426,
+            "caminho": "08_p2/caminhos.py",
+            "sha256": "20eb0a3c3a448d04576fbb10f67c3cf34c3f6c3dacb706ae1e1f56f8201a3ab1"
+          },
+          {
+            "bytes": 1841,
+            "caminho": "08_p2/console.py",
+            "sha256": "54f0f71b4171da6c57f3d56613028da434795dda4fc1ab5ef9607d207aa5f3a2"
+          },
+          {
+            "bytes": 7543,
+            "caminho": "08_p2/contexto_workspace.py",
+            "sha256": "c330c99244dda81bfcbd57369f4a5f89acec2e025584d0108903b49dc66944f6"
+          },
+          {
+            "bytes": 7619,
+            "caminho": "08_p2/executar_fluxo.py",
+            "sha256": "cac7ccc310376d7832b78588965c5917947bb9ce3cdc5c7aaa8be51bbb3bbb36"
+          },
+          {
+            "bytes": 9792,
+            "caminho": "08_p2/frota_medida.py",
+            "sha256": "1742929888c823bc0f8655cdd5d0cc2a974f5152a2b11f2da2ccb3417b21f629"
+          },
+          {
+            "bytes": 13845,
+            "caminho": "08_p2/fluxo_controlado.py",
+            "sha256": "691ba611f0ea0f95620a6de7bb1d056ed39567efd55456124b236dc0843340fd"
+          },
+          {
+            "bytes": 24495,
+            "caminho": "08_p2/runner_p2.py",
+            "sha256": "d7a48f818ce32e14bdec5eca21fe0f353fbde10859099756ab269fe8ac67333b"
+          },
+          {
+            "bytes": 33934,
+            "caminho": "08_p2/provedor_assinatura.py",
+            "sha256": "3444821778730b27dbc23aa2ec6f8a944c618feba24f58824e8517dfeec70994"
+          },
+          {
+            "bytes": 35449,
+            "caminho": "08_p2/medidor.py",
+            "sha256": "538dd565aa122045df6cd464467c001b409e7ead4909c29e4e56a5d6f10dfa5e"
+          },
+          {
+            "bytes": 4353,
+            "caminho": "08_p2/100_ativacao-claude-google-20260811.md",
+            "sha256": "ec083a85d8e2246fa0e20cf04e9811178fecf2a7d1c2a5e3ef1cea91899bc741"
+          },
+          {
+            "bytes": 22369,
+            "caminho": "08_p2/README.md",
+            "sha256": "79dad432fb0e2e1439769e84386c793fd34ba1ee345d4fe4eb1ea67a36f37735"
+          },
+          {
+            "bytes": 224,
+            "caminho": "08_p2/receitas/prompt-p22-c.txt",
+            "sha256": "99e34bfed79a2253af0c3453e9b35775a3cbe842a56f22f36b21524e4e2bc8ec"
+          },
+          {
+            "bytes": 1149,
+            "caminho": "08_p2/receitas/p22-c-repeticao.json",
+            "sha256": "6e85e6dabcdf4a6b515bc235fef838096b896265b607cb24c450135365fff5b0"
+          },
+          {
+            "bytes": 1162,
+            "caminho": "08_p2/receitas/p22-b.json",
+            "sha256": "74550eaf86ff83d717345054d750ea437eef6ba611a5fa6193876a24f91e646d"
+          },
+          {
+            "bytes": 1310,
+            "caminho": "08_p2/receitas/p21.json",
+            "sha256": "ae327f45eb14be641206095761f015487cb473e06f546bb225fb241c95cf8cbf"
+          },
+          {
+            "bytes": 1359,
+            "caminho": "08_p2/receitas/p22-c.json",
+            "sha256": "f6a0aa919494da0b9b8f1f54c5aa158e625d54f1899d4e998394f3ed759fbe9c"
+          },
+          {
+            "bytes": 1410,
+            "caminho": "08_p2/receitas/p22-a.json",
+            "sha256": "c4ca8cdd42c180b1c2179c93a4aebef7c1cdd81fe4e9f1d785368134ccacb38d"
+          },
+          {
+            "bytes": 3694,
+            "caminho": "08_p2/102_fluxo-controlado-20260811.md",
+            "sha256": "e4873eac5dee6962063fae61e2148e98d5d0d3b38d9bf316add3613548174ca9"
+          },
+          {
+            "bytes": 3958,
+            "caminho": "08_p2/101_contexto-semantica-launcher-20260811.md",
+            "sha256": "38b6952bc516d2f83c55b2a329c7ff77cbe3bf7b54782871fd9e5a41087952dc"
+          },
+          {
+            "bytes": 5574,
+            "caminho": "08_p2/MEDIDAS.md",
+            "sha256": "e0b994c5c2130e9d336498e2bb33bbdeabf19a9fd5b7afbec94a66ac27b7460c"
+          },
+          {
+            "bytes": 5873,
+            "caminho": "08_p2/00_ato-soberano-p2.md",
+            "sha256": "1cd50ed351b08bcff0a5ba2bc941bc96657780ae76413e1dd2752cd0977ce216"
+          },
+          {
+            "bytes": 6867,
+            "caminho": "08_p2/99_hardening-prioridades-20260811.md",
+            "sha256": "d60b21c22441258910d75b8c09cd03d4919e10769d0cbb0f5444c2ba25b4cef1"
+          },
+          {
+            "bytes": 8898,
+            "caminho": "08_p2/99_achados-divergencias-20260803.md",
+            "sha256": "d5b7af8bb5d233cd85564565b623f28840ad38bb8009ec10ae95cd8ece34eb74"
+          },
+          {
+            "bytes": 9222,
+            "caminho": "08_p2/99_registro-p2.md",
+            "sha256": "95625ae945e00ecbe53cd338fe1dcfb2f8ab699b1a86f1c80291e66960ab901a"
+          },
+          {
+            "bytes": 9431,
+            "caminho": "08_p2/COMO-FUNCIONA.md",
+            "sha256": "500487fe08459729c368113d5f9eaff2f7d2205bf2e673f2b5580c5685267ba4"
+          },
+          {
+            "bytes": 9518,
+            "caminho": "08_p2/99_registro-p24.md",
+            "sha256": "0861ed1fe0b7e4e9229943ec3fd2df579545b496e47b262cebbed0aa34b123da"
+          },
+          {
+            "bytes": 12925,
+            "caminho": "08_p2/99_registro-p21.md",
+            "sha256": "3a7a759cc0232a085470a06e598f782c6cb5a32b016834be57ece271fa69fd92"
+          },
+          {
+            "bytes": 13443,
+            "caminho": "08_p2/99_registro-p23.md",
+            "sha256": "ced917e7b2a7a707d480ae20085ef3a971d6a96e28810016e738792542727afa"
+          },
+          {
+            "bytes": 16761,
+            "caminho": "08_p2/99_registro-p22.md",
+            "sha256": "1ca7bebfb0bfab7c8b6f5cbf60a0c6ea57247c8d4d81a36cae4fdf032bd1ee66"
+          },
+          {
+            "bytes": 14,
+            "caminho": "requirements-dev.txt",
+            "sha256": "93c4ab5f175d24229e46ec70a8ecaeb6db8b36e3f54d8005808044c060acbc92"
+          },
+          {
+            "bytes": 159,
+            "caminho": "pyproject.toml",
+            "sha256": "27c6e8c1d66afc25fc1756cdfa6c6a3c251320c92ba7cb1b97037a2eaaf2d986"
+          },
+          {
+            "bytes": 5916,
+            "caminho": "README.md",
+            "sha256": "132f6203711b5a34f71cf6ce1c942ab1444649768c56fe84a864506478ead1e5"
+          },
+          {
+            "bytes": 19950,
+            "caminho": "CLAUDE.md",
+            "sha256": "a292edb9c96084a9552337cd6f2b36bf562c2a7c369d93c58d99fd68ca8aac2a"
+          },
+          {
+            "bytes": 5697,
+            "caminho": "06_p1a/capsula.py",
+            "sha256": "06ae40f8c4c245b01102996fe4f70b38dec1272ae51ec0e273e7036e6513c378"
+          },
+          {
+            "bytes": 14287,
+            "caminho": "06_p1a/preflight/frota_real.py",
+            "sha256": "a92f8240e8c03d29276f87a98e3de312aecc3341009ac4d1bf502672f1f59de5"
+          },
+          {
+            "bytes": 14858,
+            "caminho": "05_p0/ssc_p0/execution.py",
+            "sha256": "00030f4278630ddea67966cc9f1c408b6a499f8463d23e12e427e3e4c94d58ac"
+          },
+          {
+            "bytes": 16909,
+            "caminho": "06_p1a/preflight/pipeline.py",
+            "sha256": "7bb9be777f476a74065fb8fbded98068547c2eaf63e103a8225aa51203347eb4"
+          },
+          {
+            "bytes": 20391,
+            "caminho": "05_p0/ssc_p0/frota.py",
+            "sha256": "54bdf18aa318d471807556abe09107e92c5fba110d80b55010c8b49ca3a16e09"
+          },
+          {
+            "bytes": 1958,
+            "caminho": "06_p1a/preflight/__init__.py",
+            "sha256": "aa0eeb0e9b20e71116fd67e5b0f736026ba9a0cd22921c305cb955a485130ade"
+          },
+          {
+            "bytes": 2298,
+            "caminho": "06_p1a/processo_arvore.py",
+            "sha256": "74618abe5bfad38a84af4e59a4fd88eda642304ee4c202f7327a6fe1a8a00745"
+          },
+          {
+            "bytes": 144,
+            "caminho": "05_p0/cenarios/fixtures/to2/repo/util.py",
+            "sha256": "4b47a1672581affe376e066e2774d5a9095f114c3d7b106b3bafae34182645af"
+          },
+          {
+            "bytes": 232,
+            "caminho": "05_p0/ssc_p0/__init__.py",
+            "sha256": "5ee62dc6e8a763e300bb2a32e4f11895eede995dcd5018ed9350c5d0a0057087"
+          }
+        ],
+        "bytes": 393193,
+        "conteudo_persistido_no_recibo": false,
+        "exclusoes": [
+          {
+            "caminho": "05_p0/ssc_p0/contratos.py",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "05_p0/ssc_p0/kernel.py",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "06_p1a/leitor_tiers.py",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "06_p1a/escritor.py",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "06_p1a/preflight/sombra.py",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "06_p1a/renovar_tiers.py",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "06_p1a/seguranca_artefatos.py",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "06_p1a/escritor_repositorio.py",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "06_p1a/preflight_capsula.py",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "06_p1a/leitores_config.py",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "06_p1a/preflight/economia.py",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "06_p1a/preflight/adaptadores.py",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "05_p0/cenarios/fixtures/to2/repo/kernel.py",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "05_p0/ssc_p0/confidencialidade.py",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "05_p0/ssc_p0/canonico.py",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "05_p0/cenarios/cobertura.py",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "05_p0/ssc_p0/estados.py",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "05_p0/ssc_p0/writelock.py",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "05_p0/ssc_p0/evidence.py",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "05_p0/cenarios/comum.py",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "05_p0/ssc_p0/eventlog.py",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "05_p0/ssc_p0/cas.py",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "05_p0/ssc_p0/policy.py",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "05_p0/ssc_p0/providers.py",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "05_p0/ssc_p0/catalogo.py",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "05_p0/ssc_p0/judge.py",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "05_p0/cenarios/prova_central.py",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "05_p0/ssc_p0/router.py",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "05_p0/cenarios/corridas_to.py",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "SSC-Plus.cmd",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "conftest.py",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "scripts/verificar.py",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "ssc_plus.py",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "07_p1b/preflight_atual.py",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "06_p1a/README.md",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "05_p0/README.md",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "memoria/README.md",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "03_prova/tarefas-ouro/README.md",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "scratchpad/README.md",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "06_p1a/tiers_declarados.json",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "06_p1a/03_prova-minima.md",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "06_p1a/06_adendo-capsula-p1a2.md",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "06_p1a/02_auditoria-economica.md",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "06_p1a/99_correcao-p1a9a.md",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "06_p1a/99_declaracao-morta-p1a39.md",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "06_p1a/04_suite-preflight-e-correcoes.md",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "06_p1a/01_inventario-real.md",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "06_p1a/99_varredura-listas-p1a39.md",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "06_p1a/99_declaracoes-obrigatorias-p1a6.md",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "06_p1a/99_decisao-p1a2.md",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "06_p1a/07_adendo-emendas-p1a3.md",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "06_p1a/99_decisao-p1a35.md",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "06_p1a/99_decisao-p1a.md",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "06_p1a/05_relatorio-estabilizacao-p1a1.md",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "06_p1a/99_remedicao-guardas-p1a38.md",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "06_p1a/99_decisao-p1a51.md",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "06_p1a/99_decisao-p1a38.md",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "06_p1a/99_decisao-p1a3.md",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "06_p1a/99_decisao-p1a37.md",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "06_p1a/99_decisao-p1a34.md",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "06_p1a/99_achados-governanca-20260731.md",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "06_p1a/99_decisao-p1a32.md",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "06_p1a/99_decisao-p1a31.md",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "06_p1a/99_decisao-p1a4.md",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "06_p1a/99_decisao-p1a9.md",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "06_p1a/99_decisao-p1a33.md",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "06_p1a/99_decisao-p1a5.md",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "06_p1a/99_decisao-p1a8.md",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "06_p1a/99_varredura-guardas-p1a35.md",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "06_p1a/99_decisao-p1a36.md",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "06_p1a/99_decisao-p1a6.md",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "06_p1a/99_decisao-p1a7.md",
+            "motivo": "politica-de-segredo"
+          },
+          {
+            "caminho": "05_p0/cenarios/fixtures/to1/entrada.txt",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "05_p0/cenarios/fixtures/to1/oraculo.txt",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "05_p0/cenarios/fixtures/to2/repo/notas.txt",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "05_p0/cenarios/fixtures/to3/semente.json",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "05_p0/THREAT-MODEL.md",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": ".github/workflows/verificacao.yml",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "03_prova/tarefas-ouro/TO-1-deterministica.md",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "03_prova/tarefas-ouro/TO-4-decomposicao.md",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "03_prova/tarefas-ouro/TO-2-contextual.md",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "pytest.ini",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "03_prova/tarefas-ouro/TO-3-julgamento.md",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "03_prova/tarefas-ouro/TO-5-adversarial.md",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "logs/2026-07-30_missao-ssc-01.md",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "logs/prompt-revisao-0.2.1.md",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "00_governanca-experimental/99_decisao-ssc-04.md",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "logs/2026-07-30_missao-ssc-02.md",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "02_alvo/09_frota-subscription-only.md",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "04_integracao/08_protocolo-de-integracao.md",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "logs/revisao-independente-0.2.1-claude.md",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "00_governanca-experimental/02_manifesto-de-isolamento.md",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "00_governanca-experimental/99_decisao-ssc-01.md",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "07_p1b/99_decisao-p1b02.md",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "00_governanca-experimental/01_carta-experimental.md",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "02_alvo/revisao-independente-d5-d6.md",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "docs/handoffs/2026-08-09-fechamento-estacao-secundaria.md",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "00_governanca-experimental/99_decisao-ssc-03.md",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "07_p1b/01_parada-preflight.md",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "03_prova/07_plano-de-prova.md",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "00_governanca-experimental/99_decisao-ssc-02.md",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "01_fontes/04_matriz-engenharia-reversa.md",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "02_alvo/06_arquitetura-alvo.md",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "07_p1b/99_decisao-p1b01.md",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "01_fontes/03_baseline-supercondutor.md",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "07_p1b/02_diagnostico-parada-p1b00.md",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "02_alvo/05_contratos-alvo.md",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "06_p1a/tests/test_contexto_workspace_p2.py",
+            "motivo": "politica-de-segredo"
+          },
+          {
+            "caminho": "06_p1a/tests/test_arvore_subprocesso_automatico.py",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "06_p1a/tests/test_lancador_ssc_plus.py",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "06_p1a/tests/test_plataforma_quatro_campos_p1a9b.py",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "06_p1a/tests/test_renovar_tiers.py",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "06_p1a/tests/test_ancoragem_gerador_p1a38.py",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "06_p1a/tests/test_fluxo_controlado_p2.py",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "06_p1a/tests/test_rotulo_contencao_p1a37.py",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "06_p1a/tests/test_quota_numerica_p1a37.py",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "06_p1a/tests/test_pacote_autoinclusao_p1a37.py",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "06_p1a/tests/apoio.py",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "06_p1a/tests/test_cobertura_pacote_p1a7.py",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "06_p1a/tests/test_redacao_p1a35.py",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "06_p1a/tests/test_gitignore_efetivo_p1a39.py",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "06_p1a/tests/citacoes_declaradas.py",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "06_p1a/tests/test_portao_tier_p1a35.py",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "06_p1a/tests/test_chaves_proibidas_p1a38.py",
+            "motivo": "politica-de-segredo"
+          },
+          {
+            "caminho": "06_p1a/tests/test_pacote_p1a33.py",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "06_p1a/tests/test_cli_real_p1a34.py",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "06_p1a/tests/test_pedido_de_julgamento_p1a37.py",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "06_p1a/tests/test_redacao_call_sites_p1a37.py",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "06_p1a/tests/test_sentinela_antip2_p1a37.py",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "06_p1a/tests/test_cobertura_falhas_p1a39.py",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "06_p1a/tests/test_diagnostico_corpus_p1a39.py",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "06_p1a/tests/test_endpoint_grafias_autorais_p1a39.py",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "06_p1a/tests/test_capsula_corpus_p1a39.py",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "06_p1a/tests/test_capsula_p1a2.py",
+            "motivo": "politica-de-segredo"
+          },
+          {
+            "caminho": "06_p1a/tests/test_via_gitbash_duplicada_p1a39.py",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "06_p1a/tests/test_falha_fechada_p1a37.py",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "06_p1a/tests/test_p1b_lease_p1a35.py",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "06_p1a/tests/test_rotulo_enforcement_p1a39.py",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "06_p1a/tests/test_pii_artefatos_p1a39.py",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "06_p1a/tests/test_p2_sentinela_emendada_p2.py",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "06_p1a/tests/test_economia.py",
+            "motivo": "politica-de-segredo"
+          },
+          {
+            "caminho": "06_p1a/tests/test_fronteira_escritor_p1a39.py",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "06_p1a/tests/test_grok_sqlite_p1a37.py",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "06_p1a/tests/test_pipeline.py",
+            "motivo": "politica-de-segredo"
+          },
+          {
+            "caminho": "06_p1a/tests/test_persistencia_lock_p1a37.py",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "06_p1a/tests/test_redacao_geradores_p1a39.py",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "06_p1a/tests/test_isolamento.py",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "06_p1a/tests/test_sentinela_n5_p1a37.py",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "06_p1a/tests/test_escritor_repositorio_p1a37.py",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "06_p1a/tests/test_portao_tier_operacao_p1a39.py",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "06_p1a/tests/test_p2_frota_medida_p2.py",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "06_p1a/tests/test_escritor_unico_adotado_p1a5.py",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "06_p1a/tests/test_adaptadores.py",
+            "motivo": "politica-de-segredo"
+          },
+          {
+            "caminho": "06_p1a/tests/test_leitor_config_p1a35.py",
+            "motivo": "politica-de-segredo"
+          },
+          {
+            "caminho": "06_p1a/tests/test_contencao_atribuicao_p1a37.py",
+            "motivo": "politica-de-segredo"
+          },
+          {
+            "caminho": "06_p1a/tests/test_preflight.py",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "06_p1a/tests/sentinela_antip2.py",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "06_p1a/tests/test_estabilizacao_p1a1.py",
+            "motivo": "politica-de-segredo"
+          },
+          {
+            "caminho": "06_p1a/tests/test_redacao_operacao_p1a39.py",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "06_p1a/tests/test_config_real_p1a39.py",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "06_p1a/tests/test_falhas_obrigatorias.py",
+            "motivo": "politica-de-segredo"
+          },
+          {
+            "caminho": "06_p1a/tests/test_p2_receita_medidor_p24.py",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "06_p1a/tests/test_p2_medidor_p21.py",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "06_p1a/tests/test_p1b01_runner.py",
+            "motivo": "politica-de-segredo"
+          },
+          {
+            "caminho": "06_p1a/tests/test_correcoes_p1a32.py",
+            "motivo": "politica-de-segredo"
+          },
+          {
+            "caminho": "06_p1a/tests/test_p2_runner_p2.py",
+            "motivo": "politica-de-segredo"
+          },
+          {
+            "caminho": "06_p1a/tests/test_emendas_p1a3.py",
+            "motivo": "politica-de-segredo"
+          },
+          {
+            "caminho": "06_p1a/tests/test_p2_protecao_no_mecanismo_p23.py",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "06_p1a/tests/test_p2_provedor_real_p2.py",
+            "motivo": "politica-de-segredo"
+          },
+          {
+            "caminho": "05_p0/tests/test_concorrencia.py",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "05_p0/tests/apoio.py",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "05_p0/tests/test_estados.py",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "05_p0/tests/test_p0_canonico_p1a37.py",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "05_p0/tests/test_eventlog.py",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "05_p0/tests/test_p0_catalogo_p1a37.py",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "05_p0/tests/test_workunits.py",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "05_p0/tests/test_p0_juiz1_p1a37.py",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "05_p0/tests/test_p0_evento_p1a37.py",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "05_p0/tests/test_p0_frota_p1a37.py",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "05_p0/tests/test_p0_cas_classe_p1a37.py",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "05_p0/tests/test_p0_tipo_p1a37.py",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "05_p0/tests/test_p0_nomes_maquinas_p1a39.py",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "05_p0/tests/test_p0_frota_entry_p1a37.py",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "05_p0/tests/test_p0_controlplane_p1a37.py",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "05_p0/tests/test_p0_router_p1a37.py",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "05_p0/tests/test_p0_cas_leitura_p1a37.py",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "05_p0/tests/test_seguranca.py",
+            "motivo": "politica-de-segredo"
+          },
+          {
+            "caminho": "05_p0/tests/test_crash.py",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "05_p0/tests/test_p0_juiz2_p1a37.py",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "05_p0/tests/test_policy.py",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "05_p0/tests/test_p0_eventlog_p1a37.py",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "05_p0/tests/test_juiz.py",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "05_p0/tests/test_p0_seq_booleana_p1a38.py",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "05_p0/tests/test_p0_adaptador_assinatura_p1a37.py",
+            "motivo": "politica-de-segredo"
+          },
+          {
+            "caminho": "05_p0/tests/test_p0_writelock_p1a37.py",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "05_p0/tests/test_p0_kernel_contexto_p1a38.py",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "05_p0/tests/test_p0_kernel_ciclos_p1a38.py",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "05_p0/tests/test_p0_kernel_decisao_p1a38.py",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "05_p0/tests/test_contratos.py",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "05_p0/tests/test_p0_kernel_attempt_p1a38.py",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "05_p0/tests/test_p0_estados_attempt_p1a39.py",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "05_p0/tests/test_p0_kernel_retomada_p1a38.py",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "05_p0/tests/test_p0_autorizacao_presa_p1a39.py",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "05_p0/tests/test_p0_kernel_p1a37.py",
+            "motivo": "politica-de-segredo"
+          },
+          {
+            "caminho": "05_p0/tests/test_p0_listas_presas_p1a39.py",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "05_p0/tests/test_p0_kernel_veredito_p1a38.py",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "05_p0/tests/test_recuperacao.py",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "05_p0/tests/test_frota.py",
+            "motivo": "politica-de-segredo"
+          },
+          {
+            "caminho": "05_p0/tests/test_p0_escrita_externa_p1a39.py",
+            "motivo": "orcamento-do-snapshot"
+          },
+          {
+            "caminho": "05_p0/tests/test_hardening.py",
+            "motivo": "orcamento-do-snapshot"
+          }
+        ],
+        "limite_bytes": 393216,
+        "quantidade_excluida": 210,
+        "quantidade_incluida": 42,
+        "raiz": ".",
+        "sha256": "cb85e628329b54272e0e15830d2844f1cc6c79ec1aa9e1df9b9f0c0170406014",
+        "tipo": "snapshot-textual-read-only"
+      },
+      "detalhe": "assinaturas esgotadas/indisponiveis; STOP_WAIT_RESET, nunca PAYG",
+      "efeito_externo_medido": [
+        {
+          "alcance_da_medicao": {
+            "lar_do_cli": "o lar do CLI (~/.kimi-code), onde a escrita e CONHECIDA e nao vigiada",
+            "medido": [
+              "diretorio descartavel desta invocacao (H:\\SSC-Plus\\locks\\descartaveis-p2\\p2-kimi-fkb5ebla)",
+              "repositorio (toda a arvore sob RAIZ, inclusive locks/ e .git)",
+              "fora: ~/.codex/auth.json",
+              "fora: ~/.codex/config.toml",
+              "fora: ~/.claude/settings.json",
+              "fora: ~/.kimi-code/config.toml",
+              "fora: ~/.gemini/settings.json",
+              "fora: ~/.grok"
+            ],
+            "nao_medido": [
+              "todo caminho fora do repositorio e fora das fontes de config declaradas",
+              "o lar do CLI (~/.kimi-code), onde a escrita e CONHECIDA e nao vigiada",
+              "o lado REMOTO do provedor: efeito no servico nao aparece em fotografia local"
+            ]
+          },
+          "argv_publico": [
+            "C:\\Users\\<USUARIO>/.kimi-code/bin/kimi",
+            "-p",
+            "<PROMPT>",
+            "-m",
+            "kimi-code/k3",
+            "--output-format",
+            "stream-json"
+          ],
+          "arquivos_no_manifesto_vigiado": 1595,
+          "contexto_no_descartavel": true,
+          "cwd_do_filho": "H:\\SSC-Plus\\locks\\descartaveis-p2\\p2-kimi-fkb5ebla",
+          "descartavel_existia_durante_invocacao": true,
+          "descartavel_removido_apos_medicao": true,
+          "dir_descartavel": "H:\\SSC-Plus\\locks\\descartaveis-p2\\p2-kimi-fkb5ebla",
+          "efeito_externo": "aplicado",
+          "efeito_externo_origem": "mutacao medida no disco",
+          "isolamento_kimi_fail_closed": {
+            "aplicavel": true,
+            "resposta_aceita": false,
+            "violado": true
+          },
+          "medida": "manifesto SHA-256 do diretorio descartavel e das raizes vigiadas, ANTES e DEPOIS da invocacao",
+          "modelo_fixado_no_argv": "kimi-code/k3",
+          "mutacoes_atribuidas_ao_renovador": [
+            "alterado: repositorio/locks/repositorio.lease"
+          ],
+          "mutacoes_fora_do_descartavel": [
+            "alterado: repositorio/.git/COMMIT_EDITMSG",
+            "alterado: repositorio/.git/index",
+            "alterado: repositorio/.git/logs/HEAD",
+            "alterado: repositorio/.git/logs/refs/heads/master",
+            "criado: repositorio/.git/objects/59/943647a2a33477011c202a9020fba93095b1fc",
+            "criado: repositorio/.git/objects/83/b62d9dfa94adca1ddef3a816a5f2cf9a489510",
+            "criado: repositorio/.git/objects/b1/f80da721fba5c38a2f68b629e46535d3ff7528",
+            "criado: repositorio/.git/objects/d5/bc991fd6279bed1fb09ec0cb16d92ccaaf2b7d",
+            "criado: repositorio/.git/objects/d7/af857a1f338d63e0651a7402c38c86a5247e10",
+            "criado: repositorio/.git/objects/db/75fe3e04e68f1358781d7e4f4539775a077f3b",
+            "alterado: repositorio/.git/refs/heads/master",
+            "criado: repositorio/06_p1a/99_correcao-p1a9b.md",
+            "alterado: repositorio/06_p1a/__pycache__/leitores_config.cpython-314.pyc",
+            "criado: repositorio/08_p2/103_julgamento-google-add-dir-20260812.md"
+          ],
+          "mutacoes_no_descartavel": [],
+          "nao_vigiado": "todo caminho fora do repositorio e fora das fontes de config declaradas",
+          "prompt_bytes": 393669,
+          "provider_id": "kimi",
+          "raizes_vigiadas": [
+            "repositorio (toda a arvore sob RAIZ, inclusive locks/ e .git)",
+            "fora: ~/.codex/auth.json",
+            "fora: ~/.codex/config.toml",
+            "fora: ~/.claude/settings.json",
+            "fora: ~/.kimi-code/config.toml",
+            "fora: ~/.gemini/settings.json",
+            "fora: ~/.grok"
+          ],
+          "restricao": "o CLI `kimi` NAO oferece restricao de filesystem em modo headless: nenhuma flag de restricao e emitida. O que resta e o diretorio de trabalho descartavel do processo filho e a deteccao por manifesto SHA-256 antes e depois da invocacao (`contencao.Vigilancia`) — deteccao declarada, jamais impedimento",
+          "telemetria_cli": {
+            "formato": "stream-json",
+            "mensagens_assistente": 2
+          },
+          "transporte_prompt": "arquivo-no-descartavel"
+        }
+      ],
+      "etapa": "contextualizar",
+      "provedor_exigido": "kimi",
+      "saida_bytes": 0,
+      "saida_sha256": null,
+      "sessao_id": "323a3ab3b3a946f1baf124e44cbfe2c5",
+      "status": "STOP_WAIT_RESET",
+      "work_unit_id": "9bbdde200bfd432cb58f910d09ba6154"
+    }
+  ],
+  "status": "recusado",
+  "tipo": "fluxo-controlado-ssc-plus"
+}
