@@ -11,6 +11,7 @@ resolvendo por caminho real.
 import os
 
 from .canonico import sha256_bytes
+from .confidencialidade import escanear_segredos
 
 
 class CorrupcaoDetectada(Exception):
@@ -129,6 +130,7 @@ class CAS:
         if not isinstance(dados, (bytes, bytearray)):
             raise TypeError("CAS.gravar aceita apenas bytes")
         dados = bytes(dados)
+        escanear_segredos(dados, "objeto do CAS")
         hash_hex = sha256_bytes(dados)
         destino = self._caminho(hash_hex)
         if os.path.islink(destino):

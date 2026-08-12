@@ -5,13 +5,12 @@ hoje dos 5 CLIs de assinatura. Nada aqui e executado — os comandos sao
 somente descritores de diagnostico usados pelos adaptadores via sensores.
 
 Regras da missao:
-- google: permanece SUPERVISED (automacao condicional ate prova do canal);
-  NAO reutilizar OAuth em cliente nao autorizado.
+- google: usa o CLI oficial Antigravity (`agy`) e somente a franquia da
+  assinatura; API/creditos extras continuam proibidos.
 - grok: permanece SUPERVISED; somente cached token da assinatura, NUNCA
   XAI_API_KEY, nunca api.x.ai PAYG; unattended = TERMS_REVIEW_REQUIRED.
-- claude (emenda P1-A.3, item 4): permanece SUPERVISED enquanto nao
-  houver modelo exato observado por fonte oficial nao interativa; o plano
-  Max, isoladamente, nao basta.
+- claude: o modelo exato vem da configuracao persistida do proprio CLI e
+  e fixado novamente em toda invocacao produtiva.
 
 Nenhum caminho local e embutido no fonte: o executavel do Codex usa a
 forma com `~`, expandida SOMENTE no momento da sonda
@@ -23,6 +22,7 @@ relatorios, nem as excecoes carregam o diretorio do usuario local
 from dataclasses import dataclass
 
 _CODEX_EXE = "~/AppData/Local/Programs/OpenAI/Codex/bin/codex.exe"
+_AGY_EXE = "~/AppData/Local/agy/bin/agy.exe"
 
 # Marcador trocado pelo diretorio descartavel NO MOMENTO DA INVOCACAO
 # (P2.3). A especificacao e estatica e o descartavel so existe quando a
@@ -54,11 +54,10 @@ class EspecProvedor:
                                     # a descoberta (teto SUPERVISED)
     billing_mode: str = "subscription"
     variable_cost: float = 0.0
-    teto_resultado: str = "ELIGIBLE"  # google/grok/claude: "SUPERVISED"
+    teto_resultado: str = "ELIGIBLE"  # grok: "SUPERVISED"
     automacao: str = "allow-supervised"
-    # ZERO sondas automaticas (emenda P1-A.3, item 5): google/grok sao
-    # classificados estaticamente no teto, sem nenhum sensor — nem
-    # versao, nem login, nem modelos.
+    # Provedor sem canal diagnostico automatizavel fica classificado
+    # estaticamente no teto, sem sensor de versao/login/modelos.
     sondas_automaticas: bool = True
     observacoes: str = ""
     # Flags de restricao REAL que o CLI oferece em modo headless, emitidas
@@ -69,6 +68,17 @@ class EspecProvedor:
     # P1-A.3.4). Contem `MARCA_DESCARTAVEL` onde entra o diretorio
     # descartavel da invocacao.
     restricao_headless: tuple = ()
+    flag_modelo: tuple = ()
+    # Formato de saida exigido no caminho produtivo. Separado das flags de
+    # restricao para que telemetria/parse nao seja rotulada como sandbox.
+    formato_saida_headless: tuple = ()
+    caminho_modelo_config: tuple = ()
+    # Alguns CLIs (`agy`, `kimi`) exigem o texto logo apos `-p`; outros
+    # (codex, claude) aceitam/esperam flags antes do argumento posicional.
+    prompt_antes_das_flags: bool = False
+    # No Windows, prompts grandes excedem o limite da linha de comando.
+    # Codex e Claude documentam leitura por stdin em modo print/exec.
+    prompt_via_stdin: bool = False
 
 
 ESPECIFICACOES: dict[str, EspecProvedor] = {
@@ -103,34 +113,36 @@ ESPECIFICACOES: dict[str, EspecProvedor] = {
         restricao_headless=("--sandbox", "read-only",
                             "--cd", MARCA_DESCARTAVEL,
                             "--skip-git-repo-check", "--ephemeral"),
+        flag_modelo=("--model",),
+        prompt_via_stdin=True,
         observacoes="automacao: allow (supervised headless); billing "
                     "subscription; variable_cost 0"),
     "claude": EspecProvedor(
         provider_id="claude", cli="claude", versao_esperada="2.1.220",
-        executavel="~/.local/bin/claude",
+        executavel="~/.local/bin/claude.exe",
         canal_oficial="claude.ai OAuth (`claude auth status` devolve JSON "
                       "com subscriptionType)",
         headless=("-p",), acp=None,
         plano_esperado="Claude Max 5x",
         planos_aceitos=("claude max 5x", "claude max", "max"),
-        modelos_esperados=("claude-opus", "claude-sonnet"),
+        modelos_esperados=("claude-",),
         auth_esperada="subscription-oauth",
         chaves_payg_relacionadas=("ANTHROPIC_API_KEY",
                                   "ANTHROPIC_AUTH_TOKEN"),
         comandos={"versao": ("--version",),
                   "login": ("auth", "status"),
-                  # Emenda P1-A.3, item 4 (NAO APROVADA POR DECLARACAO):
-                  # claude permanece SUPERVISED enquanto nao houver modelo
-                  # exato observado por fonte oficial NAO INTERATIVA —
-                  # `claude models` e interativo (bloqueio factual da
-                  # P1-A.2) e o plano Max, isoladamente, nao basta. Sem
-                  # sonda de modelos (None desativa a descoberta).
+                  # `claude models` continua interativo. O modelo exato
+                  # vem da configuracao persistida oficial do proprio CLI.
                   "modelos": None},
-        teto_resultado="SUPERVISED",
-        automacao="supervised-only",
-        observacoes="headless `claude -p`; billing subscription; emenda "
-                    "P1-A.3: SUPERVISED ate modelo exato observado por "
-                    "fonte oficial nao interativa"),
+        restricao_headless=("--permission-mode", "plan",
+                            "--no-session-persistence",
+                            "--disable-slash-commands"),
+        flag_modelo=("--model",),
+        caminho_modelo_config=("model",),
+        prompt_via_stdin=True,
+        observacoes="headless `claude -p`; modelo observado na config e "
+                    "fixado por argv; permission-mode plan; billing "
+                    "subscription"),
     "kimi": EspecProvedor(
         provider_id="kimi", cli="kimi", versao_esperada="0.30.0",
         executavel="~/.kimi-code/bin/kimi",
@@ -145,6 +157,13 @@ ESPECIFICACOES: dict[str, EspecProvedor] = {
         comandos={"versao": ("--version",),
                   "login": ("provider", "list"),
                   "modelos": ("provider", "list")},
+        flag_modelo=("-m",),
+        formato_saida_headless=("--output-format", "stream-json"),
+        # O Commander do kimi exige o argumento de -p imediatamente depois
+        # da flag. `kimi -p -m <modelo> <prompt>` interpreta o modelo como
+        # comando e responde `unknown command`; a forma aceita e
+        # `kimi -p <prompt> -m <modelo>`.
+        prompt_antes_das_flags=True,
         # `restricao_headless` fica VAZIA de proposito, e a ausencia e o
         # achado: o kimi 0.30.0 devolve `unknown option '--sandbox'` e
         # recusa `--plan` junto com `-p` (medido na P1-A.3.4, nao lido em
@@ -153,28 +172,27 @@ ESPECIFICACOES: dict[str, EspecProvedor] = {
         observacoes="4 modelos via provider list; ACP disponivel "
                     "(`kimi acp`); billing subscription"),
     "google": EspecProvedor(
-        provider_id="google", cli="gemini", versao_esperada="0.52.0",
-        executavel="gemini",  # npm
-        canal_oficial="oauth-personal (security.auth.selectedType em "
-                      "~/.gemini/settings.json)",
-        headless=("-p",), acp=("--acp",),
+        provider_id="google", cli="agy", versao_esperada="1.1.12",
+        executavel=_AGY_EXE,
+        canal_oficial="Google Antigravity CLI oficial, quota da assinatura "
+                      "observada por `/quota` sem turno de modelo",
+        headless=("-p",), acp=None,
         plano_esperado="Google AI Pro",
         planos_aceitos=("google ai pro", "ai pro"),
         modelos_esperados=("gemini",),
         auth_esperada="subscription-oauth",
         chaves_payg_relacionadas=("GEMINI_API_KEY", "GOOGLE_API_KEY"),
-        comandos={"versao": ("--version",),
-                  "login": ("auth", "status"),
-                  # Emenda P1-A.3, item 5: ZERO sondas automaticas de
-                  # modelos para google (classificacao estatica; as
-                  # sondas via Git Bash penduram — P1-A.2 §5).
-                  "modelos": None},
-        teto_resultado="SUPERVISED",
-        automacao="supervised-only",
-        sondas_automaticas=False,
-        observacoes="regra da missao: permanece SUPERVISED (automacao "
-                    "condicional ate prova do canal); NAO reutilizar OAuth "
-                    "em cliente nao autorizado"),
+        comandos={"versao": ("changelog",),
+                  "login": ("-p", "/quota", "--output-format", "json",
+                            "--mode", "plan"),
+                  "modelos": ("models",)},
+        restricao_headless=("--output-format", "json", "--mode", "plan",
+                            "--sandbox", "--disable-slash-commands"),
+        flag_modelo=("--model",),
+        prompt_antes_das_flags=True,
+        observacoes="canal oficial Antigravity; quota de assinatura e "
+                    "modelos Gemini observados sem turno produtivo; "
+                    "plan+sandbox; API/creditos extras proibidos"),
     "grok": EspecProvedor(
         provider_id="grok", cli="grok", versao_esperada="1.1.7",
         executavel="grok",  # npm

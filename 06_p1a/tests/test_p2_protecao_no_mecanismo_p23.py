@@ -74,6 +74,16 @@ _FLAGS_ESPERADAS_CODEX = ("--sandbox", "read-only", "--cd",
                           "--skip-git-repo-check", "--ephemeral")
 
 
+def provedor_real(espec, **kwargs):
+    """Executor sob teste sempre com model_id observado explicitamente."""
+    modelos = {"codex": "gpt-5.6-sol", "kimi": "kimi-code/k3",
+               "claude": "claude-fable-5[1m]",
+               "google": "gemini-3.6-flash-high"}
+    kwargs.setdefault("model_id", modelos.get(espec.provider_id,
+                                               "modelo-teste"))
+    return pa.ProvedorAssinaturaReal(espec, **kwargs)
+
+
 class SensorQueEscreve:
     """Sensor falso que ESCREVE onde mandarem, e devolve sucesso.
 
@@ -89,7 +99,8 @@ class SensorQueEscreve:
         self.resposta = (rc, out, err)
         self.chamadas = []
 
-    def __call__(self, argv, env=None, timeout=None, cwd=None):
+    def __call__(self, argv, env=None, timeout=None, cwd=None,
+                 entrada_stdin=None):
         self.chamadas.append({"argv": list(argv), "cwd": cwd})
         destino = self.alvo or cwd
         with open(os.path.join(destino, self.nome), "w",
@@ -115,8 +126,8 @@ class RestricaoNoArgv(unittest.TestCase):
         tmp = tempfile.mkdtemp(prefix="p23-vigiado-")
         self.addCleanup(shutil.rmtree, tmp, True)
         sensor = SensorObrigatorio(**{provider_id: (0, "ok", "")})
-        p = pa.ProvedorAssinaturaReal(espec_de(provider_id), sensor=sensor,
-                                      vigia=vigia_de(tmp))
+        p = provedor_real(espec_de(provider_id), sensor=sensor,
+                          vigia=vigia_de(tmp))
         p.invocar(b"a tarefa")
         return sensor.chamadas[0]["argv"], sensor.chamadas[0]["cwd"], p
 
@@ -141,7 +152,8 @@ class RestricaoNoArgv(unittest.TestCase):
         argv, cwd, _ = self.argv_de_producao()
         valor_cd = argv[argv.index("--cd") + 1]
         self.assertEqual(valor_cd, cwd)
-        self.assertTrue(os.path.isdir(cwd), f"descartavel inexistente: {cwd}")
+        self.assertFalse(os.path.exists(cwd),
+                         "descartavel sensivel ficou retido apos a medicao")
         self.assertNotEqual(os.path.abspath(cwd),
                             os.path.abspath(caminhos.RAIZ))
 
@@ -161,13 +173,16 @@ class RestricaoNoArgv(unittest.TestCase):
                             p.medicoes[1]["dir_descartavel"])
         self.assertEqual(p.medicoes[0]["dir_descartavel"], cwd1)
 
-    def test_o_kimi_nao_ganha_flag_que_o_CLI_nao_tem(self):
+    def test_o_kimi_nao_ganha_sandbox_e_exige_saida_estruturada(self):
         # Medido na P1-A.3.4: `--sandbox` e `unknown option` no kimi.
         # Emitir a flag nao restringiria a corrida — a IMPEDIRIA.
         argv, cwd, _ = self.argv_de_producao("kimi")
-        self.assertEqual(argv[1:], ["-p", "a tarefa"])
+        self.assertEqual(argv[1:],
+                         ["-p", "a tarefa", "-m", "kimi-code/k3",
+                          "--output-format", "stream-json"])
+        self.assertNotIn("--sandbox", argv)
         # O que o kimi TEM continua valendo: o filho corre no descartavel.
-        self.assertTrue(os.path.isdir(cwd))
+        self.assertFalse(os.path.exists(cwd))
         self.assertNotEqual(os.path.abspath(cwd),
                             os.path.abspath(caminhos.RAIZ))
 
@@ -231,13 +246,14 @@ class DiretorioDeTrabalhoDoFilho(unittest.TestCase):
                         and os.remove(self.na_raiz))
 
     def espec_python(self):
-        return dataclasses.replace(espec_de("codex"),
-                                   executavel=sys.executable,
-                                   headless=("-c",), restricao_headless=())
+        return dataclasses.replace(
+            espec_de("codex"), executavel=sys.executable,
+            headless=("-c", "import sys;exec(sys.argv[-1])"),
+            restricao_headless=())
 
     def test_escrita_relativa_do_filho_NAO_cai_na_raiz_do_repositorio(self):
-        p = pa.ProvedorAssinaturaReal(self.espec_python(),
-                                      vigia=vigia_de(self.vigiado))
+        p = provedor_real(self.espec_python(),
+                          vigia=vigia_de(self.vigiado))
         r = p.invocar(f"open({self.NOME!r}, 'w').write('do filho')"
                       .encode("utf-8"))
         self.assertTrue(r.ok, r.saida)
@@ -247,14 +263,16 @@ class DiretorioDeTrabalhoDoFilho(unittest.TestCase):
             "o filho escreveu na RAIZ DO REPOSITORIO: e o achado A, e o "
             "alvo pode ser `locks/`, o fonte dos guardas ou a evidencia")
         descartavel = p.medicoes[0]["dir_descartavel"]
-        self.assertTrue(os.path.exists(os.path.join(descartavel, self.NOME)),
-                        "a escrita nao caiu no descartavel: ou o filho nao "
-                        "escreveu, ou escreveu em lugar nao medido")
+        self.assertTrue(any(self.NOME in item for item in
+                            p.medicoes[0]["mutacoes_no_descartavel"]),
+                        "a escrita relativa nao apareceu no manifesto")
+        self.assertFalse(os.path.exists(descartavel),
+                         "descartavel sensivel ficou retido apos a medicao")
 
     def test_o_filho_confirma_o_proprio_cwd(self):
         # Contraprova direta, pela boca do filho: ele imprime onde esta.
-        p = pa.ProvedorAssinaturaReal(self.espec_python(),
-                                      vigia=vigia_de(self.vigiado))
+        p = provedor_real(self.espec_python(),
+                          vigia=vigia_de(self.vigiado))
         r = p.invocar(b"import os;print(os.getcwd())")
         self.assertTrue(r.ok, r.saida)
         visto = r.saida.decode("utf-8").strip()
@@ -295,8 +313,8 @@ class EfeitoExternoMedido(unittest.TestCase):
         self.addCleanup(shutil.rmtree, self.vigiado, True)
 
     def provedor(self, sensor):
-        return pa.ProvedorAssinaturaReal(espec_de("codex"), sensor=sensor,
-                                         vigia=vigia_de(self.vigiado))
+        return provedor_real(espec_de("codex"), sensor=sensor,
+                             vigia=vigia_de(self.vigiado))
 
     def test_classificar_EXIGE_a_medicao(self):
         # O guarda contra a volta do defeito por omissao: sem terceiro
@@ -347,6 +365,19 @@ class EfeitoExternoMedido(unittest.TestCase):
             f"escrita fora do descartavel nao apareceu: {medicao}")
         self.assertEqual(r.efeito_externo, "aplicado")
 
+    def test_kimi_com_escrita_fora_do_descartavel_falha_fechado(self):
+        sensor = SensorQueEscreve(alvo=self.vigiado, nome="kimi-intrusa.txt")
+        p = provedor_real(espec_de("kimi"), sensor=sensor,
+                          vigia=vigia_de(self.vigiado))
+        r = p.invocar(b"t")
+        self.assertFalse(r.ok)
+        self.assertEqual(r.falha, "falha-contrato")
+        self.assertEqual(r.efeito_externo, "aplicado")
+        isolamento = p.medicoes[0]["isolamento_kimi_fail_closed"]
+        self.assertTrue(isolamento["aplicavel"])
+        self.assertTrue(isolamento["violado"])
+        self.assertFalse(isolamento["resposta_aceita"])
+
     def test_falha_com_escrita_medida_nao_vira_nao_aplicado(self):
         # Fail-closed no outro sentido: uma falha transitoria devolve
         # `nao-aplicado`, que AUTORIZA retry (IR-1). Se o disco mostrou
@@ -388,7 +419,8 @@ class OReciboDeclaraOAlcanceEmVezDeAfirmarAusencia(unittest.TestCase):
         vigiado = tempfile.mkdtemp(prefix="p1a5-alcance-")
         self.addCleanup(shutil.rmtree, vigiado, True)
 
-        def sensor(argv, env=None, timeout=None, cwd=None):
+        def sensor(argv, env=None, timeout=None, cwd=None,
+                   entrada_stdin=None):
             if escrita_em is not None:
                 os.makedirs(escrita_em, exist_ok=True)
                 with open(os.path.join(escrita_em, "sessao.log"), "w",
@@ -396,8 +428,8 @@ class OReciboDeclaraOAlcanceEmVezDeAfirmarAusencia(unittest.TestCase):
                     f.write("log de sessao do CLI")
             return (0, "ok", "")
 
-        p = pa.ProvedorAssinaturaReal(espec_de(provider_id), sensor=sensor,
-                                      vigia=vigia_de(vigiado))
+        p = provedor_real(espec_de(provider_id), sensor=sensor,
+                          vigia=vigia_de(vigiado))
         return p.invocar(b"t"), p.medicoes[0]
 
     def test_escrita_no_lar_do_CLI_NAO_e_medida_e_o_recibo_diz_isso(self):
@@ -446,8 +478,8 @@ class OReciboDeclaraOAlcanceEmVezDeAfirmarAusencia(unittest.TestCase):
         vigiado = tempfile.mkdtemp(prefix="p1a5-dentro-")
         self.addCleanup(shutil.rmtree, vigiado, True)
         sensor = SensorQueEscreve(alvo=vigiado, nome="plantada.txt")
-        p = pa.ProvedorAssinaturaReal(espec_de("codex"), sensor=sensor,
-                                      vigia=vigia_de(vigiado))
+        p = provedor_real(espec_de("codex"), sensor=sensor,
+                          vigia=vigia_de(vigiado))
         r = p.invocar(b"t")
         self.assertEqual(r.efeito_externo, "aplicado")
         self.assertIn("mutacao medida no disco",
@@ -459,7 +491,7 @@ class OReciboDeclaraOAlcanceEmVezDeAfirmarAusencia(unittest.TestCase):
         # declaracao tem de aparecer NO recibo.
         espec = dataclasses.replace(espec_de("codex"),
                                     provider_id="provedor-sem-lar")
-        p = pa.ProvedorAssinaturaReal(
+        p = provedor_real(
             espec, sensor=lambda *a, **k: (0, "ok", ""),
             vigia=vigia_de(tempfile.mkdtemp(prefix="p1a5-sem-lar-")))
         p.invocar(b"t")
@@ -481,8 +513,8 @@ class VigilanciaDispara(unittest.TestCase):
         vigiado = tempfile.mkdtemp(prefix="p23-vigiado-")
         self.addCleanup(shutil.rmtree, vigiado, True)
         sensor = SensorQueEscreve(alvo=vigiado, nome="disparo.txt")
-        p = pa.ProvedorAssinaturaReal(espec_de("codex"), sensor=sensor,
-                                      vigia=vigia_de(vigiado))
+        p = provedor_real(espec_de("codex"), sensor=sensor,
+                          vigia=vigia_de(vigiado))
         p.invocar(b"t")
         medicao = p.medicoes[0]
         self.assertTrue(medicao["mutacoes_fora_do_descartavel"],
@@ -495,9 +527,8 @@ class VigilanciaDispara(unittest.TestCase):
         # O default de operacao. A suite injeta uma vigilancia estreita
         # por custo; sem este teste, a injecao seria o interruptor que
         # apaga o mecanismo em producao sem ninguem ver.
-        p = pa.ProvedorAssinaturaReal(espec_de("codex"),
-                                      sensor=SensorObrigatorio(
-                                          codex=(0, "ok", "")))
+        p = provedor_real(espec_de("codex"),
+                          sensor=SensorObrigatorio(codex=(0, "ok", "")))
         p.invocar(b"t")
         medicao = p.medicoes[0]
         self.assertGreater(
@@ -526,13 +557,14 @@ class VigilanciaDispara(unittest.TestCase):
         locks = os.path.join(vigiado, "locks")
         apoio.escrever_lock(locks, "sessao-de-teste", 1, time.time() + 600)
 
-        def renovador(argv, env=None, timeout=None, cwd=None):
+        def renovador(argv, env=None, timeout=None, cwd=None,
+                      entrada_stdin=None):
             apoio.escrever_lock(locks, "sessao-de-teste", 1,
                                 time.time() + 900)
             return (0, "ok", "")
 
-        p = pa.ProvedorAssinaturaReal(espec_de("codex"), sensor=renovador,
-                                      vigia=vigia_de(vigiado))
+        p = provedor_real(espec_de("codex"), sensor=renovador,
+                          vigia=vigia_de(vigiado))
         r = p.invocar(b"t")
         medicao = p.medicoes[0]
         self.assertIn("alterado: repositorio/locks/repositorio.lease",
@@ -684,7 +716,7 @@ class CliRealDoCodex(unittest.TestCase):
 
     def _argv_de_producao(self):
         """O argv que o EXECUTOR monta, com o descartavel deste teste."""
-        p = pa.ProvedorAssinaturaReal(espec_de("codex"))
+        p = provedor_real(espec_de("codex"))
         return p.argv("responda apenas PONG", self.descartavel)
 
     def test_o_cli_real_ACEITA_o_argv_de_producao_e_ecoa_a_restricao(self):

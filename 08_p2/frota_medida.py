@@ -2,9 +2,10 @@
 
 CONSUMIDOR DECLARADO do veredito (`06_p1a/tests/sentinela_antip2.py`,
 `CONSUMIDORES_DECLARADOS`), autorizado pelo ato soberano de 2026-08-03.
-Este e o unico lugar da P2 onde a classificacao do preflight vira
-autorizacao de rota — e por isso ele nao executa nada: devolve entradas e
-descartes, e quem invoca e outro modulo.
+Este e o unico lugar da P2 onde duas provas independentes se encontram:
+a classificacao tecnica do preflight e um ato operacional de P2. Nenhuma
+das duas, isoladamente, vira rota. O modulo nao executa nada: devolve
+entradas e descartes, e quem invoca e outro modulo.
 
 A diferenca entre este modulo e `frota.frota_inicial()`, que a P0 usava:
 la os cinco provedores nasciam com `model_id` ESCRITO NO FONTE
@@ -22,7 +23,7 @@ O QUE E OBSERVADO E O QUE E DECLARADO, sem confundir os dois:
 
 | campo | procedencia |
 |---|---|
-| `model_id` | **observado** (`codex doctor`, `kimi provider list`) |
+| `model_id` | **observado** (`codex doctor`, config Claude, `kimi provider list`, `agy models`) |
 | `auth_mode`, `canal_oficial` | **observado** (`origem_credencial`) |
 | `quota_state` | **observado** (texto do CLI; `desconhecida` e o normal) |
 | `billing_mode`, `variable_cost` | **declarado** na especificacao estatica |
@@ -35,10 +36,27 @@ from ssc_p0 import contratos as ct
 from ssc_p0.frota import (verificar_automacao, verificar_canal,
                           verificar_economia)
 
-# Os dois vereditos que habilitam rota. SUPERVISED e teto de
-# especificacao, nao autorizacao; BLOCKED e bloqueio. A tupla e a
-# superficie inteira da decisao deste modulo sobre o veredito.
-RESULTADOS_QUE_HABILITAM = ("ELIGIBLE", "SHADOW_ELIGIBLE")
+# Estes resultados sao tecnicamente admissiveis, mas NAO sao autorizacao de
+# P2. Em particular, o payload de SHADOW_ELIGIBLE diz literalmente que ele
+# nao autoriza P2. A autorizacao operacional independente e conferida logo
+# abaixo. Manter os conceitos separados fecha a divergencia entre o contrato
+# da trilha sombra e o antigo nome `RESULTADOS_QUE_HABILITAM`.
+RESULTADOS_TECNICAMENTE_ADMISSIVEIS = ("ELIGIBLE", "SHADOW_ELIGIBLE")
+
+# Atos operacionais que autorizam o consumidor supervisionado. A declaracao
+# de tier nunca aparece como fonte: ela so produz evidencia tecnica sombra.
+# Codex/Kimi foram abertos pelo ato de 03/08; Claude/Google, pela confirmacao
+# operacional registrada em 11/08. Grok continua deliberadamente ausente.
+AUTORIZACAO_OPERACIONAL_P2 = {
+    "id": "SSC-P2-SUPERVISIONADA-20260811",
+    "modo": "supervised",
+    "provedores": {
+        "codex": "08_p2/00_ato-soberano-p2.md",
+        "kimi": "08_p2/00_ato-soberano-p2.md",
+        "claude": "08_p2/100_ativacao-claude-google-20260811.md",
+        "google": "08_p2/100_ativacao-claude-google-20260811.md",
+    },
+}
 
 # Origens de credencial que comprovam canal de assinatura. Qualquer outra
 # — inclusive `nao-sondada` e `ausente` — vira `desconhecido`, que o
@@ -79,7 +97,7 @@ def _quota_do_relatorio(quota) -> str:
     return quota if quota in ct.QUOTA_STATES else "desconhecida"
 
 
-def entradas_de(relatorio: dict, espec) -> tuple:
+def entradas_de(relatorio: dict, espec, autorizacao_p2: dict | None) -> tuple:
     """(entradas, descartes) de UM relatorio de preflight.
 
     Uma entrada por modelo OBSERVADO: `Frota` e indexada por
@@ -88,9 +106,18 @@ def entradas_de(relatorio: dict, espec) -> tuple:
     """
     pid = relatorio.get("provider_id")
     resultado = relatorio.get("resultado")
-    if resultado not in RESULTADOS_QUE_HABILITAM:
-        return ([], [{"provider_id": pid, "motivo": "veredito nao habilita "
-                                                    f"rota: {resultado}"}])
+    if resultado not in RESULTADOS_TECNICAMENTE_ADMISSIVEIS:
+        return ([], [{"provider_id": pid, "motivo":
+                      f"preflight tecnicamente inadmissivel: {resultado}"}])
+
+    fontes = ((autorizacao_p2 or {}).get("provedores") or {})
+    fonte_ato = fontes.get(pid)
+    modo_autorizado = (autorizacao_p2 or {}).get("modo")
+    if not isinstance(fonte_ato, str) or not fonte_ato \
+            or modo_autorizado != "supervised":
+        return ([], [{"provider_id": pid,
+                      "motivo": "sem autorizacao operacional P2 "
+                                "independente do preflight"}])
 
     modelos = list(relatorio.get("modelos") or [])
     if not modelos:
@@ -114,7 +141,10 @@ def entradas_de(relatorio: dict, espec) -> tuple:
              # suposta pelo nome do campo da dataclass).
              "tier_declarado": (relatorio.get("sombra") or {}).get(
                  "tier_declarado"),
-             "veredito_preflight": resultado}
+             "veredito_preflight": resultado,
+             "autorizacao_p2_id": autorizacao_p2.get("id"),
+             "autorizacao_p2_fonte": fonte_ato,
+             "autorizacao_p2_modo": modo_autorizado}
     if canal_provado:
         terms["oauth_profile"] = f"oauth:{pid}"
 
@@ -140,8 +170,9 @@ def entradas_de(relatorio: dict, espec) -> tuple:
 
 
 def frota_do_preflight(relatorios, especs: dict,
-                       modo_execucao: str = "supervised") -> dict:
-    """A frota que o preflight autoriza, com tudo que ficou de fora.
+                       modo_execucao: str = "supervised",
+                       autorizacao_p2: dict | None = None) -> dict:
+    """A frota admitida por preflight E ato, com tudo que ficou de fora.
 
     Devolve `{"entradas": [...], "descartes": [...], "vetos": [...]}`.
 
@@ -161,7 +192,7 @@ def frota_do_preflight(relatorios, especs: dict,
             descartes.append({"provider_id": pid,
                               "motivo": "sem especificacao estatica"})
             continue
-        novas, recusadas = entradas_de(relatorio, espec)
+        novas, recusadas = entradas_de(relatorio, espec, autorizacao_p2)
         entradas.extend(novas)
         descartes.extend(recusadas)
 

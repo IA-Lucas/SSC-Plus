@@ -1,22 +1,29 @@
 {
-  "tipo": "declaracao-de-tiers-do-proprietario",
   "ato": "decisao soberana sobre as emendas da P1-A.2, item 1 (APROVADA COM LIMITES), registrada na missao P1-A.3",
-  "limites": "habilita SOMENTE SHADOW_ELIGIBLE; validade maxima de 24 horas; NAO autoriza P2 nem execucao autonoma",
-  "validade_maxima_horas": 24,
   "declaracoes": [
     {
+      "declarado_em_utc": "2026-08-11T21:04:59Z",
+      "declarado_por": "proprietario",
       "provider_id": "codex",
       "tier": "ChatGPT Pro 5x",
-      "declarado_por": "proprietario",
-      "declarado_em_utc": "2026-08-05T19:34:20Z",
       "validade_horas": 24
     },
     {
+      "declarado_em_utc": "2026-08-11T21:04:59Z",
+      "declarado_por": "proprietario",
       "provider_id": "kimi",
       "tier": "Allegretto",
+      "validade_horas": 24
+    },
+    {
+      "declarado_em_utc": "2026-08-11T21:04:59Z",
       "declarado_por": "proprietario",
-      "declarado_em_utc": "2026-08-05T19:34:20Z",
+      "provider_id": "google",
+      "tier": "Google AI Pro",
       "validade_horas": 24
     }
-  ]
+  ],
+  "limites": "habilita SOMENTE SHADOW_ELIGIBLE; validade maxima de 24 horas; NAO autoriza P2 nem execucao autonoma",
+  "tipo": "declaracao-de-tiers-do-proprietario",
+  "validade_maxima_horas": 24
 }

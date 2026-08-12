@@ -3,12 +3,14 @@
 O adaptador so faz tres perguntas ao CLI: qual sua versao, qual o status
 do login e quais modelos existem. Nunca executa prompt produtivo, nunca
 pede pagamento, nunca escreve arquivo. Aqui nenhum subprocesso real e
-criado: o sensor real (`sensor_subprocess`) e testado com `subprocess.run`
+criado: o sensor real (`sensor_subprocess`) e testado com `Popen`
 substituido, o que permite provar que o ambiente entregue ao processo
 filho vai SEM credencial.
 """
 
+import json
 import subprocess
+import sys
 import unittest
 from unittest import mock
 
@@ -79,7 +81,7 @@ class ConsultaDeLogin(unittest.TestCase):
         # grok: "SuperGrok" sem rotulo de plano na saida — com a regra
         # fail-closed da P1-A.3, plano NAO e reconhecido (None).
         esperado = {"codex": "chatgpt pro 5x", "claude": "max",
-                    "kimi": "allegretto", "google": "google ai pro",
+                    "kimi": "allegretto", "google": None,
                     "grok": None}
         for provider_id, plano in esperado.items():
             with self.subTest(provedor=provider_id):
@@ -88,9 +90,35 @@ class ConsultaDeLogin(unittest.TestCase):
                 self.assertEqual(login["plano"], plano)
                 self.assertEqual(login["origem_credencial"],
                                  espec_de(provider_id).auth_esperada)
-                # Fail-closed (P1-A.1): as saidas verdes NAO trazem sinal
-                # positivo de quota — logo "desconhecida", nunca presumida.
-                self.assertEqual(login["quota"], "desconhecida")
+                esperado_quota = ("disponivel" if provider_id == "google"
+                                   else "desconhecida")
+                self.assertEqual(login["quota"], esperado_quota)
+
+    def test_google_quota_estruturada_exige_zero_turnos_e_zero_tokens(self):
+        v, login_verde, _ = apoio.VERDES["google"]
+        dados = json.loads(login_verde)
+        for campo, valor in (("num_turns", 1), ("status", "ERROR")):
+            with self.subTest(campo=campo):
+                ruim = dict(dados)
+                ruim[campo] = valor
+                login = _adaptador(
+                    "google", login=json.dumps(ruim)).consultar_login()
+                self.assertFalse(login["logado"])
+        ruim = dict(dados)
+        ruim["usage"] = dict(dados["usage"], total_tokens=1)
+        self.assertFalse(_adaptador(
+            "google", login=json.dumps(ruim)).consultar_login()["logado"])
+
+    def test_google_zero_da_assinatura_e_esgotamento(self):
+        _, login_verde, _ = apoio.VERDES["google"]
+        dados = json.loads(login_verde)
+        buckets = dados["command"]["data"]["groups"][0]["buckets"]
+        for bucket in buckets:
+            bucket["remaining_fraction"] = 0
+        login = _adaptador(
+            "google", login=json.dumps(dados)).consultar_login()
+        self.assertTrue(login["logado"])
+        self.assertEqual(login["quota"], "esgotada")
 
     def test_grok_reporta_cached_token_e_nunca_chave(self):
         login = _adaptador("grok").consultar_login()
@@ -223,46 +251,64 @@ class ReconhecimentoDePlano(unittest.TestCase):
 
 
 class SensorRealSemProcesso(unittest.TestCase):
-    """`subprocess.run` substituido: nenhum CLI real e executado aqui."""
+    """`Popen` substituido: nenhum CLI real e executado aqui."""
 
     def _chamar(self, env, **retorno):
         base = {"returncode": 0, "stdout": "ok", "stderr": ""}
         base.update(retorno)
-        with mock.patch("preflight.adaptadores.subprocess.run") as run:
-            run.return_value = mock.Mock(**base)
+        proc = mock.Mock(returncode=base["returncode"])
+        proc.communicate.return_value = (base["stdout"], base["stderr"])
+        with mock.patch("preflight.adaptadores.subprocess.Popen",
+                        return_value=proc) as popen:
             resultado = sensor_subprocess(["cli", "--version"], env=env)
-            return resultado, run.call_args
+            return resultado, popen.call_args, proc
 
     def test_credencial_nunca_entra_no_processo_filho(self):
         env = {"OPENAI_API_KEY": SENTINELA, "XAI_API_KEY": SENTINELA,
-               "VSCODE_GIT_IPC_AUTH_TOKEN": SENTINELA, "PATH": "C:\\Windows"}
-        _, chamada = self._chamar(env)
+               "VSCODE_GIT_IPC_AUTH_TOKEN": SENTINELA,
+               "ORCA_AGENT_HOOK_TOKEN": SENTINELA,
+               "ORCA_AGENT_HOOK_PORT": "9999", "PATH": "C:\\Windows"}
+        _, chamada, _ = self._chamar(env)
         entregue = chamada.kwargs["env"]
         self.assertEqual(entregue, {"PATH": "C:\\Windows"})
         self.assertNotIn(SENTINELA, repr(entregue))
+        self.assertFalse(any(k.startswith("ORCA_") for k in entregue))
 
     def test_saida_e_capturada_e_nunca_ecoada(self):
-        _, chamada = self._chamar({"PATH": "p"})
-        self.assertTrue(chamada.kwargs["capture_output"])
-        self.assertTrue(chamada.kwargs["text"])
-        self.assertEqual(chamada.kwargs["timeout"], TIMEOUT_PADRAO)
+        _, chamada, proc = self._chamar({"PATH": "p"})
+        self.assertEqual(chamada.kwargs["stdout"], subprocess.PIPE)
+        self.assertEqual(chamada.kwargs["stderr"], subprocess.PIPE)
+        self.assertNotIn("text", chamada.kwargs)
+        proc.communicate.assert_called_once_with(timeout=TIMEOUT_PADRAO)
 
     def test_retorno_do_processo_e_repassado(self):
-        (rc, out, err), _ = self._chamar({}, returncode=3, stdout="s",
-                                         stderr="e")
+        (rc, out, err), _, _ = self._chamar(
+            {}, returncode=3, stdout="s", stderr="e")
         self.assertEqual((rc, out, err), (3, "s", "e"))
 
     def test_saida_none_vira_texto_vazio(self):
-        (rc, out, err), _ = self._chamar({}, stdout=None, stderr=None)
+        (rc, out, err), _, _ = self._chamar({}, stdout=None, stderr=None)
         self.assertEqual((out, err), ("", ""))
 
     def test_timeout_devolve_codigo_124_sem_excecao(self):
-        with mock.patch("preflight.adaptadores.subprocess.run") as run:
-            run.side_effect = subprocess.TimeoutExpired(cmd="cli", timeout=1)
+        proc = mock.Mock(returncode=None)
+        proc.communicate.side_effect = [
+            subprocess.TimeoutExpired(cmd="cli", timeout=1), ("", "")]
+        with mock.patch("preflight.adaptadores.subprocess.Popen",
+                        return_value=proc), \
+                mock.patch("preflight.adaptadores.encerrar_arvore") as matar:
             rc, out, err = sensor_subprocess(["cli", "--version"], env={})
+        matar.assert_called_once_with(proc)
         self.assertEqual(rc, 124)
         self.assertEqual(out, "")
         self.assertIn("timeout", err)
+
+    def test_sensor_real_decodifica_utf8_sem_depender_da_locale(self):
+        codigo = ("import sys;sys.stdout.buffer.write("
+                  "'função'.encode('utf-8'))")
+        rc, out, err = sensor_subprocess(
+            [sys.executable, "-c", codigo], env={}, timeout=10)
+        self.assertEqual((rc, out, err), (0, "função", ""))
 
 
 class ComandosSaoSomenteDiagnostico(unittest.TestCase):
@@ -270,7 +316,8 @@ class ComandosSaoSomenteDiagnostico(unittest.TestCase):
 
     PERMITIDOS = frozenset({
         "--version", "--list-models", "login", "status", "auth", "models",
-        "provider", "list", "doctor",
+        "provider", "list", "doctor", "changelog", "/quota",
+        "--output-format", "json", "--mode", "plan", "-p",
     })
 
     def test_apenas_verbos_de_diagnostico_declarados(self):
@@ -291,19 +338,25 @@ class ComandosSaoSomenteDiagnostico(unittest.TestCase):
                 self.assertEqual(set(espec.comandos), {"versao", "login",
                                                        "modelos"})
 
-    def test_modo_headless_declarado_mas_nunca_usado_como_sonda(self):
+    def test_headless_nunca_usa_prompt_produtivo_como_sonda(self):
         for provider_id, espec in ESPECIFICACOES.items():
             with self.subTest(provedor=provider_id):
                 self.assertTrue(espec.headless)
                 for comando in espec.comandos.values():
                     if comando is None:  # descoberta desativada (P1-A.3)
                         continue
+                    if provider_id == "google" and comando == \
+                            espec.comandos["login"]:
+                        # `/quota` e resposta local read-only do proprio
+                        # CLI; o parser exige num_turns=0 e uso=0.
+                        self.assertIn("/quota", comando)
+                        continue
                     self.assertNotIn(espec.headless[0], comando)
 
     def test_nenhuma_sonda_aprova_automaticamente(self):
         proibidos = ("--always-approve", "--yes", "--dangerously-skip-"
                      "permissions", "--auto-approve", "-y", "exec", "run",
-                     "-p", "--print", "--api-key", "--batch-api")
+                     "--print", "--api-key", "--batch-api")
         for provider_id, espec in ESPECIFICACOES.items():
             for comando in espec.comandos.values():
                 if comando is None:  # descoberta desativada (P1-A.3)

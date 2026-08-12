@@ -52,6 +52,7 @@ import argparse
 import glob
 import json
 import os
+import subprocess
 import sys
 
 import caminhos  # (insere 05_p0/06_p1a/08_p2/evidencias no sys.path)
@@ -444,15 +445,33 @@ def _resolver_insumo(spec: dict, raiz: str | None = None) -> dict:
         raise ReceitaInvalida(f"origem invalida: {origem!r}; use {ORIGENS}")
 
     if origem == "arquivo":
-        caminho = os.path.join(base, spec["caminho"])
-        if not os.path.isfile(caminho):
-            raise ReceitaInvalida(f"insumo ausente do repositorio: "
-                                  f"{spec['caminho']}")
-        with open(caminho, "rb") as f:
-            medida = tamanhos(f.read())
+        commit = spec.get("commit")
+        if commit:
+            proc = subprocess.run(
+                ["git", "-c", f"safe.directory={os.path.abspath(base)}",
+                 "show", f"{commit}:{spec['caminho']}"], cwd=base,
+                capture_output=True)
+            if proc.returncode:
+                raise ReceitaInvalida(
+                    f"blob ausente: {commit}:{spec['caminho']}")
+            bruto = proc.stdout
+            if spec.get("eol") == "crlf":
+                bruto = bruto.replace(b"\r\n", b"\n").replace(b"\n", b"\r\n")
+            procedencia = "medido-blob-git"
+            fonte = f"{commit}:{spec['caminho']}"
+        else:
+            caminho = os.path.join(base, spec["caminho"])
+            if not os.path.isfile(caminho):
+                raise ReceitaInvalida(f"insumo ausente do repositorio: "
+                                      f"{spec['caminho']}")
+            with open(caminho, "rb") as f:
+                bruto = f.read()
+            procedencia = "medido-arquivo"
+            fonte = spec["caminho"]
+        medida = tamanhos(bruto)
         return {"rotulo": spec.get("rotulo") or spec["caminho"],
-                "procedencia": "medido-arquivo", "reproduzido": True,
-                "fonte": spec["caminho"], **medida}
+                "procedencia": procedencia, "reproduzido": True,
+                "fonte": fonte, **medida}
 
     if origem == "recibo":
         caminho = os.path.join(base, spec["caminho"])

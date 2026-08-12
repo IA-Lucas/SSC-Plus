@@ -258,25 +258,26 @@ class KimiProviderList(unittest.TestCase):
         self.assertIn("P1A-PLANO-DESCONHECIDO", apoio.codigos(rel))
 
 
-class ClaudeSupervised(unittest.TestCase):
-    """Emenda 4: claude SUPERVISED; plano Max sozinho nao basta."""
+class ClaudeAutomaticoComModeloVinculado(unittest.TestCase):
+    """Claude so sobe com modelo exato da config oficial."""
 
-    def test_plano_max_observado_nao_passa_de_supervised(self):
+    def test_plano_max_e_modelo_da_config_chegam_a_eligible(self):
         sens, _, sensor_modelos = sensores_dict("claude")
-        rel = executar_preflight(espec_de("claude"), sens, env={})
-        self.assertEqual(rel.resultado, "SUPERVISED")
+        rel = executar_preflight(
+            espec_de("claude"), sens, env={},
+            config_persistida={"model": "claude-fable-5[1m]"})
+        self.assertEqual(rel.resultado, "ELIGIBLE")
         self.assertEqual(rel.plano, "max")
-        self.assertEqual(rel.modelos, [])
-        # ZERO sondas de modelos: `claude models` e interativo e a
-        # descoberta foi desativada na especificacao.
+        self.assertEqual(rel.modelos, ["claude-fable-5[1m]"])
         self.assertEqual(sensor_modelos.n, 0)
 
-    def test_declaracao_de_tier_nao_muda_o_teto_do_claude(self):
+    def test_sem_modelo_exato_bloqueia_mesmo_com_declaracao(self):
         declaracoes = {"claude": decl("claude", tier="Claude Max 5x")}
         sens, _, _ = sensores_dict("claude")
         rel = executar_preflight(espec_de("claude"), sens, env={},
                                  tiers_declarados=declaracoes, agora=AGORA)
-        self.assertEqual(rel.resultado, "SUPERVISED")
+        self.assertEqual(rel.resultado, "BLOCKED")
+        self.assertIn("P1A-MODELO-REMOVIDO", apoio.codigos(rel))
 
     def test_plano_desconhecido_segue_bloqueando(self):
         sens, _, _ = sensores_dict(
@@ -295,9 +296,9 @@ class DeclaracoesDoProprietario(unittest.TestCase):
         with open(caminho, encoding="utf-8") as f:
             return json.load(f)
 
-    def test_arquivo_real_parseia_e_cobre_codex_e_kimi(self):
+    def test_arquivo_real_parseia_e_cobre_codex_kimi_google(self):
         declaracoes = carregar_declaracoes(self._arquivo())
-        self.assertEqual(set(declaracoes), {"codex", "kimi"})
+        self.assertEqual(set(declaracoes), {"codex", "kimi", "google"})
         for pid, d in declaracoes.items():
             with self.subTest(provedor=pid):
                 self.assertEqual(d.tier, espec_de(pid).plano_esperado)
@@ -329,18 +330,16 @@ class DeclaracoesDoProprietario(unittest.TestCase):
         self.assertFalse(declaracao_valida(d, AGORA))
 
 
-class GoogleGrokZeroSondas(unittest.TestCase):
-    """Emenda 5: google/grok SUPERVISED com ZERO sondas automaticas."""
+class GoogleAutomaticoEGrokZeroSondas(unittest.TestCase):
+    """Google agora e medido pelo agy; Grok conserva zero sondas."""
 
     def test_supervised_sem_nenhuma_sonda(self):
-        for pid in ("google", "grok"):
-            with self.subTest(provedor=pid):
-                sens, sensor_exec, sensor_modelos = sensores_dict(pid)
-                rel = executar_preflight(espec_de(pid), sens, env={})
-                self.assertEqual(rel.resultado, "SUPERVISED")
-                self.assertEqual(rel.modelos, [])
-                self.assertEqual(sensor_exec.n, 0)     # nem versao/login
-                self.assertEqual(sensor_modelos.n, 0)  # nem modelos
+        sens, sensor_exec, sensor_modelos = sensores_dict("grok")
+        rel = executar_preflight(espec_de("grok"), sens, env={})
+        self.assertEqual(rel.resultado, "SUPERVISED")
+        self.assertEqual(rel.modelos, [])
+        self.assertEqual(sensor_exec.n, 0)
+        self.assertEqual(sensor_modelos.n, 0)
 
     def test_sem_sonda_de_modelos_implica_teto_supervised(self):
         # Revisao P1-A.3 (MINOR): o invariante deixa de ser convencao —
@@ -348,7 +347,8 @@ class GoogleGrokZeroSondas(unittest.TestCase):
         from preflight import ESPECIFICACOES
         for espec in ESPECIFICACOES.values():
             with self.subTest(provedor=espec.provider_id):
-                if espec.comandos["modelos"] is None:
+                if espec.comandos["modelos"] is None \
+                        and not espec.caminho_modelo_config:
                     self.assertEqual(espec.teto_resultado, "SUPERVISED")
 
 
@@ -516,14 +516,20 @@ class RevisaoRodada3(unittest.TestCase):
                          "~/AppData/Local/Programs/OpenAI/Codex/bin/"
                          "codex.exe")
 
-    def test_google_grok_estatico_nao_simula_evidencia(self):
-        for pid in ("google", "grok"):
-            with self.subTest(provedor=pid):
-                sens, _, _ = sensores_dict(pid)
-                rel = executar_preflight(espec_de(pid), sens, env={})
-                self.assertEqual(rel.resultado, "SUPERVISED")
-                self.assertIsNone(rel.plano)
-                self.assertEqual(rel.origem_credencial, "nao-sondada")
+    def test_grok_estatico_e_google_publica_evidencia_medida(self):
+        sens, _, _ = sensores_dict("grok")
+        grok = executar_preflight(espec_de("grok"), sens, env={})
+        self.assertEqual(grok.resultado, "SUPERVISED")
+        self.assertEqual(grok.origem_credencial, "nao-sondada")
+
+        sens, _, _ = sensores_dict("google")
+        google = executar_preflight(
+            espec_de("google"), sens, env={}, agora=AGORA,
+            tiers_declarados={"google": decl(
+                "google", tier="Google AI Pro")})
+        self.assertEqual(google.resultado, "SHADOW_ELIGIBLE")
+        self.assertEqual(google.origem_credencial, "subscription-oauth")
+        self.assertTrue(google.modelos)
 
     def test_oauth_solto_nao_e_login_claude(self):
         sens, _, _ = sensores_dict("claude", login="oauth token expired")

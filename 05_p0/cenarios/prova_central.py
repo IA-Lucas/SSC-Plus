@@ -11,6 +11,7 @@ aprovacao (reroteamento DENTRO do envelope, sem nova aprovacao humana).
 Grava a evidencia em 05_p0/saidas/prova_central.json.
 """
 
+import argparse
 import os
 
 from comum import DIR_LABS, Lab
@@ -18,7 +19,7 @@ from ssc_p0.evidence import EvidencePlane
 from ssc_p0.judge import Juiz1
 
 
-def main():
+def main(gravar=True):
     raiz = os.path.join(DIR_LABS, "prova_central")
     lab = Lab(
         raiz,
@@ -172,10 +173,16 @@ def main():
                     for e in eventos],
         "rotulo_numeros": "simulado",
     }
-    caminho = lab.gravar_evidencia("prova_central.json", evidencia)
+    caminho = (lab.gravar_evidencia("prova_central.json", evidencia)
+               if gravar else "<verificacao sem persistencia>")
+    lab.fechar()
     print(f"OK prova_central: {len(assercoes)} assercoes, "
           f"{len(eventos)} eventos -> {caminho}")
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--sem-gravar", action="store_true",
+                        help="executa todas as assercoes sem alterar evidencia")
+    args = parser.parse_args()
+    main(gravar=not args.sem_gravar)

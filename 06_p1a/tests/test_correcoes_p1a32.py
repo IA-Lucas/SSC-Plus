@@ -32,12 +32,14 @@ import sys
 import tempfile
 import time
 import unittest
+from datetime import datetime, timedelta, timezone
 from unittest import mock
 
 import apoio
 from apoio import SENTINELA, codigos
 from preflight import espec_de, executar_preflight
 from preflight.adaptadores import _quota_de
+from preflight.sombra import DeclaracaoTier
 
 _DIR_P1A = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(_DIR_P1A, "evidencias"))
@@ -93,14 +95,18 @@ class AtalhoPaygGoogleGrok(unittest.TestCase):
     def _classificar(self, env, configs=None, sens=None):
         sens = sens or _sensores()
         mapa = configs or {}
+        agora = datetime.now(timezone.utc)
+        tiers = {"google": DeclaracaoTier(
+            "google", "Google AI Pro", "proprietario",
+            (agora - timedelta(hours=1)).strftime("%Y-%m-%dT%H:%M:%SZ"))}
         return {r.provider_id: r for r in preflight_capsula.classificar_frota(
-            env, {}, config_de=lambda pid: mapa.get(pid, {}),
+            env, tiers, config_de=lambda pid: mapa.get(pid, {}),
             sensor_de=lambda pid: sens[pid][0])}
 
     def test_google_com_chave_payg_do_proprio_provedor_e_blocked(self):
         rels = self._classificar({"GEMINI_API_KEY": SENTINELA})
         self.assertEqual(rels["google"].resultado, "BLOCKED")
-        self.assertIn("P1A-PAYG-ENV", codigos(rels["google"]))
+        self.assertIn("P1A-CONFLITO-ENV-LOGIN", codigos(rels["google"]))
 
     def test_grok_com_chave_payg_do_proprio_provedor_e_blocked(self):
         rels = self._classificar({"XAI_API_KEY": SENTINELA})
@@ -124,21 +130,19 @@ class AtalhoPaygGoogleGrok(unittest.TestCase):
         self.assertEqual(rels["google"].resultado, "BLOCKED")
         self.assertIn("P1A-PAYG-CONFIG", codigos(rels["google"]))
 
-    def test_ambiente_limpo_mantem_supervised_e_zero_sondas(self):
-        # A correcao nao pode reintroduzir sonda em google/grok: era o
-        # motivo declarado do atalho (as sondas via Git Bash penduram).
-        # A zero-sonda vem da especificacao, nao do atalho.
+    def test_ambiente_limpo_mede_google_e_mantem_grok_supervised(self):
         sens = _sensores()
         rels = self._classificar({}, sens=sens)
-        for pid in ("google", "grok"):
-            with self.subTest(provider=pid):
-                self.assertEqual(rels[pid].resultado, "SUPERVISED")
-                self.assertEqual(rels[pid].origem_credencial, "nao-sondada")
-                self.assertIsNone(rels[pid].versao)
-                self.assertEqual(sens[pid][1].n, 0,
-                                 "sonda de execucao invocada")
-                self.assertEqual(sens[pid][2].n, 0,
-                                 "sonda de modelos invocada")
+        self.assertEqual(rels["google"].resultado, "SHADOW_ELIGIBLE")
+        self.assertEqual(rels["google"].origem_credencial,
+                         "subscription-oauth")
+        self.assertTrue(rels["google"].versao)
+        self.assertEqual(sens["google"][1].n, 2)
+        self.assertEqual(sens["google"][2].n, 1)
+        self.assertEqual(rels["grok"].resultado, "SUPERVISED")
+        self.assertEqual(rels["grok"].origem_credencial, "nao-sondada")
+        self.assertEqual(sens["grok"][1].n, 0)
+        self.assertEqual(sens["grok"][2].n, 0)
 
     def test_nenhum_provedor_escapa_do_pipeline(self):
         # A frota inteira sai de `executar_preflight`: um relatorio

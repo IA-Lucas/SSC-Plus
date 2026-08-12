@@ -202,7 +202,9 @@ class ContraprovaFonteLidaEVazia(_LarDescartavel):
             with self.subTest(provedor=pid):
                 self.assertNotIn("P1A-CONFIG-NAO-LIDA", codigos(rels[pid]))
         self.assertEqual(rels["grok"].resultado, "SUPERVISED")
-        self.assertEqual(rels["google"].resultado, "SUPERVISED")
+        # Fonte vazia foi LIDA; o bloqueio restante e comercial (sem a
+        # declaracao de tier exigida), nao cegueira do leitor.
+        self.assertEqual(rels["google"].resultado, "BLOCKED")
 
     def test_o_valor_separa_lida_e_vazia_de_nao_lida(self):
         # A distincao no VALOR — que e o objeto do achado. Antes os dois

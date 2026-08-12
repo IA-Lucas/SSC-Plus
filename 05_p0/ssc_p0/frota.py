@@ -81,7 +81,11 @@ def ambiente_sanitizado(env: dict | None = None) -> dict:
     """
     fonte = dict(os.environ if env is None else env)
     return {k: v for k, v in fonte.items()
-            if k not in CHAVES_PROIBIDAS and not _PADRAO_CHAVE_PAYG.search(k)}
+            if k not in CHAVES_PROIBIDAS
+            and not _PADRAO_CHAVE_PAYG.search(k)
+            # Hooks locais do Antigravity usam ORCA_* para transportar
+            # prompt e payloads de ferramentas a um processo auxiliar.
+            and not k.upper().startswith("ORCA_")}
 
 
 def verificar_economia(entry: ct.FleetEntry) -> list:
@@ -400,8 +404,9 @@ def executar_com_frota(lab, frota: Frota, wu, papel: str = "autor",
     verdade, e a primeira a bater nele.
 
     Sob assinatura o custo variavel externo e zero por fato, nao por
-    estimativa: quem chama declara `{"valor": 0.0}` e o portao passa a
-    comparar o numero certo. `None` preserva o comportamento anterior.
+    estimativa. A propria fronteira da frota fixa esse valor; deixar o
+    chamador esquecer reporia a estimativa generica de 0.01 e faria o
+    envelope zero vetar uma assinatura valida.
     """
     elegiveis = frota.elegiveis(papel=papel)
     if not elegiveis:
@@ -417,6 +422,8 @@ def executar_com_frota(lab, frota: Frota, wu, papel: str = "autor",
                 "effort": "alto", "modo": "read-only",
                 "controle": "autonomo"}
 
+    custo_previsto = custo_previsto or {
+        "valor": 0.0, "rotulo": "assinatura-sem-custo-variavel"}
     decisao = lab.router.propor_decisao(
         wu, rota="frota", selecao=selecao(primeira),
         alternativas=[selecao(e) for e in restantes],

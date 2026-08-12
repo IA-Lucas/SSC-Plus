@@ -49,7 +49,7 @@ from ssc_p0 import contratos as ct  # noqa: E402
 from ssc_p0.frota import Frota  # noqa: E402
 
 EVIDENCIA_REAL = os.path.join(
-    _RAIZ, "07_p1b", "evidencias", "preflight-20260801T235521Z.json")
+    _RAIZ, "07_p1b", "evidencias", "preflight-20260811T211742052426Z.json")
 
 
 def relatorio(**kw) -> dict:
@@ -66,13 +66,26 @@ class VeredictoQueHabilita(unittest.TestCase):
 
     def uma(self, **kw):
         entradas, descartes = fm.entradas_de(relatorio(**kw),
-                                             ESPECIFICACOES["codex"])
+                                             ESPECIFICACOES["codex"],
+                                             fm.AUTORIZACAO_OPERACIONAL_P2)
         return entradas, descartes
 
-    def test_shadow_eligible_habilita(self):
+    def test_shadow_eligible_so_entra_com_ato_independente(self):
         entradas, descartes = self.uma()
         self.assertEqual(len(entradas), 1)
         self.assertEqual(descartes, [])
+
+        entradas, descartes = fm.entradas_de(
+            relatorio(), ESPECIFICACOES["codex"], None)
+        self.assertEqual(entradas, [])
+        self.assertIn("autorizacao operacional P2", descartes[0]["motivo"])
+
+    def test_tier_nao_pode_se_passar_por_ato_operacional(self):
+        falsa = {"id": "tier", "modo": "supervised", "provedores": {}}
+        entradas, descartes = fm.entradas_de(
+            relatorio(), ESPECIFICACOES["codex"], falsa)
+        self.assertEqual(entradas, [])
+        self.assertIn("independente do preflight", descartes[0]["motivo"])
 
     def test_eligible_habilita(self):
         entradas, _ = self.uma(resultado="ELIGIBLE")
@@ -104,7 +117,9 @@ class ProcedenciaDosCampos(unittest.TestCase):
     """Observado nao pode virar declarado, nem o contrario."""
 
     def uma(self, **kw):
-        entradas, _ = fm.entradas_de(relatorio(**kw), ESPECIFICACOES["codex"])
+        entradas, _ = fm.entradas_de(
+            relatorio(**kw), ESPECIFICACOES["codex"],
+            fm.AUTORIZACAO_OPERACIONAL_P2)
         return entradas[0]
 
     def test_model_id_e_o_observado_nunca_o_esperado_da_espec(self):
@@ -155,6 +170,10 @@ class ProcedenciaDosCampos(unittest.TestCase):
         self.assertEqual(e.terms_profile["veredito_preflight"],
                          "SHADOW_ELIGIBLE")
         self.assertEqual(e.terms_profile["tier_declarado"], "ChatGPT Pro 5x")
+        self.assertEqual(e.terms_profile["autorizacao_p2_id"],
+                         "SSC-P2-SUPERVISIONADA-20260811")
+        self.assertNotEqual(e.terms_profile["autorizacao_p2_fonte"],
+                            "06_p1a/tiers_declarados.json")
 
     def test_a_entrada_e_um_FleetEntry_validado(self):
         # Enums fechados do D5: valor fora do enum e FalhaContrato, nunca
@@ -166,7 +185,9 @@ class NadaSomeDaFrota(unittest.TestCase):
     """Vetado continua na lista; quem exclui e `Frota.elegiveis`."""
 
     def frota(self, *relatorios):
-        return fm.frota_do_preflight(relatorios, ESPECIFICACOES)
+        return fm.frota_do_preflight(
+            relatorios, ESPECIFICACOES,
+            autorizacao_p2=fm.AUTORIZACAO_OPERACIONAL_P2)
 
     def test_entrada_vetada_permanece_na_lista_e_o_motivo_aparece(self):
         # Filtrar aqui criaria um SEGUNDO portao economico. Dois portoes
@@ -203,8 +224,9 @@ class RelatorioRealDaP1B(unittest.TestCase):
     def setUpClass(cls):
         with open(EVIDENCIA_REAL, encoding="utf-8") as f:
             cls.evidencia = json.load(f)
-        cls.resultado = fm.frota_do_preflight(cls.evidencia["frota"],
-                                              ESPECIFICACOES)
+        cls.resultado = fm.frota_do_preflight(
+            cls.evidencia["frota"], ESPECIFICACOES,
+            autorizacao_p2=fm.AUTORIZACAO_OPERACIONAL_P2)
 
     def test_a_evidencia_usada_e_a_de_custo_zero(self):
         # Se um dia esta fixture for trocada por uma corrida que gastou,
@@ -212,24 +234,26 @@ class RelatorioRealDaP1B(unittest.TestCase):
         self.assertEqual(self.evidencia["chamadas_de_modelo"], 0)
         self.assertEqual(self.evidencia["custo_variavel"], 0)
 
-    def test_a_frota_real_habilita_exatamente_codex_e_kimi(self):
-        self.assertEqual(sorted(e.provider_id
-                                for e in self.resultado["entradas"]),
-                         ["codex", "kimi"])
+    def test_a_frota_real_habilita_codex_claude_kimi_google(self):
+        self.assertEqual(sorted({e.provider_id
+                                 for e in self.resultado["entradas"]}),
+                         ["claude", "codex", "google", "kimi"])
 
-    def test_os_tres_supervised_saem_com_motivo_escrito(self):
+    def test_o_grok_supervised_sai_com_motivo_escrito(self):
         motivos = {d["provider_id"]: d["motivo"]
                    for d in self.resultado["descartes"]}
-        self.assertEqual(sorted(motivos), ["claude", "google", "grok"])
+        self.assertEqual(sorted(motivos), ["grok"])
         for pid, motivo in motivos.items():
             with self.subTest(provider=pid):
                 self.assertIn("SUPERVISED", motivo)
 
     def test_os_modelos_sao_os_OBSERVADOS_na_corrida(self):
-        observados = {e.provider_id: e.model_id
-                      for e in self.resultado["entradas"]}
+        observados = {}
+        for e in self.resultado["entradas"]:
+            observados.setdefault(e.provider_id, []).append(e.model_id)
         self.assertEqual(observados,
-                         {"codex": "gpt-5.6-sol", "kimi": "kimi-code/k3"})
+                         {r["provider_id"]: r["modelos"]
+                          for r in self.evidencia["frota"] if r["modelos"]})
 
     def test_o_tier_declarado_chega_a_entrada_pela_chave_certa(self):
         # O defeito que esta fixture pegou: o codigo lia `sombra["tier"]`
@@ -239,7 +263,8 @@ class RelatorioRealDaP1B(unittest.TestCase):
         tiers = {e.provider_id: e.terms_profile["tier_declarado"]
                  for e in self.resultado["entradas"]}
         self.assertEqual(tiers, {"codex": "ChatGPT Pro 5x",
-                                 "kimi": "Allegretto"})
+                                 "claude": None, "kimi": "Allegretto",
+                                 "google": "Google AI Pro"})
 
     def test_nenhuma_entrada_real_e_vetada_pelos_portoes(self):
         self.assertEqual(self.resultado["vetos"], [])
@@ -262,17 +287,18 @@ class RelatorioRealDaP1B(unittest.TestCase):
         # cairiam no descarte seguinte, por outro motivo, e o teste ficaria
         # verde pela razao errada.
         #
-        # Aqui o relatorio REAL do claude recebe um modelo observado, e so
+        # Aqui o relatorio REAL do grok recebe um modelo observado, e so
         # isso. O veredito continua sendo o dele. E hipotese declarada
         # sobre relatorio real, nao dicionario inventado.
-        claude = next(r for r in self.evidencia["frota"]
-                      if r["provider_id"] == "claude")
-        self.assertEqual(claude["resultado"], "SUPERVISED")
-        self.assertEqual(claude["modelos"], [])
-        com_modelo = dict(claude, modelos=["claude-opus-hipotetico"])
+        grok = next(r for r in self.evidencia["frota"]
+                    if r["provider_id"] == "grok")
+        self.assertEqual(grok["resultado"], "SUPERVISED")
+        self.assertEqual(grok["modelos"], [])
+        com_modelo = dict(grok, modelos=["grok-hipotetico"])
 
         entradas, descartes = fm.entradas_de(com_modelo,
-                                             ESPECIFICACOES["claude"])
+                                             ESPECIFICACOES["grok"],
+                                             fm.AUTORIZACAO_OPERACIONAL_P2)
         self.assertEqual(entradas, [],
                          "SUPERVISED habilitou rota: teto de especificacao "
                          "nao e autorizacao")
@@ -284,7 +310,7 @@ class RelatorioRealDaP1B(unittest.TestCase):
         # `escolher` devolve uma delas para o papel de autor.
         frota = Frota(self.resultado["entradas"])
         elegiveis = frota.elegiveis(papel="autor")
-        self.assertEqual(len(elegiveis), 2)
+        self.assertEqual(len(elegiveis), len(self.resultado["entradas"]))
         escolhida = frota.escolher(capacidade="implementacao", papel="autor")
         self.assertIsNotNone(escolhida)
         self.assertEqual(escolhida.provider_id, "codex")

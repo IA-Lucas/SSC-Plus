@@ -55,7 +55,9 @@ for _d in ("05_p0", os.path.join("05_p0", "cenarios"), "08_p2",
 import contencao  # noqa: E402
 import provedor_assinatura as pa  # noqa: E402
 import runner_p2  # noqa: E402
+import seguranca_artefatos as sa  # noqa: E402
 from ssc_p0.frota import STOP_WAIT_RESET  # noqa: E402
+from ssc_p0.confidencialidade import SegredoDetectado  # noqa: E402
 
 EVIDENCIA_REAL = os.path.join(
     _RAIZ, "07_p1b", "evidencias", "preflight-20260801T235521Z.json")
@@ -78,13 +80,30 @@ class SensorObrigatorio:
         self.por_provedor = por_provedor
         self.chamadas = []
 
-    def __call__(self, argv, env=None, timeout=None, cwd=None):
+    def __call__(self, argv, env=None, timeout=None, cwd=None,
+                 entrada_stdin=None):
         exe = str(argv[0]).lower()
         for pid, resposta in self.por_provedor.items():
             if pid in exe:
                 self.chamadas.append({"provedor": pid, "argv": list(argv),
-                                      "cwd": cwd})
-                return resposta
+                                      "cwd": cwd,
+                                      "entrada_stdin": entrada_stdin})
+                rc, out, err = resposta
+                if rc == 0:
+                    semantico = (out if "SSC_STATUS:" in out else
+                                 f"{pa.STATUS_SUCESSO}\n"
+                                 f"{pa.MARCADOR_RESPOSTA}\n{out}")
+                    if pid == "kimi":
+                        out = json.dumps({"role": "assistant",
+                                          "content": semantico})
+                    elif pid == "google":
+                        out = json.dumps({
+                            "status": "SUCCESS", "num_turns": 1,
+                            "response": semantico,
+                            "usage": {"total_tokens": 1}})
+                    else:
+                        out = semantico
+                return rc, out, err
         raise AssertionError(f"sensor chamado para executavel nao previsto: "
                              f"{exe}")
 
@@ -116,7 +135,7 @@ class _ComLab(unittest.TestCase):
                     criterio="resposta nao vazia",
                     preflight=preflight_real(),
                     raiz_lab=self.raiz_lab, sensor=sensor,
-                    vigia=self.vigia())
+                    vigia=self.vigia(), contexto_workspace=False)
         base.update(kw)
         return runner_p2.executar(**base)
 
@@ -127,29 +146,42 @@ class ValidadeDoPreflight(unittest.TestCase):
     def setUp(self):
         self._tmp = tempfile.TemporaryDirectory(prefix="p2-pf-")
         self.addCleanup(self._tmp.cleanup)
+        self.chave_caminho = os.path.join(self._tmp.name, "preflight.key")
+        self.chave = b"t" * 32
+        with open(self.chave_caminho, "wb") as f:
+            f.write(self.chave)
 
-    def escrever(self, dados) -> str:
+    def escrever(self, alteracoes, assinar=True) -> str:
         caminho = os.path.join(self._tmp.name, "pf.json")
+        dados = preflight_real()
+        dados.update(alteracoes)
+        if assinar:
+            dados.pop("atestacao", None)
+            dados.pop("schema", None)
+            dados = sa.assinar_preflight(dados, self.chave)
         with open(caminho, "w", encoding="utf-8") as f:
             json.dump(dados, f)
         return caminho
 
+    def carregar(self, caminho, validade=24, agora=None):
+        return runner_p2.carregar_preflight(
+            caminho, validade, agora=agora,
+            chave_caminho=self.chave_caminho)
+
     def test_arquivo_ausente_e_parada(self):
         with self.assertRaises(SystemExit):
-            runner_p2.carregar_preflight(
-                os.path.join(self._tmp.name, "nao-existe.json"), 24)
+            self.carregar(os.path.join(self._tmp.name, "nao-existe.json"))
 
     def test_json_ilegivel_e_parada(self):
         caminho = os.path.join(self._tmp.name, "quebrado.json")
         with open(caminho, "w", encoding="utf-8") as f:
             f.write("{ nao e json")
         with self.assertRaises(SystemExit):
-            runner_p2.carregar_preflight(caminho, 24)
+            self.carregar(caminho)
 
     def test_arquivo_sem_bloco_frota_e_parada(self):
         with self.assertRaises(SystemExit):
-            runner_p2.carregar_preflight(
-                self.escrever({"gerado_em_utc": "2026-08-03T00:00:00Z"}), 24)
+            self.carregar(self.escrever({}, assinar=False))
 
     def test_sem_data_legivel_e_parada(self):
         # Sem data nao ha como saber se venceu — e "nao sei" nao pode
@@ -160,7 +192,7 @@ class ValidadeDoPreflight(unittest.TestCase):
                       {"frota": [], "gerado_em_utc": "2026-08-03T00:00:00"}):
             with self.subTest(dados=dados):
                 with self.assertRaises(SystemExit):
-                    runner_p2.carregar_preflight(self.escrever(dados), 24)
+                    self.carregar(self.escrever(dados))
 
     def test_datado_no_futuro_e_parada(self):
         # Mesma regra de `sombra.declaracao_valida`: relogio que ainda nao
@@ -168,26 +200,67 @@ class ValidadeDoPreflight(unittest.TestCase):
         agora = datetime(2026, 8, 3, tzinfo=timezone.utc)
         futuro = (agora + timedelta(hours=2)).strftime("%Y-%m-%dT%H:%M:%SZ")
         with self.assertRaises(SystemExit):
-            runner_p2.carregar_preflight(
-                self.escrever({"frota": [], "gerado_em_utc": futuro}), 24,
-                agora=agora)
+            self.carregar(self.escrever({"gerado_em_utc": futuro}),
+                          agora=agora)
 
     def test_velho_demais_e_parada_com_a_idade_no_texto(self):
         agora = datetime(2026, 8, 3, tzinfo=timezone.utc)
         velho = (agora - timedelta(hours=25)).strftime("%Y-%m-%dT%H:%M:%SZ")
         with self.assertRaises(SystemExit) as ctx:
-            runner_p2.carregar_preflight(
-                self.escrever({"frota": [], "gerado_em_utc": velho}), 24,
-                agora=agora)
+            self.carregar(self.escrever({"gerado_em_utc": velho}),
+                          agora=agora)
         self.assertIn("acima da janela", str(ctx.exception))
 
     def test_dentro_da_janela_passa_e_registra_a_idade(self):
         agora = datetime(2026, 8, 3, tzinfo=timezone.utc)
         recente = (agora - timedelta(hours=2)).strftime("%Y-%m-%dT%H:%M:%SZ")
-        dados = runner_p2.carregar_preflight(
-            self.escrever({"frota": [], "gerado_em_utc": recente}), 24,
-            agora=agora)
+        dados = self.carregar(self.escrever({"gerado_em_utc": recente}),
+                              agora=agora)
         self.assertEqual(dados["_idade_s"], 7200)
+
+    def test_cli_nao_amplia_validade_fixa(self):
+        with self.assertRaises(SystemExit) as ctx:
+            self.carregar(self.escrever({}), validade=1000)
+        self.assertIn("nunca ampliar", str(ctx.exception))
+
+    def test_alteracao_depois_da_assinatura_e_parada(self):
+        caminho = self.escrever({})
+        with open(caminho, encoding="utf-8") as f:
+            dados = json.load(f)
+        dados["frota"][0]["resultado"] = "ELIGIBLE"
+        with open(caminho, "w", encoding="utf-8") as f:
+            json.dump(dados, f)
+        with self.assertRaises(SystemExit) as ctx:
+            self.carregar(caminho)
+        self.assertIn("assinatura", str(ctx.exception))
+
+    def test_schema_fechado_recusa_campo_extra_mesmo_assinado(self):
+        dados = preflight_real()
+        dados["campo_surpresa"] = True
+        caminho = os.path.join(self._tmp.name, "pf-extra.json")
+        with open(caminho, "w", encoding="utf-8") as f:
+            json.dump(sa.assinar_preflight(dados, self.chave), f)
+        with self.assertRaises(SystemExit) as ctx:
+            self.carregar(caminho)
+        self.assertIn("schema fechado", str(ctx.exception))
+
+    def test_schema_fechado_recusa_campo_extra_aninhado(self):
+        dados = preflight_real()
+        dados["capsula"]["atalho"] = "nao permitido"
+        caminho = os.path.join(self._tmp.name, "pf-extra-aninhado.json")
+        with open(caminho, "w", encoding="utf-8") as f:
+            json.dump(sa.assinar_preflight(dados, self.chave), f)
+        with self.assertRaises(SystemExit) as ctx:
+            self.carregar(caminho)
+        self.assertIn("schema fechado", str(ctx.exception))
+
+    def test_produtor_cria_chave_ausente_mas_recusa_chave_curta(self):
+        caminho = os.path.join(self._tmp.name, "nova.key")
+        self.assertEqual(len(sa.obter_ou_criar_chave(caminho)), 32)
+        with open(caminho, "wb") as f:
+            f.write(b"curta")
+        with self.assertRaises(sa.ArtefatoInvalido):
+            sa.obter_ou_criar_chave(caminho)
 
 
 class CorridaDePontaAPonta(_ComLab):
@@ -207,7 +280,41 @@ class CorridaDePontaAPonta(_ComLab):
     def test_o_prompt_chega_ao_argv_do_CLI(self):
         sensor = SensorObrigatorio(codex=(0, "ok", ""))
         self.executar(sensor, tarefa="conte ate tres")
-        self.assertIn("conte ate tres", sensor.chamadas[0]["argv"])
+        self.assertIn(b"conte ate tres",
+                      sensor.chamadas[0]["entrada_stdin"])
+
+    def test_contexto_operacional_chega_no_prompt_e_no_context_package(self):
+        raiz_contexto = os.path.join(self._tmp.name, "workspace")
+        os.makedirs(os.path.join(raiz_contexto, "08_p2"))
+        with open(os.path.join(raiz_contexto, "08_p2", "risco.py"),
+                  "w", encoding="utf-8") as arquivo:
+            arquivo.write("RISCO_OPERACIONAL = 'snapshot-presente'\n")
+        sensor = SensorObrigatorio(codex=(0, "analise pronta", ""))
+        r = self.executar(sensor, contexto_workspace=True,
+                          raiz_contexto=raiz_contexto,
+                          limite_contexto=32 * 1024)
+        prompt = sensor.chamadas[0]["entrada_stdin"].decode("utf-8")
+        self.assertIn("RISCO_OPERACIONAL", prompt)
+        self.assertIn("nao tente abrir o filesystem", prompt)
+        self.assertEqual(r["contexto_workspace"]["quantidade_incluida"], 1)
+        self.assertEqual(r["saida"], "analise pronta")
+
+    def test_operacao_padrao_nao_volta_ao_context_package_vazio(self):
+        raiz_contexto = os.path.join(self._tmp.name, "workspace-padrao")
+        os.makedirs(raiz_contexto)
+        with open(os.path.join(raiz_contexto, "README.md"),
+                  "w", encoding="utf-8") as arquivo:
+            arquivo.write("MARCADOR_CONTEXTO_PADRAO\n")
+        sensor = SensorObrigatorio(codex=(0, "feito", ""))
+        r = runner_p2.executar(
+            tarefa="analise", criterio="cite o snapshot",
+            preflight=preflight_real(), raiz_lab=self.raiz_lab,
+            sensor=sensor, vigia=self.vigia(),
+            raiz_contexto=raiz_contexto, limite_contexto=32 * 1024)
+        self.assertIn(b"MARCADOR_CONTEXTO_PADRAO",
+                      sensor.chamadas[0]["entrada_stdin"])
+        self.assertEqual(r["contexto_workspace"]["tipo"],
+                         "snapshot-textual-read-only")
 
     def test_custo_variavel_e_zero_e_o_rotulo_nao_e_simulado(self):
         r = self.executar(SensorObrigatorio(codex=(0, "ok", "")))
@@ -242,6 +349,19 @@ class CorridaDePontaAPonta(_ComLab):
         r = self.executar(sensor, capacidade="capacidade-que-ninguem-tem")
         self.assertEqual(r["status"], "sucesso", r.get("detalhe"))
 
+    def test_provedor_exigido_nao_faz_fallback_transversal(self):
+        sensor = SensorObrigatorio(kimi=(0, "contexto", ""))
+        r = self.executar(sensor, provedor="kimi", papel="juiz")
+        self.assertEqual(r["status"], "sucesso", r.get("detalhe"))
+        self.assertEqual(sensor.provedores_chamados(), ["kimi"])
+
+    def test_provedor_exigido_ausente_para_sem_invocar(self):
+        sensor = SensorObrigatorio()
+        r = self.executar(sensor, provedor="grok")
+        self.assertEqual(r["status"], "STOP_WAIT_RESET")
+        self.assertIn("provedor exigido", r["detalhe"])
+        self.assertEqual(sensor.chamadas, [])
+
     def test_a_cadeia_de_eventos_fica_integra_e_o_placar_e_projetado(self):
         # `verificar_integridade` levanta se a cadeia quebrar, e a
         # EvidencePlane SO le: o placar sai do log verificado, nunca da
@@ -250,6 +370,29 @@ class CorridaDePontaAPonta(_ComLab):
         self.assertIn("placar", r)
         self.assertTrue(r["work_unit_id"])
         self.assertTrue(r["linhagem_id"])
+
+    def test_segredo_depois_do_resumo_de_4000_bytes_nunca_e_enviado(self):
+        tarefa = "a" * 5000 + " api_key: abcdefgh12345678"
+        sensor = SensorObrigatorio()
+        with self.assertRaises(SegredoDetectado) as ctx:
+            self.executar(sensor, tarefa=tarefa)
+        self.assertIn("segredo detectado", str(ctx.exception))
+        self.assertEqual(sensor.chamadas, [])
+
+    def test_saida_com_segredo_nao_entra_no_cas_nem_no_resultado(self):
+        segredo = "api_key: abcdefgh12345678"
+        preflight = preflight_real()
+        for relatorio in preflight["frota"]:
+            if relatorio["provider_id"] != "codex":
+                relatorio["resultado"] = "BLOCKED"
+        r = self.executar(SensorObrigatorio(codex=(0, segredo, "")),
+                          preflight=preflight)
+        self.assertNotEqual(r["status"], "sucesso")
+        self.assertIsNone(r["saida"])
+        for base, _, nomes in os.walk(os.path.join(self.raiz_lab, "cas")):
+            for nome in nomes:
+                with open(os.path.join(base, nome), "rb") as f:
+                    self.assertNotIn(segredo.encode(), f.read())
 
 
 class FallbackEntreAssinaturas(_ComLab):
@@ -263,6 +406,30 @@ class FallbackEntreAssinaturas(_ComLab):
         self.assertEqual(r["status"], "sucesso", r.get("detalhe"))
         self.assertEqual(r["saida"], "feito pelo kimi")
         self.assertEqual(sensor.provedores_chamados(), ["codex", "kimi"])
+
+    def test_recusa_textual_sem_contrato_nao_vira_sucesso_e_faz_fallback(self):
+        chamadas = []
+
+        def sensor(argv, env=None, timeout=None, cwd=None,
+                   entrada_stdin=None):
+            exe = str(argv[0]).lower()
+            if "codex" in exe:
+                chamadas.append("codex")
+                return (0, "Nao consegui analisar: workspace inacessivel", "")
+            if "kimi" in exe:
+                chamadas.append("kimi")
+                conteudo = (f"{pa.STATUS_SUCESSO}\n"
+                            f"{pa.MARCADOR_RESPOSTA}\nanalise concluida")
+                return (0, json.dumps({"role": "assistant",
+                                       "content": conteudo}), "")
+            raise AssertionError(exe)
+
+        r = self.executar(sensor)
+        self.assertEqual(r["status"], "sucesso", r.get("detalhe"))
+        self.assertEqual(r["saida"], "analise concluida")
+        self.assertEqual(chamadas, ["codex", "kimi"])
+        self.assertEqual([a["resultado"] for a in r["attempts"]],
+                         ["falha-contrato", "sucesso"])
 
     def test_o_attempt_de_quota_fica_registrado_com_o_tipo_certo(self):
         # A evidencia precisa dizer POR QUE trocou. `falha-quota` tipada e
@@ -373,7 +540,8 @@ class OTetoZeroEExercidoENaoApenasDeclarado(_ComLab):
         import frota_medida
         from preflight.frota_real import ESPECIFICACOES
         montagem = frota_medida.frota_do_preflight(
-            preflight_real()["frota"], ESPECIFICACOES)
+            preflight_real()["frota"], ESPECIFICACOES,
+            autorizacao_p2=frota_medida.AUTORIZACAO_OPERACIONAL_P2)
         aprovacao = envelope_de_frota(Frota(montagem["entradas"]))
         self.assertEqual(aprovacao["teto_custo"],
                          POLITICA_ECONOMICA["external_variable_cost_cap"])
@@ -395,7 +563,8 @@ class OSensorRealEOPadraoDaOperacao(unittest.TestCase):
         import frota_medida
         from preflight.frota_real import ESPECIFICACOES
         montagem = frota_medida.frota_do_preflight(
-            preflight_real()["frota"], ESPECIFICACOES)
+            preflight_real()["frota"], ESPECIFICACOES,
+            autorizacao_p2=frota_medida.AUTORIZACAO_OPERACIONAL_P2)
         from ssc_p0.frota import Frota
         frota = Frota(montagem["entradas"])
         marcador = SensorObrigatorio(codex=(0, "x", ""))
@@ -487,7 +656,7 @@ class RelatoNaoDependeDoConsole(unittest.TestCase):
                     if isinstance(n, ast.FunctionDef) and n.name == "main")
         chamadas = [n for n in ast.walk(main) if isinstance(n, ast.Call)]
         nomes = {c.func.id for c in chamadas if isinstance(c.func, ast.Name)}
-        self.assertIn("relatar", nomes)
+        self.assertIn("publicar_recibo", nomes)
         crus = [c for c in chamadas
                 if isinstance(c.func, ast.Name) and c.func.id == "print"
                 and any(isinstance(x, ast.Name) and x.id == "registro"
@@ -496,6 +665,51 @@ class RelatoNaoDependeDoConsole(unittest.TestCase):
             crus, [], "main() imprime texto de modelo por print cru: o "
                       "console volta a poder derrubar a corrida antes de "
                       "persistir a evidencia")
+
+    def test_recibo_ja_existe_se_o_relato_falhar(self):
+        """Exerce a mesma primitiva e a mesma ordem chamadas por main()."""
+        with tempfile.TemporaryDirectory(prefix="p2-recibo-") as tmp:
+            caminho = os.path.join(tmp, "recibo.json")
+
+            def falhar(_):
+                raise UnicodeEncodeError("cp1252", "→", 0, 1, "teste")
+
+            with self.assertRaises(UnicodeEncodeError):
+                runner_p2.publicar_recibo(
+                    caminho, {"status": "sucesso"}, self._registro(),
+                    relator=falhar)
+            with open(caminho, encoding="utf-8") as f:
+                self.assertEqual(json.load(f), {"status": "sucesso"})
+
+
+class ConcorrenciaENomes(unittest.TestCase):
+    def test_mutex_recusa_segundo_runner_da_mesma_sessao(self):
+        original_raiz = runner_p2.caminhos.RAIZ
+        original_guarda = runner_p2.exigir_capsula_limpa
+        with tempfile.TemporaryDirectory(prefix="p2-mutex-") as tmp:
+            runner_p2.caminhos.RAIZ = tmp
+            runner_p2.exigir_capsula_limpa = lambda: None
+            try:
+                @runner_p2._serializar_runner
+                def segundo():
+                    return "nao deve entrar"
+
+                @runner_p2._serializar_runner
+                def primeiro():
+                    with self.assertRaises(SystemExit) as ctx:
+                        segundo()
+                    self.assertIn("outro runner", str(ctx.exception))
+
+                primeiro()
+            finally:
+                runner_p2.caminhos.RAIZ = original_raiz
+                runner_p2.exigir_capsula_limpa = original_guarda
+
+    def test_ids_nao_colidem_no_mesmo_instante(self):
+        instante = datetime(2026, 8, 11, tzinfo=timezone.utc)
+        ids = {runner_p2.identificador_execucao(instante)
+               for _ in range(100)}
+        self.assertEqual(len(ids), 100)
 
 
 if __name__ == "__main__":  # pragma: no cover

@@ -19,6 +19,7 @@ import dataclasses
 import json
 import os
 import unittest
+from datetime import datetime, timedelta, timezone
 
 import apoio  # noqa: F401  (sys.path)
 
@@ -29,6 +30,7 @@ from preflight import (BillingDesconhecido, ChavePaygDetectada,
                        RelatorioPreflight, ambiente_sanitizado,
                        auditar_ambiente, auditar_config, espec_de,
                        executar_preflight)
+from preflight.sombra import DeclaracaoTier
 
 # Montado por concatenacao de proposito: assim o valor existe em memoria
 # para os testes, mas NENHUMA linha do arquivo casa com o padrao de chave
@@ -41,7 +43,7 @@ _LOGIN_VERDE = {
                               "subscriptionType": "max"}), ""),
     "kimi": (0, "managed:kimi-code  type=kimi  source=oauth  "
                 "plano=Allegretto", ""),
-    "google": (0, "logged in: oauth-personal\nPlano: Google AI Pro", ""),
+    "google": (0, apoio.VERDES["google"][1], ""),
     "grok": (0, "logged in (cached token)\nPlano: SuperGrok", ""),
 }
 _MODELOS_VERDE = {
@@ -50,14 +52,14 @@ _MODELOS_VERDE = {
     "claude": (0, "claude-opus-4-5\nclaude-sonnet-4-5", ""),
     "kimi": (0, "Default model: kimi-code/k3\n"
                 "managed:kimi-code  type=kimi  source=oauth", ""),
-    "google": (0, "gemini-2.5-pro\ngemini-2.5-flash", ""),
+    "google": (0, apoio.VERDES["google"][2], ""),
     "grok": (0, "grok-4\ngrok-code-fast-1", ""),
 }
 _VERSAO_VERDE = {
     "codex": (0, "codex-cli 0.145.0", ""),
     "claude": (0, "2.1.220 (Claude Code)", ""),
     "kimi": (0, "kimi-code 0.30.0", ""),
-    "google": (0, "gemini 0.52.0", ""),
+    "google": (0, apoio.VERDES["google"][0], ""),
     "grok": (0, "grok 1.1.7", ""),
 }
 
@@ -77,7 +79,8 @@ class SensorFalso:
 
     def __call__(self, argv, env):
         self.chamadas.append(list(argv))
-        resposta = self.resposta_versao if "--version" in argv \
+        resposta = self.resposta_versao if ("--version" in argv
+                                             or "changelog" in argv) \
             else self.resposta_login
         if isinstance(resposta, Exception):
             raise resposta
@@ -285,15 +288,16 @@ class TestFalhasObrigatorias(unittest.TestCase):
 class TestCaminhoFeliz(unittest.TestCase):
 
     def test_codex_claude_kimi_ate_o_teto_com_sensores_verdes(self):
-        # Emenda P1-A.3: claude tem teto SUPERVISED e descoberta de
-        # modelos desativada (sem fonte oficial nao interativa).
-        esperado = {"codex": "ELIGIBLE", "claude": "SUPERVISED",
+        esperado = {"codex": "ELIGIBLE", "claude": "ELIGIBLE",
                     "kimi": "ELIGIBLE"}
         for provider_id, resultado in esperado.items():
             with self.subTest(provider=provider_id):
                 sensores = _sensores_verdes(provider_id)
-                rel = executar_preflight(espec_de(provider_id), sensores,
-                                         env={}, config_persistida={})
+                rel = executar_preflight(
+                    espec_de(provider_id), sensores, env={},
+                    config_persistida=(
+                        {"model": "claude-fable-5[1m]"}
+                        if provider_id == "claude" else {}))
                 self.assertEqual(rel.resultado, resultado)
                 self.assertEqual(rel.erros, [])
                 # Fail-closed (P1-A.1): sem sinal positivo, quota e unknown.
@@ -301,8 +305,9 @@ class TestCaminhoFeliz(unittest.TestCase):
                 self.assertEqual(rel.origem_credencial,
                                  "subscription-oauth")
                 self.assertTrue(rel.versao)
-                if espec_de(provider_id).comandos["modelos"] is None:
-                    self.assertEqual(rel.modelos, [])
+                if provider_id == "claude":
+                    self.assertEqual(rel.modelos,
+                                     ["claude-fable-5[1m]"])
                     # Nenhuma sonda de modelos (descoberta desativada).
                     self.assertEqual(len(sensores["modelos"].chamadas), 0)
                 else:
@@ -311,19 +316,33 @@ class TestCaminhoFeliz(unittest.TestCase):
                     # modelos).
                     self.assertEqual(len(sensores["modelos"].chamadas), 1)
 
-    def test_google_grok_supervised_mesmo_com_tudo_verde(self):
+    def test_google_shadow_automatico_e_grok_supervised(self):
+        agora = datetime(2026, 8, 11, 20, tzinfo=timezone.utc)
         for provider_id in ("google", "grok"):
             with self.subTest(provider=provider_id):
                 sensores = _sensores_verdes(provider_id)
-                rel = executar_preflight(espec_de(provider_id), sensores,
-                                         env={}, config_persistida={})
-                self.assertEqual(rel.resultado, "SUPERVISED")
+                tiers = ({"google": DeclaracaoTier(
+                    "google", "Google AI Pro", "proprietario",
+                    (agora - timedelta(hours=1)).strftime(
+                        "%Y-%m-%dT%H:%M:%SZ"))}
+                    if provider_id == "google" else {})
+                rel = executar_preflight(
+                    espec_de(provider_id), sensores, env={},
+                    config_persistida={}, tiers_declarados=tiers, agora=agora)
+                self.assertEqual(rel.resultado,
+                                 "SHADOW_ELIGIBLE" if provider_id ==
+                                 "google" else "SUPERVISED")
                 self.assertEqual(rel.erros, [])
                 # Emenda P1-A.3, item 5: ZERO sondas automaticas — nem
                 # versao/login, nem modelos.
-                self.assertEqual(rel.modelos, [])
-                self.assertEqual(len(sensores["modelos"].chamadas), 0)
-                self.assertEqual(len(sensores["exec"].chamadas), 0)
+                if provider_id == "google":
+                    self.assertTrue(rel.modelos)
+                    self.assertEqual(len(sensores["modelos"].chamadas), 1)
+                    self.assertEqual(len(sensores["exec"].chamadas), 2)
+                else:
+                    self.assertEqual(rel.modelos, [])
+                    self.assertEqual(len(sensores["modelos"].chamadas), 0)
+                    self.assertEqual(len(sensores["exec"].chamadas), 0)
 
     def test_grok_origem_nao_sondada(self):
         # Emenda P1-A.3, item 5: grok tem ZERO sondas automaticas — a

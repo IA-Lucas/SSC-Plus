@@ -6,6 +6,7 @@ Providers falsos deterministicos por seed; numeros simulados e rotulados.
 
 import os
 import sys
+import weakref
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -49,6 +50,10 @@ class Lab:
         self.aprovacao = aprovacao or envelope_aprovacao_padrao()
         self.kernel = SessionKernel(self.raiz, self.relogio,
                                     raizes_fontes=[DIR_FIXTURES])
+        # Ultima rede para caminhos de excecao de chamadores antigos. O
+        # fechamento explicito/context manager continua preferido, mas um
+        # objeto abandonado nao deixa o lock do SO aberto.
+        self._finalizer = weakref.finalize(self, self.kernel.fechar)
         self.control = ControlPlane(self.kernel)
         self.policy = PolicyGateway(self.politica, self.catalogo, self.relogio)
         self.router = TaskRouter(self.kernel, self.policy, self.catalogo,
@@ -92,6 +97,17 @@ class Lab:
 
     def juiz2(self, seed=99, fila=None):
         return Juiz2(fila or fila_juizes_padrao(), seed)
+
+    def fechar(self) -> None:
+        """Libera recursos do kernel; idempotente para finally/tearDown."""
+        self._finalizer()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc, traceback):
+        self.fechar()
+        return False
 
     def selecao(self, provedor, modelo, effort="alto", modo="read-only",
                 controle="confirma-no-gasto"):

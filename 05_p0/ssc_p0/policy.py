@@ -6,6 +6,8 @@ fora da lista permitida = veto, mesmo estando na politica. Verifica orcamento
 antes de cada attempt: estouro = EscalationEvent, nunca estouro silencioso.
 """
 
+from datetime import datetime, timezone
+
 from .catalogo import Catalogo, ExecutorDesconhecido
 from .canonico import Relogio
 
@@ -53,30 +55,52 @@ class PolicyGateway:
             vetos.append(
                 f"modo {selecao.get('modo')!r} incoerente com "
                 f"classe {workunit.classe_governanca}")
-        # Portao de custo/autonomia bloqueante: ENVELOPE, nao modelo fixo.
+        # O envelope autoriza a ROTA inteira, nao apenas a cobranca. Custo
+        # zero, controle autonomo e fallback continuam sujeitos a modelo,
+        # effort, modo, validade e teto. Caso contrario um chamador podia
+        # escolher exatamente esses rotulos para contornar a aprovacao.
         custo = decisao.custo_previsto or {}
-        controle = selecao.get("controle")
-        if custo.get("valor", 0) > 0 and controle != "autonomo":
-            ap = decisao.aprovacao_custo
-            if ap is None:
-                vetos.append("aprovacao_custo (envelope) obrigatoria "
-                             "e ausente (portao bloqueante)")
-            else:
-                if chave not in ap.get("modelos_permitidos", []):
-                    vetos.append(
-                        f"modelo {chave!r} fora do envelope aprovado "
-                        "(mesmo estando na politica)")
-                if selecao.get("effort") not in ap.get("efforts_permitidos", []):
-                    vetos.append(
-                        f"effort {selecao.get('effort')!r} fora do envelope")
-                if custo.get("valor", 0) > ap.get("teto_custo", 0):
-                    vetos.append("custo previsto acima do teto do envelope")
-                if selecao.get("modo") != ap.get("modo"):
-                    vetos.append("modo divergente do envelope aprovado")
-                if self.relogio.espiar() >= ap.get("validade", ""):
-                    vetos.append("envelope de aprovacao expirado")
-                if decisao.alternativas and not ap.get("fallback_autorizado"):
-                    vetos.append("fallback nao autorizado no envelope")
+        vetos.extend(self._vetos_envelope(
+            decisao.aprovacao_custo, chave, selecao, custo,
+            tem_fallback=bool(decisao.alternativas)))
+        return vetos
+
+    def _expirado_ou_invalido(self, validade) -> bool:
+        try:
+            limite = datetime.fromisoformat(
+                str(validade).replace("Z", "+00:00"))
+            if limite.tzinfo is None:
+                return True
+            atual = datetime.fromisoformat(
+                str(self.relogio.espiar()).replace("Z", "+00:00"))
+            if atual.tzinfo is None:
+                atual = atual.replace(tzinfo=timezone.utc)
+            return atual.astimezone(timezone.utc) >= limite.astimezone(timezone.utc)
+        except (TypeError, ValueError, OverflowError):
+            return True
+
+    def _vetos_envelope(self, ap, chave, selecao, custo,
+                        tem_fallback=False) -> list:
+        if not isinstance(ap, dict):
+            return ["aprovacao_custo (envelope) obrigatoria e ausente "
+                    "(portao bloqueante)"]
+        vetos = []
+        if chave not in ap.get("modelos_permitidos", []):
+            vetos.append(f"modelo {chave!r} fora do envelope aprovado "
+                         "(mesmo estando na politica)")
+        if selecao.get("effort") not in ap.get("efforts_permitidos", []):
+            vetos.append(f"effort {selecao.get('effort')!r} fora do envelope")
+        valor = custo.get("valor", 0)
+        if not isinstance(valor, (int, float)) or valor < 0:
+            vetos.append("custo previsto invalido no envelope")
+        elif valor > ap.get("teto_custo", -1):
+            vetos.append("custo previsto acima do teto do envelope")
+        if selecao.get("modo") != ap.get("modo"):
+            vetos.append("modo divergente do envelope aprovado")
+        if self._expirado_ou_invalido(ap.get("validade")):
+            vetos.append("envelope de aprovacao expirado ou invalido")
+        if tem_fallback and not ap.get("fallback_autorizado"):
+            vetos.append("fallback nao autorizado no envelope")
         return vetos
 
     def verificar_fallback_envelope(self, decisao, para_executor: dict) -> bool:
@@ -85,17 +109,14 @@ class PolicyGateway:
         Fora do envelope = escalonamento, nao tentativa.
         """
         ap = decisao.aprovacao_custo
-        if ap is None:
-            return False
-        if not ap.get("fallback_autorizado"):
-            return False
         modelo = para_executor["modelo"]
         if modelo in self.catalogo.aliases:
             chave = self.catalogo.aliases[modelo]
         else:
             chave = f"{para_executor['provedor']}/{modelo}"
-        return (chave in ap.get("modelos_permitidos", [])
-                and para_executor.get("effort") in ap.get("efforts_permitidos", []))
+        return not self._vetos_envelope(
+            ap, chave, para_executor, decisao.custo_previsto or {},
+            tem_fallback=True)
 
     def verificar_orcamento(self, orcamento: dict, custo_previsto: dict | None) -> None:
         """Estouro = OrcamentoEstourado (o Execution emite EscalationEvent)."""

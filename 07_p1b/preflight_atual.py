@@ -13,7 +13,8 @@ Portoes herdados da P1-A/P1-A.1 (nao reimplementados aqui):
 - toda sonda passa por `sensor_subprocess` com `ambiente_sanitizado`
   (credenciais PAYG nunca entram no subprocesso — `adaptadores.py:86`);
 - violacao economica/auth bloqueia ANTES de qualquer sonda de modelo;
-- google e grok tem teto SUPERVISED; ausencia de evidencia = unknown.
+- Claude e Google exigem modelo exato observado; Grok tem teto
+  SUPERVISED; ausencia de evidencia = unknown.
 
 CAPSULA (P1-B.01, ordem 1). Ate aqui a garantia acima alcancava SOMENTE
 as sondas-filho: o processo pai auditava e classificava `dict(os.environ)`
@@ -71,6 +72,9 @@ sys.path.insert(0, os.path.join(_RAIZ, "06_p1a", "evidencias"))
 
 import leitor_tiers  # noqa: E402
 import leitores_config  # noqa: E402
+from seguranca_artefatos import (assinar_preflight, caminho_chave_padrao,
+                                 gravar_json_atomico,
+                                 obter_ou_criar_chave)  # noqa: E402
 from capsula import (ambiente_capsula, exigir_capsula_limpa,  # noqa: E402
                      verificar_capsula)
 from preflight.adaptadores import sensor_subprocess  # noqa: E402
@@ -84,8 +88,9 @@ _GITBASH = r"E:\LucasIA\Git\bin\bash.exe"
 # titular. O default historico permanece para nao mudar o comportamento
 # de quem nao declara sessao.
 _SESSAO_LOCK = os.environ.get("SSC_LOCK_SESSAO", "p1b-ops")
-# CLIs npm sem executavel Windows direto: a sonda vai pelo Git Bash.
-_VIA_GITBASH = ("google", "grok")
+# CLI sem executavel Windows direto: a sonda vai pelo Git Bash. Google
+# usa o executavel oficial `agy.exe` diretamente.
+_VIA_GITBASH = ("grok",)
 
 # Teto da sonda via Git Bash. ERA 120 e passa a 60 na P1-A.3.9, alinhado
 # com `06_p1a/preflight_capsula`. Escolhido por MEDICAO: o teto canonico
@@ -148,9 +153,8 @@ class _ContadorDeSondas:
     """Conta as sondas REAIS disparadas, por provedor (ordem 5).
 
     A evidencia precisa dizer quantas sondas correram, e sonda esperada
-    nao substitui sonda medida: "google e grok tem zero sondas
-    automaticas" e propriedade da especificacao, nao observacao desta
-    corrida. O contador envolve o sensor real e conta invocacoes — o que
+    nao substitui sonda medida. O contador envolve o sensor real e conta
+    invocacoes — o que
     o pipeline de fato executou. Nao le, nao guarda e nao registra argv,
     ambiente nem saida: somente a contagem.
     """
@@ -167,7 +171,7 @@ class _ContadorDeSondas:
 
 
 def _sensor_de(provider_id: str):
-    """Sensor real; google/grok (npm) rodam via Git Bash na estacao."""
+    """Sensor real; somente grok (npm) roda via Git Bash na estacao."""
     if provider_id not in _VIA_GITBASH:
         return sensor_subprocess
 
@@ -273,16 +277,18 @@ def main() -> int:
             set(ambiente) - set(ambiente_sanitizado(ambiente))),
         "frota": relatorios,
     }
-    texto = _redigir(json.dumps(documento, indent=2, ensure_ascii=False,
-                                default=str))
+    # A atestacao cobre exatamente o documento redigido que sera publicado.
+    # Assim nenhum caminho/valor sensivel fica fora do MAC e uma alteracao
+    # posterior, mesmo mantendo JSON valido, e recusada pelo consumidor.
+    documento = json.loads(_redigir(json.dumps(
+        documento, ensure_ascii=False, default=str)))
+    chave = obter_ou_criar_chave(caminho_chave_padrao(_RAIZ))
+    documento = assinar_preflight(documento, chave)
     dir_saida = os.path.join(_RAIZ, "07_p1b", "evidencias")
     os.makedirs(dir_saida, exist_ok=True)
-    nome = f"preflight-{agora.strftime('%Y%m%dT%H%M%SZ')}.json"
+    nome = f"preflight-{agora.strftime('%Y%m%dT%H%M%S%fZ')}.json"
     caminho = os.path.join(dir_saida, nome)
-    with open(caminho, "w", encoding="utf-8") as f:
-        f.write(texto + "\n")
-        f.flush()
-        os.fsync(f.fileno())
+    gravar_json_atomico(caminho, documento)
 
     print(f"evidencia: 07_p1b/evidencias/{nome}")
     for rel in relatorios:

@@ -31,9 +31,12 @@ Nos testes, sensores falsos substituem qualquer subprocesso: nenhum teste
 desta missao invoca CLI real, e nenhum gasta franquia de assinatura.
 """
 
-import locale
+import json
+import os
+import shutil
 import subprocess
 import tempfile
+import threading
 import time
 
 import caminhos  # (insere 05_p0/06_p1a/08_p2/evidencias no sys.path)
@@ -41,6 +44,8 @@ import caminhos  # (insere 05_p0/06_p1a/08_p2/evidencias no sys.path)
 from contencao import LAR_DO_CLI, Vigilancia, manifesto, mutacoes
 from preflight.adaptadores import argv_de, quota_esgotada
 from preflight.frota_real import MARCA_DESCARTAVEL, rotulo_restricao
+from processo_arvore import (decodificar_saida, encerrar_arvore,
+                             opcoes_nova_arvore)
 from ssc_p0.frota import ambiente_sanitizado
 from ssc_p0.providers import RespostaProvedor
 
@@ -54,6 +59,58 @@ TIMEOUT_PADRAO_S = 900
 # valor do sensor de preflight, pela mesma razao: 124 e o codigo que
 # `timeout(1)` usa, e reusa-lo evita inventar um dialeto proprio.
 RC_TIMEOUT = 124
+RC_SAIDA_EXCEDIDA = 125
+RC_SAIDA_INVALIDA = 126
+MAX_CAPTURA_BYTES = 1024 * 1024
+
+STATUS_SUCESSO = "SSC_STATUS: SUCESSO"
+STATUS_BLOQUEADO = "SSC_STATUS: BLOQUEADO"
+MARCADOR_RESPOSTA = "SSC_RESPOSTA:"
+MARCADOR_MOTIVO = "SSC_MOTIVO:"
+
+
+def montar_prompt_semantico(prompt: str) -> str:
+    """Acrescenta um contrato de conclusao que pode ser medido.
+
+    Codigo de saida zero prova que o CLI respondeu; nao prova que a tarefa foi
+    feita. O provedor precisa declarar SUCESSO ou BLOQUEADO em forma fechada.
+    Ausencia/ambiguidade vira falha de contrato e habilita fallback.
+    """
+    return (
+        "CONTRATO DE RESULTADO SSC+ (obrigatorio):\n"
+        "- Se concluir a tarefa, responda com a primeira linha exata "
+        f"`{STATUS_SUCESSO}`, depois `{MARCADOR_RESPOSTA}` e a resposta.\n"
+        "- Se nao conseguir concluir por acesso, ferramenta, permissao, "
+        "contexto ou qualquer bloqueio, responda com a primeira linha exata "
+        f"`{STATUS_BLOQUEADO}`, depois `{MARCADOR_MOTIVO}` e o motivo.\n"
+        "- Nunca declare SUCESSO quando apenas explicar por que nao executou.\n"
+        "- Nao envolva os marcadores em bloco de codigo.\n\n"
+        "PEDIDO:\n" + prompt
+    )
+
+
+def normalizar_resultado_semantico(texto: str) -> tuple[bool, str, str]:
+    """(concluiu, resposta, motivo) para o contrato textual fechado."""
+    linhas = (texto or "").replace("\r\n", "\n").split("\n")
+    indices = [i for i, linha in enumerate(linhas)
+               if linha.strip() in (STATUS_SUCESSO, STATUS_BLOQUEADO)]
+    if len(indices) != 1:
+        return False, "", "marcador de status ausente ou ambiguo"
+    indice = indices[0]
+    status = linhas[indice].strip()
+    resto = linhas[indice + 1:]
+    if status == STATUS_BLOQUEADO:
+        if not resto or not resto[0].strip().startswith(MARCADOR_MOTIVO):
+            return False, "", "bloqueio sem SSC_MOTIVO"
+        primeiro = resto[0].strip()[len(MARCADOR_MOTIVO):].strip()
+        motivo = "\n".join(([primeiro] if primeiro else []) + resto[1:]).strip()
+        return False, "", motivo or "provedor declarou bloqueio sem detalhe"
+    if not resto or resto[0].strip() != MARCADOR_RESPOSTA:
+        return False, "", "sucesso sem SSC_RESPOSTA"
+    resposta = "\n".join(resto[1:]).strip()
+    if not resposta:
+        return False, "", "sucesso com resposta vazia"
+    return True, resposta, ""
 
 # Marcadores de falha TRANSITORIA (429/5xx/rede). Retry so acontece sob
 # IR-1 — com idempotency_key ou efeito comprovadamente nao-aplicado — e o
@@ -110,24 +167,12 @@ def decodificar(bruto: bytes) -> str:
     texto plausivel e errado, em silencio. Um decodificador que nunca
     falha e um decodificador que nunca avisa.
     """
-    if not bruto:
-        return ""
-    tentativas = ["utf-8"]
-    local = locale.getpreferredencoding(False)
-    if local and local.lower() not in tentativas:
-        tentativas.append(local)
-    if "cp1252" not in [t.lower() for t in tentativas]:
-        tentativas.append("cp1252")
-    for codificacao in tentativas:
-        try:
-            return bruto.decode(codificacao)
-        except (UnicodeDecodeError, LookupError):
-            continue
-    return bruto.decode("utf-8", errors="replace")
+    return decodificar_saida(bruto)
 
 
 def sensor_subprocess(argv, env=None, timeout: int = TIMEOUT_PADRAO_S,
-                      cwd: str | None = None):
+                      cwd: str | None = None,
+                      entrada_stdin: bytes | None = None):
     """Sensor real: subprocesso sanitizado, sem shell, com teto de parede.
 
     Captura stdout/stderr sem ecoa-los. `shell=False` (implicito na forma
@@ -148,17 +193,68 @@ def sensor_subprocess(argv, env=None, timeout: int = TIMEOUT_PADRAO_S,
     """
     ambiente = ambiente_sanitizado(env)
     try:
-        proc = subprocess.run(list(argv), env=ambiente, capture_output=True,
-                              timeout=timeout, cwd=cwd)
-    except subprocess.TimeoutExpired:
-        return (RC_TIMEOUT, "", f"timeout de {timeout}s na invocacao")
+        proc = subprocess.Popen(list(argv), env=ambiente,
+                                stdin=(subprocess.PIPE if entrada_stdin is not None
+                                       else subprocess.DEVNULL),
+                                stdout=subprocess.PIPE,
+                                stderr=subprocess.PIPE, cwd=cwd,
+                                **opcoes_nova_arvore())
     except (FileNotFoundError, OSError) as exc:
         # NAO propaga: o Execution Gateway espera uma RespostaProvedor, e
         # uma excecao aqui derrubaria a sessao inteira em vez de produzir
         # o attempt registrado que a evidencia exige.
         return (127, "", f"{type(exc).__name__}: executavel indisponivel")
-    return (proc.returncode, decodificar(proc.stdout),
-            decodificar(proc.stderr))
+    capturas = {"stdout": bytearray(), "stderr": bytearray()}
+    excedeu = {"stdout": False, "stderr": False}
+
+    def drenar(nome, fluxo):
+        while True:
+            bloco = fluxo.read(65536)
+            if not bloco:
+                break
+            restante = MAX_CAPTURA_BYTES - len(capturas[nome])
+            if restante > 0:
+                capturas[nome].extend(bloco[:restante])
+            if len(bloco) > restante:
+                excedeu[nome] = True
+
+    def alimentar_stdin():
+        try:
+            proc.stdin.write(entrada_stdin or b"")
+            proc.stdin.flush()
+        except (BrokenPipeError, OSError):
+            pass
+        finally:
+            try:
+                proc.stdin.close()
+            except OSError:
+                pass
+
+    threads = [threading.Thread(target=drenar, args=(nome, fluxo), daemon=True)
+               for nome, fluxo in (("stdout", proc.stdout),
+                                   ("stderr", proc.stderr))]
+    if entrada_stdin is not None:
+        threads.append(threading.Thread(target=alimentar_stdin, daemon=True))
+    for thread in threads:
+        thread.start()
+    try:
+        proc.wait(timeout=timeout)
+    except subprocess.TimeoutExpired:
+        encerrar_arvore(proc)
+        for thread in threads:
+            thread.join()
+        proc.stdout.close()
+        proc.stderr.close()
+        return (RC_TIMEOUT, "", f"timeout de {timeout}s na invocacao")
+    for thread in threads:
+        thread.join()
+    proc.stdout.close()
+    proc.stderr.close()
+    if any(excedeu.values()):
+        return (RC_SAIDA_EXCEDIDA, "",
+                f"saida do CLI excedeu o teto de {MAX_CAPTURA_BYTES} bytes")
+    return (proc.returncode, decodificar(bytes(capturas["stdout"])),
+            decodificar(bytes(capturas["stderr"])))
 
 
 def classificar(rc: int, texto: str, mutacoes_medidas) -> tuple:
@@ -235,6 +331,72 @@ def classificar(rc: int, texto: str, mutacoes_medidas) -> tuple:
     return ("falha-contrato", medido or "nenhum")
 
 
+def normalizar_saida(provider_id: str, rc: int, out: str, err: str):
+    """Saida util + telemetria comprovada do CLI, fail-closed.
+
+    O Antigravity e invocado com `--output-format json`; aceitar stdout
+    livre significaria aceitar que a flag foi ignorada (o defeito medido
+    quando o prompt estava na posicao errada). Em sucesso, exige um turno
+    produtivo, status SUCCESS, resposta textual e contadores numericos.
+    """
+    if rc != 0:
+        return rc, out, err, None
+    if provider_id == "kimi":
+        try:
+            respostas = []
+            for linha in out.splitlines():
+                if not linha.strip():
+                    continue
+                dados = json.loads(linha)
+                mensagem = dados.get("message") \
+                    if isinstance(dados.get("message"), dict) else dados
+                papel = mensagem.get("role") or dados.get("role") \
+                    or dados.get("type")
+                if papel not in ("assistant", "message.assistant"):
+                    continue
+                conteudo = mensagem.get("content")
+                if isinstance(conteudo, str) and conteudo.strip():
+                    respostas.append(conteudo)
+                elif isinstance(conteudo, list):
+                    textos = [p.get("text") for p in conteudo
+                              if isinstance(p, dict)
+                              and isinstance(p.get("text"), str)]
+                    if textos:
+                        respostas.append("\n".join(textos))
+            if not respostas:
+                raise ValueError("sem mensagem assistant")
+            # `stream-json` pode repartir uma unica resposta logica em
+            # varios eventos assistant. Reter apenas o ultimo amputava o
+            # contrato quando SSC_STATUS e SSC_RESPOSTA vinham separados.
+            return rc, "\n".join(respostas), err, {
+                "mensagens_assistente": len(respostas),
+                "formato": "stream-json"}
+        except (json.JSONDecodeError, TypeError, ValueError, AttributeError):
+            return (RC_SAIDA_INVALIDA, "",
+                    "saida estruturada invalida do Kimi", None)
+    if provider_id != "google":
+        return rc, out, err, None
+    try:
+        dados = json.loads(out)
+        uso = dados.get("usage")
+        resposta = dados.get("response")
+        if dados.get("status") != "SUCCESS" \
+                or not isinstance(dados.get("num_turns"), int) \
+                or dados["num_turns"] < 1 \
+                or not isinstance(resposta, str) or not resposta.strip() \
+                or not isinstance(uso, dict) or not uso \
+                or not all(isinstance(v, (int, float))
+                           and not isinstance(v, bool) and v >= 0
+                           for v in uso.values()):
+            raise ValueError("schema de sucesso incompleto")
+        telemetria = {"num_turns": dados["num_turns"],
+                      "total_tokens": uso.get("total_tokens")}
+        return rc, resposta, err, telemetria
+    except (json.JSONDecodeError, TypeError, ValueError, AttributeError):
+        return (RC_SAIDA_INVALIDA, "",
+                "saida estruturada invalida do Antigravity", None)
+
+
 class ProvedorAssinaturaReal:
     """Invoca o CLI de assinatura em modo nao-interativo.
 
@@ -246,13 +408,20 @@ class ProvedorAssinaturaReal:
 
     def __init__(self, espec, sensor=None, timeout: int = TIMEOUT_PADRAO_S,
                  env=None, relogio=time.monotonic, vigia=None,
-                 sessao_lock: str | None = None):
+                 sessao_lock: str | None = None,
+                 raiz_descartaveis: str | None = None,
+                 model_id: str | None = None,
+                 contrato_semantico: bool = False):
         self.espec = espec
+        self.model_id = model_id
+        self.contrato_semantico = bool(contrato_semantico)
         self.sensor = sensor or sensor_subprocess
         self.timeout = int(timeout)
         self.env = dict(env) if env is not None else None
         self.relogio = relogio
         self.sessao_lock = sessao_lock or caminhos.SESSAO_LOCK
+        self.raiz_descartaveis = raiz_descartaveis or os.path.join(
+            caminhos.RAIZ, "locks", "descartaveis-p2")
         # `vigia` injetavel pela mesma razao do sensor: em teste ela olha
         # uma arvore de brinquedo, em operacao a arvore de verdade. `None`
         # NAO desliga a vigilancia — constroi a real. Desligar por omissao
@@ -306,7 +475,7 @@ class ProvedorAssinaturaReal:
             "lar_do_cli": lar_dito,
         }
 
-    def argv(self, prompt: str, descartavel: str) -> list:
+    def argv(self, prompt: str | None, descartavel: str) -> list:
         """argv nao-interativo: executavel + headless + RESTRICAO + prompt.
 
         `espec.headless` e o campo que a P1-A declarou e NUNCA usou —
@@ -323,10 +492,27 @@ class ProvedorAssinaturaReal:
         rotulo (`rotulo_restricao`) diz isso por extenso, em vez de deixar
         a ausencia passar por protecao.
         """
+        flag_modelo = list(getattr(self.espec, "flag_modelo", ()) or ())
+        if not flag_modelo or not isinstance(self.model_id, str) \
+                or not self.model_id.strip():
+            raise ValueError(
+                f"modelo nao vinculavel para {self.espec.provider_id}: "
+                "toda rota automatica exige flag e model_id observado")
+        vinculo_modelo = flag_modelo + [self.model_id]
+        formato_saida = list(getattr(
+            self.espec, "formato_saida_headless", ()) or ())
         restricao = [descartavel if arg == MARCA_DESCARTAVEL else arg
                      for arg in self.espec.restricao_headless]
-        return argv_de(self.espec,
-                       list(self.espec.headless) + restricao + [prompt])
+        if prompt is None:
+            comando = (list(self.espec.headless) + vinculo_modelo
+                       + restricao + formato_saida)
+        elif getattr(self.espec, "prompt_antes_das_flags", False):
+            comando = (list(self.espec.headless) + [prompt]
+                       + vinculo_modelo + restricao + formato_saida)
+        else:
+            comando = (list(self.espec.headless) + vinculo_modelo
+                       + restricao + formato_saida + [prompt])
+        return argv_de(self.espec, comando)
 
     def invocar(self, entrada: bytes, pacote: dict | None = None,
                 idempotency_key: str | None = None) -> RespostaProvedor:
@@ -339,16 +525,41 @@ class ProvedorAssinaturaReal:
         """
         self.chaves_recebidas.append(idempotency_key)
         self.chamadas += 1
-        prompt = (entrada or b"").decode("utf-8", errors="replace")
+        prompt_original = (entrada or b"").decode("utf-8", errors="replace")
+        prompt_completo = (montar_prompt_semantico(prompt_original)
+                           if self.contrato_semantico else prompt_original)
 
         # Diretorio descartavel POR INVOCACAO: e o `--cd` do CLI e o `cwd`
         # do processo filho ao mesmo tempo. Dois elos herdavam o diretorio
         # do terminal ate a P2.3 (`capsula.py:111` e a chamada de
         # `subprocess.run` daqui), e caminho relativo escrito pelo filho
         # caia na raiz deste repositorio.
+        os.makedirs(self.raiz_descartaveis, exist_ok=True)
         descartavel = tempfile.mkdtemp(
-            prefix=f"p2-{self.espec.provider_id}-")
-        argv = self.argv(prompt, descartavel)
+            prefix=f"p2-{self.espec.provider_id}-",
+            dir=self.raiz_descartaveis)
+        entrada_stdin = None
+        arquivo_contexto = None
+        if self.contrato_semantico:
+            arquivo_contexto = os.path.join(descartavel, "contexto-ssc.txt")
+            with open(arquivo_contexto, "x", encoding="utf-8", newline="\n") as f:
+                f.write(prompt_completo)
+                f.flush()
+                os.fsync(f.fileno())
+            if getattr(self.espec, "prompt_via_stdin", False):
+                prompt_argv = None
+                entrada_stdin = prompt_completo.encode("utf-8")
+                transporte_prompt = "stdin"
+            else:
+                prompt_argv = (
+                    "Leia integralmente o arquivo contexto-ssc.txt no "
+                    "diretorio atual e execute o pedido e o contrato nele. "
+                    "Nao procure contexto fora desse arquivo.")
+                transporte_prompt = "arquivo-no-descartavel"
+        else:
+            prompt_argv = prompt_completo
+            transporte_prompt = "argumento"
+        argv = self.argv(prompt_argv, descartavel)
 
         # As DUAS fotografias de antes. O descartavel responde *o filho
         # escreveu no proprio espaco?*; a `Vigilancia` responde *escreveu
@@ -359,9 +570,30 @@ class ProvedorAssinaturaReal:
         vigia.abrir()
 
         inicio = self.relogio()
-        rc, out, err = self.sensor(argv, self.env, self.timeout,
-                                   cwd=descartavel)
+        try:
+            rc, out, err = self.sensor(argv, self.env, self.timeout,
+                                       cwd=descartavel,
+                                       entrada_stdin=entrada_stdin)
+        except BaseException:
+            # Sensores injetados podem levantar; o sensor real converte as
+            # falhas esperadas em resultado. Em ambos os casos, nenhuma
+            # excecao pode deixar vigilancia/descartavel abertos.
+            try:
+                vigia.fechar()
+            finally:
+                shutil.rmtree(descartavel, ignore_errors=True)
+            raise
         latencia_ms = int(round((self.relogio() - inicio) * 1000))
+        rc, out, err, telemetria = normalizar_saida(
+            self.espec.provider_id, rc, out, err)
+        if rc == 0 and self.contrato_semantico:
+            concluiu, resposta_util, motivo = normalizar_resultado_semantico(out)
+            if concluiu:
+                out = resposta_util
+            else:
+                rc = RC_SAIDA_INVALIDA
+                out = ""
+                err = "tarefa nao concluida: " + motivo
 
         relatorio_vigilancia = vigia.fechar()
         no_descartavel = mutacoes(antes, manifesto(descartavel))
@@ -371,6 +603,19 @@ class ProvedorAssinaturaReal:
         # faria toda corrida longa parecer escrita externa.
         medidas = [f"descartavel: {m}" for m in no_descartavel] + fora
 
+        # O Kimi nao oferece sandbox de filesystem equivalente ao Codex.
+        # Por isso sua resposta NUNCA e aceita quando a vigilancia observa
+        # escrita fora do descartavel. Antes, a mutacao aparecia no recibo
+        # como `aplicado`, mas rc=0 ainda virava sucesso e podia alimentar a
+        # proxima etapa. Detectar sem bloquear nao e isolamento.
+        isolamento_kimi_violado = (
+            self.espec.provider_id == "kimi" and bool(fora))
+        if isolamento_kimi_violado and rc == 0:
+            rc = RC_SAIDA_INVALIDA
+            out = ""
+            err = ("isolamento Kimi violado: mutacao medida fora do "
+                   "diretorio descartavel")
+
         texto = (out or "") + "\n" + (err or "")
         falha, efeito = classificar(rc, texto, medidas)
         ok = falha is None
@@ -378,15 +623,28 @@ class ProvedorAssinaturaReal:
 
         self.medicoes.append({
             "provider_id": self.espec.provider_id,
+            "modelo_fixado_no_argv": self.model_id,
+            "telemetria_cli": telemetria,
+            "transporte_prompt": transporte_prompt,
+            "prompt_bytes": len(prompt_completo.encode("utf-8")),
+            "contexto_no_descartavel": bool(arquivo_contexto),
             "restricao": rotulo_restricao(self.espec),
             # O prompt e a tarefa do usuario: fora do recibo publico.
-            "argv_publico": ["<PROMPT>" if a == prompt else a for a in argv],
+            "argv_publico": (["<PROMPT>" if a == prompt_argv else a
+                              for a in argv]
+                             + (["<PROMPT>"] if prompt_argv is None else [])),
             "dir_descartavel": descartavel,
             "cwd_do_filho": descartavel,
+            "descartavel_existia_durante_invocacao": True,
             "medida": "manifesto SHA-256 do diretorio descartavel e das "
                       "raizes vigiadas, ANTES e DEPOIS da invocacao",
             "mutacoes_no_descartavel": no_descartavel,
             "mutacoes_fora_do_descartavel": fora,
+            "isolamento_kimi_fail_closed": {
+                "aplicavel": self.espec.provider_id == "kimi",
+                "violado": isolamento_kimi_violado,
+                "resposta_aceita": not isolamento_kimi_violado,
+            },
             "mutacoes_atribuidas_ao_renovador":
                 relatorio_vigilancia["mutacoes_atribuidas_ao_renovador"],
             "arquivos_no_manifesto_vigiado":
@@ -408,7 +666,7 @@ class ProvedorAssinaturaReal:
                 "afirmacao de que nada foi escrito"),
         })
 
-        return RespostaProvedor(
+        resposta = RespostaProvedor(
             ok=ok,
             # Em sucesso, a saida util e o stdout; em falha, os dois canais
             # combinados — o motivo costuma sair em stderr (a licao F-2 do
@@ -424,9 +682,14 @@ class ProvedorAssinaturaReal:
             executor_observado=None,
             efeito_externo=efeito,
             custo={"valor": 0.0, "rotulo": "medido-assinatura",
-                   "tokens_reportados": None},
+                   "tokens_reportados": ((telemetria or {}).get(
+                       "total_tokens"))},
             latencia_ms=latencia_ms,
             latencia_rotulo="medido",
             retry_after_ms=None,
             idempotency_key=idempotency_key,
         )
+        shutil.rmtree(descartavel, ignore_errors=True)
+        self.medicoes[-1]["descartavel_removido_apos_medicao"] = (
+            not os.path.exists(descartavel))
+        return resposta

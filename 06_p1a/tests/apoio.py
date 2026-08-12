@@ -43,9 +43,26 @@ VERDES = {
              "managed:kimi-code type=kimi source=oauth plan=Allegretto",
              "Default model: kimi-code/k3\n"
              "managed:kimi-code type=kimi source=oauth"),
-    "google": ("0.52.0",
-               "oauth-personal; plan: Google AI Pro",
-               "gemini-3-pro\ngemini-3-flash"),
+    "google": ("Antigravity CLI Changelog\n1.1.12",
+               json.dumps({
+                   "command": {"name": "usage", "data": {"groups": [{
+                       "name": "Gemini Models", "buckets": [
+                           {"name": "Weekly Limit Remaining",
+                            "remaining_fraction": 0.96},
+                           {"name": "Five Hour Limit Remaining",
+                            "remaining_fraction": 0.80}]}]}},
+                   "status": "SUCCESS",
+                   "num_turns": 0,
+                   "response": "Gemini Models\tWeekly Limit Remaining\t"
+                               "96%\t2026-08-18T17:25:05Z\nGemini Models\t"
+                               "Five Hour Limit Remaining\t80%\t"
+                               "2026-08-11T22:25:05Z\n",
+                   "usage": {"cache_read_tokens": 0, "input_tokens": 0,
+                             "output_tokens": 0, "thinking_tokens": 0,
+                             "total_tokens": 0}}),
+               "gemini-3.6-flash-high\tGemini 3.6 Flash High\n"
+               "gemini-3.1-pro-high\tGemini 3.1 Pro High\n"
+               "claude-opus-4-6\tClaude Opus"),
     "grok": ("1.1.7",
              "Using cached token (SuperGrok)",
              "grok-4-latest\ngrok-4-fast"),

@@ -14,6 +14,8 @@ import os
 import re
 import subprocess
 
+from processo_arvore import (decodificar_saida, encerrar_arvore,
+                             opcoes_nova_arvore)
 from .economia import CliIndisponivel, ambiente_sanitizado
 
 TIMEOUT_PADRAO = 20
@@ -145,12 +147,19 @@ def sensor_subprocess(argv, env=None, timeout: int = TIMEOUT_PADRAO):
     o adaptador classificar como CliIndisponivel.
     """
     ambiente = ambiente_sanitizado(env)
+    proc = subprocess.Popen(
+        list(argv), env=ambiente, stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE, **opcoes_nova_arvore())
     try:
-        proc = subprocess.run(list(argv), env=ambiente, capture_output=True,
-                              text=True, timeout=timeout)
+        out, err = proc.communicate(timeout=timeout)
     except subprocess.TimeoutExpired:
+        encerrar_arvore(proc)
+        try:
+            proc.communicate(timeout=10)
+        except subprocess.TimeoutExpired:
+            pass
         return (124, "", "timeout do sensor de preflight")
-    return (proc.returncode, proc.stdout or "", proc.stderr or "")
+    return (proc.returncode, decodificar_saida(out), decodificar_saida(err))
 
 
 def extrair_modelos(texto: str) -> list:
@@ -322,9 +331,44 @@ def _login_kimi(rc, out, err, espec):
 
 
 def _login_google(rc, out, err, espec):
-    logado = _logado_texto(rc, out, ("oauth-personal", "logged in"))
-    return _resultado(logado, _plano_de(out, espec.planos_aceitos),
-                      "subscription-oauth", out)
+    """Canal Antigravity: `/quota` estruturado, sem turno nem tokens.
+
+    `credits=0` nao participa desta decisao: credito extra/PAYG e proibido
+    e nao representa a franquia da assinatura. Somente as linhas
+    ``Gemini Models ... Remaining`` autorizam disponibilidade.
+    """
+    try:
+        dados = json.loads(out)
+        uso = dados.get("usage")
+        comando = dados.get("command")
+        grupos = ((comando.get("data") or {}).get("groups")
+                  if isinstance(comando, dict) else None)
+        grupo_gemini = next((g for g in (grupos or [])
+                             if isinstance(g, dict)
+                             and g.get("name") == "Gemini Models"), None)
+        fracoes = [b.get("remaining_fraction")
+                   for b in ((grupo_gemini or {}).get("buckets") or [])
+                   if isinstance(b, dict)]
+        fracoes_validas = bool(fracoes) and all(
+            isinstance(v, (int, float)) and not isinstance(v, bool)
+            and 0 <= v <= 1 for v in fracoes)
+        uso_zero = isinstance(uso, dict) and bool(uso) and all(
+            isinstance(v, (int, float)) and not isinstance(v, bool) and v == 0
+            for v in uso.values())
+        diagnostico_puro = isinstance(comando, dict) \
+            and comando.get("name") == "usage" \
+            and dados.get("status") == "SUCCESS" \
+            and dados.get("num_turns") == 0 and uso_zero
+        logado = rc == 0 and diagnostico_puro and fracoes_validas
+    except (json.JSONDecodeError, AttributeError, TypeError, ValueError):
+        logado, fracoes = False, []
+    quota = ("esgotada" if logado and max(fracoes) == 0 else
+             "disponivel" if logado and max(fracoes) > 0 else
+             "desconhecida")
+    return {"logado": logado, "plano": None,
+            "origem_credencial": ("subscription-oauth" if logado
+                                    else "ausente"),
+            "quota": quota}
 
 
 def _login_grok(rc, out, err, espec):
@@ -406,11 +450,28 @@ def _modelos_kimi_provider_list(rc, out, err):
     return [modelos.pop()]
 
 
+_RX_AGY_MODELO_GEMINI = re.compile(
+    r"^\s*(gemini-[a-z0-9][a-z0-9._-]*)\s*(?:\t|$)",
+    re.IGNORECASE | re.MULTILINE)
+
+
+def _modelos_google_agy(rc, out, err):
+    """Lista oficial do `agy models`, limitada a modelos Gemini.
+
+    O mesmo CLI pode listar Claude/GPT. Eles nao pertencem ao provedor
+    Google desta frota e portanto nunca viram rotas por acidente.
+    """
+    if rc != 0:
+        return []
+    return sorted({m.lower() for m in _RX_AGY_MODELO_GEMINI.findall(out or "")})
+
+
 # Parsers dedicados de descoberta por provedor; os demais usam a
 # extracao generica de identificadores (extrair_modelos).
 _PARSERS_MODELOS = {
     "codex": _modelos_codex_doctor,
     "kimi": _modelos_kimi_provider_list,
+    "google": _modelos_google_agy,
 }
 
 

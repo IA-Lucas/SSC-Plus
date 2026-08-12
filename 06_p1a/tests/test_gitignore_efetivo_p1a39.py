@@ -154,14 +154,22 @@ class OGitDecideIgnorarOEstadoDeRuntime(unittest.TestCase):
              _ignorado("06_p1a/preflight/economia.py")],
             [True, False])
 
-    def test_o_diretorio_de_locks_existe_de_fato_nesta_estacao(self):
-        # DISCRIMINADOR: se `locks/` nao existisse, a propriedade
-        # "estado de lock fica fora do Git" seria verdadeira por
-        # ausencia de estado, e nao por regra.
-        self.assertTrue(os.path.isdir(os.path.join(_RAIZ_REPO, "locks")),
-                        "nao ha diretorio locks/ — a prova perdeu o objeto")
-        self.assertTrue(os.listdir(os.path.join(_RAIZ_REPO, "locks")),
-                        "locks/ esta vazio — a prova perdeu o objeto")
+    def test_estado_de_lock_real_criado_agora_fica_ignorado(self):
+        # Exerce o caso numa estacao limpa: a propria prova cria um objeto
+        # de runtime, pergunta ao Git e o remove. Depender de sobra de uma
+        # corrida anterior tornava o resultado propriedade da estacao.
+        diretorio = os.path.join(_RAIZ_REPO, "locks")
+        os.makedirs(diretorio, exist_ok=True)
+        caminho = os.path.join(diretorio, "prova-p1a39-runtime.lease")
+        try:
+            with open(caminho, "w", encoding="ascii") as arquivo:
+                arquivo.write("runtime")
+            self.assertTrue(_ignorado("locks/prova-p1a39-runtime.lease"))
+        finally:
+            try:
+                os.remove(caminho)
+            except FileNotFoundError:
+                pass
 
 
 if __name__ == "__main__":

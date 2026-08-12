@@ -21,6 +21,7 @@ registrada no log (kernel.decisao_canonica); objeto mutado = recusado.
 from . import contratos as ct
 from .canonico import novo_id
 from .catalogo import Catalogo
+from .confidencialidade import SegredoDetectado, escanear_segredos
 from .kernel import ControlPlane, SessionKernel
 from .policy import OrcamentoEstourado, PolicyGateway
 from .router import RotaVetada
@@ -64,6 +65,11 @@ class ExecutionGateway:
                  entrada: bytes = b"") -> ResultadoExecucao:
         """Materializa attempts ate sucesso, fallback esgotado ou escalonamento."""
         k = self.kernel
+        if len(entrada) > 1024 * 1024:
+            raise ct.FalhaContrato("entrada excede o teto de 1 MiB")
+        # O scanner recebe a entrada INTEGRAL; a intencao resumida da WU
+        # nunca substitui os bytes que efetivamente irao ao provedor.
+        escanear_segredos(entrada, "entrada integral do provider")
         # 0.2.1-1: somente a copia canonica registrada e executada.
         decisao = k.decisao_canonica(decisao.decisao_id)
         executores = [dict(decisao.selecao)] + [
@@ -110,6 +116,18 @@ class ExecutionGateway:
             # 0.2.1-5: a idempotency_key e propagada ao Provider Adapter.
             resposta = provider.invocar(entrada, pacote,
                                         idempotency_key=idempotency_key)
+            try:
+                if len(resposta.saida or b"") > 1024 * 1024:
+                    raise SegredoDetectado("saida do provider acima de 1 MiB")
+                escanear_segredos(resposta.saida or b"",
+                                  "saida integral do provider")
+            except SegredoDetectado:
+                # O attempt ja foi despachado: conclui com um artefato fixo
+                # seguro, preservando auditoria sem persistir nem ecoar o
+                # conteudo recusado.
+                resposta.saida = b"[saida bloqueada pela politica de confidencialidade]"
+                resposta.ok = False
+                resposta.falha = "falha-contrato"
             # Captura estruturada OBRIGATORIA (D5 §5), mesmo em falha.
             saida_ref = k.cas.gravar(resposta.saida or b"")
             captura = {

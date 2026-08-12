@@ -246,7 +246,11 @@ def ambiente_sanitizado(env: dict | None = None) -> dict:
     usuario permanecem intactas — elas apenas nao entram no subprocesso.
     """
     fonte = dict(os.environ if env is None else env)
-    return {k: v for k, v in fonte.items() if not _nome_payg(k)}
+    return {k: v for k, v in fonte.items()
+            if not _nome_payg(k)
+            # Nao deixa hooks locais do Antigravity herdarem o transporte
+            # de prompt/payload do Orca durante sondas automaticas.
+            and not k.upper().startswith("ORCA_")}
 
 
 def auditar_ambiente(env: dict) -> list:

@@ -36,6 +36,7 @@ O QUE ESTES TESTES NAO COBREM, declarado:
 """
 
 import dataclasses
+import json
 import os
 import sys
 import tempfile
@@ -71,10 +72,15 @@ class SensorFalso:
         self.resposta = (rc, out, err)
         self.chamadas = []
 
-    def __call__(self, argv, env=None, timeout=None, cwd=None):
+    def __call__(self, argv, env=None, timeout=None, cwd=None,
+                 entrada_stdin=None):
         self.chamadas.append({"argv": list(argv), "env": env,
-                              "timeout": timeout, "cwd": cwd})
-        return self.resposta
+                              "timeout": timeout, "cwd": cwd,
+                              "entrada_stdin": entrada_stdin})
+        rc, out, err = self.resposta
+        if rc == 0 and "kimi" in str(argv[0]).lower():
+            out = json.dumps({"role": "assistant", "content": out})
+        return rc, out, err
 
 
 def vigia_estreita():
@@ -92,6 +98,14 @@ def vigia_estreita():
 def provedor(espec, **kw):
     """`ProvedorAssinaturaReal` com a vigilancia estreitada por default."""
     kw.setdefault("vigia", vigia_estreita())
+    modelos_teste = {
+        "codex": "gpt-5.6-sol", "kimi": "kimi-code/k3",
+        "claude": "claude-fable-5[1m]",
+        "google": "gemini-3.6-flash-high",
+    }
+    kw.setdefault("model_id", ("modelo-teste" if espec.executavel ==
+                                sys.executable else
+                                modelos_teste[espec.provider_id]))
     return pa.ProvedorAssinaturaReal(espec, **kw)
 
 
@@ -99,12 +113,15 @@ def espec_codex():
     return espec_de("codex")
 
 
-def espec_python(headless=("-c",)):
+def espec_python(headless=("-c", "import sys;exec(sys.argv[-1])")):
     """O interpretador local no lugar do CLI — e SEM a restricao do codex.
 
     `restricao_headless=()` nao e conveniencia: as flags declaradas para o
     codex sao do codex. Herda-las aqui faria o argv virar
-    `[python, "-c", "--sandbox", "read-only", ...]`, e o programa sob
+    `[python, "-c", <ponte>, "--model", <id>, <prompt>]`, e a ponte
+    executa somente o ultimo argumento. Assim o caminho operacional tambem
+    exercita o vinculo obrigatorio de modelo sem fingir que Python entende
+    a flag de um provedor.
     teste passaria a ser outro. Provedor sem restricao declarada e
     exatamente o que esta espec representa.
     """
@@ -144,7 +161,56 @@ class ArgvNaoInterativo(unittest.TestCase):
         sensor = SensorFalso()
         p = provedor(espec_de("kimi"), sensor=sensor)
         p.invocar(b"tarefa")
-        self.assertEqual(sensor.chamadas[0]["argv"][1:], ["-p", "tarefa"])
+        self.assertEqual(sensor.chamadas[0]["argv"][1:],
+                         ["-p", "tarefa", "-m", "kimi-code/k3",
+                          "--output-format", "stream-json"])
+
+    def test_quatro_clis_fixam_o_modelo_resolvido_no_argv(self):
+        modelos = {"codex": "gpt-5.6-sol", "claude": "claude-fable-5[1m]",
+                   "kimi": "kimi-code/k3",
+                   "google": "gemini-3.6-flash-high"}
+        for provider_id, modelo in modelos.items():
+            with self.subTest(provider_id=provider_id):
+                sensor = SensorFalso()
+                p = provedor(espec_de(provider_id), sensor=sensor,
+                             model_id=modelo)
+                p.invocar(b"tarefa")
+                argv = sensor.chamadas[0]["argv"]
+                flag = espec_de(provider_id).flag_modelo
+                indice = argv.index(flag[0])
+                self.assertEqual(argv[indice + len(flag)], modelo)
+
+    def test_google_coloca_prompt_logo_apos_p_e_flags_depois(self):
+        sensor = SensorFalso(out=json.dumps({
+            "status": "SUCCESS", "num_turns": 1, "response": "ok",
+            "usage": {"total_tokens": 1}}))
+        p = provedor(espec_de("google"), sensor=sensor,
+                     model_id="gemini-3.1-pro-high")
+        r = p.invocar(b"tarefa")
+        argv = sensor.chamadas[0]["argv"]
+        self.assertEqual(argv[1:3], ["-p", "tarefa"])
+        self.assertGreater(argv.index("--model"), argv.index("tarefa"))
+        self.assertTrue(r.ok)
+        self.assertEqual(r.saida, b"ok")
+        self.assertEqual(r.custo["tokens_reportados"], 1)
+
+    def test_kimi_coloca_prompt_logo_apos_p_antes_do_modelo(self):
+        sensor = SensorFalso()
+        p = provedor(espec_de("kimi"), sensor=sensor,
+                     model_id="kimi-code/k3")
+        p.invocar(b"tarefa")
+        argv = sensor.chamadas[0]["argv"]
+        indice = argv.index("-p")
+        self.assertEqual(argv[indice + 1], "tarefa")
+        self.assertGreater(argv.index("-m"), indice + 1)
+        self.assertEqual(argv[-2:], ["--output-format", "stream-json"])
+
+    def test_sem_modelo_observado_recusa_antes_do_sensor(self):
+        sensor = SensorFalso()
+        p = provedor(espec_codex(), sensor=sensor, model_id=None)
+        with self.assertRaises(ValueError):
+            p.invocar(b"tarefa")
+        self.assertEqual(sensor.chamadas, [])
 
     def test_til_do_executavel_e_expandido_e_o_home_nao_vaza_da_espec(self):
         # A regra e a MESMA de `argv_de` (P1-A, F-1): expande so o `~` do
@@ -239,6 +305,118 @@ class ClassificacaoDoResultado(unittest.TestCase):
         # mesmo erro, tres vezes a mesma franquia.
         falha, _ = classificar(2, "erro que ninguem enumerou")
         self.assertEqual(falha, "falha-contrato")
+
+    def test_google_recusa_sucesso_sem_json_ou_sem_turno_produtivo(self):
+        for out in ("texto livre", json.dumps({
+                "status": "SUCCESS", "num_turns": 0, "response": "ok",
+                "usage": {"total_tokens": 0}})):
+            with self.subTest(out=out[:20]):
+                rc, saida, err, telemetria = pa.normalizar_saida(
+                    "google", 0, out, "")
+                self.assertEqual(rc, pa.RC_SAIDA_INVALIDA)
+                self.assertEqual(saida, "")
+                self.assertIn("invalida", err)
+                self.assertIsNone(telemetria)
+
+
+class ContratoSemantico(unittest.TestCase):
+    def test_sucesso_exige_marcador_e_resposta_nao_vazia(self):
+        self.assertEqual(
+            pa.normalizar_resultado_semantico(
+                f"{pa.STATUS_SUCESSO}\n{pa.MARCADOR_RESPOSTA}\nfeito"),
+            (True, "feito", ""))
+        for texto in ("feito sem marcador",
+                      f"{pa.STATUS_SUCESSO}\n{pa.MARCADOR_RESPOSTA}"):
+            with self.subTest(texto=texto):
+                ok, _, motivo = pa.normalizar_resultado_semantico(texto)
+                self.assertFalse(ok)
+                self.assertTrue(motivo)
+
+    def test_bloqueio_expresso_nunca_vira_sucesso(self):
+        ok, resposta, motivo = pa.normalizar_resultado_semantico(
+            f"{pa.STATUS_BLOQUEADO}\n{pa.MARCADOR_MOTIVO} workspace inacessivel")
+        self.assertFalse(ok)
+        self.assertEqual(resposta, "")
+        self.assertIn("workspace inacessivel", motivo)
+
+    def test_executor_com_contrato_converte_recusa_em_falha(self):
+        sensor = SensorFalso(out=(f"{pa.STATUS_BLOQUEADO}\n"
+                                  f"{pa.MARCADOR_MOTIVO} sem acesso"))
+        p = provedor(espec_codex(), sensor=sensor,
+                     contrato_semantico=True)
+        r = p.invocar(b"tarefa")
+        self.assertFalse(r.ok)
+        self.assertEqual(r.falha, "falha-contrato")
+        self.assertIn(b"tarefa nao concluida", r.saida)
+
+    def test_kimi_recompoe_fragmentos_assistant_do_jsonl(self):
+        bruto = "\n".join([
+            json.dumps({"role": "assistant", "content": "vou ler"}),
+            json.dumps({"role": "tool", "content": "arquivo"}),
+            json.dumps({"role": "assistant", "content": "resposta final"}),
+        ])
+        rc, out, err, telemetria = pa.normalizar_saida(
+            "kimi", 0, bruto, "")
+        self.assertEqual((rc, out, err),
+                         (0, "vou ler\nresposta final", ""))
+        self.assertEqual(telemetria["mensagens_assistente"], 2)
+
+    def test_kimi_preserva_contrato_repartido_em_eventos(self):
+        bruto = "\n".join([
+            json.dumps({"role": "assistant", "content": pa.STATUS_SUCESSO}),
+            json.dumps({"role": "assistant", "content": pa.MARCADOR_RESPOSTA}),
+            json.dumps({"role": "assistant", "content": "resultado"}),
+        ])
+        rc, out, err, _ = pa.normalizar_saida("kimi", 0, bruto, "")
+        self.assertEqual((rc, err), (0, ""))
+        self.assertEqual(pa.normalizar_resultado_semantico(out),
+                         (True, "resultado", ""))
+
+    def test_kimi_recusa_texto_livre_quando_stream_json_foi_exigido(self):
+        rc, out, err, telemetria = pa.normalizar_saida(
+            "kimi", 0, "texto sem estrutura", "")
+        self.assertEqual(rc, pa.RC_SAIDA_INVALIDA)
+        self.assertEqual(out, "")
+        self.assertIn("Kimi", err)
+        self.assertIsNone(telemetria)
+
+    def test_prompt_grande_codex_vai_por_stdin_e_nao_pelo_argv(self):
+        sensor = SensorFalso(out=(f"{pa.STATUS_SUCESSO}\n"
+                                  f"{pa.MARCADOR_RESPOSTA}\nfeito"))
+        p = provedor(espec_codex(), sensor=sensor,
+                     contrato_semantico=True)
+        p.invocar(("contexto-" + "x" * 100_000).encode())
+        chamada = sensor.chamadas[0]
+        self.assertGreater(len(chamada["entrada_stdin"]), 100_000)
+        self.assertLess(max(map(len, chamada["argv"])), 1000,
+                        "prompt grande voltou para a linha de comando")
+        self.assertEqual(p.medicoes[0]["transporte_prompt"], "stdin")
+
+    def test_google_recebe_prompt_curto_e_contexto_em_arquivo_descartavel(self):
+        observado = {}
+
+        def sensor(argv, env=None, timeout=None, cwd=None,
+                   entrada_stdin=None):
+            observado["argv"] = list(argv)
+            observado["stdin"] = entrada_stdin
+            with open(os.path.join(cwd, "contexto-ssc.txt"),
+                      encoding="utf-8") as arquivo:
+                observado["contexto"] = arquivo.read()
+            semantico = (f"{pa.STATUS_SUCESSO}\n"
+                         f"{pa.MARCADOR_RESPOSTA}\nfeito")
+            return 0, json.dumps({
+                "status": "SUCCESS", "num_turns": 1,
+                "response": semantico,
+                "usage": {"total_tokens": 1}}), ""
+
+        p = provedor(espec_de("google"), sensor=sensor,
+                     contrato_semantico=True)
+        p.invocar(("contexto-" + "y" * 100_000).encode())
+        self.assertIsNone(observado["stdin"])
+        self.assertIn("y" * 1000, observado["contexto"])
+        self.assertLess(max(map(len, observado["argv"])), 1000)
+        self.assertEqual(p.medicoes[0]["transporte_prompt"],
+                         "arquivo-no-descartavel")
 
 
 # O texto EXATO que o `kimi` devolveu na primeira corrida real da P2
@@ -487,7 +665,7 @@ class SubprocessoDeVerdade(unittest.TestCase):
     shell e teto de parede sem gastar franquia de assinatura.
     """
 
-    def espec_python(self, headless=("-c",)):
+    def espec_python(self, headless=("-c", "import sys;exec(sys.argv[-1])")):
         return espec_python(headless)
 
     def test_env_payg_e_removido_do_processo_filho(self):
@@ -496,13 +674,16 @@ class SubprocessoDeVerdade(unittest.TestCase):
         # sanitizacao nunca roda.
         env = {"PATH": os.environ.get("PATH", ""),
                "OPENAI_API_KEY": "valor-fabricado-de-teste",
+               "ORCA_AGENT_HOOK_PORT": "9999",
+               "ORCA_AGENT_HOOK_TOKEN": "token-fabricado-de-teste",
                "SSC_MARCA_BENIGNA": "presente"}
         p = provedor(self.espec_python(), env=env)
         r = p.invocar(b"import os;"
                       b"print('OPENAI_API_KEY' in os.environ,"
+                      b"any(k.startswith('ORCA_') for k in os.environ),"
                       b"os.environ.get('SSC_MARCA_BENIGNA'))")
         self.assertTrue(r.ok, r.saida)
-        self.assertIn(b"False presente", r.saida,
+        self.assertIn(b"False False presente", r.saida,
                       "chave PAYG vazou para o subprocesso, ou a variavel "
                       "benigna foi removida junto")
 
@@ -512,6 +693,16 @@ class SubprocessoDeVerdade(unittest.TestCase):
         self.assertFalse(r.ok)
         self.assertEqual(r.falha, "falha-contrato")
         self.assertIn(b"erro", r.saida)
+
+    def test_stdin_grande_chega_ao_subprocesso_sem_entrar_no_argv(self):
+        carga = b"z" * 100_000
+        argv = [sys.executable, "-c",
+                "import sys;d=sys.stdin.buffer.read();print(len(d),d[:1].decode())"]
+        rc, out, err = pa.sensor_subprocess(argv, timeout=10,
+                                            entrada_stdin=carga)
+        self.assertEqual(rc, 0, err)
+        self.assertIn("100000 z", out)
+        self.assertTrue(all(len(a) < 1000 for a in argv))
 
     def test_metacaractere_nao_vira_comando_no_subprocesso_real(self):
         # Se houvesse shell, `;` separaria comandos. Aqui o prompt inteiro
@@ -536,6 +727,16 @@ class SubprocessoDeVerdade(unittest.TestCase):
         r = provedor(espec).invocar(b"t")
         self.assertFalse(r.ok)
         self.assertEqual(r.falha, "falha-contrato")
+
+    def test_captura_grande_e_drenada_com_teto_sem_ecoar_conteudo(self):
+        codigo = ("import sys;sys.stdout.buffer.write(b'x' * "
+                  f"{pa.MAX_CAPTURA_BYTES + 1})")
+        rc, out, err = pa.sensor_subprocess(
+            [sys.executable, "-c", codigo], timeout=10,
+            cwd=tempfile.gettempdir())
+        self.assertEqual(rc, pa.RC_SAIDA_EXCEDIDA)
+        self.assertEqual(out, "")
+        self.assertIn("excedeu o teto", err)
 
 
 if __name__ == "__main__":  # pragma: no cover

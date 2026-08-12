@@ -115,7 +115,13 @@ def verbos_de_sonda(provider_id: str) -> set:
     tokens = set()
     for comando in espec.comandos.values():
         if comando is not None:
-            tokens.update(comando)
+            # `agy -p /quota` usa a moldura headless, mas o parser exige
+            # num_turns=0 e todos os contadores de token em zero. O verbo
+            # diagnostico e `/quota`; `-p` e apenas o transporte local.
+            if "/quota" in comando:
+                tokens.add("/quota")
+            else:
+                tokens.update(comando)
     return tokens
 
 

@@ -26,6 +26,8 @@
   "turno_interno": [
     {
       "caminho": "05_p0/ssc_p0/execution.py",
+      "commit": "9ad6db360c6287ac29be69363ffa6bb05d51088f",
+      "eol": "crlf",
       "origem": "arquivo"
     }
   ],

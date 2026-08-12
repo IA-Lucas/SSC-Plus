@@ -24,14 +24,12 @@ import threading
 from . import contratos as ct
 from .canonico import Relogio, RelogioReal, canonico, novo_id, sha256_bytes, sha256_de
 from .cas import CAS, CorrupcaoDetectada, ler_arquivo_contido
+from .confidencialidade import (PADROES_SEGREDO, SegredoDetectado,
+                                escanear_segredos)
 from .estados import (TransicaoIlegal, marcar_orfao, transitar_attempt,
                       transitar_sessao, transitar_workunit)
 from .eventlog import EventLog, EventoAdulterado, hash_evento
 from .writelock import LockSessao
-
-
-class SegredoDetectado(Exception):
-    """IC-4: padrao de segredo detectado em payload de evento ou contexto."""
 
 
 class VinculoDivergente(ct.FalhaContrato):
@@ -54,27 +52,6 @@ _ID_RE = re.compile(r"^[0-9a-f]{32}$")
 def _validar_id(valor, rotulo: str) -> None:
     if not isinstance(valor, str) or not _ID_RE.match(valor):
         raise ct.FalhaContrato(f"{rotulo}: id invalido para uso em caminho")
-
-
-# Scanner deterministico de segredos (IC-4). Deteccao = recusa, nunca redacao.
-PADROES_SEGREDO = [
-    re.compile(p) for p in (
-        r"-----BEGIN [A-Z ]*PRIVATE KEY-----",
-        r"AKIA[0-9A-Z]{16}",
-        r"ghp_[A-Za-z0-9]{30,}",
-        r"sk-[A-Za-z0-9]{20,}",
-        r"xox[baprs]-[A-Za-z0-9-]{10,}",
-        r"(?i)(api[_-]?key|secret|senha|password|passwd)[\"'\s]*[:=]"
-        r"[\"'\s]*[A-Za-z0-9_./+\-]{8,}",
-    )
-]
-
-
-def escanear_segredos(dados: bytes, rotulo: str) -> None:
-    texto = dados.decode("utf-8", errors="replace")
-    for padrao in PADROES_SEGREDO:
-        if padrao.search(texto):
-            raise SegredoDetectado(f"IC-4: segredo detectado em {rotulo}")
 
 
 def _similaridade(a: str, b: str) -> float:

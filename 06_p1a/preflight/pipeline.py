@@ -6,16 +6,15 @@ Encadeia: (a) auditoria de ambiente; (b) auditoria de config persistida;
 erros tipados.
 
 Qualquer violacao economica ou de auth BLOQUEIA ANTES de qualquer sensor
-de modelo ser invocado. Google e Grok nunca saem de SUPERVISED, mesmo com
-tudo verde (teto_resultado da especificacao).
+de modelo ser invocado. Grok nunca sai de SUPERVISED; Claude e Google so
+entram na rota com modelo exato observado e canal de assinatura provado.
 
-Emendas P1-A.3 (decisao soberana sobre a P1-A.2):
+Emendas P1-A.3 e ativacao medida de 2026-08-11:
 - item 1: tier DECLARADO pelo proprietario + OAuth OBSERVADO habilita
-  SOMENTE SHADOW_ELIGIBLE, com validade maxima de 24 h — nao autoriza P2
-  nem execucao autonoma;
-- item 4: sem modelo exato observado por fonte oficial nao interativa, o
-  provedor fica com teto SUPERVISED (claude); a descoberta de modelos e
-  OPCIONAL na especificacao (comandos["modelos"] = None a desativa).
+  SOMENTE SHADOW_ELIGIBLE, com validade maxima de 24 h;
+- Claude usa o modelo exato da configuracao persistida oficial;
+- Google usa `agy models` e `/quota` estruturado; Grok permanece com zero
+  sondas e teto SUPERVISED. Sem modelo exato, o resultado e BLOCKED.
 """
 
 import os
@@ -93,6 +92,23 @@ def _normalizar_sensores(sensores) -> dict:
     return normalizado
 
 
+def _modelo_da_config(config: dict, caminho: tuple) -> list:
+    """Extrai um unico identificador exato de uma config ja auditada.
+
+    Nao aceita alias vazio, lista ou objeto. A origem e a configuracao
+    oficial persistida do CLI e o valor sera fixado novamente no argv
+    produtivo; sem esse vinculo a ausencia continua fail-closed.
+    """
+    atual = config
+    for parte in caminho:
+        if not isinstance(atual, dict) or parte not in atual:
+            return []
+        atual = atual[parte]
+    if not isinstance(atual, str) or not atual.strip():
+        return []
+    return [atual.strip()]
+
+
 def executar_preflight(provider_spec, sensores, env=None,
                        config_persistida=None, tiers_declarados=None,
                        agora=None) -> RelatorioPreflight:
@@ -149,7 +165,7 @@ def executar_preflight(provider_spec, sensores, env=None,
                          origem_credencial="nao-sondada",
                          quota="nao-sondada")
 
-    # Emenda P1-A.3, item 5 (google/grok): ZERO sondas automaticas. A
+    # Provedor com ZERO sondas automaticas (hoje, grok). A
     # classificacao e estatica no teto SUPERVISED — somente as auditorias
     # locais (ambiente/config/status) contam; nenhum sensor e invocado,
     # nem versao, nem login, nem modelos. Chave PAYG do proprio provedor
@@ -270,14 +286,20 @@ def executar_preflight(provider_spec, sensores, env=None,
                          origem_credencial=login["origem_credencial"],
                          quota=login["quota"])
 
-    # (d) descoberta de modelos — somente com economia/auth verdes, e
-    # somente quando a especificacao declara um comando de descoberta
-    # (emenda P1-A.3, item 4: claude nao tem fonte oficial nao interativa
-    # — sem sonda de modelos, teto SUPERVISED).
+    # (d) descoberta de modelos — somente com economia/auth verdes.
+    # Claude usa a configuracao oficial persistida; os demais usam uma
+    # sonda nao interativa. As duas fontes produzem o MESMO model_id que
+    # sera obrigatoriamente fixado no argv produtivo.
     # O payload `sombra` NAO acompanha relatorios BLOCKED (revisao
     # P1-A.3): autorizacao-sombra so existe no resultado SHADOW_ELIGIBLE.
     modelos = []
-    if provider_spec.comandos.get("modelos") is not None:
+    caminho_config = tuple(getattr(provider_spec,
+                                   "caminho_modelo_config", ()) or ())
+    fonte_modelo_ativa = bool(caminho_config) \
+        or provider_spec.comandos.get("modelos") is not None
+    if caminho_config:
+        modelos = _modelo_da_config(persistido, caminho_config)
+    elif provider_spec.comandos.get("modelos") is not None:
         try:
             modelos = adaptador.descobrir_modelos()
         except CliIndisponivel as exc:
@@ -285,6 +307,7 @@ def executar_preflight(provider_spec, sensores, env=None,
                              plano=login["plano"],
                              origem_credencial=login["origem_credencial"],
                              quota=login["quota"])
+    if fonte_modelo_ativa:
         esperados = [m for m in modelos if any(
             esperado in m for esperado in provider_spec.modelos_esperados)]
         if not esperados:
@@ -298,8 +321,7 @@ def executar_preflight(provider_spec, sensores, env=None,
                              origem_credencial=login["origem_credencial"],
                              quota=login["quota"], modelos=modelos)
 
-    # (e) classificacao: google/grok/claude tem teto SUPERVISED pela
-    # especificacao. A trilha sombra NUNCA sobe o teto: SHADOW_ELIGIBLE
+    # (e) classificacao: a trilha sombra NUNCA sobe o teto: SHADOW_ELIGIBLE
     # somente onde o teto e ELIGIBLE — e o payload `sombra` so existe
     # nesse resultado (nunca em SUPERVISED nem BLOCKED).
     resultado = provider_spec.teto_resultado

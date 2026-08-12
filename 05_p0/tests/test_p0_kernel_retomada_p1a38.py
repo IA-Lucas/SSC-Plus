@@ -142,7 +142,8 @@ class RetomadaEIntegridade(unittest.TestCase):
 
     def test_envelope_adulterado_nao_retoma(self):
         self._sessao_caida()
-        dados = json.loads(open(self._caminho_envelope(), "rb").read())
+        with open(self._caminho_envelope(), "rb") as fluxo:
+            dados = json.loads(fluxo.read())
         dados["politica_ref"] = "0" * 64
         with open(self._caminho_envelope(), "wb") as f:
             f.write(canonico(dados))
@@ -152,7 +153,8 @@ class RetomadaEIntegridade(unittest.TestCase):
 
     def test_payload_apagado_do_cas_nao_retoma(self):
         self._sessao_caida()
-        primeira = open(self._caminho_log(), "rb").read().split(b"\n")[0]
+        with open(self._caminho_log(), "rb") as fluxo:
+            primeira = fluxo.read().split(b"\n")[0]
         ref = json.loads(primeira)["payload_ref"]
         alvo = os.path.join(self.raiz, "cas", "objetos", ref[:2], ref[2:4],
                             ref)
@@ -169,7 +171,8 @@ class RetomadaEIntegridade(unittest.TestCase):
         pode refaze-la. Isto encena exatamente esse adversario.
         """
         caminho = self._caminho_log()
-        linhas = open(caminho, "rb").read().split(b"\n")
+        with open(caminho, "rb") as fluxo:
+            linhas = fluxo.read().split(b"\n")
         linhas = [linha for linha in linhas if linha]
         eventos = [json.loads(linha) for linha in linhas]
         anterior = eventos[0]["prev_event_hash"]  # genese, preservada
@@ -210,7 +213,8 @@ class RetomadaEIntegridade(unittest.TestCase):
         self._sessao_caida()
         arquivo = glob.glob(os.path.join(self.raiz, "checkpoints", self.sid,
                                          "*.json"))[0]
-        checkpoint = json.loads(open(arquivo, "rb").read())
+        with open(arquivo, "rb") as fluxo:
+            checkpoint = json.loads(fluxo.read())
         checkpoint["estado_refs"]["ultimo_evento_hash"] = "f" * 64
         corpo = {c: v for c, v in checkpoint.items()
                  if c not in ("validacao", "selo")}

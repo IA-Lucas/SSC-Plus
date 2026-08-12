@@ -8,32 +8,49 @@ invariantes da especificacao estatica da frota. Nenhum CLI real invocado.
 import json
 import os
 import unittest
+from datetime import datetime, timedelta, timezone
 
 import apoio
 from apoio import SENTINELA, SensorFalso, sensores_dict, sensores_verdes
 from preflight import (ESPECIFICACOES, RESULTADOS, RelatorioPreflight,
                        espec_de, executar_preflight, frota_real)
 from preflight.pipeline import _normalizar_sensores
+from preflight.sombra import DeclaracaoTier
+
+AGORA = datetime(2026, 8, 11, 20, 0, tzinfo=timezone.utc)
+
+
+def _kwargs_verdes(provider_id):
+    kwargs = {"env": {}, "agora": AGORA}
+    if provider_id == "claude":
+        kwargs["config_persistida"] = {"model": "claude-fable-5[1m]"}
+    if provider_id == "google":
+        kwargs["tiers_declarados"] = {"google": DeclaracaoTier(
+            provider_id="google", tier="Google AI Pro",
+            declarado_por="proprietario",
+            declarado_em_utc=(AGORA - timedelta(hours=1)).strftime(
+                "%Y-%m-%dT%H:%M:%SZ"))}
+    return kwargs
 
 
 class FrotaVerde(unittest.TestCase):
     """Com tudo verde, cada provedor chega ao seu teto — nunca acima."""
 
     def test_classificacao_dos_cinco_provedores(self):
-        # Emenda P1-A.3 item 4: claude tem teto SUPERVISED enquanto nao
-        # houver modelo exato observado por fonte oficial nao interativa.
-        esperado = {"codex": "ELIGIBLE", "claude": "SUPERVISED",
-                    "kimi": "ELIGIBLE", "google": "SUPERVISED",
+        esperado = {"codex": "ELIGIBLE", "claude": "ELIGIBLE",
+                    "kimi": "ELIGIBLE", "google": "SHADOW_ELIGIBLE",
                     "grok": "SUPERVISED"}
         for provider_id, resultado in esperado.items():
             with self.subTest(provedor=provider_id):
                 sens, _, _ = sensores_dict(provider_id)
                 relatorio = executar_preflight(espec_de(provider_id), sens,
-                                               env={})
+                                               **_kwargs_verdes(provider_id))
                 self.assertEqual(relatorio.resultado, resultado)
                 self.assertEqual(relatorio.erros, [])
-                # Sem sinal positivo de quota nas saidas verdes: unknown.
-                self.assertEqual(relatorio.quota, "desconhecida")
+                self.assertEqual(
+                    relatorio.quota,
+                    "disponivel" if provider_id == "google"
+                    else "desconhecida")
                 if not espec_de(provider_id).sondas_automaticas:
                     # ZERO sondas (google/grok): campos de evidencia NAO
                     # observados — plano/origem declarados nao podem
@@ -46,23 +63,19 @@ class FrotaVerde(unittest.TestCase):
                     continue
                 self.assertEqual(relatorio.origem_credencial,
                                  espec_de(provider_id).auth_esperada)
-                if espec_de(provider_id).comandos["modelos"] is None:
-                    # Descoberta desativada pela especificacao (claude).
-                    self.assertEqual(relatorio.modelos, [])
-                    self.assertTrue(relatorio.versao)
-                else:
-                    self.assertTrue(relatorio.modelos)
-                    self.assertTrue(relatorio.versao)
+                self.assertTrue(relatorio.modelos)
+                self.assertTrue(relatorio.versao)
 
-    def test_google_e_grok_nunca_sobem_para_eligible(self):
-        for provider_id in ("google", "grok"):
-            with self.subTest(provedor=provider_id):
-                sens, _, _ = sensores_dict(provider_id)
-                relatorio = executar_preflight(espec_de(provider_id), sens,
-                                               env={})
-                self.assertNotEqual(relatorio.resultado, "ELIGIBLE")
-                self.assertEqual(espec_de(provider_id).automacao,
-                                 "supervised-only")
+    def test_google_automatico_e_grok_permanece_supervisionado(self):
+        sens, _, _ = sensores_dict("google")
+        google = executar_preflight(espec_de("google"), sens,
+                                    **_kwargs_verdes("google"))
+        self.assertEqual(google.resultado, "SHADOW_ELIGIBLE")
+        self.assertEqual(espec_de("google").automacao, "allow-supervised")
+        sens, _, _ = sensores_dict("grok")
+        grok = executar_preflight(espec_de("grok"), sens, env={})
+        self.assertEqual(grok.resultado, "SUPERVISED")
+        self.assertEqual(espec_de("grok").automacao, "supervised-only")
 
     def test_tres_sondas_exatas_no_caminho_verde(self):
         sens, sensor_exec, sensor_modelos = sensores_dict("codex")
@@ -75,7 +88,9 @@ class FrotaVerde(unittest.TestCase):
     def test_caminho_verde_nao_registra_erro_nem_segredo(self):
         sens, _, _ = sensores_dict("claude")
         relatorio = executar_preflight(espec_de("claude"), sens,
-                                       env={"PATH": "p"})
+                                       env={"PATH": "p"},
+                                       config_persistida={
+                                           "model": "claude-fable-5[1m]"})
         self.assertNotIn(SENTINELA, json.dumps(relatorio.to_dict()))
         self.assertEqual(relatorio.to_dict()["erros"], [])
 
@@ -237,10 +252,10 @@ class EspecificacaoDaFrota(unittest.TestCase):
         self.assertIn("XAI_API_KEY", espec.chaves_payg_relacionadas)
         self.assertEqual(espec.teto_resultado, "SUPERVISED")
 
-    def test_google_declara_oauth_personal_e_teto_supervised(self):
+    def test_google_declara_canal_antigravity_e_teto_eligible(self):
         espec = espec_de("google")
-        self.assertEqual(espec.teto_resultado, "SUPERVISED")
-        self.assertIn("oauth-personal", espec.canal_oficial)
+        self.assertEqual(espec.teto_resultado, "ELIGIBLE")
+        self.assertIn("Antigravity", espec.canal_oficial)
 
     def test_toda_espec_declara_chaves_payg_do_proprio_provedor(self):
         for provider_id, espec in ESPECIFICACOES.items():
@@ -254,13 +269,15 @@ class EspecificacaoDaFrota(unittest.TestCase):
         relatorios = []
         for espec in frota_real():
             sens, _, _ = sensores_dict(espec.provider_id)
-            relatorios.append(executar_preflight(espec, sens, env={}))
+            relatorios.append(executar_preflight(
+                espec, sens, **_kwargs_verdes(espec.provider_id)))
         self.assertEqual(len(relatorios), 5)
-        # Emenda P1-A.3: claude desce do grupo ELIGIBLE para SUPERVISED.
         self.assertEqual(sum(1 for r in relatorios
-                             if r.resultado == "ELIGIBLE"), 2)
+                             if r.resultado == "ELIGIBLE"), 3)
         self.assertEqual(sum(1 for r in relatorios
-                             if r.resultado == "SUPERVISED"), 3)
+                             if r.resultado == "SHADOW_ELIGIBLE"), 1)
+        self.assertEqual(sum(1 for r in relatorios
+                             if r.resultado == "SUPERVISED"), 1)
         self.assertEqual([r for r in relatorios if r.erros], [])
 
 

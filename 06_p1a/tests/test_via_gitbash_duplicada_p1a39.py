@@ -115,7 +115,7 @@ for _p in (os.path.join(_RAIZ, "06_p1a"), os.path.join(_RAIZ, "07_p1b"),
 # Provedores que NAO vao pelo Git Bash — escrito a mao, nao derivado de
 # `FONTES` nem de `_VIA_GITBASH`. Se saisse de uma das duas, encolher a
 # estrutura encolheria o corpus junto.
-DIRETOS = ("claude", "codex", "kimi")
+DIRETOS = ("claude", "codex", "kimi", "google")
 ARGV_DE_SONDA = ("gemini", "--version")
 
 
@@ -155,19 +155,14 @@ class OSensorRoteiaPeloGitBashQuemAListaDiz(unittest.TestCase):
         self.addCleanup(setattr, modulo, "sensor_subprocess", original)
         return cap
 
-    def test_google_vai_pelo_git_bash_nos_dois_runners(self):
-        # `google` escrito a mao: se sair da tupla de qualquer um dos
-        # dois modulos, `_sensor_de` devolve o sensor direto e este
-        # teste fica vermelho naquele runner.
+    def test_google_agy_vai_direto_nos_dois_runners(self):
         for nome, modulo in RUNNERS:
             with self.subTest(runner=nome):
                 cap = self._com_capturador(modulo)
                 modulo._sensor_de("google")(list(ARGV_DE_SONDA))
                 self.assertEqual(len(cap.chamadas), 1)
                 argv = cap.chamadas[0]["argv"]
-                self.assertEqual(argv[0], modulo._GITBASH)
-                self.assertEqual(argv[1], "-lc")
-                self.assertIn("gemini", argv[2])
+                self.assertEqual(argv, list(ARGV_DE_SONDA))
 
     def test_grok_vai_pelo_git_bash_nos_dois_runners(self):
         for nome, modulo in RUNNERS:
@@ -205,7 +200,7 @@ class AsDuasCopiasNaoPodemDivergirEmSilencio(unittest.TestCase):
 
     def test_a_constante_nao_esta_vazia(self):
         # Guarda anti-igualdade-trivial: duas tuplas vazias sao iguais.
-        self.assertEqual(len(_CAPSULA._VIA_GITBASH), 2)
+        self.assertEqual(tuple(_CAPSULA._VIA_GITBASH), ("grok",))
 
     def test_os_wrappers_estao_ALINHADOS_nos_dois_runners(self):
         # ERA o teste que fixava a DIVERGENCIA (timeout 60 contra 120 e
@@ -220,7 +215,7 @@ class AsDuasCopiasNaoPodemDivergirEmSilencio(unittest.TestCase):
             original = modulo.sensor_subprocess
             modulo.sensor_subprocess = cap
             self.addCleanup(setattr, modulo, "sensor_subprocess", original)
-            modulo._sensor_de("google")(["gemini", "~/x"])
+            modulo._sensor_de("grok")(["grok", "~/x"])
         # TIMEOUT: venceu 60, o menor dos dois. Fundamento medido —
         # `adaptadores.TIMEOUT_PADRAO` e 20 e a partida do Git Bash custa
         # 0,35 s nesta estacao, entao a camada extra justifica ~21 s.

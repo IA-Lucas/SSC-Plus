@@ -114,10 +114,10 @@ class QuotaFailClosed(unittest.TestCase):
             "claude",
             login='{"loggedIn": true, "subscriptionType": "max", '
                   '"quota": "120 requests remaining"}')
-        relatorio = executar_preflight(espec_de("claude"), sens, env={})
-        # Emenda P1-A.3 item 4: claude tem teto SUPERVISED; a quota
-        # observada continua propagada no diagnostico.
-        self.assertEqual(relatorio.resultado, "SUPERVISED")
+        relatorio = executar_preflight(
+            espec_de("claude"), sens, env={},
+            config_persistida={"model": "claude-fable-5[1m]"})
+        self.assertEqual(relatorio.resultado, "ELIGIBLE")
         self.assertEqual(relatorio.quota, "disponivel")
 
     def test_pipeline_quota_esgotada_segue_bloqueando(self):

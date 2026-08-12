@@ -238,11 +238,16 @@ class ControlePositivo(unittest.TestCase):
                   "rb") as f:
             conteudo = f.read()
         receita["turno_interno"] = [{"origem": "arquivo",
+                                     "caminho": self.arquivo(
+                                         conteudo, "base.txt")}]
+        total_base = medidor.reproduzir(receita)["comparacao"][
+            "alternativo_sozinho"]["bytes_utf8"]
+        receita["turno_interno"] = [{"origem": "arquivo",
                                      "caminho": self.arquivo(conteudo + b"x")}]
         movido = medidor.reproduzir(receita)
         self.assertEqual(
             movido["comparacao"]["alternativo_sozinho"]["bytes_utf8"],
-            15389, "um byte a mais no insumo nao apareceu no total")
+            total_base + 1, "um byte a mais no insumo nao apareceu no total")
 
     def test_resposta_da_assinatura_diferente_MOVE_o_residual(self):
         # O outro lado da conta. O residual e o coracao da medicao: se ele

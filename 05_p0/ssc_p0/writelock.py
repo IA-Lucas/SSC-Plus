@@ -122,6 +122,15 @@ class LockSessao:
         """Fechamento limpo do escritor (handoff explicito)."""
         self._soltar()
 
+    def __del__(self):
+        # Rede final para objetos abandonados por excecao/retomada. Nao
+        # substitui `liberar`, mas impede que o descritor sobreviva ate o
+        # coletor e produza ResourceWarning.
+        try:
+            self._soltar()
+        except Exception:
+            pass
+
     def simular_crash(self) -> None:
         """Morte de processo (so teste): solta o lock do SO sem aviso.
 

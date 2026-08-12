@@ -108,6 +108,42 @@ class TestPolicy(unittest.TestCase):
         self.assertTrue(any("aprovacao_custo" in v
                             for v in ctx.exception.vetos))
 
+    def test_custo_zero_nao_contorna_envelope_ausente(self):
+        """Exerce o caminho operacional da assinatura: custo previsto zero."""
+        wu = self._wu()
+        with self.assertRaises(RotaVetada) as ctx:
+            self.lab.router.propor_decisao(
+                wu, rota="padrao",
+                selecao=self.lab.selecao("prov-a", "modelo-x"),
+                custo_previsto={"valor": 0.0, "rotulo": "assinatura"},
+                aprovacao_custo=None, motivo="zero sem envelope")
+        self.assertTrue(any("aprovacao_custo" in v
+                            for v in ctx.exception.vetos))
+
+    def test_autonomo_nao_contorna_envelope_expirado(self):
+        wu = self._wu()
+        envelope = dict(self.lab.aprovacao,
+                        validade="2020-01-01T00:00:00Z")
+        with self.assertRaises(RotaVetada) as ctx:
+            self.lab.router.propor_decisao(
+                wu, rota="padrao",
+                selecao=self.lab.selecao("prov-a", "modelo-x",
+                                         controle="autonomo"),
+                custo_previsto={"valor": 0.0},
+                aprovacao_custo=envelope, motivo="autonomo expirado")
+        self.assertTrue(any("expirado" in v for v in ctx.exception.vetos))
+
+    def test_fallback_recusa_envelope_que_expirou_depois_da_decisao(self):
+        wu = self._wu()
+        decisao = self.lab.router.propor_decisao(
+            wu, rota="padrao",
+            selecao=self.lab.selecao("prov-a", "modelo-x"),
+            alternativas=[self.lab.selecao("prov-b", "modelo-y")],
+            aprovacao_custo=self.lab.aprovacao, motivo="antes de expirar")
+        decisao.aprovacao_custo["validade"] = "2020-01-01T00:00:00Z"
+        self.assertFalse(self.lab.policy.verificar_fallback_envelope(
+            decisao, self.lab.selecao("prov-b", "modelo-y")))
+
 
 if __name__ == "__main__":
     unittest.main()

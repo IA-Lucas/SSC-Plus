@@ -103,23 +103,23 @@ class CodigoNaoEscreveNemAbreRede(unittest.TestCase):
     def test_nenhum_modulo_abre_arquivo(self):
         for nome in _fontes_do_preflight():
             with self.subTest(modulo=nome):
-                self.assertNotIn("open(", _ler(os.path.join(DIR_PREFLIGHT,
-                                                            nome)))
+                fonte = _ler(os.path.join(DIR_PREFLIGHT, nome))
+                self.assertIsNone(re.search(r"(?<![A-Za-z])open\(", fonte))
 
     def test_subprocesso_existe_somente_no_sensor_real(self):
         for nome in _fontes_do_preflight():
             fonte = _ler(os.path.join(DIR_PREFLIGHT, nome))
             with self.subTest(modulo=nome):
                 if nome == "adaptadores.py":
-                    self.assertIn("subprocess.run", fonte)
+                    self.assertIn("subprocess.Popen", fonte)
                 else:
-                    self.assertNotIn("subprocess.run", fonte)
+                    self.assertNotIn("subprocess.Popen", fonte)
 
     def test_o_unico_subprocesso_roda_com_ambiente_sanitizado(self):
         fonte = _ler(os.path.join(DIR_PREFLIGHT, "adaptadores.py"))
-        self.assertEqual(fonte.count("subprocess.run("), 1)
+        self.assertEqual(fonte.count("subprocess.Popen("), 1)
         trecho = fonte[fonte.index("def sensor_subprocess"):]
-        trecho = trecho[:trecho.index("subprocess.run(")]
+        trecho = trecho[:trecho.index("subprocess.Popen(")]
         self.assertIn("ambiente_sanitizado(env)", trecho)
 
     def test_ha_pelo_menos_os_quatro_modulos_do_preflight(self):

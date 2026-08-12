@@ -18,9 +18,9 @@ Emendas P1-A.3 aplicadas (decisao soberana sobre a P1-A.2):
   mode; NAO catalogo completo);
 - item 3: `kimi provider list` comprova OAuth e modelo efetivo, nao o
   plano comercial (cai na trilha sombra do item 1);
-- item 4: claude SUPERVISED, sem sonda de modelos (sem fonte oficial
-  nao interativa);
-- item 5: google/grok SUPERVISED estaticos, ZERO sondas automaticas.
+- ativacao 2026-08-11: Claude usa modelo exato da configuracao oficial;
+  Google usa o CLI oficial Antigravity (`agy`) para quota e modelos;
+- Grok permanece SUPERVISED estatico, com ZERO sondas automaticas.
 
 Somente sondas oficiais de DIAGNOSTICO (versao/login/model-list/doctor):
 ZERO prompt, ZERO geracao, custo variavel = 0 (billing subscription).
@@ -55,7 +55,7 @@ from preflight.pipeline import executar_preflight  # noqa: E402
 
 _GITBASH = r"E:\LucasIA\Git\bin\bash.exe"
 _SESSAO_LOCK = os.environ.get("SSC_LOCK_SESSAO", "p1a3-ops")
-_VIA_GITBASH = ("google", "grok")  # CLIs npm sem executavel Windows direto
+_VIA_GITBASH = ("grok",)  # unico CLI sem executavel Windows direto
 
 # Teto da sonda que passa pelo Git Bash. ALINHADO com o runner da P1-B na
 # P1-A.3.9, e escolhido por MEDICAO e nao por antiguidade: o teto
@@ -108,7 +108,7 @@ def _verificar_lock_vivo(fence_esperado: int | None = None,
 
 
 def _sensor_de(provider_id: str):
-    """Sensor real; google/grok (npm) rodam via Git Bash na estacao.
+    """Sensor real; somente grok (npm) roda via Git Bash na estacao.
 
     ALINHADO com `07_p1b/preflight_atual._sensor_de` na P1-A.3.9. As duas
     copias divergiam em silencio — timeout 60 contra 120, e `expanduser`
