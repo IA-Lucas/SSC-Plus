@@ -35,7 +35,7 @@ repositorio e `experimental / provisorio / sem autoridade`.
 | D6 | [02_alvo/06_arquitetura-alvo.md](02_alvo/06_arquitetura-alvo.md) | Session Kernel, Task Router, Policy Gateway, Execution Gateway... |
 | D7 | [03_prova/07_plano-de-prova.md](03_prova/07_plano-de-prova.md) | Tarefas-ouro, shadow mode, providers falsos, juiz independente |
 | D8 | [04_integracao/08_protocolo-de-integracao.md](04_integracao/08_protocolo-de-integracao.md) | Snapshot canonico → SSC+ → evidencia → Goal competente → promocao |
-| — | [99_decisao-ssc-01.md](99_decisao-ssc-01.md) | Validacao da missao e decisao (READY-FOR-SSC-0.2 / ADJUST / BLOCKED / STOP) |
+| — | [99_decisao-ssc-01.md](00_governanca-experimental/99_decisao-ssc-01.md) | Validacao da missao e decisao (READY-FOR-SSC-0.2 / ADJUST / BLOCKED / STOP) |
 
 ## Fase P2 — frota supervisionada ativa
 

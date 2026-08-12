@@ -93,7 +93,7 @@ criado_em: 2026-07-30
 
 | Fonte | Referencia fixada | Uso nesta missao |
 |---|---|---|
-| Canonico LucaX Enterprise OS | `BL-2026-07-29-08` · 164 artefatos · impressao `8cf2143c…b027a7f` · snapshots de 97 arquivos (v1, 22:05) e 98 (v2, 01:32) em `01_fontes/snapshots/` — **processo externo alterou 7 arquivos de registro/indice e criou 1 durante a missao** (nenhum `foundation/` ou template); ver `99_decisao-ssc-01.md` §2 | Restricoes (FND-03/04/08/09/10, ADR-0007, ADR-0021) e Goals 1.13–1.20 |
+| Canonico LucaX Enterprise OS | `BL-2026-07-29-08` · 164 artefatos · impressao `8cf2143c…b027a7f` · snapshots de 97 arquivos (v1, 22:05) e 98 (v2, 01:32) em `01_fontes/snapshots/` — **processo externo alterou 7 arquivos de registro/indice e criou 1 durante a missao** (nenhum `foundation/` ou template); ver `00_governanca-experimental/99_decisao-ssc-01.md` §2 | Restricoes (FND-03/04/08/09/10, ADR-0007, ADR-0021) e Goals 1.13–1.20 |
 | SuperCondutor legado | git `bf8a407c…b5b786` · hashes de 7 arquivos + 4 agregados em D3 §1 | Baseline e matriz de engenharia reversa |
 | A4 congelada | `_SAIDA-COMPANY-OS` (RESEARCH-READY-FROZEN) · resumo executivo → pacote → candidatos → fichas, na ordem obrigatoria | Candidatos, padroes, lacunas e o roteamento de Goals; **zero fontes originais abertas** (nenhuma duvida material) |
 | Acervo A0 | `LucaX-Enterprise-Research/acervo-company-os` | Confirmacao de inventario/hashes; nao usado como fonte de avaliacao |

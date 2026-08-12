@@ -26,6 +26,6 @@ Memoria local do laboratorio — isolada de `memory/` do canonico (Manifesto D2 
 
 | Data | Tipo | Validade | Entrada | Fonte |
 |---|---|---|---|---|
-| 2026-07-30 | decisao de missao | 365d | Missao 0.1 encerrada com READY-FOR-SSC-0.2; 8 entregaveis + snapshots v1–v3 | `99_decisao-ssc-01.md` |
+| 2026-07-30 | decisao de missao | 365d | Missao 0.1 encerrada com READY-FOR-SSC-0.2; 8 entregaveis + snapshots v1–v3 | `00_governanca-experimental/99_decisao-ssc-01.md` |
 | 2026-07-30 | risco observado | 365d | Canonico sofre escrita concorrente de missoes paralelas; snapshot unico nao e garantia — fixar baseline por hash no inicio e revalidar no fim | `logs/2026-07-30_missao-ssc-01.md` item 6 |
 | 2026-07-30 | estado de fonte | 365d | Legado `lucaX`: HEAD fraco (334 mudancas locais); hash de working tree e a referencia | D3 §1 nota de proveniencia |
