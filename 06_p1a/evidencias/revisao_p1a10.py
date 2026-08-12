@@ -28,6 +28,32 @@ revisores, e a reverificacao do lease imediatamente antes de persistir
 
 DECLARADO: quem despacha esta revisao e a MESMA sessao que corrigiu.
 O conflito e estrutural e esta na cara do revisor nas DECLARACOES.
+
+DUAS TENTATIVAS FALHAS ANTES DESTA VERSAO, evidencia em
+`revisao-p1a10/{codex,kimi}-20260812T1841*.json`:
+
+- codex: o sandbox read-only falhou ao INICIAR e o modelo recusou a
+  revisao em vez de inventa-la (15 s). Sondas posteriores com o MESMO
+  argv passaram em C: e em H: — causa nao identificada, classificada
+  transitoria e reexecutada;
+- kimi: despachou agentes paralelos de verificacao e morreu no teto de
+  600 s do config do proprio CLI com o parecer inacabado (599,958 s,
+  rc=1). O prompt passa a exigir turno unico sem subagentes; o config
+  do CLI e do proprietario e nao foi tocado.
+
+TERCEIRA RODADA (apos a segunda falhar tambem):
+
+- codex: a falha nao era transitoria — o modelo roda, mas TODA
+  ferramenta de leitura morre porque `codex-windows-sandbox-setup.exe`
+  esta ausente nesta estacao. A sonda "Diga OK" passava por nao usar
+  ferramenta; o fluxo P2 funciona porque entrega o prompt por STDIN e o
+  codex nunca le arquivo. Este despachante passa a fazer O MESMO para o
+  codex: os tres documentos vao inline por stdin, e os SHA-256 vao
+  DECLARADOS no cabecalho de cada um (sem ferramenta nao ha como o
+  revisor computa-los; o vinculo fica mais fraco e fica declarado);
+- kimi: quota do ciclo esgotada de novo (403 em 3,3 s) — a revisao de
+  10 minutos com agentes consumiu o ciclo. STOP_WAIT_RESET; o parecer
+  do kimi espera o proximo reset.
 """
 import hashlib
 import json
@@ -169,9 +195,13 @@ def _redigir(texto: str) -> str:
 
 
 COMANDOS = {
+    # codex SEM prompt posicional: ele vem por STDIN, com os documentos
+    # inline — o sandbox de ferramentas esta quebrado nesta estacao
+    # (setup.exe ausente) e leitura de arquivo morreria. E o mesmo
+    # transporte do fluxo P2, que funciona.
     "codex": lambda tmp, skills, prompt: [
         "codex", "exec", "--sandbox", "read-only", "--cd", tmp,
-        "--skip-git-repo-check", "--ephemeral", prompt],
+        "--skip-git-repo-check", "--ephemeral"],
     "kimi": lambda tmp, skills, prompt: argv_kimi(_KIMI_EXE, prompt, skills),
 }
 
@@ -232,26 +262,46 @@ def montar_registros() -> bytes:
     return _redigir("\n".join(partes)).encode("utf-8")
 
 
-def montar_prompt() -> str:
-    return (
-        "Revise em modo SOMENTE LEITURA o estado atual do laboratorio "
-        "SSC+. No diretorio atual ha TRES arquivos, e voce precisa ler "
-        "OS TRES POR INTEIRO antes de avaliar:\n"
-        "  ./pacote-revisao.txt           — o estado sob julgamento\n"
-        "  ./declaracoes-obrigatorias.txt — fatos que o autor e OBRIGADO "
-        "a transmitir, varios contra o interesse dele\n"
-        "  ./registros-de-correcao.txt    — os registros das correcoes "
-        "sob julgamento, ancorados no commit ALVO\n\n"
+def montar_prompt(inline: bool = False) -> str:
+    if inline:
+        abertura = (
+            "Revise em modo SOMENTE LEITURA o estado atual do laboratorio "
+            "SSC+. Os TRES documentos seguem INLINE nesta mesma entrada, "
+            "apos estas instrucoes, cada um com o seu SHA-256 DECLARADO "
+            "no cabecalho (voce nao tem ferramentas; ecoe os declarados "
+            "nas linhas exigidas em vez de computa-los):\n"
+            "  1. pacote-revisao.txt           — o estado sob julgamento\n"
+            "  2. declaracoes-obrigatorias.txt — fatos que o autor e "
+            "OBRIGADO a transmitir, varios contra o interesse dele\n"
+            "  3. registros-de-correcao.txt    — os registros das "
+            "correcoes sob julgamento, ancorados no commit ALVO\n\n")
+    else:
+        abertura = (
+            "Revise em modo SOMENTE LEITURA o estado atual do laboratorio "
+            "SSC+. No diretorio atual ha TRES arquivos, e voce precisa ler "
+            "OS TRES POR INTEIRO antes de avaliar:\n"
+            "  ./pacote-revisao.txt           — o estado sob julgamento\n"
+            "  ./declaracoes-obrigatorias.txt — fatos que o autor e "
+            "OBRIGADO a transmitir, varios contra o interesse dele\n"
+            "  ./registros-de-correcao.txt    — os registros das correcoes "
+            "sob julgamento, ancorados no commit ALVO\n\n")
+    return abertura + (
         "Comece pelas declaracoes. Quem corrigiu, montou e despachou e a "
         "MESMA sessao: nada fecha sem o seu parecer.\n\n"
         "Contexto: o veredito vigente do acervo e REPROVADO (P1-A.4). O "
         "pacote e o estado DEPOIS das missoes de 2026-08-11/12.\n\n"
         "Voce NAO pode escrever nada: responda apenas com a revisao em "
         "texto.\n\n"
+        "IMPORTANTE: leia e julgue VOCE MESMO, num unico turno, sem "
+        "despachar subagentes e sem aguardar processos paralelos — o seu "
+        "ambiente encerra em 10 minutos e parecer inacabado nao e "
+        "parecer. Se o tempo nao der para tudo, priorize as linhas "
+        "exigidas abaixo, nesta ordem, e diga o que ficou sem conferir.\n\n"
         "Sua resposta precisa conter, NESTA ORDEM:\n"
-        "1. as linhas PROVIDER, MODELO-OBSERVADO, CANAL, PACOTE-SHA256 "
-        "(compute o SHA-256 de ./pacote-revisao.txt), DECLARACOES-SHA256 "
-        "e REGISTROS-SHA256 (idem para os outros dois) e ESCOPO;\n"
+        "1. as linhas PROVIDER, MODELO-OBSERVADO, CANAL, PACOTE-SHA256, "
+        "DECLARACOES-SHA256 e REGISTROS-SHA256 (compute-os dos arquivos "
+        "se tiver ferramentas; ecoe os DECLARADOS nos cabecalhos se nao "
+        "tiver, dizendo qual dos dois fez) e ESCOPO;\n"
         "2. UMA linha por id — 6, N1, N5, P1A4-1, P1A4-2, P1A4-3, "
         "P1A4-4, P1A4-5, P1A4-6 — exatamente na forma "
         "'MAJOR-<id>: FECHADO | NAO-FECHADO — <justificativa "
@@ -316,7 +366,25 @@ def main() -> int:
             f.write(dados_decl)
         with open(os.path.join(tmp, "registros-de-correcao.txt"), "wb") as f:
             f.write(dados_registros)
-        prompt = montar_prompt()
+        prompt = montar_prompt(inline=(provider == "codex"))
+        entrada_stdin = None
+        if provider == "codex":
+            # Documentos INLINE por stdin — o transporte do fluxo P2, que
+            # funciona onde o sandbox de ferramentas nao inicia.
+            entrada_stdin = "\n".join([
+                prompt,
+                f"\n{'=' * 72}\n=== DOCUMENTO 1/3: pacote-revisao.txt "
+                f"(sha256 declarado: {pacote_sha256}) ===\n",
+                dados_pacote.decode("utf-8", errors="replace"),
+                f"\n{'=' * 72}\n=== DOCUMENTO 2/3: "
+                f"declaracoes-obrigatorias.txt "
+                f"(sha256 declarado: {decl_sha256}) ===\n",
+                dados_decl.decode("utf-8", errors="replace"),
+                f"\n{'=' * 72}\n=== DOCUMENTO 3/3: "
+                f"registros-de-correcao.txt "
+                f"(sha256 declarado: {registros_sha256}) ===\n",
+                dados_registros.decode("utf-8", errors="replace"),
+            ])
         argv = COMANDOS[provider](tmp, skills, prompt)
         ts = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
         vigilancia = Vigilancia(RAIZ, SESSAO_LOCK)
@@ -325,7 +393,8 @@ def main() -> int:
         try:
             proc = subprocess.run(
                 argv, cwd=tmp, env=env, capture_output=True, text=True,
-                timeout=3600, encoding="utf-8", errors="replace")
+                timeout=3600, encoding="utf-8", errors="replace",
+                input=entrada_stdin)
             rc, out, err = proc.returncode, proc.stdout, proc.stderr
         except subprocess.TimeoutExpired as e:
             rc, out = "TIMEOUT", (e.stdout or "")
@@ -345,6 +414,11 @@ def main() -> int:
             "lock_escritor_unico": lock,
             "argv_publico": ["<PROMPT>" if a == prompt else a for a in argv],
             "prompt_sha256": hashlib.sha256(prompt.encode()).hexdigest(),
+            "transporte_documentos": ("stdin-inline" if entrada_stdin
+                                      else "arquivos-no-descartavel"),
+            "stdin_sha256": (hashlib.sha256(
+                entrada_stdin.encode("utf-8")).hexdigest()
+                if entrada_stdin else None),
             "pacote_sha256": pacote_sha256,
             "pacote_bytes_entregues": len(dados_pacote),
             "declaracoes_sha256": decl_sha256,

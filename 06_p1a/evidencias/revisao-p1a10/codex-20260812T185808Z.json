@@ -1,0 +1,81 @@
+{
+  "provider": "codex",
+  "ts_utc": "20260812T185808Z",
+  "tipo": "revisao-p1a10",
+  "chamadas_de_modelo": 1,
+  "custo_variavel": 0,
+  "rotulo": "assinatura-oauth; UMA chamada; enforcement read-only",
+  "enforcement_read_only": "--sandbox read-only --ephemeral (CLI)",
+  "tier_declarado_no_instante": {
+    "provider_id": "codex",
+    "tier": "ChatGPT Pro 5x",
+    "declarado_por": "proprietario",
+    "declarado_em_utc": "2026-08-11T21:04:59Z",
+    "expira_em_utc": "2026-08-12T21:04:59Z",
+    "valido_no_instante": true
+  },
+  "lock_escritor_unico": {
+    "sessao": "p1a10-ops",
+    "pid_titular": 25432,
+    "fence": 42
+  },
+  "argv_publico": [
+    "codex",
+    "exec",
+    "--sandbox",
+    "read-only",
+    "--cd",
+    "C:\\Users\\<USUARIO>\\AppData\\Local\\Temp\\p1a10-revisao-codex-nz4_wjdt",
+    "--skip-git-repo-check",
+    "--ephemeral"
+  ],
+  "prompt_sha256": "48aa29b1e801bed5b9b81b508ae821a70e5638939f2eb1e5a0db7ef0326c4993",
+  "transporte_documentos": "stdin-inline",
+  "stdin_sha256": "262082b95e08fbc7acca8d99fbb901a9fb57b696a8fb2c2e44e704e070c6a50d",
+  "pacote_sha256": "01a32ffb22bcbd4e6fbdff5da95f8728bed05b889074c4dc5cdbaad3197e3141",
+  "pacote_bytes_entregues": 556589,
+  "declaracoes_sha256": "5bf01533fc572c67c60b5b27922b39c95858c240998b646fc592e048d9a16d6a",
+  "declaracoes_bytes_entregues": 4614,
+  "registros_sha256": "606adecdaf34b6053794749dccfc9d46c96cd236a9654f1e39d3b81bb64b1e5d",
+  "registros_bytes_entregues": 30982,
+  "registros_alvo_commit": "f799883",
+  "dir_descartavel": "C:\\Users\\<USUARIO>\\AppData\\Local\\Temp\\p1a10-revisao-codex-nz4_wjdt",
+  "dir_descartavel_arquivos_restantes": [
+    "declaracoes-obrigatorias.txt",
+    "pacote-revisao.txt",
+    "registros-de-correcao.txt"
+  ],
+  "contencao": {
+    "titular_do_escritor_no_fechamento": "p1a10-ops",
+    "medida": "manifesto SHA-256 antes/depois das raizes vigiadas, com atribuicao separada da deteccao",
+    "raizes_vigiadas": [
+      "repositorio (toda a arvore sob RAIZ, inclusive locks/ e .git)",
+      "fora: ~/.codex/auth.json",
+      "fora: ~/.codex/config.toml",
+      "fora: ~/.claude/settings.json",
+      "fora: ~/.kimi-code/config.toml",
+      "fora: ~/.gemini/settings.json",
+      "fora: ~/.grok"
+    ],
+    "nao_vigiado": "todo caminho fora do repositorio e fora das fontes de config declaradas",
+    "arquivos_no_manifesto": 2165,
+    "mutacoes_detectadas": [
+      "alterado: repositorio/locks/repositorio.lease"
+    ],
+    "mutacoes_atribuidas_ao_renovador": [
+      "alterado: repositorio/locks/repositorio.lease"
+    ],
+    "mutacoes_fora_do_descartavel": [],
+    "violada": false
+  },
+  "lock_verificado_antes_da_persistencia": true,
+  "env_vars_removidas_nomes": [
+    "NVIDIA_API_KEY"
+  ],
+  "returncode": 0,
+  "duracao_s": 108.33,
+  "modelo_efetivo_no_banner": "gpt-5.6-terra",
+  "resposta": "PROVIDER: OpenAI  \nMODELO-OBSERVADO: GPT-5  \nCANAL: Codex via API  \nPACOTE-SHA256: 01a32ffb22bcbd4e6fbdff5da95f8728bed05b889074c4dc5cdbaad3197e3141 — declarado no cabeçalho, não computado  \nDECLARACOES-SHA256: 5bf01533fc572c67c60b5b27922b39c95858c240998b646fc592e048d9a16d6a — declarado no cabeçalho, não computado  \nREGISTROS-SHA256: 606adecdaf34b6053794749dccfc9d46c96cd236a9654f1e39d3b81bb64b1e5d — declarado no cabeçalho, não computado  \nESCOPO: revisão somente textual dos três documentos inline, priorizando declarações; não executei testes nem li checkout.\n\nMAJOR-6: NAO-FECHADO — é o mesmo defeito de N5/P1A4-2: `sentinela_antip2.py:construcoes_nao_resolvidas` ainda deixa invisível construção dinâmica sem fragmento do vocabulário; a própria declaração admite o resíduo.  \nMAJOR-N1: FECHADO — mesmo defeito de P1A4-1; `runner_p2.py:_serializar_runner` usa `LockSessao` e recusa segundo runner ativo.  \nMAJOR-N5: NAO-FECHADO — mesmo defeito de 6/P1A4-2; formas deliberadas podem ocultar vocabulário via `chr`, base64 ou dado externo e continuam sem negação.  \nMAJOR-P1A4-1: FECHADO — mesmo defeito de N1; há mutex efetivo no entry point do runner.  \nMAJOR-P1A4-2: NAO-FECHADO — mesmo defeito de 6/N5; `%`, `.format`, `join` são negados somente se o fragmento textual atingir o portão de vocabulário.  \nMAJOR-P1A4-3: FECHADO — `provedor_assinatura.py` publica mutações medidas e declara explicitamente o alcance, em vez de afirmar ausência global de efeito.  \nMAJOR-P1A4-4: NAO-FECHADO — `medidor.py:exportar_bruto` torna recontável somente o conteúdo redigido; tamanhos e hash do original continuam declaração do exportador, e o fluxo controlado nem exporta brutos.  \nMAJOR-P1A4-5: FECHADO — `runner_p2.py:publicar_recibo` grava atomicamente antes de chamar o relator; o teste exercita o relator que falha depois da gravação.  \nMAJOR-P1A4-6: FECHADO — o padrão atual dos novos guardas usa a interface operacional (`subprocesso`, `copytree`, `check-ignore` ou runner), não mera afirmação sobre ela.\n\nCONTAGEM-DISTINTA: 6 — fundi 6/N5/P1A4-2 e N1/P1A4-1; os outros cinco ids não compartilham causa nem remédio.\n\nREGISTRO-P1A9-a: SUSTENTADO — o teste cria o `.lease` num clone limpo, consulta `check-ignore` e a remoção de `locks/` o torna vermelho; a não-reprodução da antiga mutação foi corretamente declarada.  \nREGISTRO-P1A9-b: SUSTENTADO — executa o `scripts/verificar.py` real e verifica os quatro campos, ordem e dois valores observados; as reversões cobrem cada campo.  \nREGISTRO-103: SUSTENTADO — `--add-dir` aponta para o mesmo descartável que contém `contexto-ssc.txt`; o teste alcança `invocar()` e confere essa identidade.  \nREGISTRO-104: SUSTENTADO — a transcrição inline real é aceita, o marcador posterior sobrevive e a resposta vazia continua recusada.  \nREGISTRO-105: SUSTENTADO — como mitigação, não como garantia: o ponteiro realmente passa a proibir terminal e indicar leitura nativa; o próprio registro declara que o modelo ainda pode ignorá-lo.  \nREGISTRO-106: SUSTENTADO — a cópia do portão preserva `.git`, exclui runtime e o teste verifica o mesmo `HEAD` por Git real.  \nREGISTRO-107: SUSTENTADO — o subprocesso do portão remove precisamente `SSC_LOCK_SESSAO`, e o teste reproduz o vazamento ocorrido.  \nREGISTRO-108: SUSTENTADO — `--mode plan` saiu apenas da invocação produtiva Google e ficou no diagnóstico `/quota`, onde o registro declara efeito.\n\nDECLARADO-a: CONFIRMO — `99_correcao-p1a9a.md` reconhece que `!locks/*.lease` é inerte sob diretório já ignorado; ÁREA JA REVISADA: teste de gitignore. FAMILIA: fora-de-ambas  \nDECLARADO-b: CONFIRMO — o próprio registro 106 descreve `SystemExit` de gerador abortando a suite sem sumário; ESTREIA — P1-A.9 não continha o portão de cópia fiel que o expôs. FAMILIA: fora-de-ambas  \nDECLARADO-c: CONFIRMO — `pacote_p1a10.py:_classificar` trata `R`/`C` em três campos, confirmando que o gerador P1-A.3.7 anterior não tratava rename; ESTREIA — P1-A.3.7 não continha rename no acervo. FAMILIA: fora-de-ambas  \nDECLARADO-d: CONFIRMO — o registro 104 atribui a primeira recusa a mutação concorrente causada pela própria sessão; ESTREIA — pacotes anteriores não continham esses fluxos reais de 12/08. FAMILIA: fora-de-ambas  \n\nDEFEITO-NOVO: SIM — `08_p2/contexto_workspace.py:montar_snapshot` verifica link e tamanho antes de abrir o arquivo, mas não revalida contenção/inode após a abertura; troca TOCTOU por symlink pode incluir arquivo externo no snapshot enviado ao provedor.\n\nMAJOR: 06_p1a/tests/sentinela_antip2.py:construcoes_nao_resolvidas — a negação depende de fragmento literal do vocabulário; portanto não fecha o contorno geral por construção dinâmica. FAMILIA: (N)  \nMAJOR: 08_p2/medidor.py:exportar_bruto — a recontagem é do redigido; os números do original permanecem testemunhais no manifesto e o fluxo não produz esse artefato. FAMILIA: fora-de-ambas  \nMAJOR: 08_p2/contexto_workspace.py:montar_snapshot — NOVO, ESTREIA; P1-A.9 não continha `contexto_workspace.py`: há janela TOCTOU entre `islink`/`getsize` e `open`, sem `ler_arquivo_contido` nem validação do descritor. FAMILIA: fora-de-ambas  \nMINOR: 08_p2/provedor_assinatura.py:normalizar_saida — `num_turns=True` passa como inteiro positivo no JSON Google, embora o parser de quota já rejeite booleanos; NOVO, ESTREIA; P1-A.9 não continha este normalizador produtivo. FAMILIA: fora-de-ambas  \nMINOR: 06_p1a/99_correcao-p1a9a.md:plataforma — o registro diz que `verificar.py --rapido` incluiu prova central, mas o script mostrado só executa prova central sem `--rapido`; a medição foi descrita com alcance maior que o código exerce. FAMILIA: (F)  \n\nVEREDITO: REPROVADO",
+  "stderr_resumo": "Reading prompt from stdin...\n2026-08-12T18:58:09.006313Z ERROR codex_models_manager::cache: failed to load models cache: missing field `base_instructions` at line 94 column 5\nOpenAI Codex v0.145.0\n--------\nworkdir: C:\\Users\\<USUARIO>\\AppData\\Local\\Temp\\p1a10-revisao-codex-nz4_wjdt\nmodel: gpt-5.6-terra\nprovider: openai\napproval: never\nsandbox: read-only\nreasoning effort: high\nreasoning summaries: none\nsession id: 019ff756-cf7b-7992-848f-036360ce4953\n--------\nuser\nRevise em modo SOMENTE LEITURA o estado atual do laboratorio SSC+. Os TRES documentos seguem INLINE nesta mesma entrada, apos estas instrucoes, cada um com o seu SHA-256 DECLARADO no cabecalho (voce nao tem ferramentas; ecoe os declarados nas linhas exigidas em vez de computa-los):\n  1. pacote-revisao.txt           — o estado sob julgamento\n  2. declaracoes-obrigatorias.txt — fatos que o autor e OBRIGADO a transmitir, varios contra o interesse dele\n  3. registros-de-correcao.txt    — os registros das correcoes sob julgamento, ancorados no commit ALVO\n\nComece pelas declaracoes. Quem corrigiu, montou e despachou e a MESMA sessao: nada fecha sem o seu parecer.\n\nContexto: o veredito vigente do acervo e REPROVADO (P1-A.4). O pacote e o estado DEPOIS das missoes de 2026-08-11/12.\n\nVoce NAO pode escrever nada: responda apenas com a revisao em texto.\n\nIMPORTANTE: leia e julgue VOCE MESMO, num unico turno, sem despachar subagentes e sem aguardar processos paralelos — o seu ambiente encerra em 10 minutos e parecer inacabado nao e parecer. Se o tempo nao der para tudo, priorize as linhas exigidas abaixo, nesta ordem, e diga o que ficou sem conferir.\n\nSua resposta precisa conter, NESTA ORDEM:\n1. as linhas PROVIDER, MODELO-OBSERVADO, CANAL, PACOTE-SHA256, DECLARACOES-SHA256 e REGISTROS-SHA256 (compute-os dos arquivos se tiver ferramentas; ecoe os DECLARADOS nos cabecalhos se nao tiver, dizendo qual dos dois fez) e ESCOPO;\n2. UMA linha por id — 6, N1, N5, P1A4-1, P1A4-2, P1A4-3, P1A4-4, P1A4-5, P1A4-6 — exatamente na forma 'MAJOR-<id>: FECHADO | NAO-FECHADO — <justificativa apontavel>'. Se voce julgar que dois ou mais ids sao o MESMO defeito, diga-o na linha de cada um; a fusao e permitida e nao ha contagem certa esperada;\n3. a linha 'CONTAGEM-DISTINTA: <numero> — <criterio que voce usou>', com QUANTOS defeitos distintos os nove ids representam NA SUA contagem;\n4. UMA linha por registro de correcao de hoje — P1A9-a, P1A9-b, 103, 104, 105, 106, 107, 108 — na forma 'REGISTRO-<id>: SUSTENTADO | NAO-SUSTENTADO — <motivo>' (sustentado = a correcao fecha o que diz fechar, o teste exerce o caso que ocorre e os limites declarados sao os reais);\n5. UMA linha por achado novo declarado — a, b, c, d da secao 3 das declaracoes — na forma 'DECLARADO-<letra>: CONFIRMO | NAO-CONFIRMO — <motivo>', com a FAMILIA ao final;\n6. a linha 'DEFEITO-NOVO: SIM | NAO — <o que, onde>' sobre as correcoes de 2026-08-11/12;\n7. os seus achados, um por linha, prefixados por CRITICAL | MAJOR | MINOR | OBS, com arquivo:tema e descricao curta, e CADA um terminando com a FAMILIA obrigatoria:\n   'FAMILIA: (F)' — guarda que AFIRMA em vez de EXERCER;\n   'FAMILIA: (N)' — classe que a varredura por alcance de linha nao media;\n   'FAMILIA: fora-de-ambas' — com o motivo.\n   Sem familia o criterio de parada nao se afere. Para cada achado NOVO diga se esta em AREA JA REVISADA ou em ESTREIA — e, se estreia, QUAL pacote anterior nao a continha;\n8. a linha final 'VEREDITO: APROVADO | APROVADO-COM-RESSALVAS | REPROVADO'.\n\n========================================================================\n=== DOCUMENTO 1/3: pacote-revisao.txt (sha256 declarado: 01a32ffb22bcbd4e6fbdff5da95f8728bed05b889074c4dc5cdbaad3197e3141) ===\n\nPACOTE DE REVISAO — SSC+ (laboratorio experimental, sem autoridade)\n\nQuem corrigiu nao certifica: correcao nao fecha por ter sido feita, fecha por revisor independente dizer que fechou.\n\n=== IDENTIDADE (ancorada em commit, nao no checkout) ===\nBASE:  9ad6db360c6287ac29be69363ffa6bb05d51088f  SSC+ handoff de fechamento ",
+  "quota_observavel": "nao-exposta-pelo-cli"
+}

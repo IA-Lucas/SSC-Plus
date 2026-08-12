@@ -1,0 +1,76 @@
+{
+  "provider": "codex",
+  "ts_utc": "20260812T184149Z",
+  "tipo": "revisao-p1a10",
+  "chamadas_de_modelo": 1,
+  "custo_variavel": 0,
+  "rotulo": "assinatura-oauth; UMA chamada; enforcement read-only",
+  "enforcement_read_only": "--sandbox read-only --ephemeral (CLI)",
+  "tier_declarado_no_instante": {
+    "provider_id": "codex",
+    "tier": "ChatGPT Pro 5x",
+    "declarado_por": "proprietario",
+    "declarado_em_utc": "2026-08-11T21:04:59Z",
+    "expira_em_utc": "2026-08-12T21:04:59Z",
+    "valido_no_instante": true
+  },
+  "lock_escritor_unico": {
+    "sessao": "p1a10-ops",
+    "pid_titular": 51016,
+    "fence": 38
+  },
+  "argv_publico": [
+    "codex",
+    "exec",
+    "--sandbox",
+    "read-only",
+    "--cd",
+    "C:\\Users\\<USUARIO>\\AppData\\Local\\Temp\\p1a10-revisao-codex-1tbyp2mp",
+    "--skip-git-repo-check",
+    "--ephemeral",
+    "<PROMPT>"
+  ],
+  "prompt_sha256": "296c1881c384512c4288c868b4cc90f26b65376cc50e055d7522d024517a621f",
+  "pacote_sha256": "01a32ffb22bcbd4e6fbdff5da95f8728bed05b889074c4dc5cdbaad3197e3141",
+  "pacote_bytes_entregues": 556589,
+  "declaracoes_sha256": "5bf01533fc572c67c60b5b27922b39c95858c240998b646fc592e048d9a16d6a",
+  "declaracoes_bytes_entregues": 4614,
+  "registros_sha256": "606adecdaf34b6053794749dccfc9d46c96cd236a9654f1e39d3b81bb64b1e5d",
+  "registros_bytes_entregues": 30982,
+  "registros_alvo_commit": "f799883",
+  "dir_descartavel": "C:\\Users\\<USUARIO>\\AppData\\Local\\Temp\\p1a10-revisao-codex-1tbyp2mp",
+  "dir_descartavel_arquivos_restantes": [
+    "declaracoes-obrigatorias.txt",
+    "pacote-revisao.txt",
+    "registros-de-correcao.txt"
+  ],
+  "contencao": {
+    "titular_do_escritor_no_fechamento": "p1a10-ops",
+    "medida": "manifesto SHA-256 antes/depois das raizes vigiadas, com atribuicao separada da deteccao",
+    "raizes_vigiadas": [
+      "repositorio (toda a arvore sob RAIZ, inclusive locks/ e .git)",
+      "fora: ~/.codex/auth.json",
+      "fora: ~/.codex/config.toml",
+      "fora: ~/.claude/settings.json",
+      "fora: ~/.kimi-code/config.toml",
+      "fora: ~/.gemini/settings.json",
+      "fora: ~/.grok"
+    ],
+    "nao_vigiado": "todo caminho fora do repositorio e fora das fontes de config declaradas",
+    "arquivos_no_manifesto": 2161,
+    "mutacoes_detectadas": [],
+    "mutacoes_atribuidas_ao_renovador": [],
+    "mutacoes_fora_do_descartavel": [],
+    "violada": false
+  },
+  "lock_verificado_antes_da_persistencia": true,
+  "env_vars_removidas_nomes": [
+    "NVIDIA_API_KEY"
+  ],
+  "returncode": 0,
+  "duracao_s": 15.176,
+  "modelo_efetivo_no_banner": "gpt-5.6-terra",
+  "resposta": "Não foi possível executar a revisão: o ambiente somente leitura falhou ao iniciar o mecanismo de sandbox, antes de permitir qualquer leitura dos três arquivos. Portanto não vou inventar hashes, evidências ou veredito.\n\nEnvie o conteúdo dos três arquivos aqui, ou restabeleça o acesso de leitura ao diretório, e faço a avaliação no formato exigido.",
+  "stderr_resumo": "Reading additional input from stdin...\n2026-08-12T18:41:49.775888Z ERROR codex_models_manager::cache: failed to load models cache: missing field `base_instructions` at line 94 column 5\nOpenAI Codex v0.145.0\n--------\nworkdir: C:\\Users\\<USUARIO>\\AppData\\Local\\Temp\\p1a10-revisao-codex-1tbyp2mp\nmodel: gpt-5.6-terra\nprovider: openai\napproval: never\nsandbox: read-only\nreasoning effort: high\nreasoning summaries: none\nsession id: 019ff747-de41-76f2-af98-52103ab8817e\n--------\nuser\nRevise em modo SOMENTE LEITURA o estado atual do laboratorio SSC+. No diretorio atual ha TRES arquivos, e voce precisa ler OS TRES POR INTEIRO antes de avaliar:\n  ./pacote-revisao.txt           — o estado sob julgamento\n  ./declaracoes-obrigatorias.txt — fatos que o autor e OBRIGADO a transmitir, varios contra o interesse dele\n  ./registros-de-correcao.txt    — os registros das correcoes sob julgamento, ancorados no commit ALVO\n\nComece pelas declaracoes. Quem corrigiu, montou e despachou e a MESMA sessao: nada fecha sem o seu parecer.\n\nContexto: o veredito vigente do acervo e REPROVADO (P1-A.4). O pacote e o estado DEPOIS das missoes de 2026-08-11/12.\n\nVoce NAO pode escrever nada: responda apenas com a revisao em texto.\n\nSua resposta precisa conter, NESTA ORDEM:\n1. as linhas PROVIDER, MODELO-OBSERVADO, CANAL, PACOTE-SHA256 (compute o SHA-256 de ./pacote-revisao.txt), DECLARACOES-SHA256 e REGISTROS-SHA256 (idem para os outros dois) e ESCOPO;\n2. UMA linha por id — 6, N1, N5, P1A4-1, P1A4-2, P1A4-3, P1A4-4, P1A4-5, P1A4-6 — exatamente na forma 'MAJOR-<id>: FECHADO | NAO-FECHADO — <justificativa apontavel>'. Se voce julgar que dois ou mais ids sao o MESMO defeito, diga-o na linha de cada um; a fusao e permitida e nao ha contagem certa esperada;\n3. a linha 'CONTAGEM-DISTINTA: <numero> — <criterio que voce usou>', com QUANTOS defeitos distintos os nove ids representam NA SUA contagem;\n4. UMA linha por registro de correcao de hoje — P1A9-a, P1A9-b, 103, 104, 105, 106, 107, 108 — na forma 'REGISTRO-<id>: SUSTENTADO | NAO-SUSTENTADO — <motivo>' (sustentado = a correcao fecha o que diz fechar, o teste exerce o caso que ocorre e os limites declarados sao os reais);\n5. UMA linha por achado novo declarado — a, b, c, d da secao 3 das declaracoes — na forma 'DECLARADO-<letra>: CONFIRMO | NAO-CONFIRMO — <motivo>', com a FAMILIA ao final;\n6. a linha 'DEFEITO-NOVO: SIM | NAO — <o que, onde>' sobre as correcoes de 2026-08-11/12;\n7. os seus achados, um por linha, prefixados por CRITICAL | MAJOR | MINOR | OBS, com arquivo:tema e descricao curta, e CADA um terminando com a FAMILIA obrigatoria:\n   'FAMILIA: (F)' — guarda que AFIRMA em vez de EXERCER;\n   'FAMILIA: (N)' — classe que a varredura por alcance de linha nao media;\n   'FAMILIA: fora-de-ambas' — com o motivo.\n   Sem familia o criterio de parada nao se afere. Para cada achado NOVO diga se esta em AREA JA REVISADA ou em ESTREIA — e, se estreia, QUAL pacote anterior nao a continha;\n8. a linha final 'VEREDITO: APROVADO | APROVADO-COM-RESSALVAS | REPROVADO'.\ncodex\nVou começar pelas declarações obrigatórias e ler integralmente os três arquivos, mantendo a revisão estritamente em modo somente leitura.\nexec\n\"C:\\\\Program Files\\\\WindowsApps\\\\Microsoft.PowerShell_7.6.4.0_x64__8wekyb3d8bbwe\\\\pwsh.exe\" -Command '$files = @('\"'declaracoes-obrigatorias.txt','pacote-revisao.txt','registros-de-correcao.txt'); Get-FileHash -Algorithm SHA256 \"'$files | ForEach-Object { \"$($_.Path): $($_.Hash)\" }; Get-Content -LiteralPath '\"'.\\\\declaracoes-obrigatorias.txt' | Measure-Object -Line; Get-Content -LiteralPath '.\\\\pacote-revisao.txt' | Measure-Object -Line; Get-Content -LiteralPath '.\\\\registros-de-correcao.txt' | Measure-Object -Line\" in C:\\Users\\<USUARIO>\\AppData\\Local\\Temp\\p1a10-revisao-codex-1tbyp2mp\n2026-08-12T18:41:59.045349Z ERROR codex_core::exec: exec error: windows sandbox: orchestrator_helper_launch_failed: setup refresh failed to launch helper: helper=codex-windows-sandbox-setup.exe, cwd=C:\\Users\\<USUARIO>\\AppData\\Local\\Temp\\p1a10-revisao-",
+  "quota_observavel": "nao-exposta-pelo-cli"
+}
