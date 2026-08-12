@@ -147,6 +147,7 @@ class MetadeAAlcanca07P1B(_ArvoreSintetica):
         self.assertEqual(achados, {"ilegiveis": [], "portoes": [],
                                    "decisoes_fora": [],
                                    "nao_resolvidos": [],
+                                   "nao_resolvidos_reconhecidos": [],
                                    "portoes_autorizados": [],
                                    "decisoes_autorizadas": []})
 

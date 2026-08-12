@@ -72,6 +72,18 @@ CONSUMIDORES_DECLARADOS = (
     "08_p2/runner_p2.py",
 )
 
+# Construcoes NAO RESOLVIDAS que o Fundador reconheceu nominalmente
+# (2026-08-12, correcao do MAJOR #6/N5/P1A4-2). Mesmo desenho da emenda
+# da P2: o achado MIGRA para um campo visivel (`nao_resolvidos_
+# reconhecidos`), nunca some. So entram instrumentos CONGELADOS de
+# missoes ja julgadas — congelado nao se edita, e linha de arquivo
+# congelado e estavel por definicao. Item novo aqui e ato, nao acidente.
+NAO_RESOLVIDOS_RECONHECIDOS = (
+    "06_p1a/evidencias/revisao_p1a2.py:180 import dinamico __import__()",
+    "06_p1a/evidencias/revisao_p1a3.py:99 "
+    "f-string interpolada com fragmento do vocabulario",
+)
+
 # Primitivas que EXECUTAM algo: subprocesso, interpretacao dinamica e as
 # juntas de sonda do proprio pacote. Um consumidor nao precisa chamar
 # `subprocess.run` — basta acionar a sonda do adaptador.
@@ -116,8 +128,11 @@ def dobrar_constante(no):
     Dobra o que o proprio interpretador dobraria: constante textual,
     soma de constantes textuais e f-string sem interpolacao. NAO dobra
     `%`, `.format`, `str.join` nem valor vindo de chamada — e o que nao
-    se consegue dobrar entra na lista de NAO RESOLVIDOS de `varrer`, em
-    vez de sumir em silencio.
+    se consegue dobrar entra na lista de NAO RESOLVIDOS de `varrer`
+    QUANDO carrega fragmento do vocabulario (o portao que impede a
+    negacao de inundar; `construcoes_nao_resolvidas` e quem a executa,
+    desde a correcao do MAJOR #6/N5/P1A4-2 em 2026-08-12), em vez de
+    sumir em silencio.
     """
     if isinstance(no, ast.Constant):
         return no.value if isinstance(no.value, str) else None
@@ -136,6 +151,87 @@ def dobrar_constante(no):
             partes.append(valor)
         return "".join(partes)
     return None
+
+
+def _fragmentos_dobraveis(no) -> list:
+    """Todo texto constante que aparece DENTRO da subarvore."""
+    fragmentos = []
+    for f in ast.walk(no):
+        valor = dobrar_constante(f)
+        if isinstance(valor, str):
+            fragmentos.append(valor)
+    return fragmentos
+
+
+def _fragmento_toca_vocabulario(fragmentos) -> bool:
+    """Algum fragmento e pedaco de um termo do enum, ou o contem.
+
+    O limiar de 4 caracteres corta ruido ("_", "s", ": ") sem soltar
+    nenhum termo: o menor pedaco util de qualquer termo do vocabulario
+    ("SHADOW_", "ELIGIBLE", "BLOCK") passa dele.
+    """
+    for fragmento in fragmentos:
+        if len(fragmento) < 4:
+            continue
+        for termo in VOCABULARIO_VEREDITO:
+            if fragmento in termo or termo in fragmento:
+                return True
+    return False
+
+
+# Construtores textuais que o dobrador RECUSA de proposito, na ordem em
+# que o revisor os nomeou: `%`, `.format`, `join` — e o import dinamico,
+# que nenhuma resolucao estatica de `ast.Import` alcanca.
+_IMPORTADORES_DINAMICOS = frozenset({"import_module", "__import__"})
+
+
+def construcoes_nao_resolvidas(arvore) -> list:
+    """(linha, motivo) das construcoes que a sentinela NAO consegue
+    resolver e que podem estar montando um termo do vocabulario.
+
+    MAJOR #6 / N5 / P1A4-2: *"construcao nao resolvida = REPROVA, nao =
+    ignora"*. O dobrador recusa `%`, `.format`, `join` e f-string com
+    interpolacao; ate aqui a recusa virava SILENCIO — o arquivo saia
+    limpo. Passa a virar NEGACAO quando a construcao carrega fragmento
+    do vocabulario: quem escreve `"SHADOW_" + sufixo` ou
+    `"%s_ELIGIBLE" % x` aparece em `nao_resolvidos`, nunca como limpo.
+
+    O portao de vocabulario e o que impede a negacao de inundar: `%s de
+    %d bytes` nao tem fragmento de termo nenhum e continua fora. O
+    LIMITE declarado: construcao SEM fragmento nenhum do vocabulario
+    (chr(), base64, dados externos) continua invisivel — negacao total
+    de toda string dinamica do repositorio acusaria milhares de linhas
+    legitimas e enterraria o achado real. Import dinamico NAO leva o
+    portao: `import_module(x)` traz um modulo inteiro que a resolucao
+    estatica nao segue, toque ele no vocabulario ou nao.
+    """
+    achadas = []
+    for no in ast.walk(arvore):
+        motivo = None
+        if isinstance(no, ast.BinOp) and isinstance(no.op, ast.Mod):
+            if dobrar_constante(no) is None \
+                    and _fragmento_toca_vocabulario(_fragmentos_dobraveis(no)):
+                motivo = "interpolacao % com fragmento do vocabulario"
+        elif isinstance(no, ast.BinOp) and isinstance(no.op, ast.Add):
+            if dobrar_constante(no) is None \
+                    and _fragmento_toca_vocabulario(_fragmentos_dobraveis(no)):
+                motivo = "concatenacao nao dobravel com fragmento do vocabulario"
+        elif isinstance(no, ast.JoinedStr):
+            if dobrar_constante(no) is None \
+                    and _fragmento_toca_vocabulario(_fragmentos_dobraveis(no)):
+                motivo = "f-string interpolada com fragmento do vocabulario"
+        elif isinstance(no, ast.Call):
+            alvo = no.func
+            nome = alvo.attr if isinstance(alvo, ast.Attribute) else (
+                alvo.id if isinstance(alvo, ast.Name) else None)
+            if nome in _IMPORTADORES_DINAMICOS:
+                motivo = f"import dinamico {nome}()"
+            elif nome in ("format", "join") \
+                    and _fragmento_toca_vocabulario(_fragmentos_dobraveis(no)):
+                motivo = f"{nome}() com fragmento do vocabulario"
+        if motivo is not None:
+            achadas.append((no.lineno, motivo))
+    return sorted(set(achadas))
 
 
 def tem_literal_do_veredito(no) -> bool:
@@ -363,7 +459,8 @@ def portoes_de_execucao(arvore, apelidos) -> list:
     return sorted(set(portoes))
 
 
-def varrer(raiz_repo, classificador, consumidores=None) -> dict:
+def varrer(raiz_repo, classificador, consumidores=None,
+           reconhecidos=None) -> dict:
     """A varredura inteira sobre uma raiz — a operacao e o controle.
 
     Devolve `{"ilegiveis": [...], "portoes": [...], "decisoes_fora":
@@ -387,9 +484,20 @@ def varrer(raiz_repo, classificador, consumidores=None) -> dict:
                   else consumidores)
     autorizados = {os.path.realpath(os.path.join(raiz_repo, str(c)))
                    for c in declarados}
+    # Reconhecimento nominal: mesma regra dos consumidores — `None` usa a
+    # lista declarada, `()` devolve o comportamento cru para os controles.
+    conhecidos = set(NAO_RESOLVIDOS_RECONHECIDOS if reconhecidos is None
+                     else reconhecidos)
     indice = indice_de_modulos(raiz_repo)
     ilegiveis, decisoes_fora, portoes, nao_resolvidos = [], [], [], []
     portoes_autorizados, decisoes_autorizadas = [], []
+    nao_resolvidos_reconhecidos = []
+
+    def negar(item: str) -> None:
+        destino = (nao_resolvidos_reconhecidos
+                   if item.replace(os.sep, "/") in conhecidos
+                   else nao_resolvidos)
+        destino.append(item)
     for caminho in fontes_py(raiz_repo):
         try:
             with open(caminho, encoding="utf-8") as f:
@@ -404,7 +512,14 @@ def varrer(raiz_repo, classificador, consumidores=None) -> dict:
         # NEGA quando nao consegue resolver (achado N5): import que o
         # sentinela nao conseguiu seguir e ponto cego, e ponto cego nao
         # pode sair como arquivo limpo.
-        nao_resolvidos.extend(f"{rel}: {m}" for m in faltou)
+        for m in faltou:
+            negar(f"{rel}: {m}")
+        # NEGA tambem a CONSTRUCAO textual que o dobrador recusa quando
+        # ela carrega fragmento do vocabulario, e todo import dinamico
+        # (MAJOR #6 / N5 / P1A4-2): ate aqui a recusa do dobrador virava
+        # silencio, e silencio saia como limpo.
+        for linha, motivo in construcoes_nao_resolvidas(arvore):
+            negar(f"{rel}:{linha} {motivo}")
         # Consumidor DECLARADO pelo ato soberano: o que ele produz muda de
         # campo, nao de existencia. Um arquivo autorizado que ilegivel
         # continua ilegivel — a autorizacao nunca cobre o fail-closed.
@@ -420,5 +535,7 @@ def varrer(raiz_repo, classificador, consumidores=None) -> dict:
     return {"ilegiveis": ilegiveis, "portoes": portoes,
             "decisoes_fora": decisoes_fora,
             "nao_resolvidos": sorted(set(nao_resolvidos)),
+            "nao_resolvidos_reconhecidos":
+                sorted(set(nao_resolvidos_reconhecidos)),
             "portoes_autorizados": portoes_autorizados,
             "decisoes_autorizadas": decisoes_autorizadas}
