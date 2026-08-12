@@ -125,6 +125,52 @@ class FluxoEstruturado(unittest.TestCase):
         self.assertEqual(len(r["etapas"]), 5)
 
 
+class CopiaFielParaOPortaoDeTestes(unittest.TestCase):
+    def test_a_copia_leva_o_git_e_deixa_o_runtime(self):
+        """`.git` viaja; `locks/` e caches nao — e o git da copia FUNCIONA.
+
+        Copia sem `.git` nao e o estado em que a operacao roda: a suite
+        completa ancora testes de blob em commits e, sem historico, um
+        gerador de pacote da SystemExit que mata o unittest sem sumario
+        (medido em 2026-08-12, `fluxo-20260812T135319*-recusado.json`).
+        Aqui a interface exercida e a mesma do portao: `copytree` com
+        `_ignorar_copia`, e um comando git REAL dentro da copia.
+        """
+        import shutil
+        import subprocess
+        with tempfile.TemporaryDirectory() as tmp:
+            origem = Path(tmp) / "origem"
+            (origem / "locks").mkdir(parents=True)
+            (origem / "__pycache__").mkdir()
+            (origem / "locks" / "x.lease").write_text("runtime")
+            (origem / "modulo.pyc").write_text("cache")
+            (origem / "codigo.py").write_text("print('ok')\n")
+            ambiente = {**os.environ,
+                        "GIT_AUTHOR_NAME": "t", "GIT_AUTHOR_EMAIL": "t@t",
+                        "GIT_COMMITTER_NAME": "t", "GIT_COMMITTER_EMAIL": "t@t"}
+            for argv in (["git", "init", "-q"],
+                         ["git", "add", "codigo.py"],
+                         ["git", "commit", "-q", "-m", "base"]):
+                subprocess.run(argv, cwd=origem, env=ambiente,
+                               capture_output=True, check=True)
+            destino = Path(tmp) / "copia"
+            shutil.copytree(origem, destino, ignore=fc._ignorar_copia)
+
+            self.assertFalse((destino / "locks").exists())
+            self.assertFalse((destino / "__pycache__").exists())
+            self.assertFalse((destino / "modulo.pyc").exists())
+            cabeca = lambda raiz: subprocess.run(  # noqa: E731
+                ["git", "-c", f"safe.directory={raiz.as_posix()}",
+                 "rev-parse", "HEAD"], cwd=raiz, capture_output=True,
+                text=True)
+            na_copia = cabeca(destino)
+            self.assertEqual(na_copia.returncode, 0,
+                             "o git da copia nao funciona: "
+                             + na_copia.stderr[:200])
+            self.assertEqual(na_copia.stdout, cabeca(origem).stdout,
+                             "a copia nao carrega o MESMO historico")
+
+
 class AplicacaoExplicita(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory(prefix="fluxo-gate-")

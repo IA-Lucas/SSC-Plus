@@ -216,8 +216,13 @@ def executar_fluxo(operacao: str, pedido: str, despachar: Callable,
 
 
 def _ignorar_copia(_base: str, nomes: list[str]) -> set[str]:
+    # `.git` VIAJA na copia, e nao e detalhe: a suite completa exige o
+    # historico (testes de blob ancorados em commit dao SystemExit sem
+    # ele, matando o unittest sem sumario — medido em 2026-08-12,
+    # fluxo-20260812T135319*). Copia sem .git nao e o estado em que a
+    # operacao roda; o portao mede a suite num checkout fiel descartavel.
     return {n for n in nomes if n in {
-        ".git", "locks", "__pycache__", ".venv", "node_modules",
+        "locks", "__pycache__", ".venv", "node_modules",
     } or n.endswith(".pyc")}
 
 
