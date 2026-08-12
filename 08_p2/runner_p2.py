@@ -267,7 +267,8 @@ def executar(tarefa: str, criterio: str, preflight: dict,
              idempotency_key: str | None = None, sensor=None,
              vigia=None, contexto_workspace: bool = True,
              raiz_contexto: str | None = None,
-             limite_contexto: int = LIMITE_CONTEXTO_BYTES) -> dict:
+             limite_contexto: int = LIMITE_CONTEXTO_BYTES,
+             exportar_brutos: str | None = None) -> dict:
     """Uma tarefa, da frota medida ao veredito — devolve o registro."""
     montagem = frota_medida.frota_do_preflight(
         preflight["frota"], ESPECIFICACOES,
@@ -402,6 +403,16 @@ def executar(tarefa: str, criterio: str, preflight: dict,
     lab.kernel.verificar_integridade()
     registro["placar"] = EvidencePlane(
         raiz_lab, lab.envelope.sessao_id).projetar()
+    # P1A4-4: a evidencia bruta sai do lab (runtime que morre — a P1-A.6
+    # provou) para um destino versionavel, ANTES de fechar o lab e com a
+    # ENTRADA REAL em maos — exportar da cadeia truncaria em 4000 chars.
+    # So o caminho de medicao liga este parametro; fluxo nao exporta, e
+    # a ausencia esta declarada no registro 109.
+    if exportar_brutos and registro["attempts"]:
+        import medidor
+        registro["evidencia_bruta"] = redigir(
+            medidor.exportar_bruto_do_registro(
+                registro, exportar_brutos, entrada_real=entrada_produtiva))
     lab.fechar()
     return registro
 
@@ -463,7 +474,9 @@ def main(argv=None) -> int:
                         capacidade=args.capacidade, papel=args.papel,
                         provedor=args.provedor,
                         timeout=args.timeout,
-                        contexto_workspace=not args.sem_contexto_workspace)
+                        contexto_workspace=not args.sem_contexto_workspace,
+                        exportar_brutos=os.path.join(
+                            caminhos.RAIZ, "08_p2", "evidencias", "brutos"))
 
     # Escritor unico verificado DE NOVO, com o MESMO fence, imediatamente
     # antes de persistir: entre a verificacao de abertura e agora correram

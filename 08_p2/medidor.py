@@ -50,6 +50,7 @@ mediria o que ele acha que enviou, e nao o que ficou gravado.
 
 import argparse
 import glob
+import hashlib
 import json
 import os
 import subprocess
@@ -304,6 +305,123 @@ def medir_assinatura(raiz_lab: str, sessao_id: str,
         })
 
 
+def exportar_bruto(raiz_lab: str, sessao_id: str, destino: str,
+                   work_unit_id: str | None = None,
+                   entrada_real=None) -> dict:
+    """Exporta a evidencia bruta de uma corrida para FORA do lab — P1A4-4.
+
+    O defeito, na voz do revisor: a receita recompoe numeros com insumos
+    TESTEMUNHAIS e nao permite recontar respostas alternativas nem a
+    corrida sem recibo. A raiz do defeito e que a evidencia bruta vivia
+    SO no lab — runtime que o Git ignora, e que a P1-A.6 provou que
+    morre (destruiu o unico lab de P2 que existia).
+
+    O que este export grava, num diretorio VERSIONAVEL:
+
+    - por objeto (entrada da WorkUnit e saida de cada attempt), o
+      conteudo REDIGIDO (`contencao.redigir` — o bruto versionado nao
+      pode carregar usuario/caminho local, guardas ZeroPii) num arquivo
+      proprio;
+    - `manifesto.json` com, por objeto: sha256 e tamanhos do ORIGINAL,
+      sha256 e tamanhos do REDIGIDO, e o delta entre eles.
+
+    LIMITE DECLARADO: o original nao se recupera do export. O que uma
+    receita reconta de verdade e o objeto REDIGIDO (que esta no
+    repositorio); os tamanhos originais viajam como declaracao do
+    manifesto, com o delta da redacao ao lado — nunca como recontagem.
+    """
+    from contencao import redigir  # caminhos ja poe evidencias no path
+    from seguranca_artefatos import gravar_json_atomico
+
+    plano = EvidencePlane(raiz_lab, sessao_id)
+    projecao = plano.projetar()
+    unidades_wu = projecao["work_units"]
+    if work_unit_id is None:
+        if len(unidades_wu) != 1:
+            raise MedicaoAmbigua(
+                f"{len(unidades_wu)} WorkUnits no laboratorio; declare "
+                "work_unit_id — exportar sozinho exportaria a tarefa errada")
+        work_unit_id = next(iter(unidades_wu))
+    if work_unit_id not in unidades_wu:
+        raise MedicaoAmbigua(f"WorkUnit {work_unit_id!r} nao esta na cadeia")
+
+    def _bytes(conteudo) -> bytes:
+        if isinstance(conteudo, (bytes, bytearray)):
+            return bytes(conteudo)
+        return str(conteudo).encode("utf-8")
+
+    os.makedirs(destino, exist_ok=True)
+    objetos = {}
+
+    def _gravar_objeto(nome: str, papel: str, original: bytes,
+                       extra: dict | None = None) -> None:
+        redigido = redigir(
+            original.decode("utf-8", errors="replace")).encode("utf-8")
+        arquivo = f"{nome}.txt"
+        with open(os.path.join(destino, arquivo), "wb") as f:
+            f.write(redigido)
+        objetos[nome] = {
+            "papel": papel,
+            "arquivo": arquivo,
+            "sha256_original": hashlib.sha256(original).hexdigest(),
+            "tamanhos_originais": tamanhos(original),
+            "sha256_redigido": hashlib.sha256(redigido).hexdigest(),
+            "tamanhos_redigidos": tamanhos(redigido),
+            "delta_redacao": {
+                u: tamanhos(redigido)[u] - tamanhos(original)[u]
+                for u in UNIDADES},
+            **(extra or {}),
+        }
+
+    entrada = (_bytes(entrada_real) if entrada_real is not None
+               else _bytes(unidades_wu[work_unit_id].get("intencao") or ""))
+    _gravar_objeto("entrada", "entrada", entrada, {
+        "procedencia": ("medido-processo" if entrada_real is not None
+                        else "medido-cadeia"),
+        "truncamento_possivel": entrada_real is None and
+        tamanhos(entrada)["caracteres"] >= TETO_INTENCAO_CHARS})
+
+    for att in projecao["attempts"]:
+        if att.get("work_unit_id") != work_unit_id:
+            continue
+        if att.get("resultado") is None:
+            continue
+        ref = (att.get("captura") or {}).get("saida_estruturada_ref")
+        conteudo = plano.cas.ler(ref) if ref else b""
+        resolvido = att.get("executor_resolvido") or {}
+        _gravar_objeto(f"saida-{att.get('attempt_id')}", "saida",
+                       _bytes(conteudo), {
+                           "attempt_id": att.get("attempt_id"),
+                           "resultado": att.get("resultado"),
+                           "executor": f"{resolvido.get('provedor')}/"
+                                       f"{resolvido.get('modelo')}"})
+
+    manifesto = {
+        "formato": "evidencia-bruta-p1a44-v1",
+        "sessao_id": sessao_id,
+        "work_unit_id": work_unit_id,
+        "fonte": "cadeia-verificada (EventLog + CAS via EvidencePlane)",
+        "limite_declarado": "o original nao se recupera daqui; reconta-se "
+                            "o objeto REDIGIDO, e os tamanhos originais "
+                            "sao declaracao deste manifesto",
+        "objetos": objetos,
+    }
+    gravar_json_atomico(os.path.join(destino, "manifesto.json"), manifesto)
+    return manifesto
+
+
+def exportar_bruto_do_registro(registro: dict, destino_base: str,
+                               entrada_real=None) -> str | None:
+    """Export a partir do REGISTRO que o runner devolve; None sem lab."""
+    if not registro.get("raiz_lab") or not registro.get("work_unit_id"):
+        return None
+    destino = os.path.join(destino_base, registro["work_unit_id"])
+    exportar_bruto(registro["raiz_lab"], registro["sessao_id"], destino,
+                   work_unit_id=registro["work_unit_id"],
+                   entrada_real=entrada_real)
+    return destino
+
+
 def medir_alternativo(itens) -> dict:
     """O razonete do outro canal para a MESMA tarefa, feita por ele.
 
@@ -425,7 +543,7 @@ def comparar(assinatura: dict, alternativo: dict) -> dict:
 
 DIR_RECEITAS = os.path.join(caminhos.RAIZ, "08_p2", "receitas")
 
-ORIGENS = ("arquivo", "recibo", "testemunho")
+ORIGENS = ("arquivo", "recibo", "testemunho", "bruto")
 
 
 class ReceitaInvalida(Exception):
@@ -487,6 +605,40 @@ def _resolver_insumo(spec: dict, raiz: str | None = None) -> dict:
         return {"rotulo": spec.get("rotulo") or spec["caminho"],
                 "procedencia": "medido-recibo", "reproduzido": True,
                 "fonte": spec["caminho"], **tamanhos(texto)}
+
+    if origem == "bruto":
+        # P1A4-4: o objeto exportado por `exportar_bruto`. O que se
+        # RECONTA e o arquivo REDIGIDO que esta no repositorio — hash
+        # conferido contra o manifesto, fail-closed. Os tamanhos
+        # ORIGINAIS viajam como declaracao, com o delta da redacao.
+        caminho_manifesto = os.path.join(base, spec["manifesto"])
+        if not os.path.isfile(caminho_manifesto):
+            raise ReceitaInvalida(
+                f"manifesto ausente: {spec['manifesto']}")
+        with open(caminho_manifesto, encoding="utf-8") as f:
+            manifesto = json.load(f)
+        objeto = (manifesto.get("objetos") or {}).get(spec.get("objeto"))
+        if objeto is None:
+            raise ReceitaInvalida(
+                f"{spec['manifesto']}: objeto {spec.get('objeto')!r} "
+                "ausente do manifesto")
+        caminho_objeto = os.path.join(
+            os.path.dirname(caminho_manifesto), objeto["arquivo"])
+        if not os.path.isfile(caminho_objeto):
+            raise ReceitaInvalida(
+                f"objeto do manifesto ausente: {objeto['arquivo']}")
+        with open(caminho_objeto, "rb") as f:
+            redigido = f.read()
+        if hashlib.sha256(redigido).hexdigest() != objeto["sha256_redigido"]:
+            raise ReceitaInvalida(
+                f"{objeto['arquivo']}: conteudo divergente do manifesto — "
+                "recontagem sobre objeto adulterado nao e recontagem")
+        return {"rotulo": spec.get("rotulo") or spec.get("objeto"),
+                "procedencia": "medido-bruto-redigido", "reproduzido": True,
+                "fonte": f"{spec['manifesto']}#{spec.get('objeto')}",
+                "originais_declarados": objeto["tamanhos_originais"],
+                "delta_redacao": objeto["delta_redacao"],
+                **tamanhos(redigido)}
 
     # testemunho: o numero publicado, sem objeto no repositorio que o
     # sustente. Ele entra na conta e NAO entra na cobertura reproduzida.
