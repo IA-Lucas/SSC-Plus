@@ -171,6 +171,38 @@ class CopiaFielParaOPortaoDeTestes(unittest.TestCase):
                              "a copia nao carrega o MESMO historico")
 
 
+class PortaoHermetico(unittest.TestCase):
+    def test_a_suite_do_portao_nao_herda_a_sessao_do_operador(self):
+        """O caso que OCORREU: fluxo real com SSC_LOCK_SESSAO exportada.
+
+        O launcher exporta a identidade de sessao; herdada pela suite na
+        copia, o escritor unico dos testes reivindica 'ssc-plus-ui' e a
+        corrida devolve 30 falhas + 16 erros (medido em 2026-08-12,
+        `fluxo-20260812T160301092940Z-recusado.json`). Aqui o comando do
+        portao E o verificador da variavel: sai 1 se ela vazar.
+        """
+        anterior = os.environ.get("SSC_LOCK_SESSAO")
+        os.environ["SSC_LOCK_SESSAO"] = "sessao-do-operador-teste"
+        try:
+            with tempfile.TemporaryDirectory() as tmp:
+                raiz = Path(tmp) / "arvore"
+                raiz.mkdir()
+                (raiz / "so-um-arquivo.txt").write_text("x")
+                r = fc.testar_patch_isolado(
+                    None, raiz,
+                    comando=[sys.executable, "-c",
+                             "import os,sys;"
+                             "sys.exit(1 if 'SSC_LOCK_SESSAO' in os.environ"
+                             " else 0)"])
+        finally:
+            if anterior is None:
+                os.environ.pop("SSC_LOCK_SESSAO", None)
+            else:
+                os.environ["SSC_LOCK_SESSAO"] = anterior
+        self.assertEqual(r["returncode"], 0,
+                         "a sessao do operador VAZOU para a suite do portao")
+
+
 class AplicacaoExplicita(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory(prefix="fluxo-gate-")

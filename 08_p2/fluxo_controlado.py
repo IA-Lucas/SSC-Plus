@@ -253,8 +253,15 @@ def testar_patch_isolado(patch: str | None, raiz: str | Path,
                         "fase": "git-apply",
                         "stdout_sha256": _sha256_texto(aplicada.stdout),
                         "stderr": aplicada.stderr[-4000:]}
+        # A suite roda HERMETICA: sem a identidade de sessao do operador.
+        # Herdada, ela faz o codigo de producao reivindicar 'ssc-plus-ui'
+        # dentro dos testes de escritor unico — 30 falhas e 16 erros,
+        # medido em 2026-08-12 (fluxo-20260812T160301*). O portao mede a
+        # suite como o verificar.py a define, nao como o fluxo a cerca.
+        ambiente = {k: v for k, v in os.environ.items()
+                    if k != "SSC_LOCK_SESSAO"}
         resultado = subprocess.run(comando, cwd=copia, capture_output=True,
-                                   text=True)
+                                   text=True, env=ambiente)
         return {
             "returncode": resultado.returncode,
             "fase": "suite-isolada" if patch else "suite-atual",
