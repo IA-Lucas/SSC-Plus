@@ -105,9 +105,15 @@ def normalizar_resultado_semantico(texto: str) -> tuple[bool, str, str]:
         primeiro = resto[0].strip()[len(MARCADOR_MOTIVO):].strip()
         motivo = "\n".join(([primeiro] if primeiro else []) + resto[1:]).strip()
         return False, "", motivo or "provedor declarou bloqueio sem detalhe"
-    if not resto or resto[0].strip() != MARCADOR_RESPOSTA:
+    # Mesma regra do ramo de MOTIVO: o marcador pode vir sozinho na linha
+    # ou seguido da resposta. O contrato do prompt ("depois `SSC_RESPOSTA:`
+    # e a resposta") permite as duas leituras, e o kimi-code/k3 real
+    # devolveu a inline em 2026-08-12; exigir so uma delas reprovava
+    # resposta que cumpre o contrato como escrito.
+    if not resto or not resto[0].strip().startswith(MARCADOR_RESPOSTA):
         return False, "", "sucesso sem SSC_RESPOSTA"
-    resposta = "\n".join(resto[1:]).strip()
+    primeiro = resto[0].strip()[len(MARCADOR_RESPOSTA):].strip()
+    resposta = "\n".join(([primeiro] if primeiro else []) + resto[1:]).strip()
     if not resposta:
         return False, "", "sucesso com resposta vazia"
     return True, resposta, ""

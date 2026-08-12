@@ -118,7 +118,9 @@ def _prompt(etapa: str, operacao: str, pedido: str,
         f"Operacao: {OPERACOES[operacao]['rotulo']}\n"
         f"Pedido do operador: {pedido}\n\n"
         "Trabalhe somente em leitura. Nao altere arquivos, configuracao ou "
-        "estado externo. Fundamente em caminhos e fatos do snapshot.\n")
+        "estado externo. Fundamente em caminhos e fatos do snapshot.\n"
+        "Todo marcador SSC_* deve ocupar uma linha propria, sem negrito, "
+        "sem crase e sem bloco de codigo ao redor.\n")
     instrucoes = {
         "contextualizar": (
             "Mapeie o contexto amplo, riscos, arquivos relevantes e lacunas. "

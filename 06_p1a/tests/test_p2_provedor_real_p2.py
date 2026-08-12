@@ -332,6 +332,53 @@ class ContratoSemantico(unittest.TestCase):
                 self.assertFalse(ok)
                 self.assertTrue(motivo)
 
+    def test_resposta_na_mesma_linha_do_marcador_e_aceita(self):
+        """O caso que OCORREU: kimi-code/k3 real, 2026-08-12, verbatim.
+
+        O contrato do prompt diz "depois `SSC_RESPOSTA:` e a resposta" —
+        leitura inline permitida —, e o ramo de MOTIVO ja aceitava a
+        forma inline. Exigir marcador sozinho SO para resposta reprovava
+        saida que cumpre o contrato como escrito, e levou junto o
+        marcador de etapa `SSC_CONTEXTO: PRONTO`, presente e limpo na
+        ultima linha (fluxo-20260812T130953814422Z-recusado.json e a
+        sonda registrada em `08_p2/104_contrato-inline-kimi-20260812.md`).
+        """
+        transcricao_real_kimi = (
+            "SSC_STATUS: SUCESSO\n"
+            "SSC_RESPOSTA: O snapshot contém um único arquivo, "
+            "`exemplo.py`, cujo único comportamento é imprimir \"ola\" — "
+            "ou seja, um script mínimo sem dependências, testes ou "
+            "configuração associados.\n\n"
+            "Contexto amplo, riscos e lacunas (baseados apenas no "
+            "snapshot):\n"
+            "- Arquivo relevante: `exemplo.py` (único artefato do "
+            "projeto).\n"
+            "- Lacunas: não há README, testes, gerenciador de "
+            "dependências ou CI descritos no snapshot; nada se sabe "
+            "sobre versão de Python alvo.\n"
+            "- Riscos: por ser um arquivo trivial de uma instrução, o "
+            "risco técnico é praticamente nulo; o único risco é de "
+            "escopo — qualquer afirmação além de \"imprime ola\" seria "
+            "inferência não fundamentada no snapshot.\n\n"
+            "SSC_CONTEXTO: PRONTO")
+        ok, resposta, motivo = pa.normalizar_resultado_semantico(
+            transcricao_real_kimi)
+        self.assertTrue(ok, motivo)
+        self.assertTrue(resposta.startswith("O snapshot contém"))
+        # O marcador de etapa tem de SOBREVIVER a extracao, em linha
+        # propria — e o que `fluxo_controlado._marcador_unico` exige.
+        import re
+        self.assertEqual(
+            re.findall(r"(?m)^\s*SSC_CONTEXTO:\s*([A-Z_]+)\s*$", resposta),
+            ["PRONTO"])
+
+    def test_marcador_sozinho_sem_resposta_continua_recusado(self):
+        ok, resposta, motivo = pa.normalizar_resultado_semantico(
+            f"{pa.STATUS_SUCESSO}\n{pa.MARCADOR_RESPOSTA}   ")
+        self.assertFalse(ok)
+        self.assertEqual(resposta, "")
+        self.assertIn("vazia", motivo)
+
     def test_bloqueio_expresso_nunca_vira_sucesso(self):
         ok, resposta, motivo = pa.normalizar_resultado_semantico(
             f"{pa.STATUS_BLOQUEADO}\n{pa.MARCADOR_MOTIVO} workspace inacessivel")
