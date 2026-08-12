@@ -186,8 +186,14 @@ ESPECIFICACOES: dict[str, EspecProvedor] = {
                   "login": ("-p", "/quota", "--output-format", "json",
                             "--mode", "plan"),
                   "modelos": ("models",)},
+        # `--add-dir` poe o DESCARTAVEL no workspace do agy: sem ele a
+        # leitura de contexto-ssc.txt cai na permissao `command`, que o
+        # headless auto-nega, e o turno termina SUCCESS com resposta
+        # vazia (medido em 2026-08-12; recibos fluxo-20260812T0111*/0119*).
+        # Nao amplia alcance: e o mesmo diretorio que ja e cwd do filho.
         restricao_headless=("--output-format", "json", "--mode", "plan",
-                            "--sandbox", "--disable-slash-commands"),
+                            "--sandbox", "--disable-slash-commands",
+                            "--add-dir", MARCA_DESCARTAVEL),
         flag_modelo=("--model",),
         prompt_antes_das_flags=True,
         observacoes="canal oficial Antigravity; quota de assinatura e "

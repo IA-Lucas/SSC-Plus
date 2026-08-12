@@ -418,6 +418,48 @@ class ContratoSemantico(unittest.TestCase):
         self.assertEqual(p.medicoes[0]["transporte_prompt"],
                          "arquivo-no-descartavel")
 
+    def test_google_workspace_cobre_o_descartavel_com_add_dir(self):
+        """O `--add-dir` do argv aponta para o MESMO descartavel do arquivo.
+
+        Medido em 2026-08-12: sem o descartavel no workspace, a leitura
+        de `contexto-ssc.txt` cai na permissao `command`, que o headless
+        auto-nega, e o turno termina `SUCCESS` com `response` vazia — o
+        julgamento vazio dos recibos `fluxo-20260812T0111*/0119*`. O que
+        este teste NAO cobre, declarado: o que o CLI real faz com a flag
+        e propriedade dele; a leitura de fato foi medida por sonda real
+        (registro da correcao), nao por esta suite, que nao chama modelo.
+        """
+        observado = {}
+
+        def sensor(argv, env=None, timeout=None, cwd=None,
+                   entrada_stdin=None):
+            observado["argv"] = list(argv)
+            observado["cwd"] = cwd
+            observado["contexto_existe"] = os.path.isfile(
+                os.path.join(cwd, "contexto-ssc.txt"))
+            semantico = (f"{pa.STATUS_SUCESSO}\n"
+                         f"{pa.MARCADOR_RESPOSTA}\nfeito")
+            return 0, json.dumps({
+                "status": "SUCCESS", "num_turns": 1,
+                "response": semantico,
+                "usage": {"total_tokens": 1}}), ""
+
+        p = provedor(espec_de("google"), sensor=sensor,
+                     contrato_semantico=True)
+        p.invocar(b"tarefa de julgamento")
+        argv = observado["argv"]
+        self.assertIn("--add-dir", argv,
+                      "o descartavel ficou FORA do workspace do agy")
+        valor = argv[argv.index("--add-dir") + 1]
+        self.assertEqual(valor, observado["cwd"],
+                         "--add-dir nao aponta para o descartavel da "
+                         "invocacao")
+        self.assertTrue(observado["contexto_existe"],
+                        "contexto-ssc.txt nao estava no descartavel no "
+                        "instante da chamada")
+        self.assertNotIn("<DESCARTAVEL>", argv,
+                         "marcador nao foi trocado pelo diretorio real")
+
 
 # O texto EXATO que o `kimi` devolveu na primeira corrida real da P2
 # (2026-08-03), com a franquia da assinatura de fato acabada. Copiado da
