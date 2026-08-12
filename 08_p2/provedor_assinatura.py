@@ -557,10 +557,20 @@ class ProvedorAssinaturaReal:
                 entrada_stdin = prompt_completo.encode("utf-8")
                 transporte_prompt = "stdin"
             else:
+                # A proibicao de terminal nao e estilo: em headless a
+                # permissao `command` e auto-negada e o turno sai SUCCESS
+                # com resposta vazia (medido no agy em 2026-08-12, sonda F
+                # do registro 105). O modelo escolhe a ferramenta pela
+                # complexidade do pedido; o ponteiro tira o terminal do
+                # cardapio e manda responder mesmo apos negacao.
                 prompt_argv = (
                     "Leia integralmente o arquivo contexto-ssc.txt no "
                     "diretorio atual e execute o pedido e o contrato nele. "
-                    "Nao procure contexto fora desse arquivo.")
+                    "Nao procure contexto fora desse arquivo. Use somente "
+                    "a leitura nativa de arquivos; comandos de terminal "
+                    "estao bloqueados neste modo e deixariam a resposta "
+                    "vazia. Se alguma ferramenta for negada, ainda assim "
+                    "escreva a resposta do contrato com o que tiver lido.")
                 transporte_prompt = "arquivo-no-descartavel"
         else:
             prompt_argv = prompt_completo
