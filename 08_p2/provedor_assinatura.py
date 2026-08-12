@@ -84,7 +84,9 @@ def montar_prompt_semantico(prompt: str) -> str:
         "contexto ou qualquer bloqueio, responda com a primeira linha exata "
         f"`{STATUS_BLOQUEADO}`, depois `{MARCADOR_MOTIVO}` e o motivo.\n"
         "- Nunca declare SUCESSO quando apenas explicar por que nao executou.\n"
-        "- Nao envolva os marcadores em bloco de codigo.\n\n"
+        "- Nao envolva os marcadores em bloco de codigo.\n"
+        "- Escreva cada marcador UMA unica vez, somente na resposta final; "
+        "nao os mencione em comentarios de progresso.\n\n"
         "PEDIDO:\n" + prompt
     )
 
@@ -602,6 +604,11 @@ class ProvedorAssinaturaReal:
         latencia_ms = int(round((self.relogio() - inicio) * 1000))
         rc, out, err, telemetria = normalizar_saida(
             self.espec.provider_id, rc, out, err)
+        # Qual regra do contrato quebrou VIAJA no recibo (so a regra,
+        # nunca o conteudo): a recusa de 2026-08-12T14:13 saiu como
+        # `falha-contrato` seco e custou uma sonda real para adivinhar o
+        # que o campo abaixo teria dito de graca.
+        motivo_contrato = None
         if rc == 0 and self.contrato_semantico:
             concluiu, resposta_util, motivo = normalizar_resultado_semantico(out)
             if concluiu:
@@ -610,6 +617,7 @@ class ProvedorAssinaturaReal:
                 rc = RC_SAIDA_INVALIDA
                 out = ""
                 err = "tarefa nao concluida: " + motivo
+                motivo_contrato = motivo
 
         relatorio_vigilancia = vigia.fechar()
         no_descartavel = mutacoes(antes, manifesto(descartavel))
@@ -640,6 +648,7 @@ class ProvedorAssinaturaReal:
         self.medicoes.append({
             "provider_id": self.espec.provider_id,
             "modelo_fixado_no_argv": self.model_id,
+            "contrato_motivo": motivo_contrato,
             "telemetria_cli": telemetria,
             "transporte_prompt": transporte_prompt,
             "prompt_bytes": len(prompt_completo.encode("utf-8")),
