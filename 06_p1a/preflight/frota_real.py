@@ -191,7 +191,15 @@ ESPECIFICACOES: dict[str, EspecProvedor] = {
         # headless auto-nega, e o turno termina SUCCESS com resposta
         # vazia (medido em 2026-08-12; recibos fluxo-20260812T0111*/0119*).
         # Nao amplia alcance: e o mesmo diretorio que ja e cwd do filho.
-        restricao_headless=("--output-format", "json", "--mode", "plan",
+        #
+        # `--mode plan` NAO esta aqui de proposito (decisao do Fundador,
+        # 2026-08-12, registro 108): sob `--disable-slash-commands` a
+        # flag e inerte — o proprio CLI avisa "--mode plan has no effect
+        # while slash command expansion is disabled" — e mante-la seria
+        # rotular contencao que nao se exerce (familia F). No comando de
+        # LOGIN ela permanece: la os slash commands estao ligados e o
+        # plan tem efeito.
+        restricao_headless=("--output-format", "json",
                             "--sandbox", "--disable-slash-commands",
                             "--add-dir", MARCA_DESCARTAVEL),
         flag_modelo=("--model",),
