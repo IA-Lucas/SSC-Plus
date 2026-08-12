@@ -1,0 +1,367 @@
+{
+  "attempts": [
+    {
+      "attempt_id": "6bb940cbc22f41abb175b457bc9c8486",
+      "custo_medido": {
+        "rotulo": "medido-assinatura",
+        "tokens_reportados": null,
+        "valor": 0.0
+      },
+      "efeito_externo": "nenhum",
+      "executor_resolvido": {
+        "modelo": "gemini-3.1-pro-high",
+        "provedor": "google"
+      },
+      "resultado": "sucesso"
+    }
+  ],
+  "capsula": {
+    "violacoes_no_env_do_processo": []
+  },
+  "detalhe": "",
+  "efeito_externo_medido": [
+    {
+      "alcance_da_medicao": {
+        "lar_do_cli": "o lar do CLI (~/.gemini), onde a escrita e CONHECIDA e nao vigiada",
+        "medido": [
+          "diretorio descartavel desta invocacao (H:\\SSC-Plus\\locks\\descartaveis-p2\\p2-google-m5i6fgxm)",
+          "repositorio (toda a arvore sob RAIZ, inclusive locks/ e .git)",
+          "fora: ~/.codex/auth.json",
+          "fora: ~/.codex/config.toml",
+          "fora: ~/.claude/settings.json",
+          "fora: ~/.kimi-code/config.toml",
+          "fora: ~/.gemini/settings.json",
+          "fora: ~/.grok"
+        ],
+        "nao_medido": [
+          "todo caminho fora do repositorio e fora das fontes de config declaradas",
+          "o lar do CLI (~/.gemini), onde a escrita e CONHECIDA e nao vigiada",
+          "o lado REMOTO do provedor: efeito no servico nao aparece em fotografia local"
+        ]
+      },
+      "argv_publico": [
+        "C:\\Users\\<USUARIO>/AppData/Local/agy/bin/agy.exe",
+        "-p",
+        "--model",
+        "gemini-3.1-pro-high",
+        "--output-format",
+        "json",
+        "--mode",
+        "plan",
+        "--sandbox",
+        "--disable-slash-commands",
+        "<PROMPT>"
+      ],
+      "arquivos_no_manifesto_vigiado": 958,
+      "cwd_do_filho": "H:\\SSC-Plus\\locks\\descartaveis-p2\\p2-google-m5i6fgxm",
+      "descartavel_existia_durante_invocacao": true,
+      "descartavel_removido_apos_medicao": true,
+      "dir_descartavel": "H:\\SSC-Plus\\locks\\descartaveis-p2\\p2-google-m5i6fgxm",
+      "efeito_externo": "nenhum",
+      "efeito_externo_origem": "fotografia sem nenhuma mutacao DENTRO DO ALCANCE MEDIDO (ver `alcance_da_medicao`) — `nenhum` aqui e medicao, nao eco do envelope. Fora do alcance nada foi medido, inclusive o lar do CLI (~/.gemini), onde a escrita e CONHECIDA e nao vigiada: `nenhum` e o valor de contrato para 'sem efeito medido', jamais afirmacao de que nada foi escrito",
+      "medida": "manifesto SHA-256 do diretorio descartavel e das raizes vigiadas, ANTES e DEPOIS da invocacao",
+      "modelo_fixado_no_argv": "gemini-3.1-pro-high",
+      "mutacoes_atribuidas_ao_renovador": [],
+      "mutacoes_fora_do_descartavel": [],
+      "mutacoes_no_descartavel": [],
+      "nao_vigiado": "todo caminho fora do repositorio e fora das fontes de config declaradas",
+      "provider_id": "google",
+      "raizes_vigiadas": [
+        "repositorio (toda a arvore sob RAIZ, inclusive locks/ e .git)",
+        "fora: ~/.codex/auth.json",
+        "fora: ~/.codex/config.toml",
+        "fora: ~/.claude/settings.json",
+        "fora: ~/.kimi-code/config.toml",
+        "fora: ~/.gemini/settings.json",
+        "fora: ~/.grok"
+      ],
+      "restricao": "restricao emitida ao CLI `agy` em modo headless: `--output-format json --mode plan --sandbox --disable-slash-commands` (o marcador <DESCARTAVEL> e trocado pelo diretorio descartavel da invocacao), mais o diretorio de trabalho descartavel do processo filho e a deteccao por manifesto SHA-256 antes e depois (`contencao.Vigilancia`). O que a flag FAZ dentro do turno do modelo e propriedade do CLI externo e NAO foi medido aqui"
+    }
+  ],
+  "linhagem_id": "208ee9ebbc65480ebe97b0ce02d8b589",
+  "lock_escritor_unico": {
+    "fence": 17,
+    "sessao": "ativacao-claude-google"
+  },
+  "montagem": {
+    "descartes": [
+      {
+        "motivo": "veredito nao habilita rota: SUPERVISED",
+        "provider_id": "grok"
+      }
+    ],
+    "entradas": [
+      "codex/gpt-5.6-sol",
+      "claude/claude-fable-5[1m]",
+      "kimi/kimi-code/k3",
+      "google/gemini-3.1-pro-high",
+      "google/gemini-3.1-pro-low",
+      "google/gemini-3.5-flash-high",
+      "google/gemini-3.5-flash-low",
+      "google/gemini-3.5-flash-medium",
+      "google/gemini-3.6-flash-high",
+      "google/gemini-3.6-flash-low",
+      "google/gemini-3.6-flash-medium"
+    ],
+    "vetos": []
+  },
+  "placar": {
+    "attempts": [
+      {
+        "artefato_ref": "3b969bf2b514658da4ea39b9d120fc3a0922757ffbd1fc174319fdefde3da840",
+        "attempt_id": "6bb940cbc22f41abb175b457bc9c8486",
+        "captura": {
+          "saida_estruturada_ref": "3b969bf2b514658da4ea39b9d120fc3a0922757ffbd1fc174319fdefde3da840",
+          "saida_final_ref": "3b969bf2b514658da4ea39b9d120fc3a0922757ffbd1fc174319fdefde3da840"
+        },
+        "custo_medido": {
+          "rotulo": "medido-assinatura",
+          "tokens_reportados": null,
+          "valor": 0.0
+        },
+        "decisao_id": "4dade50d22b3403b9fd0af700810465b",
+        "efeito_externo": "nenhum",
+        "executor_observado": null,
+        "executor_resolvido": {
+          "alias_usado": false,
+          "effort": "alto",
+          "executor_id": "google/gemini-3.1-pro-high",
+          "ferramenta": "cli-assinatura",
+          "hash_catalogo": "cb3c5f88d9bc5340f3651ff00d647da9f76e5cdbc720eb370751e1cd670291a8",
+          "modelo": "gemini-3.1-pro-high",
+          "provedor": "google"
+        },
+        "fim": "2026-07-30T00:00:09Z",
+        "inicio": "2026-07-30T00:00:07Z",
+        "linhagem_id": "208ee9ebbc65480ebe97b0ce02d8b589",
+        "resultado": "sucesso",
+        "selecao_solicitada": {
+          "controle": "autonomo",
+          "effort": "alto",
+          "ferramenta": "cli-assinatura",
+          "modelo": "gemini-3.1-pro-high",
+          "modo": "read-only",
+          "provedor": "google"
+        },
+        "vinculos": {
+          "hash_aprovacao": "d3986de1331bf632fdd76d632b08ac61c06e80eea7871a77617a9a195539fd93",
+          "hash_catalogo": "cb3c5f88d9bc5340f3651ff00d647da9f76e5cdbc720eb370751e1cd670291a8",
+          "hash_contexto": "cc52f09854e611b35e9349c25cba26d3327c6539cf28e578c25bcfe5f95dbe19",
+          "hash_envelope": "ddcb79666964843f43b09e6fae249fd473399d5058484ef01dbc2ac794530de3",
+          "hash_permissoes": "5683800ce20fea8313db4ee6fe6162e73b1119535cbb1faac5f90b5e136b7d04",
+          "hash_politica": "29a1ce1a8a2953ff389b30927216d07ab340f0057566a8b2e4b08422d3882201"
+        },
+        "work_unit_id": "e3d8958551414f6992d9c9ff29d29fc9"
+      }
+    ],
+    "custo_total": {
+      "rotulo": "simulado",
+      "valor": 0.0
+    },
+    "decisoes": {
+      "4dade50d22b3403b9fd0af700810465b": {
+        "alternativas": [
+          {
+            "controle": "autonomo",
+            "effort": "alto",
+            "ferramenta": "cli-assinatura",
+            "modelo": "gemini-3.1-pro-low",
+            "modo": "read-only",
+            "provedor": "google"
+          },
+          {
+            "controle": "autonomo",
+            "effort": "alto",
+            "ferramenta": "cli-assinatura",
+            "modelo": "gemini-3.5-flash-high",
+            "modo": "read-only",
+            "provedor": "google"
+          },
+          {
+            "controle": "autonomo",
+            "effort": "alto",
+            "ferramenta": "cli-assinatura",
+            "modelo": "gemini-3.5-flash-low",
+            "modo": "read-only",
+            "provedor": "google"
+          },
+          {
+            "controle": "autonomo",
+            "effort": "alto",
+            "ferramenta": "cli-assinatura",
+            "modelo": "gemini-3.5-flash-medium",
+            "modo": "read-only",
+            "provedor": "google"
+          },
+          {
+            "controle": "autonomo",
+            "effort": "alto",
+            "ferramenta": "cli-assinatura",
+            "modelo": "gemini-3.6-flash-high",
+            "modo": "read-only",
+            "provedor": "google"
+          },
+          {
+            "controle": "autonomo",
+            "effort": "alto",
+            "ferramenta": "cli-assinatura",
+            "modelo": "gemini-3.6-flash-low",
+            "modo": "read-only",
+            "provedor": "google"
+          },
+          {
+            "controle": "autonomo",
+            "effort": "alto",
+            "ferramenta": "cli-assinatura",
+            "modelo": "gemini-3.6-flash-medium",
+            "modo": "read-only",
+            "provedor": "google"
+          },
+          {
+            "controle": "autonomo",
+            "effort": "alto",
+            "ferramenta": "cli-assinatura",
+            "modelo": "gpt-5.6-sol",
+            "modo": "read-only",
+            "provedor": "codex"
+          },
+          {
+            "controle": "autonomo",
+            "effort": "alto",
+            "ferramenta": "cli-assinatura",
+            "modelo": "claude-fable-5[1m]",
+            "modo": "read-only",
+            "provedor": "claude"
+          },
+          {
+            "controle": "autonomo",
+            "effort": "alto",
+            "ferramenta": "cli-assinatura",
+            "modelo": "kimi-code/k3",
+            "modo": "read-only",
+            "provedor": "kimi"
+          }
+        ],
+        "aprovacao_custo": {
+          "efforts_permitidos": [
+            "baixo",
+            "alto"
+          ],
+          "fallback_autorizado": true,
+          "modelos_permitidos": [
+            "google/gemini-3.1-pro-high",
+            "google/gemini-3.1-pro-low",
+            "google/gemini-3.5-flash-high",
+            "google/gemini-3.5-flash-low",
+            "google/gemini-3.5-flash-medium",
+            "google/gemini-3.6-flash-high",
+            "google/gemini-3.6-flash-low",
+            "google/gemini-3.6-flash-medium",
+            "codex/gpt-5.6-sol",
+            "claude/claude-fable-5[1m]",
+            "kimi/kimi-code/k3"
+          ],
+          "modo": "read-only",
+          "teto_custo": 0.0,
+          "validade": "2027-01-01T00:00:00Z"
+        },
+        "classificacao": {
+          "confianca": "alta",
+          "metodo": "declarado",
+          "rota": "frota"
+        },
+        "custo_previsto": {
+          "rotulo": "assinatura-sem-custo-variavel",
+          "valor": 0.0
+        },
+        "decisao_id": "4dade50d22b3403b9fd0af700810465b",
+        "hash_pacote": "cc52f09854e611b35e9349c25cba26d3327c6539cf28e578c25bcfe5f95dbe19",
+        "independencia_evidencia": null,
+        "motivo": "frota: google/gemini-3.1-pro-high por capacidade/preferencia (fallback autorizado)",
+        "nivel_capacidade_atendido": "L2",
+        "papel": "autor",
+        "selecao": {
+          "controle": "autonomo",
+          "effort": "alto",
+          "ferramenta": "cli-assinatura",
+          "modelo": "gemini-3.1-pro-high",
+          "modo": "read-only",
+          "provedor": "google"
+        },
+        "supersede": null,
+        "vinculos": {
+          "hash_aprovacao": "d3986de1331bf632fdd76d632b08ac61c06e80eea7871a77617a9a195539fd93",
+          "hash_catalogo": "cb3c5f88d9bc5340f3651ff00d647da9f76e5cdbc720eb370751e1cd670291a8",
+          "hash_contexto": "cc52f09854e611b35e9349c25cba26d3327c6539cf28e578c25bcfe5f95dbe19",
+          "hash_envelope": "ddcb79666964843f43b09e6fae249fd473399d5058484ef01dbc2ac794530de3",
+          "hash_permissoes": "5683800ce20fea8313db4ee6fe6162e73b1119535cbb1faac5f90b5e136b7d04",
+          "hash_politica": "29a1ce1a8a2953ff389b30927216d07ab340f0057566a8b2e4b08422d3882201"
+        },
+        "work_unit_id": "e3d8958551414f6992d9c9ff29d29fc9"
+      }
+    },
+    "divergencias_observado_resolvido": [],
+    "escalacoes": [],
+    "fallbacks": [],
+    "linhagem_id": "208ee9ebbc65480ebe97b0ce02d8b589",
+    "n_eventos": 10,
+    "placar_por_executor": {
+      "google/gemini-3.1-pro-high": {
+        "attempts": 1,
+        "custo_simulado": 0.0,
+        "latencias_simuladas_ms": [],
+        "sucesso": 1
+      }
+    },
+    "retries": [],
+    "sessao_id": "208ee9ebbc65480ebe97b0ce02d8b589",
+    "tokens_total": {
+      "rotulo": "simulado",
+      "valor": 0
+    },
+    "vereditos": [],
+    "work_units": {
+      "e3d8958551414f6992d9c9ff29d29fc9": {
+        "classe_governanca": "C1",
+        "contexto_ref": "cc52f09854e611b35e9349c25cba26d3327c6539cf28e578c25bcfe5f95dbe19",
+        "criterios_aceite_ref": "fb09c69545cc1e78707dcee83c5934a13c82f16127e87904136ed4e3a814c75c",
+        "custo_medido": null,
+        "depende_de": [],
+        "estado": "aguardando-validacao",
+        "intencao": "Sem usar ferramentas nem criar ou alterar arquivos, responda apenas SSC_GOOGLE_AUTOMATICO_OK e o identificador publico do modelo.",
+        "linhagem_id": "208ee9ebbc65480ebe97b0ce02d8b589",
+        "nivel_capacidade": "L2",
+        "parent_work_unit": null,
+        "perfil_capacidade": {
+          "contexto_max_tokens": 128000,
+          "dominio": "multimodal",
+          "ferramentas": [],
+          "formato_saida": "livre",
+          "latencia_max_ms": null,
+          "modalidade": "texto",
+          "orcamento_max_custo": null,
+          "privacidade": "remoto-permitido"
+        },
+        "resultado_ref": null,
+        "sessao_id": "208ee9ebbc65480ebe97b0ce02d8b589",
+        "tipo": "ato",
+        "tipo_decisao": "tipo-2",
+        "work_unit_id": "e3d8958551414f6992d9c9ff29d29fc9"
+      }
+    }
+  },
+  "preflight_consumido": {
+    "caminho": "H:\\SSC-Plus\\07_p1b\\evidencias\\preflight-20260811T211742052426Z.json",
+    "gerado_em_utc": "2026-08-11T21:17:42Z",
+    "idade_s": 84
+  },
+  "raiz_lab": "H:\\SSC-Plus\\08_p2\\saidas\\labs\\20260811T211906781230Z-29e0ded1ba67",
+  "saida_resumo": {
+    "bytes": 361,
+    "conteudo_persistido_no_recibo": false,
+    "sha256": "3b969bf2b514658da4ea39b9d120fc3a0922757ffbd1fc174319fdefde3da840"
+  },
+  "sessao_id": "208ee9ebbc65480ebe97b0ce02d8b589",
+  "status": "sucesso",
+  "work_unit_id": "e3d8958551414f6992d9c9ff29d29fc9"
+}

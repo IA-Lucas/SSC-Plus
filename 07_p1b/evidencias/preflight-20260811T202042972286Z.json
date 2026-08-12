@@ -1,0 +1,121 @@
+{
+  "atestacao": {
+    "algoritmo": "hmac-sha256",
+    "chave_id": "8e106ae583dc71a0",
+    "mac": "5a3f444fc812b7f108ae250c2f26352a7756797a0732c41700613237abec3dc6"
+  },
+  "capsula": {
+    "mecanismo": "entrada por capsula.iniciar_em_capsula + guarda exigir_capsula_limpa no processo + ambiente derivado por capsula.ambiente_capsula",
+    "politica": "subscription-only; qualquer credencial de modelo visivel dentro da capsula = bloqueio",
+    "violacoes_no_env_classificado": [],
+    "violacoes_no_env_do_processo": []
+  },
+  "chamadas_de_modelo": 0,
+  "custo_variavel": 0,
+  "emenda_p1a3_item_1": {
+    "limite": "SHADOW_ELIGIBLE somente; validade maxima 24 h; NAO autoriza P2 nem execucao autonoma",
+    "nota": "declaracao vencida e reportada como esta (DeclaracaoExpirada); renovar e ato do proprietario",
+    "tiers_declarados": {
+      "codex": "ChatGPT Pro 5x",
+      "kimi": "Allegretto"
+    }
+  },
+  "env_sanitizado_remove_nomes": [],
+  "frota": [
+    {
+      "caminho": "~/AppData/Local/Programs/OpenAI/Codex/bin/codex.exe",
+      "erros": [],
+      "modelos": [
+        "gpt-5.6-sol"
+      ],
+      "origem_credencial": "subscription-oauth",
+      "plano": null,
+      "provider_id": "codex",
+      "quota": "desconhecida",
+      "resultado": "SHADOW_ELIGIBLE",
+      "sombra": {
+        "autorizacao": "somente observacao-sombra de diagnostico; NAO autoriza P2 nem execucao autonoma",
+        "declarado_em_utc": "2026-08-11T20:20:42Z",
+        "declarado_por": "proprietario",
+        "expira_em_utc": "2026-08-12T20:20:42Z",
+        "tier_declarado": "ChatGPT Pro 5x"
+      },
+      "versao": "0.145.0"
+    },
+    {
+      "caminho": "~/.local/bin/claude",
+      "erros": [],
+      "modelos": [],
+      "origem_credencial": "subscription-oauth",
+      "plano": "max",
+      "provider_id": "claude",
+      "quota": "desconhecida",
+      "resultado": "SUPERVISED",
+      "sombra": null,
+      "versao": "2.1.228"
+    },
+    {
+      "caminho": "~/.kimi-code/bin/kimi",
+      "erros": [],
+      "modelos": [
+        "kimi-code/k3"
+      ],
+      "origem_credencial": "subscription-oauth",
+      "plano": null,
+      "provider_id": "kimi",
+      "quota": "desconhecida",
+      "resultado": "SHADOW_ELIGIBLE",
+      "sombra": {
+        "autorizacao": "somente observacao-sombra de diagnostico; NAO autoriza P2 nem execucao autonoma",
+        "declarado_em_utc": "2026-08-11T20:20:42Z",
+        "declarado_por": "proprietario",
+        "expira_em_utc": "2026-08-12T20:20:42Z",
+        "tier_declarado": "Allegretto"
+      },
+      "versao": "0.30.0"
+    },
+    {
+      "caminho": "gemini",
+      "erros": [],
+      "modelos": [],
+      "origem_credencial": "nao-sondada",
+      "plano": null,
+      "provider_id": "google",
+      "quota": "desconhecida",
+      "resultado": "SUPERVISED",
+      "sombra": null,
+      "versao": null
+    },
+    {
+      "caminho": "grok",
+      "erros": [],
+      "modelos": [],
+      "origem_credencial": "nao-sondada",
+      "plano": null,
+      "provider_id": "grok",
+      "quota": "desconhecida",
+      "resultado": "SUPERVISED",
+      "sombra": null,
+      "versao": null
+    }
+  ],
+  "gerado_em_utc": "2026-08-11T20:20:42Z",
+  "lock_escritor_unico": {
+    "expira_em": 1786479762.4606428,
+    "fence": 4,
+    "pid_titular": 76512,
+    "sessao": "p2-ops"
+  },
+  "lock_verificado_antes_da_persistencia": true,
+  "nota": "somente sondas de diagnostico (versao/login/modelos); nenhuma invocacao de modelo; env das sondas sanitizado pela canonica preflight.economia.ambiente_sanitizado",
+  "schema": "ssc-plus/preflight-p1b/v1",
+  "sondas_medidas": {
+    "claude": 2,
+    "codex": 3,
+    "google": 0,
+    "grok": 0,
+    "kimi": 3
+  },
+  "tipo": "preflight-atual-p1b",
+  "violacoes_ambiente_nomes": []
+}

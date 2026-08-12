@@ -1,0 +1,1406 @@
+{
+  "attempts": [
+    {
+      "attempt_id": "e24f85f7225c43188e6bf4d7a5e0d863",
+      "custo_medido": {
+        "rotulo": "medido-assinatura",
+        "tokens_reportados": null,
+        "valor": 0.0
+      },
+      "efeito_externo": "nenhum",
+      "executor_resolvido": {
+        "modelo": "gpt-5.6-sol",
+        "provedor": "codex"
+      },
+      "resultado": "sucesso"
+    }
+  ],
+  "capsula": {
+    "violacoes_no_env_do_processo": []
+  },
+  "contexto_workspace": {
+    "arquivos_incluidos": [
+      {
+        "bytes": 14,
+        "caminho": "requirements-dev.txt",
+        "sha256": "93c4ab5f175d24229e46ec70a8ecaeb6db8b36e3f54d8005808044c060acbc92"
+      },
+      {
+        "bytes": 159,
+        "caminho": "pyproject.toml",
+        "sha256": "27c6e8c1d66afc25fc1756cdfa6c6a3c251320c92ba7cb1b97037a2eaaf2d986"
+      },
+      {
+        "bytes": 5237,
+        "caminho": "README.md",
+        "sha256": "62273a37d888dd8020b5cb9776d6f3e2d3c3ac5f74113c5fe0cbc3a31c17ac4d"
+      },
+      {
+        "bytes": 19950,
+        "caminho": "CLAUDE.md",
+        "sha256": "a292edb9c96084a9552337cd6f2b36bf562c2a7c369d93c58d99fd68ca8aac2a"
+      },
+      {
+        "bytes": 1426,
+        "caminho": "08_p2/caminhos.py",
+        "sha256": "20eb0a3c3a448d04576fbb10f67c3cf34c3f6c3dacb706ae1e1f56f8201a3ab1"
+      },
+      {
+        "bytes": 1841,
+        "caminho": "08_p2/console.py",
+        "sha256": "54f0f71b4171da6c57f3d56613028da434795dda4fc1ab5ef9607d207aa5f3a2"
+      },
+      {
+        "bytes": 5697,
+        "caminho": "06_p1a/capsula.py",
+        "sha256": "06ae40f8c4c245b01102996fe4f70b38dec1272ae51ec0e273e7036e6513c378"
+      },
+      {
+        "bytes": 7543,
+        "caminho": "08_p2/contexto_workspace.py",
+        "sha256": "c330c99244dda81bfcbd57369f4a5f89acec2e025584d0108903b49dc66944f6"
+      },
+      {
+        "bytes": 8193,
+        "caminho": "08_p2/frota_medida.py",
+        "sha256": "c69d73306952336901663d3ce6427e7fbbb3e7a67c5d3c8c0b6884af890fdba6"
+      },
+      {
+        "bytes": 13242,
+        "caminho": "06_p1a/preflight/frota_real.py",
+        "sha256": "272d2157af4e3d4685389933032c2607a528e3a95280df9afe328a2ee5e6d998"
+      },
+      {
+        "bytes": 14858,
+        "caminho": "05_p0/ssc_p0/execution.py",
+        "sha256": "00030f4278630ddea67966cc9f1c408b6a499f8463d23e12e427e3e4c94d58ac"
+      },
+      {
+        "bytes": 16909,
+        "caminho": "06_p1a/preflight/pipeline.py",
+        "sha256": "7bb9be777f476a74065fb8fbded98068547c2eaf63e103a8225aa51203347eb4"
+      },
+      {
+        "bytes": 20391,
+        "caminho": "05_p0/ssc_p0/frota.py",
+        "sha256": "54bdf18aa318d471807556abe09107e92c5fba110d80b55010c8b49ca3a16e09"
+      },
+      {
+        "bytes": 21442,
+        "caminho": "05_p0/ssc_p0/contratos.py",
+        "sha256": "26f55d0216a3ee1aa0a953a71e274dee65f1b375668bedf19ee9a07c28cf1110"
+      },
+      {
+        "bytes": 23763,
+        "caminho": "08_p2/runner_p2.py",
+        "sha256": "5ebc9cfed9084811dd550c82da7a41133ab7df05155e8d14d4a36673c1c3c468"
+      },
+      {
+        "bytes": 31154,
+        "caminho": "08_p2/provedor_assinatura.py",
+        "sha256": "a7ffb35464bf08bb24222a3d4244682f88937ff5b4a0f6085cb6feace55dc4a2"
+      },
+      {
+        "bytes": 35449,
+        "caminho": "08_p2/medidor.py",
+        "sha256": "538dd565aa122045df6cd464467c001b409e7ead4909c29e4e56a5d6f10dfa5e"
+      },
+      {
+        "bytes": 54236,
+        "caminho": "05_p0/ssc_p0/kernel.py",
+        "sha256": "07af5a4b970bd8a2b9a9a41f7845e6c76e573ddaffeb867e282a0abf8de6d47c"
+      },
+      {
+        "bytes": 1958,
+        "caminho": "06_p1a/preflight/__init__.py",
+        "sha256": "aa0eeb0e9b20e71116fd67e5b0f736026ba9a0cd22921c305cb955a485130ade"
+      },
+      {
+        "bytes": 2298,
+        "caminho": "06_p1a/processo_arvore.py",
+        "sha256": "74618abe5bfad38a84af4e59a4fd88eda642304ee4c202f7327a6fe1a8a00745"
+      },
+      {
+        "bytes": 2519,
+        "caminho": "06_p1a/leitor_tiers.py",
+        "sha256": "4fc55d7837fa278325182e27dde5678201163b853ae932e2387e7713778c8f0b"
+      },
+      {
+        "bytes": 4320,
+        "caminho": "06_p1a/escritor.py",
+        "sha256": "7396f3fd29be882606058800dd398c19fcd445f6fa352d162968448cc961e414"
+      },
+      {
+        "bytes": 5526,
+        "caminho": "06_p1a/preflight/sombra.py",
+        "sha256": "25f94cc4322bcc7846e0db69fa66528549f089d877b4ed7dde9d6660e99bf2de"
+      },
+      {
+        "bytes": 5584,
+        "caminho": "06_p1a/renovar_tiers.py",
+        "sha256": "9ab6b232bc2a2d0467c14511f16b1e17e04857c4e37e2636664d97a1a3bdf7a4"
+      },
+      {
+        "bytes": 7852,
+        "caminho": "06_p1a/seguranca_artefatos.py",
+        "sha256": "a0c2187b4d34f910cd18d49ced96a07d8f8fa20522252f3133fc4ea3a6d49ec9"
+      },
+      {
+        "bytes": 8120,
+        "caminho": "06_p1a/escritor_repositorio.py",
+        "sha256": "42eed451100f1a5c4f9657fba1b6aba89eec792a588fc5d502a49d4725204010"
+      },
+      {
+        "bytes": 11727,
+        "caminho": "06_p1a/preflight_capsula.py",
+        "sha256": "6b3da122cad236cc61f9209642c4051cb8647e10a3b90bd93e86d751e3cee452"
+      },
+      {
+        "bytes": 14647,
+        "caminho": "06_p1a/leitores_config.py",
+        "sha256": "b14de7e90cfff351892f41b8ec7610ea4d772518dd745e6e412ec90c7a42656c"
+      },
+      {
+        "bytes": 16641,
+        "caminho": "06_p1a/preflight/economia.py",
+        "sha256": "7f65f141be1e0e74f0b8c7282844254407c83425168ee7e1b8d280c2903c4edb"
+      },
+      {
+        "bytes": 144,
+        "caminho": "05_p0/cenarios/fixtures/to2/repo/util.py",
+        "sha256": "4b47a1672581affe376e066e2774d5a9095f114c3d7b106b3bafae34182645af"
+      },
+      {
+        "bytes": 232,
+        "caminho": "05_p0/ssc_p0/__init__.py",
+        "sha256": "5ee62dc6e8a763e300bb2a32e4f11895eede995dcd5018ed9350c5d0a0057087"
+      },
+      {
+        "bytes": 300,
+        "caminho": "05_p0/cenarios/fixtures/to2/repo/kernel.py",
+        "sha256": "0685e1a6a35d416b8406215124c531d516119c382b0ac6aec2da868cb7587c12"
+      },
+      {
+        "bytes": 896,
+        "caminho": "05_p0/ssc_p0/confidencialidade.py",
+        "sha256": "e14bfdba7ea6d3c590429ea13d4bbe3821c763fa7b6261a8b7c5d49c2e726c1f"
+      },
+      {
+        "bytes": 2398,
+        "caminho": "05_p0/ssc_p0/canonico.py",
+        "sha256": "c7489e86dcdd8d1241d0e4a88ec535d8636f9cd290059e29082b4a02e0d2e32e"
+      },
+      {
+        "bytes": 2551,
+        "caminho": "05_p0/cenarios/cobertura.py",
+        "sha256": "8f90111e4510ec4cae807ce4af82745c71afcc7518b899390d93d98fbf55a690"
+      },
+      {
+        "bytes": 2987,
+        "caminho": "05_p0/ssc_p0/estados.py",
+        "sha256": "af708bdf680505d83f92ad1c6bd078247d986dca92def4ccfcdaf454f2c9643f"
+      },
+      {
+        "bytes": 5016,
+        "caminho": "05_p0/ssc_p0/writelock.py",
+        "sha256": "81e80ffa75a8f79d8e6f2d57a5a1d7cfdde4c8c1b7eda807fbf94ec3fa09de1a"
+      },
+      {
+        "bytes": 204,
+        "caminho": "SSC-Plus.cmd",
+        "sha256": "4bda9c214edacb10cc722191ac6020206771899c7f87c16ff039520bb7e06f56"
+      },
+      {
+        "bytes": 1917,
+        "caminho": "conftest.py",
+        "sha256": "ce5b71fc67443a7511b28ff68ed98ccf430e43d2ca104be02022c963a07b6198"
+      }
+    ],
+    "bytes": 393053,
+    "conteudo_persistido_no_recibo": false,
+    "exclusoes": [
+      {
+        "caminho": "06_p1a/preflight/adaptadores.py",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "05_p0/ssc_p0/evidence.py",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "05_p0/cenarios/comum.py",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "05_p0/ssc_p0/eventlog.py",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "05_p0/ssc_p0/cas.py",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "05_p0/ssc_p0/policy.py",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "05_p0/ssc_p0/providers.py",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "05_p0/ssc_p0/catalogo.py",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "05_p0/ssc_p0/judge.py",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "05_p0/cenarios/prova_central.py",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "05_p0/ssc_p0/router.py",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "05_p0/cenarios/corridas_to.py",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "scripts/verificar.py",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "ssc_plus.py",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "07_p1b/preflight_atual.py",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "08_p2/100_ativacao-claude-google-20260811.md",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "08_p2/README.md",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "06_p1a/README.md",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "05_p0/README.md",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "08_p2/receitas/prompt-p22-c.txt",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "08_p2/receitas/p22-c-repeticao.json",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "08_p2/receitas/p22-b.json",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "08_p2/receitas/p21.json",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "memoria/README.md",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "08_p2/receitas/p22-c.json",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "08_p2/receitas/p22-a.json",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "03_prova/tarefas-ouro/README.md",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "scratchpad/README.md",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "08_p2/MEDIDAS.md",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "08_p2/00_ato-soberano-p2.md",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "08_p2/99_hardening-prioridades-20260811.md",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "08_p2/99_achados-divergencias-20260803.md",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "08_p2/99_registro-p2.md",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "08_p2/99_registro-p24.md",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "08_p2/COMO-FUNCIONA.md",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "08_p2/99_registro-p21.md",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "08_p2/99_registro-p23.md",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "08_p2/99_registro-p22.md",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "06_p1a/tiers_declarados.json",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "06_p1a/03_prova-minima.md",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "06_p1a/06_adendo-capsula-p1a2.md",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "06_p1a/02_auditoria-economica.md",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "06_p1a/99_declaracao-morta-p1a39.md",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "06_p1a/04_suite-preflight-e-correcoes.md",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "06_p1a/01_inventario-real.md",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "06_p1a/99_varredura-listas-p1a39.md",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "06_p1a/99_declaracoes-obrigatorias-p1a6.md",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "06_p1a/99_decisao-p1a2.md",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "06_p1a/07_adendo-emendas-p1a3.md",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "06_p1a/99_decisao-p1a35.md",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "06_p1a/99_decisao-p1a.md",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "06_p1a/05_relatorio-estabilizacao-p1a1.md",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "06_p1a/99_remedicao-guardas-p1a38.md",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "06_p1a/99_decisao-p1a51.md",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "06_p1a/99_decisao-p1a38.md",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "06_p1a/99_decisao-p1a3.md",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "06_p1a/99_decisao-p1a37.md",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "06_p1a/99_decisao-p1a34.md",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "06_p1a/99_achados-governanca-20260731.md",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "06_p1a/99_decisao-p1a32.md",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "06_p1a/99_decisao-p1a31.md",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "06_p1a/99_decisao-p1a4.md",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "06_p1a/99_decisao-p1a9.md",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "06_p1a/99_decisao-p1a33.md",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "06_p1a/99_decisao-p1a5.md",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "06_p1a/99_decisao-p1a8.md",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "06_p1a/99_varredura-guardas-p1a35.md",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "06_p1a/99_decisao-p1a36.md",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "06_p1a/99_decisao-p1a6.md",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "06_p1a/99_decisao-p1a7.md",
+        "motivo": "politica-de-segredo"
+      },
+      {
+        "caminho": "05_p0/cenarios/fixtures/to1/entrada.txt",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "05_p0/cenarios/fixtures/to1/oraculo.txt",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "05_p0/cenarios/fixtures/to2/repo/notas.txt",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "05_p0/cenarios/fixtures/to3/semente.json",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "05_p0/THREAT-MODEL.md",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": ".github/workflows/verificacao.yml",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "03_prova/tarefas-ouro/TO-1-deterministica.md",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "03_prova/tarefas-ouro/TO-4-decomposicao.md",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "03_prova/tarefas-ouro/TO-2-contextual.md",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "pytest.ini",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "03_prova/tarefas-ouro/TO-3-julgamento.md",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "03_prova/tarefas-ouro/TO-5-adversarial.md",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "logs/2026-07-30_missao-ssc-01.md",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "logs/prompt-revisao-0.2.1.md",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "99_decisao-ssc-04.md",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "logs/2026-07-30_missao-ssc-02.md",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "02_alvo/09_frota-subscription-only.md",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "04_integracao/08_protocolo-de-integracao.md",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "logs/revisao-independente-0.2.1-claude.md",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "00_governanca-experimental/02_manifesto-de-isolamento.md",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "99_decisao-ssc-01.md",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "07_p1b/99_decisao-p1b02.md",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "00_governanca-experimental/01_carta-experimental.md",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "02_alvo/revisao-independente-d5-d6.md",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "docs/handoffs/2026-08-09-fechamento-estacao-secundaria.md",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "99_decisao-ssc-03.md",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "07_p1b/01_parada-preflight.md",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "03_prova/07_plano-de-prova.md",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "99_decisao-ssc-02.md",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "01_fontes/04_matriz-engenharia-reversa.md",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "02_alvo/06_arquitetura-alvo.md",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "07_p1b/99_decisao-p1b01.md",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "01_fontes/03_baseline-supercondutor.md",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "07_p1b/02_diagnostico-parada-p1b00.md",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "02_alvo/05_contratos-alvo.md",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "06_p1a/tests/test_lancador_ssc_plus.py",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "06_p1a/tests/test_contexto_workspace_p2.py",
+        "motivo": "politica-de-segredo"
+      },
+      {
+        "caminho": "06_p1a/tests/test_arvore_subprocesso_automatico.py",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "06_p1a/tests/test_renovar_tiers.py",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "06_p1a/tests/test_ancoragem_gerador_p1a38.py",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "06_p1a/tests/test_rotulo_contencao_p1a37.py",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "06_p1a/tests/test_quota_numerica_p1a37.py",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "06_p1a/tests/test_pacote_autoinclusao_p1a37.py",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "06_p1a/tests/apoio.py",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "06_p1a/tests/test_cobertura_pacote_p1a7.py",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "06_p1a/tests/test_redacao_p1a35.py",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "06_p1a/tests/test_gitignore_efetivo_p1a39.py",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "06_p1a/tests/citacoes_declaradas.py",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "06_p1a/tests/test_portao_tier_p1a35.py",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "06_p1a/tests/test_chaves_proibidas_p1a38.py",
+        "motivo": "politica-de-segredo"
+      },
+      {
+        "caminho": "06_p1a/tests/test_pacote_p1a33.py",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "06_p1a/tests/test_cli_real_p1a34.py",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "06_p1a/tests/test_pedido_de_julgamento_p1a37.py",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "06_p1a/tests/test_redacao_call_sites_p1a37.py",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "06_p1a/tests/test_sentinela_antip2_p1a37.py",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "06_p1a/tests/test_cobertura_falhas_p1a39.py",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "06_p1a/tests/test_diagnostico_corpus_p1a39.py",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "06_p1a/tests/test_endpoint_grafias_autorais_p1a39.py",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "06_p1a/tests/test_capsula_corpus_p1a39.py",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "06_p1a/tests/test_capsula_p1a2.py",
+        "motivo": "politica-de-segredo"
+      },
+      {
+        "caminho": "06_p1a/tests/test_via_gitbash_duplicada_p1a39.py",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "06_p1a/tests/test_falha_fechada_p1a37.py",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "06_p1a/tests/test_p1b_lease_p1a35.py",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "06_p1a/tests/test_rotulo_enforcement_p1a39.py",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "06_p1a/tests/test_pii_artefatos_p1a39.py",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "06_p1a/tests/test_p2_sentinela_emendada_p2.py",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "06_p1a/tests/test_economia.py",
+        "motivo": "politica-de-segredo"
+      },
+      {
+        "caminho": "06_p1a/tests/test_fronteira_escritor_p1a39.py",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "06_p1a/tests/test_grok_sqlite_p1a37.py",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "06_p1a/tests/test_pipeline.py",
+        "motivo": "politica-de-segredo"
+      },
+      {
+        "caminho": "06_p1a/tests/test_persistencia_lock_p1a37.py",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "06_p1a/tests/test_redacao_geradores_p1a39.py",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "06_p1a/tests/test_isolamento.py",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "06_p1a/tests/test_sentinela_n5_p1a37.py",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "06_p1a/tests/test_escritor_repositorio_p1a37.py",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "06_p1a/tests/test_p2_frota_medida_p2.py",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "06_p1a/tests/test_portao_tier_operacao_p1a39.py",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "06_p1a/tests/test_escritor_unico_adotado_p1a5.py",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "06_p1a/tests/test_adaptadores.py",
+        "motivo": "politica-de-segredo"
+      },
+      {
+        "caminho": "06_p1a/tests/test_leitor_config_p1a35.py",
+        "motivo": "politica-de-segredo"
+      },
+      {
+        "caminho": "06_p1a/tests/test_contencao_atribuicao_p1a37.py",
+        "motivo": "politica-de-segredo"
+      },
+      {
+        "caminho": "06_p1a/tests/test_preflight.py",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "06_p1a/tests/sentinela_antip2.py",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "06_p1a/tests/test_estabilizacao_p1a1.py",
+        "motivo": "politica-de-segredo"
+      },
+      {
+        "caminho": "06_p1a/tests/test_redacao_operacao_p1a39.py",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "06_p1a/tests/test_config_real_p1a39.py",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "06_p1a/tests/test_falhas_obrigatorias.py",
+        "motivo": "politica-de-segredo"
+      },
+      {
+        "caminho": "06_p1a/tests/test_p2_receita_medidor_p24.py",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "06_p1a/tests/test_p2_medidor_p21.py",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "06_p1a/tests/test_p1b01_runner.py",
+        "motivo": "politica-de-segredo"
+      },
+      {
+        "caminho": "06_p1a/tests/test_correcoes_p1a32.py",
+        "motivo": "politica-de-segredo"
+      },
+      {
+        "caminho": "06_p1a/tests/test_p2_runner_p2.py",
+        "motivo": "politica-de-segredo"
+      },
+      {
+        "caminho": "06_p1a/tests/test_p2_provedor_real_p2.py",
+        "motivo": "politica-de-segredo"
+      },
+      {
+        "caminho": "06_p1a/tests/test_emendas_p1a3.py",
+        "motivo": "politica-de-segredo"
+      },
+      {
+        "caminho": "06_p1a/tests/test_p2_protecao_no_mecanismo_p23.py",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "05_p0/tests/test_concorrencia.py",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "05_p0/tests/apoio.py",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "05_p0/tests/test_estados.py",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "05_p0/tests/test_p0_canonico_p1a37.py",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "05_p0/tests/test_eventlog.py",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "05_p0/tests/test_p0_catalogo_p1a37.py",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "05_p0/tests/test_workunits.py",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "05_p0/tests/test_p0_juiz1_p1a37.py",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "05_p0/tests/test_p0_evento_p1a37.py",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "05_p0/tests/test_p0_frota_p1a37.py",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "05_p0/tests/test_p0_cas_classe_p1a37.py",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "05_p0/tests/test_p0_tipo_p1a37.py",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "05_p0/tests/test_p0_nomes_maquinas_p1a39.py",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "05_p0/tests/test_p0_frota_entry_p1a37.py",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "05_p0/tests/test_p0_controlplane_p1a37.py",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "05_p0/tests/test_p0_router_p1a37.py",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "05_p0/tests/test_p0_cas_leitura_p1a37.py",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "05_p0/tests/test_seguranca.py",
+        "motivo": "politica-de-segredo"
+      },
+      {
+        "caminho": "05_p0/tests/test_crash.py",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "05_p0/tests/test_p0_juiz2_p1a37.py",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "05_p0/tests/test_policy.py",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "05_p0/tests/test_p0_eventlog_p1a37.py",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "05_p0/tests/test_juiz.py",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "05_p0/tests/test_p0_seq_booleana_p1a38.py",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "05_p0/tests/test_p0_adaptador_assinatura_p1a37.py",
+        "motivo": "politica-de-segredo"
+      },
+      {
+        "caminho": "05_p0/tests/test_p0_writelock_p1a37.py",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "05_p0/tests/test_p0_kernel_contexto_p1a38.py",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "05_p0/tests/test_p0_kernel_ciclos_p1a38.py",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "05_p0/tests/test_p0_kernel_decisao_p1a38.py",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "05_p0/tests/test_contratos.py",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "05_p0/tests/test_p0_kernel_attempt_p1a38.py",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "05_p0/tests/test_p0_estados_attempt_p1a39.py",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "05_p0/tests/test_p0_kernel_retomada_p1a38.py",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "05_p0/tests/test_p0_autorizacao_presa_p1a39.py",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "05_p0/tests/test_p0_kernel_p1a37.py",
+        "motivo": "politica-de-segredo"
+      },
+      {
+        "caminho": "05_p0/tests/test_p0_listas_presas_p1a39.py",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "05_p0/tests/test_p0_kernel_veredito_p1a38.py",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "05_p0/tests/test_recuperacao.py",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "05_p0/tests/test_frota.py",
+        "motivo": "politica-de-segredo"
+      },
+      {
+        "caminho": "05_p0/tests/test_p0_escrita_externa_p1a39.py",
+        "motivo": "orcamento-do-snapshot"
+      },
+      {
+        "caminho": "05_p0/tests/test_hardening.py",
+        "motivo": "orcamento-do-snapshot"
+      }
+    ],
+    "limite_bytes": 393216,
+    "quantidade_excluida": 206,
+    "quantidade_incluida": 39,
+    "raiz": ".",
+    "sha256": "6dd0105ff0801272dd53208f17ba365178b6385d9911cf337f7092e24b71e6fe",
+    "tipo": "snapshot-textual-read-only"
+  },
+  "detalhe": "",
+  "efeito_externo_medido": [
+    {
+      "alcance_da_medicao": {
+        "lar_do_cli": "o lar do CLI (~/.codex), onde a escrita e CONHECIDA e nao vigiada",
+        "medido": [
+          "diretorio descartavel desta invocacao (H:\\SSC-Plus\\locks\\descartaveis-p2\\p2-codex-9mw6q8xh)",
+          "repositorio (toda a arvore sob RAIZ, inclusive locks/ e .git)",
+          "fora: ~/.codex/auth.json",
+          "fora: ~/.codex/config.toml",
+          "fora: ~/.claude/settings.json",
+          "fora: ~/.kimi-code/config.toml",
+          "fora: ~/.gemini/settings.json",
+          "fora: ~/.grok"
+        ],
+        "nao_medido": [
+          "todo caminho fora do repositorio e fora das fontes de config declaradas",
+          "o lar do CLI (~/.codex), onde a escrita e CONHECIDA e nao vigiada",
+          "o lado REMOTO do provedor: efeito no servico nao aparece em fotografia local"
+        ]
+      },
+      "argv_publico": [
+        "C:\\Users\\<USUARIO>/AppData/Local/Programs/OpenAI/Codex/bin/codex.exe",
+        "exec",
+        "--model",
+        "gpt-5.6-sol",
+        "--sandbox",
+        "read-only",
+        "--cd",
+        "H:\\SSC-Plus\\locks\\descartaveis-p2\\p2-codex-9mw6q8xh",
+        "--skip-git-repo-check",
+        "--ephemeral",
+        "<PROMPT>"
+      ],
+      "arquivos_no_manifesto_vigiado": 1048,
+      "contexto_no_descartavel": true,
+      "cwd_do_filho": "H:\\SSC-Plus\\locks\\descartaveis-p2\\p2-codex-9mw6q8xh",
+      "descartavel_existia_durante_invocacao": true,
+      "descartavel_removido_apos_medicao": true,
+      "dir_descartavel": "H:\\SSC-Plus\\locks\\descartaveis-p2\\p2-codex-9mw6q8xh",
+      "efeito_externo": "nenhum",
+      "efeito_externo_origem": "fotografia sem nenhuma mutacao DENTRO DO ALCANCE MEDIDO (ver `alcance_da_medicao`) — `nenhum` aqui e medicao, nao eco do envelope. Fora do alcance nada foi medido, inclusive o lar do CLI (~/.codex), onde a escrita e CONHECIDA e nao vigiada: `nenhum` e o valor de contrato para 'sem efeito medido', jamais afirmacao de que nada foi escrito",
+      "medida": "manifesto SHA-256 do diretorio descartavel e das raizes vigiadas, ANTES e DEPOIS da invocacao",
+      "modelo_fixado_no_argv": "gpt-5.6-sol",
+      "mutacoes_atribuidas_ao_renovador": [
+        "alterado: repositorio/locks/repositorio.lease"
+      ],
+      "mutacoes_fora_do_descartavel": [],
+      "mutacoes_no_descartavel": [],
+      "nao_vigiado": "todo caminho fora do repositorio e fora das fontes de config declaradas",
+      "prompt_bytes": 393529,
+      "provider_id": "codex",
+      "raizes_vigiadas": [
+        "repositorio (toda a arvore sob RAIZ, inclusive locks/ e .git)",
+        "fora: ~/.codex/auth.json",
+        "fora: ~/.codex/config.toml",
+        "fora: ~/.claude/settings.json",
+        "fora: ~/.kimi-code/config.toml",
+        "fora: ~/.gemini/settings.json",
+        "fora: ~/.grok"
+      ],
+      "restricao": "restricao emitida ao CLI `codex` em modo headless: `--sandbox read-only --cd <DESCARTAVEL> --skip-git-repo-check --ephemeral` (o marcador <DESCARTAVEL> e trocado pelo diretorio descartavel da invocacao), mais o diretorio de trabalho descartavel do processo filho e a deteccao por manifesto SHA-256 antes e depois (`contencao.Vigilancia`). O que a flag FAZ dentro do turno do modelo e propriedade do CLI externo e NAO foi medido aqui",
+      "telemetria_cli": null,
+      "transporte_prompt": "stdin"
+    }
+  ],
+  "linhagem_id": "662301eea66a41c89dd9060cf00cae08",
+  "lock_escritor_unico": {
+    "fence": 21,
+    "sessao": "ssc-plus-ui"
+  },
+  "montagem": {
+    "descartes": [
+      {
+        "motivo": "veredito nao habilita rota: SUPERVISED",
+        "provider_id": "grok"
+      }
+    ],
+    "entradas": [
+      "codex/gpt-5.6-sol",
+      "claude/claude-fable-5[1m]",
+      "kimi/kimi-code/k3",
+      "google/gemini-3.1-pro-high",
+      "google/gemini-3.1-pro-low",
+      "google/gemini-3.5-flash-high",
+      "google/gemini-3.5-flash-low",
+      "google/gemini-3.5-flash-medium",
+      "google/gemini-3.6-flash-high",
+      "google/gemini-3.6-flash-low",
+      "google/gemini-3.6-flash-medium"
+    ],
+    "vetos": []
+  },
+  "placar": {
+    "attempts": [
+      {
+        "artefato_ref": "ae49655e734067310ad5d8119a3a294778df08620d0175ef6973b4df644b7ef3",
+        "attempt_id": "e24f85f7225c43188e6bf4d7a5e0d863",
+        "captura": {
+          "saida_estruturada_ref": "ae49655e734067310ad5d8119a3a294778df08620d0175ef6973b4df644b7ef3",
+          "saida_final_ref": "ae49655e734067310ad5d8119a3a294778df08620d0175ef6973b4df644b7ef3"
+        },
+        "custo_medido": {
+          "rotulo": "medido-assinatura",
+          "tokens_reportados": null,
+          "valor": 0.0
+        },
+        "decisao_id": "9e7b3dc762ec4859a37979430448d08b",
+        "efeito_externo": "nenhum",
+        "executor_observado": null,
+        "executor_resolvido": {
+          "alias_usado": false,
+          "effort": "alto",
+          "executor_id": "codex/gpt-5.6-sol",
+          "ferramenta": "cli-assinatura",
+          "hash_catalogo": "cb3c5f88d9bc5340f3651ff00d647da9f76e5cdbc720eb370751e1cd670291a8",
+          "modelo": "gpt-5.6-sol",
+          "provedor": "codex"
+        },
+        "fim": "2026-07-30T00:00:09Z",
+        "inicio": "2026-07-30T00:00:07Z",
+        "linhagem_id": "662301eea66a41c89dd9060cf00cae08",
+        "resultado": "sucesso",
+        "selecao_solicitada": {
+          "controle": "autonomo",
+          "effort": "alto",
+          "ferramenta": "cli-assinatura",
+          "modelo": "gpt-5.6-sol",
+          "modo": "read-only",
+          "provedor": "codex"
+        },
+        "vinculos": {
+          "hash_aprovacao": "98a0126eba607b017dc88df9fe5f73c2488aa8c811327ca0fc8f0dadd364c66b",
+          "hash_catalogo": "cb3c5f88d9bc5340f3651ff00d647da9f76e5cdbc720eb370751e1cd670291a8",
+          "hash_contexto": "ca05970f80b4a87f90958fa2f0a3074ddb173da8d640c00135fb08adea687bb7",
+          "hash_envelope": "241a27d49eaf56996672b2d9015cd2bb299be25079cd65a293ac7e5be4e97d97",
+          "hash_permissoes": "5683800ce20fea8313db4ee6fe6162e73b1119535cbb1faac5f90b5e136b7d04",
+          "hash_politica": "099d3a4fb9159501901d8304ec1a1064b88ed5df52211d10f338d6de8291ba5a"
+        },
+        "work_unit_id": "a1a32ef5e60a4f5982506e3e83833a23"
+      }
+    ],
+    "custo_total": {
+      "rotulo": "simulado",
+      "valor": 0.0
+    },
+    "decisoes": {
+      "9e7b3dc762ec4859a37979430448d08b": {
+        "alternativas": [
+          {
+            "controle": "autonomo",
+            "effort": "alto",
+            "ferramenta": "cli-assinatura",
+            "modelo": "claude-fable-5[1m]",
+            "modo": "read-only",
+            "provedor": "claude"
+          },
+          {
+            "controle": "autonomo",
+            "effort": "alto",
+            "ferramenta": "cli-assinatura",
+            "modelo": "kimi-code/k3",
+            "modo": "read-only",
+            "provedor": "kimi"
+          },
+          {
+            "controle": "autonomo",
+            "effort": "alto",
+            "ferramenta": "cli-assinatura",
+            "modelo": "gemini-3.1-pro-high",
+            "modo": "read-only",
+            "provedor": "google"
+          },
+          {
+            "controle": "autonomo",
+            "effort": "alto",
+            "ferramenta": "cli-assinatura",
+            "modelo": "gemini-3.1-pro-low",
+            "modo": "read-only",
+            "provedor": "google"
+          },
+          {
+            "controle": "autonomo",
+            "effort": "alto",
+            "ferramenta": "cli-assinatura",
+            "modelo": "gemini-3.5-flash-high",
+            "modo": "read-only",
+            "provedor": "google"
+          },
+          {
+            "controle": "autonomo",
+            "effort": "alto",
+            "ferramenta": "cli-assinatura",
+            "modelo": "gemini-3.5-flash-low",
+            "modo": "read-only",
+            "provedor": "google"
+          },
+          {
+            "controle": "autonomo",
+            "effort": "alto",
+            "ferramenta": "cli-assinatura",
+            "modelo": "gemini-3.5-flash-medium",
+            "modo": "read-only",
+            "provedor": "google"
+          },
+          {
+            "controle": "autonomo",
+            "effort": "alto",
+            "ferramenta": "cli-assinatura",
+            "modelo": "gemini-3.6-flash-high",
+            "modo": "read-only",
+            "provedor": "google"
+          },
+          {
+            "controle": "autonomo",
+            "effort": "alto",
+            "ferramenta": "cli-assinatura",
+            "modelo": "gemini-3.6-flash-low",
+            "modo": "read-only",
+            "provedor": "google"
+          },
+          {
+            "controle": "autonomo",
+            "effort": "alto",
+            "ferramenta": "cli-assinatura",
+            "modelo": "gemini-3.6-flash-medium",
+            "modo": "read-only",
+            "provedor": "google"
+          }
+        ],
+        "aprovacao_custo": {
+          "efforts_permitidos": [
+            "baixo",
+            "alto"
+          ],
+          "fallback_autorizado": true,
+          "modelos_permitidos": [
+            "codex/gpt-5.6-sol",
+            "claude/claude-fable-5[1m]",
+            "kimi/kimi-code/k3",
+            "google/gemini-3.1-pro-high",
+            "google/gemini-3.1-pro-low",
+            "google/gemini-3.5-flash-high",
+            "google/gemini-3.5-flash-low",
+            "google/gemini-3.5-flash-medium",
+            "google/gemini-3.6-flash-high",
+            "google/gemini-3.6-flash-low",
+            "google/gemini-3.6-flash-medium"
+          ],
+          "modo": "read-only",
+          "teto_custo": 0.0,
+          "validade": "2027-01-01T00:00:00Z"
+        },
+        "classificacao": {
+          "confianca": "alta",
+          "metodo": "declarado",
+          "rota": "frota"
+        },
+        "custo_previsto": {
+          "rotulo": "assinatura-sem-custo-variavel",
+          "valor": 0.0
+        },
+        "decisao_id": "9e7b3dc762ec4859a37979430448d08b",
+        "hash_pacote": "ca05970f80b4a87f90958fa2f0a3074ddb173da8d640c00135fb08adea687bb7",
+        "independencia_evidencia": null,
+        "motivo": "frota: codex/gpt-5.6-sol por capacidade/preferencia (fallback autorizado)",
+        "nivel_capacidade_atendido": "L2",
+        "papel": "autor",
+        "selecao": {
+          "controle": "autonomo",
+          "effort": "alto",
+          "ferramenta": "cli-assinatura",
+          "modelo": "gpt-5.6-sol",
+          "modo": "read-only",
+          "provedor": "codex"
+        },
+        "supersede": null,
+        "vinculos": {
+          "hash_aprovacao": "98a0126eba607b017dc88df9fe5f73c2488aa8c811327ca0fc8f0dadd364c66b",
+          "hash_catalogo": "cb3c5f88d9bc5340f3651ff00d647da9f76e5cdbc720eb370751e1cd670291a8",
+          "hash_contexto": "ca05970f80b4a87f90958fa2f0a3074ddb173da8d640c00135fb08adea687bb7",
+          "hash_envelope": "241a27d49eaf56996672b2d9015cd2bb299be25079cd65a293ac7e5be4e97d97",
+          "hash_permissoes": "5683800ce20fea8313db4ee6fe6162e73b1119535cbb1faac5f90b5e136b7d04",
+          "hash_politica": "099d3a4fb9159501901d8304ec1a1064b88ed5df52211d10f338d6de8291ba5a"
+        },
+        "work_unit_id": "a1a32ef5e60a4f5982506e3e83833a23"
+      }
+    },
+    "divergencias_observado_resolvido": [],
+    "escalacoes": [],
+    "fallbacks": [],
+    "linhagem_id": "662301eea66a41c89dd9060cf00cae08",
+    "n_eventos": 10,
+    "placar_por_executor": {
+      "codex/gpt-5.6-sol": {
+        "attempts": 1,
+        "custo_simulado": 0.0,
+        "latencias_simuladas_ms": [],
+        "sucesso": 1
+      }
+    },
+    "retries": [],
+    "sessao_id": "662301eea66a41c89dd9060cf00cae08",
+    "tokens_total": {
+      "rotulo": "simulado",
+      "valor": 0
+    },
+    "vereditos": [],
+    "work_units": {
+      "a1a32ef5e60a4f5982506e3e83833a23": {
+        "classe_governanca": "C1",
+        "contexto_ref": "ca05970f80b4a87f90958fa2f0a3074ddb173da8d640c00135fb08adea687bb7",
+        "criterios_aceite_ref": "2fac6c545c3ebaf99532fb4ed9099ed316ab78cc21fdc4650068fa9e314606cb",
+        "custo_medido": null,
+        "depende_de": [],
+        "estado": "aguardando-validacao",
+        "intencao": "Analise os tres riscos mais importantes do SSC Plus com base no snapshot, citando arquivos e mitigacoes",
+        "linhagem_id": "662301eea66a41c89dd9060cf00cae08",
+        "nivel_capacidade": "L2",
+        "parent_work_unit": null,
+        "perfil_capacidade": {
+          "contexto_max_tokens": 128000,
+          "dominio": "geral",
+          "ferramentas": [],
+          "formato_saida": "livre",
+          "latencia_max_ms": null,
+          "modalidade": "texto",
+          "orcamento_max_custo": null,
+          "privacidade": "remoto-permitido"
+        },
+        "resultado_ref": null,
+        "sessao_id": "662301eea66a41c89dd9060cf00cae08",
+        "tipo": "ato",
+        "tipo_decisao": "tipo-2",
+        "work_unit_id": "a1a32ef5e60a4f5982506e3e83833a23"
+      }
+    }
+  },
+  "preflight_consumido": {
+    "caminho": "H:\\SSC-Plus\\07_p1b\\evidencias\\preflight-20260811T211742052426Z.json",
+    "gerado_em_utc": "2026-08-11T21:17:42Z",
+    "idade_s": 8112
+  },
+  "raiz_lab": "H:\\SSC-Plus\\08_p2\\saidas\\labs\\20260811T233254401615Z-3fb2c6d78a49",
+  "saida_resumo": {
+    "bytes": 3713,
+    "conteudo_persistido_no_recibo": false,
+    "sha256": "ae49655e734067310ad5d8119a3a294778df08620d0175ef6973b4df644b7ef3"
+  },
+  "sessao_id": "662301eea66a41c89dd9060cf00cae08",
+  "status": "sucesso",
+  "work_unit_id": "a1a32ef5e60a4f5982506e3e83833a23"
+}
