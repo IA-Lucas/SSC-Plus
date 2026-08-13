@@ -248,14 +248,24 @@ def _verificar_tier(provider: str) -> dict:
     raise SystemExit(f"PARADA: sem declaracao de tier para {provider}")
 
 
+def _blob_do_alvo(rel: str) -> bytes:
+    """Um registro pelo blob do ALVO — o seam que a prova de corpus troca.
+
+    Os guardas de redacao/tier rodam o `main()` REAL numa raiz de prova
+    sem git; ali nao ha blob a ler, e ESTA funcao e o unico ponto que a
+    prova substitui — o resto do caminho permanece o da operacao.
+    """
+    return subprocess.run(
+        ["git", "-c", f"safe.directory={RAIZ.as_posix()}", "cat-file",
+         "blob", f"{ALVO}:{rel}"], cwd=RAIZ, capture_output=True,
+        check=True).stdout
+
+
 def montar_registros() -> bytes:
     """O terceiro arquivo, montado por blob do ALVO — nunca da arvore."""
     partes = [f"REGISTROS DE CORRECAO SOB JULGAMENTO — blobs de {ALVO}\n"]
     for rel in REGISTROS_DE_CORRECAO:
-        blob = subprocess.run(
-            ["git", "-c", f"safe.directory={RAIZ.as_posix()}", "cat-file",
-             "blob", f"{ALVO}:{rel}"], cwd=RAIZ, capture_output=True,
-            check=True).stdout
+        blob = _blob_do_alvo(rel)
         partes.append(f"\n{'=' * 72}\n--- {rel} "
                       f"(sha256 {hashlib.sha256(blob).hexdigest()}) ---\n")
         partes.append(blob.decode("utf-8", errors="replace"))
@@ -344,7 +354,7 @@ def main() -> int:
     sys.stdout.reconfigure(errors="replace")
 
     from ssc_plus import LeaseAutomatico
-    with LeaseAutomatico(SESSAO_LOCK):
+    with LeaseAutomatico(SESSAO_LOCK, dir_locks=RAIZ / "locks"):
         lock = _verificar_lock()
         tier = _verificar_tier(provider)
 

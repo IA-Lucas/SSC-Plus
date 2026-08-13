@@ -80,6 +80,7 @@ existe porque a redacao agiu ali.
 """
 
 import ast
+import contextlib
 import importlib.util
 import json
 import os
@@ -259,6 +260,8 @@ _RUNNERS = {
                      "saida": "revisao-p1a4", "fontes": ()},
     "revisao_p1a6": {"sessao": "p1a6-ops", "argv": 2,
                      "saida": "revisao-p1a6", "fontes": ()},
+    "revisao_p1a10": {"sessao": "p1a10-ops", "argv": 2,
+                      "saida": "revisao-p1a10", "fontes": ()},
 }
 
 _PREFLIGHTS = {
@@ -334,13 +337,23 @@ class OsRunnersGravamRedigido(unittest.TestCase):
             pacote.write_bytes(b"pacote de prova")
             modulo = _carregar(os.path.join(_DIR_EVID, f"{nome}.py"),
                                f"p1a39_{nome}")
+            # O despachante da P1-A.10 monta um terceiro arquivo por blob
+            # do commit ALVO; nesta raiz de prova nao ha git, e o SEAM
+            # declarado do proprio modulo (`_blob_do_alvo`) e o UNICO
+            # ponto substituido — o resto do main() e real.
+            seam = (mock.patch.object(
+                modulo, "_blob_do_alvo",
+                lambda rel: b"registro de prova sem conteudo sensivel")
+                if hasattr(modulo, "_blob_do_alvo")
+                else contextlib.nullcontext())
             argv = ["runner.py", "codex"]
             if espec["argv"] == 2:
                 argv.append(str(pacote))
             # A resposta do revisor volta pelo stdout e vai INTEIRA para
             # o campo `resposta`: e por ali que a PII entra em operacao.
             script = ("import sys;sys.stdout.write(sys.argv[1])",)
-            with mock.patch.object(modulo, "RAIZ", raiz), \
+            with seam, \
+                    mock.patch.object(modulo, "RAIZ", raiz), \
                     mock.patch.object(modulo, "SAIDA", saida), \
                     mock.patch.object(modulo, "COMANDOS", {
                         "codex": lambda *a: [sys.executable, "-c", script[0],

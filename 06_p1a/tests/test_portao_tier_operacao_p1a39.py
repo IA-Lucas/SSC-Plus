@@ -57,6 +57,7 @@ que parasse SEMPRE passaria em tudo acima, e a corrida nunca aconteceria.
 """
 
 import ast
+import contextlib
 import importlib.util
 import json
 import os
@@ -85,6 +86,7 @@ RUNNERS_COM_PORTAO = {
     "revisao_p1a36": "p1a36-ops",
     "revisao_p1a4": "p1a4-ops",
     "revisao_p1a6": "p1a6-ops",
+    "revisao_p1a10": "p1a10-ops",
 }
 
 
@@ -182,8 +184,15 @@ class PortaoDeTierParaAntesDaChamada(unittest.TestCase):
                 contagem["argv"] += 1
                 return [sys.executable, "-c", "pass"]
 
+            # Seam declarado do despachante da P1-A.10: blob do ALVO nao
+            # existe numa raiz de prova sem git; so esta funcao e trocada.
+            seam = (mock.patch.object(
+                modulo, "_blob_do_alvo", lambda rel: b"registro de prova")
+                if hasattr(modulo, "_blob_do_alvo")
+                else contextlib.nullcontext())
             erro = None
-            with mock.patch.object(modulo, "RAIZ", raiz), \
+            with seam, \
+                    mock.patch.object(modulo, "RAIZ", raiz), \
                     mock.patch.object(modulo, "SAIDA", saida), \
                     mock.patch.object(modulo, "COMANDOS",
                                       {"kimi": montar_argv}), \

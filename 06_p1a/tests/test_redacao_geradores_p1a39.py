@@ -102,6 +102,7 @@ GERADORES = {
     "pacote_p1a33": "_redigir",
     "pacote_p1a36": "_redigir",
     "pacote_p1a37": "redigir",
+    "pacote_p1a10": "redigir",
 }
 
 # Modulo que redige mas nao monta pacote proprio: e exercido pelo
