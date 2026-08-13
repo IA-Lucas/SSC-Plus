@@ -1,0 +1,81 @@
+{
+  "provider": "codex",
+  "ts_utc": "20260813T214121Z",
+  "tipo": "revisao-p1a11",
+  "chamadas_de_modelo": 1,
+  "custo_variavel": 0,
+  "rotulo": "assinatura-oauth; UMA chamada; enforcement read-only",
+  "enforcement_read_only": "--sandbox read-only --ephemeral (CLI)",
+  "tier_declarado_no_instante": {
+    "provider_id": "codex",
+    "tier": "ChatGPT Pro 5x",
+    "declarado_por": "proprietario",
+    "declarado_em_utc": "2026-08-13T10:09:52Z",
+    "expira_em_utc": "2026-08-14T10:09:52Z",
+    "valido_no_instante": true
+  },
+  "lock_escritor_unico": {
+    "sessao": "p1a11-ops",
+    "pid_titular": 38168,
+    "fence": 46
+  },
+  "argv_publico": [
+    "codex",
+    "exec",
+    "--sandbox",
+    "read-only",
+    "--cd",
+    "C:\\Users\\<USUARIO>\\AppData\\Local\\Temp\\p1a11-revisao-codex-pakrlj7w",
+    "--skip-git-repo-check",
+    "--ephemeral"
+  ],
+  "prompt_sha256": "eec120427376bed8d6135cc575c266c657c52ecb7e8f871d117185d343829580",
+  "transporte_documentos": "stdin-inline",
+  "stdin_sha256": "1ea9f88e773f5e16fb1deca5c47467368d747ff59f53d42722801cb33e0521ee",
+  "pacote_sha256": "175b04f1569918801fa2b71f6e7b9ed6721afa3da01eac80bd58ca5f898a27c7",
+  "pacote_bytes_entregues": 105034,
+  "declaracoes_sha256": "a80f71d3bc3ee5289189cb1fd3530077eb2bc617d7d109b8f418a2b8af6be4ca",
+  "declaracoes_bytes_entregues": 6006,
+  "registros_sha256": "087b159aabfc57926fb7910ef02974c73b1abfa8663d367eeee5588487a2bd93",
+  "registros_bytes_entregues": 11790,
+  "registros_alvo_commit": "3ff94e6",
+  "dir_descartavel": "C:\\Users\\<USUARIO>\\AppData\\Local\\Temp\\p1a11-revisao-codex-pakrlj7w",
+  "dir_descartavel_arquivos_restantes": [
+    "declaracoes-obrigatorias.txt",
+    "pacote-revisao.txt",
+    "registros-de-correcao.txt"
+  ],
+  "contencao": {
+    "titular_do_escritor_no_fechamento": "p1a11-ops",
+    "medida": "manifesto SHA-256 antes/depois das raizes vigiadas, com atribuicao separada da deteccao",
+    "raizes_vigiadas": [
+      "repositorio (toda a arvore sob RAIZ, inclusive locks/ e .git)",
+      "fora: ~/.codex/auth.json",
+      "fora: ~/.codex/config.toml",
+      "fora: ~/.claude/settings.json",
+      "fora: ~/.kimi-code/config.toml",
+      "fora: ~/.gemini/settings.json",
+      "fora: ~/.grok"
+    ],
+    "nao_vigiado": "todo caminho fora do repositorio e fora das fontes de config declaradas",
+    "arquivos_no_manifesto": 2347,
+    "mutacoes_detectadas": [
+      "alterado: repositorio/locks/repositorio.lease"
+    ],
+    "mutacoes_atribuidas_ao_renovador": [
+      "alterado: repositorio/locks/repositorio.lease"
+    ],
+    "mutacoes_fora_do_descartavel": [],
+    "violada": false
+  },
+  "lock_verificado_antes_da_persistencia": true,
+  "env_vars_removidas_nomes": [
+    "NVIDIA_API_KEY"
+  ],
+  "returncode": 0,
+  "duracao_s": 98.675,
+  "modelo_efetivo_no_banner": "gpt-5.6-sol",
+  "resposta": "PROVIDER: OpenAI  \nMODELO-OBSERVADO: GPT-5 (Codex; variante exata não exposta)  \nCANAL: API, com os três documentos inline  \nPACOTE-SHA256: 175b04f1569918801fa2b71f6e7b9ed6721afa3da01eac80bd58ca5f898a27c7 — ECOADO DO CABEÇALHO DECLARADO; NÃO COMPUTADO  \nDECLARACOES-SHA256: a80f71d3bc3ee5289189cb1fd3530077eb2bc617d7d109b8f418a2b8af6be4ca — ECOADO DO CABEÇALHO DECLARADO; NÃO COMPUTADO  \nREGISTROS-SHA256: 087b159aabfc57926fb7910ef02974c73b1abfa8663d367eeee5588487a2bd93 — ECOADO DO CABEÇALHO DECLARADO; NÃO COMPUTADO  \nESCOPO: revisão somente-leitura dos três ids, dos itens 1–3, do commit fora de escopo, das declarações a–c e dos diffs inline; N5 não foi julgado. Blobs apresentados apenas por hash e a implementação preexistente de `ler_arquivo_contido` não puderam ser conferidos.\n\nMAJOR-6: NAO-FECHADO — é o mesmo defeito de P1A4-2: `comparacoes_nao_resolvidas` só reconhece o construtor diretamente no `ast.Compare`; `x = \"\".join(partes); if resposta == x:` continua invisível, preservando o contorno por construção não resolvida.  \nMAJOR-P1A4-2: NAO-FECHADO — é o mesmo defeito do 6: os testes cobrem construtores inline, mas não a forma operacional com construção atribuída a variável antes da comparação; o limite real é maior que o despacho sem `ast.Compare` declarado.  \nMAJOR-P1A4-4: NAO-FECHADO — `exportar_brutos` foi apenas fiado para a próxima corrida, ainda inexistente, e o teste da âncora fabrica o recibo copiando o hash do próprio manifesto; isso testa concordância sintética, não independência nem recontagem do original irrecuperável.\n\nITEM-1: NAO-SUSTENTADO — o teste exerce uma junction estática fora da raiz, não a troca concorrente entre seleção e abertura; a própria corrida TOCTOU declarada como fechada não é exercida, e a primitiva subjacente não foi entregue para conferência integral.  \nITEM-2: NAO-SUSTENTADO — a correção e os testes alcançam somente construtores diretamente presentes no comparando; atribuição intermediária e outras decisões escapam, de modo que o mesmo defeito permanece.  \nITEM-3: NAO-SUSTENTADO — não há corrida real ponta a ponta nem receita operacional usando `recibo`/`trilha`; o teste cria dois artefatos concordantes a partir da mesma declaração, sem provar âncora independente do original.\n\nFORA-DE-ESCOPO: NAO-SUSTENTADO — `GITHUB_ACTIONS=true` mais nome nominal não prova ausência de proprietário ou configurações reais, especialmente em runners autohospedados; contas amplas como `root`, `admin` e `user` podem fazer guardas reais pularem por heurística.\n\nDECLARADO-a: CONFIRMO — o BASE atual é `f799883`, também usado como ALVO dos registros da P1-A.10, e os instrumentos anteriores aparecem no manifesto atual. FAMILIA: fora-de-ambas — identidade e cobertura de pacote, não guarda nem varredura  \nDECLARADO-b: NAO-CONFIRMO — `99_decisao-p1a10.md` registra pareceres divididos: codex manteve os três abertos, mas kimi declarou 6, P1A4-2 e P1A4-4 FECHADOS; portanto não há dois pareceres dizendo NAO-FECHADO. FAMILIA: (F)  \nDECLARADO-c: CONFIRMO — o diff inclui `3ff94e6`, e a cronologia declarada mostra que sua primeira revisão independente é esta rodada, conduzida após correção, montagem e despacho pela mesma sessão. FAMILIA: fora-de-ambas — conflito de independência e proveniência, não alcance de guarda\n\nDEFEITO-NOVO: SIM — `contencao.py:usuario_e_infraestrutura` introduz bypass dos guardas de propriedade baseado em marcador ambiental e lista ampla de usernames, sem medir se o objeto realmente inexiste.\n\nMAJOR 06_p1a/tests/sentinela_antip2.py:comparacoes_nao_resolvidas — AREA JA REVISADA; construtor atribuído a variável atravessa o novo guarda e conserva o defeito de 6/P1A4-2. FAMILIA: (N)  \nMAJOR 08_p2/medidor.py+executar_fluxo.py:ancora-do-original — AREA JA REVISADA; concordância sintética entre manifesto e recibo é tratada como independência, sem corrida real ou bytes originais recontáveis. FAMILIA: (F)  \nMAJOR 06_p1a/tests/test_contexto_workspace_p2.py:TOCTOU — AREA JA REVISADA; o teste afirma fechamento da corrida exercendo apenas uma junction estática, vizinha do caso alegado. FAMILIA: (F)  \nMAJOR 06_p1a/evidencias/contencao.py:usuario_e_infraestrutura — AREA JA REVISADA; o novo classificador presume que CI mais username genérico implica ausência de proprietário e desliga guardas em runners autohospedados legítimos. FAMILIA: (F)  \nMAJOR declaracoes-obrigatorias.txt:historico-dos-pareceres — ESTREIA; o pacote anterior P1-A.10 não continha estas declarações P1-A.11, e a afirmação de dois NAO-FECHADO contradiz o registro ancorado que documenta parecer dividido. FAMILIA: (F)\n\nVEREDITO: REPROVADO",
+  "stderr_resumo": "Reading prompt from stdin...\n2026-08-13T21:41:33.632849Z ERROR codex_models_manager::cache: failed to load models cache: missing field `base_instructions` at line 94 column 5\nOpenAI Codex v0.145.0\n--------\nworkdir: C:\\Users\\<USUARIO>\\AppData\\Local\\Temp\\p1a11-revisao-codex-pakrlj7w\nmodel: gpt-5.6-sol\nprovider: openai\napproval: never\nsandbox: read-only\nreasoning effort: high\nreasoning summaries: none\nsession id: 019ffd12-c74a-7b41-a094-47f35afdbabf\n--------\nuser\nRevise em modo SOMENTE LEITURA o estado atual do laboratorio SSC+. Os TRES documentos seguem INLINE nesta mesma entrada, apos estas instrucoes, cada um com o seu SHA-256 DECLARADO no cabecalho (voce nao tem ferramentas; ecoe os declarados nas linhas exigidas em vez de computa-los):\n  1. pacote-revisao.txt           — o estado sob julgamento\n  2. declaracoes-obrigatorias.txt — fatos que o autor e OBRIGADO a transmitir, varios contra o interesse dele\n  3. registros-de-correcao.txt    — os dois registros da correcao sob julgamento, ancorados no commit ALVO\n\nComece pelas declaracoes. Quem corrigiu, montou e despachou e a MESMA sessao: nada fecha sem o seu parecer.\n\nContexto: o veredito vigente do acervo e REPROVADO (P1-A.4). Dois revisores independentes ja julgaram 6/P1A4-2/P1A4-4 NAO-FECHADO uma vez, contra o pacote ANTERIOR a esta correcao de residuo. Esta e a SEGUNDA rodada sobre os MESMOS tres ids.\n\nVoce NAO pode escrever nada: responda apenas com a revisao em texto.\n\nIMPORTANTE: leia e julgue VOCE MESMO, num unico turno, sem despachar subagentes e sem aguardar processos paralelos — o seu ambiente encerra em 10 minutos e parecer inacabado nao e parecer. Se o tempo nao der para tudo, priorize as linhas exigidas abaixo, nesta ordem, e diga o que ficou sem conferir.\n\nSua resposta precisa conter, NESTA ORDEM:\n1. as linhas PROVIDER, MODELO-OBSERVADO, CANAL, PACOTE-SHA256, DECLARACOES-SHA256 e REGISTROS-SHA256 (compute-os dos arquivos se tiver ferramentas; ecoe os DECLARADOS nos cabecalhos se nao tiver, dizendo qual dos dois fez) e ESCOPO;\n2. UMA linha por id — 6, P1A4-2, P1A4-4 — exatamente na forma 'MAJOR-<id>: FECHADO | NAO-FECHADO — <justificativa apontavel>'. Se voce julgar que dois ou mais ids sao o MESMO defeito, diga-o na linha de cada um; a fusao e permitida e nao ha contagem certa esperada. NAO julgue N5 — ele fica aberto por decisao do Fundador e nao esta em julgamento nesta rodada;\n3. UMA linha por item do registro de residuos — os itens 1, 2 e 3 de `99_correcao-residuos-p1a10.md` — na forma 'ITEM-<numero>: SUSTENTADO | NAO-SUSTENTADO — <motivo>' (sustentado = a correcao fecha o que diz fechar, o teste exerce o caso que ocorre e os limites declarados sao os reais);\n4. UMA linha sobre o commit fora de escopo (secao 2 das declaracoes, `contencao.py:usuario_e_infraestrutura`) na forma 'FORA-DE-ESCOPO: SUSTENTADO | NAO-SUSTENTADO — <motivo>';\n5. UMA linha por achado novo declarado — a, b, c da secao 3 das declaracoes — na forma 'DECLARADO-<letra>: CONFIRMO | NAO-CONFIRMO — <motivo>', com a FAMILIA ao final;\n6. a linha 'DEFEITO-NOVO: SIM | NAO — <o que, onde>' sobre as correcoes desta rodada;\n7. os seus achados, um por linha, prefixados por CRITICAL | MAJOR | MINOR | OBS, com arquivo:tema e descricao curta, e CADA um terminando com a FAMILIA obrigatoria:\n   'FAMILIA: (F)' — guarda que AFIRMA em vez de EXERCER;\n   'FAMILIA: (N)' — classe que a varredura por alcance de linha nao media;\n   'FAMILIA: fora-de-ambas' — com o motivo.\n   Sem familia o criterio de parada nao se afere. Para cada achado NOVO diga se esta em AREA JA REVISADA ou em ESTREIA — e, se estreia, QUAL pacote anterior nao a continha;\n8. a linha final 'VEREDITO: APROVADO | APROVADO-COM-RESSALVAS | REPROVADO'.\n\n========================================================================\n=== DOCUMENTO 1/3: pacote-revisao.txt (sha256 declarado: 175b04f1569918801fa2b71f6e7b9ed6721afa3da01eac80bd58ca5f898a27c7) ===\n\nPACOTE DE REVISAO — SSC+ (laboratorio experimental, sem autoridade)\n\nQuem corrigiu nao certifica: corre",
+  "quota_observavel": "nao-exposta-pelo-cli"
+}
