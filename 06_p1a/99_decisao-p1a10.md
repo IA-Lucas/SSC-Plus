@@ -70,6 +70,52 @@ foram declarados de proposito e o revisor os julgou insuficientes).
 - quem despachou e quem corrigiu — conflito declarado na primeira
   secao das DECLARACOES que o revisor leu.
 
+## ANEXO (2026-08-13) — o segundo parecer chegou: kimi, APROVADO-COM-RESSALVAS
+
+O parecer do kimi (484,8 s, contencao limpa, hashes COMPUTADOS por ele
+e conferidos, `kimi-20260813T*.json`) julgou o MESMO pacote. O mapa dos
+dois revisores:
+
+| id | codex | kimi | Consenso |
+|---|---|---|---|
+| N1 | FECHADO | FECHADO | **FECHADO por ambos** |
+| P1A4-1 | FECHADO | FECHADO | **FECHADO por ambos** |
+| P1A4-3 | FECHADO | FECHADO | **FECHADO por ambos** |
+| P1A4-5 | FECHADO | FECHADO | **FECHADO por ambos** |
+| 6 | nao-fechado | FECHADO | dividido |
+| P1A4-2 | nao-fechado | FECHADO | dividido |
+| P1A4-4 | nao-fechado | FECHADO (no mecanismo) | dividido |
+| P1A4-6 | FECHADO | nao-fechado (fora do diff, nao conferivel) | dividido |
+| N5 | nao-fechado | nao-fechado | **ABERTO por ambos** (residuo declarado) |
+
+**CONTAGEM-DISTINTA: 6 pelos DOIS revisores, com as MESMAS fusoes**
+(6/N5/P1A4-2 e N1/P1A4-1). A pergunta que o handoff mandou reabrir sem
+numero esta respondida por convergencia independente: **seis**.
+
+Divergencias registradas, nao absorvidas: o kimi fechou 6/P1A4-2 e
+P1A4-4 lendo as correcoes desta missao; o codex os manteve abertos pelo
+residuo. O kimi nao fechou P1A4-6 por honestidade de escopo (o
+tratamento e da P1-A.5, fora do diff). **A palavra final sobre os
+divididos e do Fundador**, com os dois pareceres na mao. Nota: os
+residuos que motivaram os nao-fechados do codex foram corrigidos APOS o
+ALVO deste pacote (`99_correcao-residuos-p1a10.md`) e entram no proximo
+ciclo.
+
+Registros: kimi sustenta 7 de 8 — o 105 saiu NAO-SUSTENTADO como
+correcao ("mitigacao por instrucao sem instrumento", que e exatamente o
+que o proprio registro declara). DEFEITO-NOVO: NAO pelo kimi (o TOCTOU
+do codex ja estava corrigido apos o ALVO). Achados novos do kimi, para
+a fila: marcador `stdout.index("==")` fragil no guarda dos quatro
+campos (MINOR, estreia), reconversao `eol: crlf` do ramo `commit` do
+medidor sem limite declarado (MINOR, estreia), envelope do pacote sem
+cabecalhos de protocolo (OBS, estreia), evidencia de sondas nao
+versionada (MINOR, ja revisada).
+
+**Criterio de parada, remedido com os DOIS pareceres:** (a) novos em
+area ja revisada ≈ 4 contra limiar 6; (b) familia F = 1 contra limiar
+4; (c) saldo de consenso **+4** (quatro fechados por ambos, zero
+reabertos). **Nenhum dispara; a trilha pode continuar.**
+
 ## Plataforma — os quatro campos
 
 interpretador Python 3.14.3 · pytest 9.1.1 · `core.autocrlf` true ·
