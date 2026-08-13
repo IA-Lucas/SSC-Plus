@@ -60,6 +60,7 @@ import re
 import sys
 import tempfile
 import unittest
+from unittest import mock
 
 import apoio  # noqa: F401  (ajusta sys.path da suite)
 
@@ -135,6 +136,11 @@ class ZeroPiiNasTresRaizes(unittest.TestCase):
         # — fronteira em vez de substring, e citacao forense declarada
         # em vez de vazamento. A parte de USUARIO fica declarada e nao
         # se corrige: ver `test_o_resultado_depende_do_usuario_da_estacao`.
+        if contencao.usuario_e_infraestrutura():
+            self.skipTest(
+                "GITHUB_ACTIONS=true + conta nominal de INFRAESTRUTURA: "
+                "o objeto deste guarda (nome do proprietario da estacao) "
+                "nao existe; SKIP declarado, nunca medido como verde")
         for raiz in RAIZES:
             nome = os.path.basename(raiz)
             with self.subTest(raiz=nome):
@@ -214,6 +220,42 @@ class AVarreduraDetectaOQuePlanta(unittest.TestCase):
         self.assertEqual(
             self._com_arquivo("artefato.json",
                               '{"dir": "C:\\\\Users\\\\<USUARIO>\\\\x"}'), [])
+
+
+class AEstacaoDeCINaoFingeTerProprietario(unittest.TestCase):
+    """O salto e estreito, declarado e nao desliga o detector."""
+
+    def test_classificacao_exige_CI_declarado_E_usuario_nominal(self):
+        ci = {"GITHUB_ACTIONS": "true"}
+        self.assertTrue(
+            contencao.usuario_e_infraestrutura("runneradmin", ci))
+        self.assertTrue(
+            contencao.usuario_e_infraestrutura(" RUNNERADMIN ", ci))
+        self.assertFalse(
+            contencao.usuario_e_infraestrutura("runneradmin", {}),
+            "nome generico sozinho nao pode desligar a guarda local")
+        self.assertFalse(
+            contencao.usuario_e_infraestrutura("proprietario-real", ci),
+            "declaracao de CI sozinha nao pode apagar o proprietario")
+
+    def test_guarda_da_arvore_pula_com_declaracao_apontavel(self):
+        caso = ZeroPiiNasTresRaizes(
+            "test_nenhuma_raiz_do_acervo_carrega_pii")
+        with mock.patch.object(contencao, "_USUARIO_LOCAL", "runneradmin"), \
+                mock.patch.dict(os.environ, {"GITHUB_ACTIONS": "true"}):
+            with self.assertRaisesRegex(
+                    unittest.SkipTest,
+                    r"GITHUB_ACTIONS=true.*SKIP declarado"):
+                caso.test_nenhuma_raiz_do_acervo_carrega_pii()
+
+    def test_controle_positivo_continua_rodando_em_CI(self):
+        # So a afirmacao sobre a ARVORE REAL pula. A mesma conta generica
+        # continua obrigada a detectar PII plantada numa fixture.
+        caso = AVarreduraDetectaOQuePlanta(
+            "test_usuario_local_plantado_e_detectado_nas_tres_formas")
+        with mock.patch.object(contencao, "_USUARIO_LOCAL", "runneradmin"), \
+                mock.patch.dict(os.environ, {"GITHUB_ACTIONS": "true"}):
+            caso.test_usuario_local_plantado_e_detectado_nas_tres_formas()
 
 
 class AVarreduraRealmenteLeArquivos(unittest.TestCase):

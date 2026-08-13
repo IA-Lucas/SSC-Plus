@@ -251,6 +251,11 @@ class ASuperficieRealDeEndpointEMedida(unittest.TestCase):
         # DISCRIMINADOR, e a metade que a pergunta nao previa: se
         # NENHUM provedor tivesse a chave, a auditoria de endpoint seria
         # defesa em profundidade sem objeto. MEDIDO: o kimi tem tres.
+        if contencao.usuario_e_infraestrutura():
+            self.skipTest(
+                "GITHUB_ACTIONS=true + conta nominal de INFRAESTRUTURA: "
+                "configs reais do proprietario nao existem neste runner; "
+                "SKIP declarado, nunca medido como verde")
         com_endpoint = {p: campos_de_endpoint(p) for p in _presentes()}
         com_endpoint = {p: v for p, v in com_endpoint.items() if v}
         self.assertTrue(
@@ -465,11 +470,40 @@ class OQueEVigiadoMasNaoEAuditado(unittest.TestCase):
         self.assertIs(config_persistida, leitores_config.config_persistida)
 
     def test_ao_menos_tres_fontes_declaradas_existem_nesta_estacao(self):
+        if contencao.usuario_e_infraestrutura():
+            self.skipTest(
+                "GITHUB_ACTIONS=true + conta nominal de INFRAESTRUTURA: "
+                "configs reais do proprietario nao existem neste runner; "
+                "SKIP declarado, nunca medido como verde")
         presentes = _presentes()
         self.assertGreaterEqual(
             len(presentes), 3,
             f"so {presentes} existem — a auditoria de config perde o "
             "objeto e os testes acima ficam verdes por ausencia")
+
+
+class AEstacaoDeCINaoAfirmaConfigsDoProprietario(unittest.TestCase):
+    """Os dois discriminadores sem objeto pulam; as sondas ficam ativas."""
+
+    def test_os_dois_guardas_pulam_com_declaracao_apontavel(self):
+        casos = (
+            ASuperficieRealDeEndpointEMedida(
+                "test_algum_provedor_TEM_grafia_de_endpoint_na_config_real"),
+            OQueEVigiadoMasNaoEAuditado(
+                "test_ao_menos_tres_fontes_declaradas_existem_nesta_estacao"),
+        )
+        metodos = (
+            casos[0].test_algum_provedor_TEM_grafia_de_endpoint_na_config_real,
+            casos[1].test_ao_menos_tres_fontes_declaradas_existem_nesta_estacao,
+        )
+        with mock.patch.object(contencao, "_USUARIO_LOCAL", "runneradmin"), \
+                mock.patch.dict(os.environ, {"GITHUB_ACTIONS": "true"}):
+            for metodo in metodos:
+                with self.subTest(guarda=metodo.__name__):
+                    with self.assertRaisesRegex(
+                            unittest.SkipTest,
+                            r"GITHUB_ACTIONS=true.*SKIP declarado"):
+                        metodo()
 
 
 if __name__ == "__main__":

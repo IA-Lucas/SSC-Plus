@@ -57,6 +57,34 @@ import os
 
 _USUARIO_LOCAL = os.path.basename(os.path.expanduser("~"))
 
+# Usuarios de INFRAESTRUTURA (runner de CI, conta generica): nao sao uma
+# pessoa, e o objeto dos guardas de propriedade da estacao — nome do
+# proprietario e configs instaladas por ele — nao existe numa estacao
+# assim. Pior: nome generico curto ("runner") casa o acervo inteiro
+# (`runner_p2`) e o guarda de PII vira ruido. Medido no primeiro CI
+# verde-por-desenho (P1-A.10, 2026-08-13): o runner do GitHub roda como
+# `runneradmin`.
+#
+# O salto exige DUAS provas, nao uma heuristica solta: a declaracao
+# `GITHUB_ACTIONS=true` do ambiente E uma conta desta lista nominal. Um
+# usuario local chamado `admin`, ou uma variavel de CI plantada sob o
+# nome de uma pessoa, nao desliga guarda nenhum. Quem pula tambem grava
+# a declaracao no motivo do `skip`; nunca conta ausencia como verde.
+USUARIOS_DE_INFRAESTRUTURA = frozenset({
+    "runner", "runneradmin", "root", "admin", "administrator",
+    "user", "actions", "jenkins", "vagrant", "ci", "containeradministrator"})
+
+
+def usuario_e_infraestrutura(
+        usuario: str | None = None,
+        ambiente: dict | None = None) -> bool:
+    """CI declarado + conta nominal de infraestrutura, nunca so um deles."""
+    alvo = _USUARIO_LOCAL if usuario is None else str(usuario)
+    env = os.environ if ambiente is None else ambiente
+    github_actions = str(env.get("GITHUB_ACTIONS", "")).strip().lower()
+    return (github_actions == "true" and
+            alvo.strip().lower() in USUARIOS_DE_INFRAESTRUTURA)
+
 # NENHUMA exclusao. Ate a P1-A.3.6, `locks/` saia do manifesto porque o
 # renovador dedicado reescreve o lease a cada 30 s, e a alternativa
 # conhecida era alarme falso em toda corrida. O revisor independente
