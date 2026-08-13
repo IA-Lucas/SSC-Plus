@@ -1,0 +1,1 @@
+Pedido do operador: responda somente com a palavra ARQUIVO-LIDO

@@ -574,6 +574,12 @@ def _resolver_insumo(spec: dict, raiz: str | None = None) -> dict:
                     f"blob ausente: {commit}:{spec['caminho']}")
             bruto = proc.stdout
             if spec.get("eol") == "crlf":
+                # LIMITE DECLARADO (MINOR do kimi, P1-A.10): a
+                # reconversao normaliza TODO LF para CRLF. Ela reproduz o
+                # checkout somente de arquivo cujo fim de linha e uniforme
+                # — arquivo de EOL misto nao volta aos bytes reais por
+                # este caminho, e receita que precisar dele deve usar a
+                # origem `arquivo` (checkout real) e declarar a plataforma.
                 bruto = bruto.replace(b"\r\n", b"\n").replace(b"\n", b"\r\n")
             procedencia = "medido-blob-git"
             fonte = f"{commit}:{spec['caminho']}"

@@ -116,6 +116,23 @@ area ja revisada ≈ 4 contra limiar 6; (b) familia F = 1 contra limiar
 4; (c) saldo de consenso **+4** (quatro fechados por ambos, zero
 reabertos). **Nenhum dispara; a trilha pode continuar.**
 
+## ARBITRAGEM DO FUNDADOR (2026-08-13) — os quatro divididos
+
+Decisao do Fundador, com os dois pareceres na mao:
+
+| id | Decisao | Fundamento |
+|---|---|---|
+| **6** e **P1A4-2** | **aguardam o proximo ciclo** | o codex julgou um residuo que ja foi corrigido DEPOIS do ALVO (`99_correcao-residuos-p1a10.md`); o fechamento sai mais forte quando um revisor vir o estado atual |
+| **P1A4-4** | **aguarda o proximo ciclo** | mesmo fundamento — ancora cruzada e export do fluxo sao pos-ALVO |
+| **P1A4-6** | **FECHADO** | a regra do acervo exige UM revisor independente dizendo que fechou, e o codex o disse no merito; o kimi nao contradisse o merito — declarou o proprio escopo ("fora do diff, nao conferivel"), e a ressalva fica anotada |
+| **N5** | **mantido ABERTO por decisao** | o residuo final (decisao sem comparacao, dado externo) e indecidivel por analise estatica; N5 permanece como lembrete permanente de que a sentinela e deteccao, nunca impedimento |
+
+Com isto o placar de origem fica: **CINCO fechados** (N1, P1A4-1,
+P1A4-3, P1A4-5 por consenso; P1A4-6 pela regra de um revisor), **tres
+aguardando o proximo ciclo** ja com as correcoes prontas, **um aberto
+por decisao**. A fila menor do kimi foi autorizada e corrigida na
+mesma data (marcador do guarda, limite do `eol`, sondas versionadas).
+
 ## Plataforma — os quatro campos
 
 interpretador Python 3.14.3 · pytest 9.1.1 · `core.autocrlf` true ·

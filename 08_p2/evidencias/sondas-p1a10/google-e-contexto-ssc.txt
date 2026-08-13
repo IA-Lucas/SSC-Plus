@@ -1,0 +1,3 @@
+Operacao: Analisar projeto
+Pedido do operador: responda somente com a linha abaixo.
+SSC_JULGAMENTO_TESTE: ARQUIVO-LIDO-E

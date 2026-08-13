@@ -1,0 +1,263 @@
+{
+ "formato": "sondas-p1a10-v1",
+ "porque": "MINOR dos dois revisores da P1-A.10: a evidencia operacional das sondas vivia em scratchpad de sessao. Copiada com redacao integral; conteudo e transcricao redigida, hashes sao DESTA copia.",
+ "sondas": {
+  "google/a": {
+   "err.txt": {
+    "arquivo": "google-a-err.txt",
+    "bytes_redigido": 78,
+    "sha256_redigido": "3a7f8550106d86abb322e8ed0fb30a0296c0e97c6be03d5a8033b99d16737459"
+   },
+   "out.json": {
+    "arquivo": "google-a-out.json",
+    "bytes_redigido": 261,
+    "sha256_redigido": "d88f72f618051cff124477b93a1a193644842f538db225bd5e3f045297c2c096"
+   }
+  },
+  "google/b": {
+   "contexto-ssc.txt": {
+    "arquivo": "google-b-contexto-ssc.txt",
+    "bytes_redigido": 64,
+    "sha256_redigido": "7eaf3ac04aba5e4128421a9e7d7567a3c03f47da18155dbef2c7e0fd0aa13a9a"
+   },
+   "err.txt": {
+    "arquivo": "google-b-err.txt",
+    "bytes_redigido": 381,
+    "sha256_redigido": "04a3fd7b53540108a5ddd980fe2cbad6d681c6fa15eeb5fb69a969fb581fe0c0"
+   },
+   "out.json": {
+    "arquivo": "google-b-out.json",
+    "bytes_redigido": 254,
+    "sha256_redigido": "86acffe4dcf77bc938cbfe194416f4e01a623e7ba7ce6e1815a5211d6306766d"
+   }
+  },
+  "google/c": {
+   "err.txt": {
+    "arquivo": "google-c-err.txt",
+    "bytes_redigido": 0,
+    "sha256_redigido": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+   },
+   "out.json": {
+    "arquivo": "google-c-out.json",
+    "bytes_redigido": 686,
+    "sha256_redigido": "680e8929433b89e87f4748ab96e1ff75c5c57eef3a6c3e5d7172d6244057e11d"
+   }
+  },
+  "google/d": {
+   "contexto-ssc.txt": {
+    "arquivo": "google-d-contexto-ssc.txt",
+    "bytes_redigido": 66,
+    "sha256_redigido": "218bd8533ea6b707248357099f27c19c265d7dab9e5dcf1212108ccf8ffdc065"
+   },
+   "err.txt": {
+    "arquivo": "google-d-err.txt",
+    "bytes_redigido": 0,
+    "sha256_redigido": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+   },
+   "out.json": {
+    "arquivo": "google-d-out.json",
+    "bytes_redigido": 274,
+    "sha256_redigido": "faabb9d8311a6699b5322936beecefc90c17d53a3c69ac7c45e17268a94a9bf5"
+   }
+  },
+  "google/e": {
+   "contexto-ssc.txt": {
+    "arquivo": "google-e-contexto-ssc.txt",
+    "bytes_redigido": 121,
+    "sha256_redigido": "8cf2139f2029dcfa13e8d3c93f6d5d1a036310635b23422e1eaeacb2ca578655"
+   },
+   "err.txt": {
+    "arquivo": "google-e-err.txt",
+    "bytes_redigido": 78,
+    "sha256_redigido": "3a7f8550106d86abb322e8ed0fb30a0296c0e97c6be03d5a8033b99d16737459"
+   },
+   "out.json": {
+    "arquivo": "google-e-out.json",
+    "bytes_redigido": 296,
+    "sha256_redigido": "300f5f1edeaf5632e32fd94f2ce085100fe9a9739d20ee22e692c993fa3610ba"
+   }
+  },
+  "google/f": {
+   "contexto-ssc.txt": {
+    "arquivo": "google-f-contexto-ssc.txt",
+    "bytes_redigido": 400041,
+    "sha256_redigido": "66faa3001dc0a61e69df9678fc37015ffbb8ed9f7d16b359e50897227ad487b7"
+   },
+   "err.txt": {
+    "arquivo": "google-f-err.txt",
+    "bytes_redigido": 381,
+    "sha256_redigido": "04a3fd7b53540108a5ddd980fe2cbad6d681c6fa15eeb5fb69a969fb581fe0c0"
+   },
+   "out.json": {
+    "arquivo": "google-f-out.json",
+    "bytes_redigido": 258,
+    "sha256_redigido": "da0b090067c5a3eb0a395ece26aaa9c62761ad1b5c5263f92746ef45ba143240"
+   }
+  },
+  "google/f100": {
+   "contexto-ssc.txt": {
+    "arquivo": "google-f100-contexto-ssc.txt",
+    "bytes_redigido": 100016,
+    "sha256_redigido": "20a60598a92f396c8d559c8a876014343e7c3541dda13533cf6fd8b2859a9885"
+   },
+   "err.txt": {
+    "arquivo": "google-f100-err.txt",
+    "bytes_redigido": 78,
+    "sha256_redigido": "3a7f8550106d86abb322e8ed0fb30a0296c0e97c6be03d5a8033b99d16737459"
+   },
+   "out.json": {
+    "arquivo": "google-f100-out.json",
+    "bytes_redigido": 279,
+    "sha256_redigido": "21f0fcab411615faf4cc25950dee8d866f0146cf52e58e1cfcac2c4a6b8ccfde"
+   }
+  },
+  "google/f200": {
+   "contexto-ssc.txt": {
+    "arquivo": "google-f200-contexto-ssc.txt",
+    "bytes_redigido": 200025,
+    "sha256_redigido": "ed2526a8622ba600d627a4edf8c94fb9fac6bf9a4897f92af9045840efa02ac8"
+   },
+   "err.txt": {
+    "arquivo": "google-f200-err.txt",
+    "bytes_redigido": 78,
+    "sha256_redigido": "3a7f8550106d86abb322e8ed0fb30a0296c0e97c6be03d5a8033b99d16737459"
+   },
+   "out.json": {
+    "arquivo": "google-f200-out.json",
+    "bytes_redigido": 279,
+    "sha256_redigido": "1110a83361d7dca912d9fba50a5705df1ccb5762364ea4c51b70d5e0b5997470"
+   }
+  },
+  "google/f256": {
+   "contexto-ssc.txt": {
+    "arquivo": "google-f256-contexto-ssc.txt",
+    "bytes_redigido": 256032,
+    "sha256_redigido": "1abf7f113613624f0fce6bab4d9eebc7ffecbabe95086b71b0d71f67d3d3f5c4"
+   },
+   "err.txt": {
+    "arquivo": "google-f256-err.txt",
+    "bytes_redigido": 78,
+    "sha256_redigido": "3a7f8550106d86abb322e8ed0fb30a0296c0e97c6be03d5a8033b99d16737459"
+   },
+   "out.json": {
+    "arquivo": "google-f256-out.json",
+    "bytes_redigido": 279,
+    "sha256_redigido": "bea590fd53da95df0fac922017f0a16a7c17949fe9708fc027ca10e7a81c2a98"
+   }
+  },
+  "google/f300": {
+   "contexto-ssc.txt": {
+    "arquivo": "google-f300-contexto-ssc.txt",
+    "bytes_redigido": 300034,
+    "sha256_redigido": "cee7e6ee9d671e86101ce328cd63f740ab4b3ca25a183fdb5e175dd674afe152"
+   },
+   "err.txt": {
+    "arquivo": "google-f300-err.txt",
+    "bytes_redigido": 78,
+    "sha256_redigido": "3a7f8550106d86abb322e8ed0fb30a0296c0e97c6be03d5a8033b99d16737459"
+   },
+   "out.json": {
+    "arquivo": "google-f300-out.json",
+    "bytes_redigido": 279,
+    "sha256_redigido": "bedfc9aed6906b8f035f0a27e744ab63e076b1ab41944f3c86c9c0980dd9a9ce"
+   }
+  },
+  "google/g350": {
+   "contexto-ssc.txt": {
+    "arquivo": "google-g350-contexto-ssc.txt",
+    "bytes_redigido": 350014,
+    "sha256_redigido": "988611a09cd498dbf6990cfefd1bdfed40587cb748e21c75ad611e2c1cc4d920"
+   },
+   "err.txt": {
+    "arquivo": "google-g350-err.txt",
+    "bytes_redigido": 78,
+    "sha256_redigido": "3a7f8550106d86abb322e8ed0fb30a0296c0e97c6be03d5a8033b99d16737459"
+   },
+   "out.json": {
+    "arquivo": "google-g350-out.json",
+    "bytes_redigido": 279,
+    "sha256_redigido": "ad76f15812c8ee06260d861186dab89458509aadae226671044a930fcb892a1c"
+   }
+  },
+  "google/g400": {
+   "contexto-ssc.txt": {
+    "arquivo": "google-g400-contexto-ssc.txt",
+    "bytes_redigido": 400043,
+    "sha256_redigido": "874863f5c25f4287d1386936570bba4cacde38f4b3119006d2726d39aae1d5b9"
+   },
+   "err.txt": {
+    "arquivo": "google-g400-err.txt",
+    "bytes_redigido": 78,
+    "sha256_redigido": "3a7f8550106d86abb322e8ed0fb30a0296c0e97c6be03d5a8033b99d16737459"
+   },
+   "out.json": {
+    "arquivo": "google-g400-out.json",
+    "bytes_redigido": 279,
+    "sha256_redigido": "db412b7bc31c66185230d5d0a3190d13468759c6a810e21fcc44a2e4facecaf8"
+   }
+  },
+  "google/g-julgamento": {
+   "contexto-ssc.txt": {
+    "arquivo": "google-g-julgamento-contexto-ssc.txt",
+    "bytes_redigido": 400041,
+    "sha256_redigido": "66faa3001dc0a61e69df9678fc37015ffbb8ed9f7d16b359e50897227ad487b7"
+   },
+   "err.txt": {
+    "arquivo": "google-g-julgamento-err.txt",
+    "bytes_redigido": 78,
+    "sha256_redigido": "3a7f8550106d86abb322e8ed0fb30a0296c0e97c6be03d5a8033b99d16737459"
+   },
+   "out.json": {
+    "arquivo": "google-g-julgamento-out.json",
+    "bytes_redigido": 672,
+    "sha256_redigido": "7fd0f88bbb798bb16d44a3d5a3203eb7ac1b24de657ef5f96c4dca674d1093c1"
+   }
+  },
+  "google/sem-plan": {
+   "contexto-ssc.txt": {
+    "arquivo": "google-sem-plan-contexto-ssc.txt",
+    "bytes_redigido": 60,
+    "sha256_redigido": "67d1425a7316dacdddf01d374a4f0491d91b45c71c7632c28f062ebc45413020"
+   },
+   "err.txt": {
+    "arquivo": "google-sem-plan-err.txt",
+    "bytes_redigido": 0,
+    "sha256_redigido": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+   },
+   "out.json": {
+    "arquivo": "google-sem-plan-out.json",
+    "bytes_redigido": 282,
+    "sha256_redigido": "12160fe531b279cdf1fa57d46ade8b5604056b39524c4af9bb978ddef169efe2"
+   }
+  },
+  "kimi/a": {
+   "err.txt": {
+    "arquivo": "kimi-a-err.txt",
+    "bytes_redigido": 0,
+    "sha256_redigido": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+   },
+   "out.jsonl": {
+    "arquivo": "kimi-a-out.jsonl",
+    "bytes_redigido": 295,
+    "sha256_redigido": "ce9fc3d278ae5d31c7ffaf24adf7cc1425c68a1359b159d516cb12b2bf51c7f0"
+   }
+  },
+  "kimi/grande": {
+   "contexto-ssc.txt": {
+    "arquivo": "kimi-grande-contexto-ssc.txt",
+    "bytes_redigido": 350035,
+    "sha256_redigido": "2bb69824d506cba390f651b6e4a4ce4da0330c3501325c91c5a8599ec7423773"
+   },
+   "err.txt": {
+    "arquivo": "kimi-grande-err.txt",
+    "bytes_redigido": 0,
+    "sha256_redigido": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+   },
+   "out.jsonl": {
+    "arquivo": "kimi-grande-out.jsonl",
+    "bytes_redigido": 27379,
+    "sha256_redigido": "8f065d1034e41894ff849887ff8b95861a328ee9e42b08f82e4412a65f10bfc3"
+   }
+  }
+ }
+}

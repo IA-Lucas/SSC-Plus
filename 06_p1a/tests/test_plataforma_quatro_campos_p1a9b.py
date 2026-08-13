@@ -109,7 +109,10 @@ class OInstrumentoDeclaraOsQuatroCampos(unittest.TestCase):
     def test_a_plataforma_vem_antes_de_qualquer_numero_de_suite(self):
         stdout = self.processo.stdout
         posicao_plataforma = stdout.index("plataforma:")
-        primeira_suite = stdout.index("==")
+        # MINOR do kimi (P1-A.10): `index("==")` era fragil — qualquer
+        # `==` anterior na saida inverteria o teste. O marcador agora e o
+        # cabecalho de suite como o `executar` do verificar.py o imprime.
+        primeira_suite = stdout.index("\n== ")
         self.assertLess(posicao_plataforma, primeira_suite,
                         "a plataforma tem de emoldurar o numero, nao "
                         "vir depois dele")

@@ -1,0 +1,1 @@
+{"conversation_id":"f735768e-5731-47dd-a01c-8d9c6cf0ff7b","status":"SUCCESS","response":"SSC_SONDA: LIDO-256\n","duration_seconds":18.9054828,"num_turns":1,"usage":{"input_tokens":24595,"output_tokens":1294,"thinking_tokens":1166,"cache_read_tokens":28490,"total_tokens":25889}}

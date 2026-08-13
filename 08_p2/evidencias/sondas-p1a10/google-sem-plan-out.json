@@ -1,0 +1,1 @@
+{"conversation_id":"e5c627e5-0b34-47bb-933d-08f69b8f198d","status":"SUCCESS","response":"SSC_SONDA: SEM-PLAN-OK\n","duration_seconds":22.8629502,"num_turns":1,"usage":{"input_tokens":30553,"output_tokens":1263,"thinking_tokens":1037,"cache_read_tokens":36563,"total_tokens":31816}}
