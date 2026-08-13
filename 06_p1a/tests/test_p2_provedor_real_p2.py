@@ -307,9 +307,14 @@ class ClassificacaoDoResultado(unittest.TestCase):
         self.assertEqual(falha, "falha-contrato")
 
     def test_google_recusa_sucesso_sem_json_ou_sem_turno_produtivo(self):
+        # `num_turns: true` — MINOR da P1-A.10: bool e subclasse de int
+        # em Python, e `isinstance(True, int)` passava o schema com um
+        # valor que nao conta turno nenhum.
         for out in ("texto livre", json.dumps({
                 "status": "SUCCESS", "num_turns": 0, "response": "ok",
-                "usage": {"total_tokens": 0}})):
+                "usage": {"total_tokens": 0}}), json.dumps({
+                "status": "SUCCESS", "num_turns": True, "response": "ok",
+                "usage": {"total_tokens": 1}})):
             with self.subTest(out=out[:20]):
                 rc, saida, err, telemetria = pa.normalizar_saida(
                     "google", 0, out, "")

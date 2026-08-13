@@ -14,6 +14,7 @@ import os
 import re
 from dataclasses import dataclass
 
+from ssc_p0.cas import FugaDeCaminho, ler_arquivo_contido
 from ssc_p0.confidencialidade import SegredoDetectado, escanear_segredos
 
 
@@ -145,15 +146,27 @@ def montar_snapshot(raiz: str, tarefa: str, criterio: str,
     incluidos = []
     for _, caminho, relativo, tamanho in candidatos:
         try:
-            with open(caminho, "rb") as arquivo:
-                bruto = arquivo.read(LIMITE_ARQUIVO_BYTES + 1)
+            # MAJOR da P1-A.10 (TOCTOU): a checagem de link/tamanho do
+            # walk e a abertura eram atos separados — alvo trocado no
+            # intervalo entrava no snapshot enviado ao provedor. A
+            # leitura passa pela MESMA primitiva do runner
+            # (`ler_arquivo_contido`): contencao na raiz, abertura, e
+            # (st_dev, st_ino) do descritor conferidos contra o caminho.
+            # Ela tambem fecha o buraco de JUNCTION do Windows, que
+            # `os.path.islink` nao ve: o realpath resolve a juncao e o
+            # destino fora da raiz reprova.
+            bruto = ler_arquivo_contido(caminho, [raiz_real])
             if len(bruto) > LIMITE_ARQUIVO_BYTES:
-                raise OSError("arquivo cresceu durante leitura")
+                raise OSError("arquivo cresceu apos a selecao")
             texto = bruto.decode("utf-8")
             escanear_segredos(bruto, relativo)
         except SegredoDetectado:
             exclusoes.append({"caminho": relativo,
                               "motivo": "politica-de-segredo"})
+            continue
+        except FugaDeCaminho:
+            exclusoes.append({"caminho": relativo,
+                              "motivo": "toctou-ou-fora-da-raiz"})
             continue
         except (OSError, UnicodeDecodeError):
             exclusoes.append({"caminho": relativo,

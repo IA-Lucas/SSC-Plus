@@ -38,7 +38,7 @@ proprio registro declara). Os quatro achados declarados contra o autor
 | MAJOR | `sentinela_antip2.py` | o portao de vocabulario nao fecha o contorno geral | (N) | ja revisada |
 | MAJOR | `medidor.py:exportar_bruto` | originais permanecem testemunhais; fluxo nao exporta | fora-de-ambas | ja revisada |
 | MINOR | `provedor_assinatura.py:normalizar_saida` | `num_turns=True` passa como int (bool e subclasse de int) | fora-de-ambas | **estreia** |
-| MINOR | `99_correcao-p1a9b.md` | o registro afirma que `--rapido` incluiu a prova central — e `--rapido` a OMITE; alcance descrito maior que o exercido | **(F)** | registro novo |
+| MINOR | `99_correcao-p1a9a.md` (errata: a primeira publicacao desta tabela grafou p1a9b) | o registro afirma que `--rapido` incluiu a prova central — e `--rapido` a OMITE; alcance descrito maior que o exercido | **(F)** | registro novo |
 
 `DEFEITO-NOVO: SIM` (o TOCTOU). `VEREDITO: REPROVADO` — o acervo
 continua reprovado, e continuar reprovado com cinco fechamentos e

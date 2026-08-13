@@ -2,6 +2,7 @@
 
 import os
 import sys
+import subprocess
 import tempfile
 import unittest
 
@@ -27,6 +28,39 @@ class SnapshotLimitado(unittest.TestCase):
         os.makedirs(os.path.dirname(caminho), exist_ok=True)
         with open(caminho, "w", encoding="utf-8") as arquivo:
             arquivo.write(conteudo)
+
+    def test_junction_para_fora_da_raiz_nao_vaza_no_snapshot(self):
+        """MAJOR da P1-A.10 (TOCTOU/contencao do snapshot), o caso Windows.
+
+        `os.path.islink` NAO ve junction; sem a leitura contida, o walk
+        desceria pela juncao e um arquivo de FORA da raiz entraria no
+        snapshot enviado ao provedor. A janela de troca pos-checagem
+        (o TOCTOU literal) nao se simula num teste sem corrida; o que se
+        exerce aqui e o MESMO guarda que a fecha — `ler_arquivo_contido`
+        confere descritor e realpath —, contra o vizinho de mecanismo
+        que ele tambem fecha e que E reproduzivel: alvo resolvendo fora
+        da raiz. Limite declarado: a corrida em si nao foi exercida.
+        """
+        fora = tempfile.TemporaryDirectory(prefix="ssc-fora-")
+        self.addCleanup(fora.cleanup)
+        with open(os.path.join(fora.name, "vazado.py"), "w",
+                  encoding="utf-8") as f:
+            f.write("SEGREDO_DE_FORA_DA_RAIZ = 1\n")
+        self.escrever("raiz/normal.py", "print('dentro')\n")
+        juncao = os.path.join(self.tmp.name, "raiz", "atalho")
+        criada = subprocess.run(
+            ["cmd", "/c", "mklink", "/J", juncao, fora.name],
+            capture_output=True).returncode == 0
+        if not criada:
+            self.skipTest("mklink /J indisponivel nesta estacao")
+        snapshot = cw.montar_snapshot(
+            os.path.join(self.tmp.name, "raiz"), "tarefa", "criterio")
+        self.assertNotIn("SEGREDO_DE_FORA_DA_RAIZ", snapshot.prompt,
+                         "conteudo de FORA da raiz vazou no snapshot")
+        self.assertIn("dentro", snapshot.prompt)
+        vazados = [i for i in snapshot.resumo["arquivos_incluidos"]
+                   if "vazado" in i["caminho"]]
+        self.assertEqual(vazados, [])
 
     def test_snapshot_entrega_codigo_e_rotula_como_dado_hostil(self):
         self.escrever("README.md", "# Projeto de teste")

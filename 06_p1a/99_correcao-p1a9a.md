@@ -98,6 +98,13 @@ arvore restaurada: `python scripts/verificar.py --rapido` → **OK, 986
 testes, 1 ignorado, 108,0 s** (P0 e prova central incluidos pelo
 proprio script).
 
+> **ERRATA (2026-08-12, achado do revisor da P1-A.10, familia F).** O
+> parentese acima afirma alcance maior que o exercido: `--rapido`
+> roda P0 e P1-A/P2 e **OMITE** prova central e receitas — elas so
+> entram na verificacao completa. Os numeros medidos nao mudam; o
+> alcance descrito muda. A frase original fica riscada pelo contexto,
+> nao apagada, porque apagar esconderia o achado.
+
 ## O que fica aberto
 
 - `P1A9-a` so fecha com revisor independente — este registro e o

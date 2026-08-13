@@ -390,6 +390,7 @@ def normalizar_saida(provider_id: str, rc: int, out: str, err: str):
         resposta = dados.get("response")
         if dados.get("status") != "SUCCESS" \
                 or not isinstance(dados.get("num_turns"), int) \
+                or isinstance(dados.get("num_turns"), bool) \
                 or dados["num_turns"] < 1 \
                 or not isinstance(resposta, str) or not resposta.strip() \
                 or not isinstance(uso, dict) or not uso \
