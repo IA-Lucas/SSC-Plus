@@ -38,8 +38,14 @@ def main() -> None:
     # Resumo por modulo ssc_p0: linhas executaveis x executadas.
     contagens = resultados.counts  # {(arquivo, linha): hits}
     por_modulo = {}
+    # Icado para fora da comparacao: a sentinela anti-P2 passou a negar
+    # comparacao contra construtor textual nao resolvido (P1-A.10), e
+    # esta era a UNICA ocorrencia legitima do acervo — refatorar aqui
+    # custa uma linha e evita uma entrada de reconhecimento em codigo
+    # vivo, cuja linha derivaria a cada edicao.
+    marcador_ssc_p0 = f"{os.sep}ssc_p0{os.sep}"
     for (arquivo, _linha), hits in contagens.items():
-        if f"{os.sep}ssc_p0{os.sep}" not in arquivo:
+        if marcador_ssc_p0 not in arquivo:
             continue
         modulo = os.path.basename(arquivo)
         executadas, total = por_modulo.get(modulo, (0, 0))

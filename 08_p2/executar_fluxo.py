@@ -70,7 +70,12 @@ def preparar(args) -> int:
             tarefa=pedido["tarefa"], criterio=pedido["criterio"],
             preflight=preflight, provedor=pedido["provedor"],
             papel=pedido["papel"], timeout=args.timeout,
-            contexto_workspace=True)
+            contexto_workspace=True,
+            # P1A4-4, residuo apontado pela P1-A.10: "o fluxo controlado
+            # nem exporta brutos". Passa a exportar por etapa — a
+            # evidencia recontavel nao pode existir so no caminho de
+            # medicao.
+            exportar_brutos=str(DIR_EVIDENCIAS / "brutos"))
         registros_publicos.append(_publico(
             registro, pedido["etapa"], pedido["provedor"]))
         return registro

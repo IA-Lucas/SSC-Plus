@@ -633,8 +633,27 @@ def _resolver_insumo(spec: dict, raiz: str | None = None) -> dict:
             raise ReceitaInvalida(
                 f"{objeto['arquivo']}: conteudo divergente do manifesto — "
                 "recontagem sobre objeto adulterado nao e recontagem")
+        # Ancora CRUZADA (residuo do P1A4-4, P1-A.10): o sha do original
+        # deixa de ser declaracao solitaria do exportador quando um
+        # RECIBO independente carrega o mesmo hash. A receita declara
+        # onde ele mora (`recibo` + `trilha`), e divergencia reprova.
+        procedencia = "medido-bruto-redigido"
+        if spec.get("recibo"):
+            caminho_recibo = os.path.join(base, spec["recibo"])
+            if not os.path.isfile(caminho_recibo):
+                raise ReceitaInvalida(f"recibo da ancora ausente: "
+                                      f"{spec['recibo']}")
+            with open(caminho_recibo, encoding="utf-8") as f:
+                recibo = json.load(f)
+            ancora = _cavar(recibo, tuple(spec.get("trilha") or
+                                          ("saida_sha256",)))
+            if ancora != objeto["sha256_original"]:
+                raise ReceitaInvalida(
+                    f"ancora do recibo diverge do manifesto: "
+                    f"{ancora!r} != {objeto['sha256_original']!r}")
+            procedencia = "medido-bruto-redigido+ancora-recibo"
         return {"rotulo": spec.get("rotulo") or spec.get("objeto"),
-                "procedencia": "medido-bruto-redigido", "reproduzido": True,
+                "procedencia": procedencia, "reproduzido": True,
                 "fonte": f"{spec['manifesto']}#{spec.get('objeto')}",
                 "originais_declarados": objeto["tamanhos_originais"],
                 "delta_redacao": objeto["delta_redacao"],

@@ -152,6 +152,30 @@ class ReceitaRecontaDoBruto(_CorridaExportada):
         with self.assertRaises(medidor.ReceitaInvalida):
             medidor._resolver_insumo(spec, raiz=self._tmp.name)
 
+    def test_ancora_de_recibo_corrobora_o_original_declarado(self):
+        # Residuo da P1-A.10: o sha do original era declaracao solitaria
+        # do exportador. Com um recibo independente carregando o mesmo
+        # hash, viram DOIS artefatos que precisam concordar.
+        spec, dir_export, objeto = self._spec_da_saida()
+        recibo = os.path.join(self._tmp.name, "recibo.json")
+        with open(recibo, "w", encoding="utf-8") as f:
+            json.dump({"sha256": objeto["sha256_original"]}, f)
+        spec["recibo"] = "recibo.json"
+        spec["trilha"] = ["sha256"]
+        insumo = medidor._resolver_insumo(spec, raiz=self._tmp.name)
+        self.assertEqual(insumo["procedencia"],
+                         "medido-bruto-redigido+ancora-recibo")
+
+    def test_ancora_divergente_reprova_em_vez_de_recontar(self):
+        spec, dir_export, objeto = self._spec_da_saida()
+        recibo = os.path.join(self._tmp.name, "recibo.json")
+        with open(recibo, "w", encoding="utf-8") as f:
+            json.dump({"sha256": "0" * 64}, f)
+        spec["recibo"] = "recibo.json"
+        spec["trilha"] = ["sha256"]
+        with self.assertRaises(medidor.ReceitaInvalida):
+            medidor._resolver_insumo(spec, raiz=self._tmp.name)
+
     def test_objeto_ausente_do_manifesto_reprova(self):
         spec, _, _ = self._spec_da_saida()
         spec["objeto"] = "nao-existe"

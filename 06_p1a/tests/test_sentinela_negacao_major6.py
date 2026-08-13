@@ -84,6 +84,52 @@ class ConstrucaoNaoResolvidaEhNegada(_ArvoreSintetica):
         self.assertEqual(achados["nao_resolvidos_reconhecidos"], [])
 
 
+class ComparacaoContraConstrutorEhNegada(_ArvoreSintetica):
+    """O residuo da P1-A.10: contorno SEM fragmento do vocabulario.
+
+    Na atribuicao ele continua invisivel (limite declarado); no ponto de
+    DECISAO nao ha como não comparar, e ali a negacao dispensa o portao
+    de vocabulario.
+    """
+
+    FORMAS = {
+        "chr-encadeado": 'if r == chr(83) + chr(72) + sufixo(dado):\n',
+        "join-sobre-literal": 'if r == "".join(pedacos(dado)):\n',
+        "decode-de-literal": 'if r == b"\\x53\\x48".decode() + resto(dado):\n',
+    }
+
+    def test_cada_forma_de_contorno_cego_vira_negacao(self):
+        for forma, condicao in sorted(self.FORMAS.items()):
+            with self.subTest(forma=forma):
+                caminho = self.escrever(
+                    f"07_p1b/cego_{forma.replace('-', '_')}.py",
+                    "def usar(r, dado, sufixo, pedacos, resto):\n"
+                    f"    {condicao}"
+                    "        return 1\n"
+                    "    return 0\n")
+                achados = self.varrer()
+                negados = [a.replace("\\", "/")
+                           for a in achados["nao_resolvidos"]]
+                self.assertTrue(
+                    any(f"cego_{forma.replace('-', '_')}.py" in n
+                        for n in negados),
+                    f"contorno cego {forma} atravessou: {negados}")
+                os.remove(caminho)
+
+    def test_comparacao_comum_nao_e_negada(self):
+        self.escrever("06_p1a/logica.py",
+                      'def decide(a, b, nome, extensao):\n'
+                      '    if a + b > 10:\n'
+                      '        return 1\n'
+                      '    if nome == extensao:\n'
+                      '        return 2\n'
+                      '    if nome == "constante.txt":\n'
+                      '        return 3\n'
+                      '    return 0\n')
+        achados = self.varrer()
+        self.assertEqual(achados["nao_resolvidos"], [])
+
+
 class ReconhecimentoNominal(_ArvoreSintetica):
     """O achado reconhecido MIGRA de campo; nunca some, nunca fecha o
     portao para o vizinho nao reconhecido."""

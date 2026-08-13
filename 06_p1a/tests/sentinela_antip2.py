@@ -234,6 +234,64 @@ def construcoes_nao_resolvidas(arvore) -> list:
     return sorted(set(achadas))
 
 
+def _construtor_direto_nao_resolvido(no):
+    """Motivo se o NO e um construtor textual que o dobrador recusa.
+
+    DIRETO: o proprio no, nunca algo aninhado dentro dele — construto
+    dentro de argumento de chamada nao e o comparando.
+    """
+    if isinstance(no, ast.BinOp) and isinstance(no.op, (ast.Add, ast.Mod)):
+        # Textual se um dos lados dobra para texto OU e ele mesmo um
+        # construtor (chr(a) + chr(b) nao tem constante nenhuma e ainda
+        # e construcao textual); `a + b` numerico fica fora.
+        lados_textuais = any(
+            isinstance(dobrar_constante(lado), str)
+            or _construtor_direto_nao_resolvido(lado) is not None
+            for lado in (no.left, no.right))
+        if dobrar_constante(no) is None and lados_textuais:
+            return "concatenacao/interpolacao nao resolvida"
+    if isinstance(no, ast.JoinedStr) and dobrar_constante(no) is None:
+        return "f-string interpolada"
+    if isinstance(no, ast.Call):
+        alvo = no.func
+        if isinstance(alvo, ast.Name) and alvo.id == "chr":
+            return "chr()"
+        if isinstance(alvo, ast.Attribute) \
+                and isinstance(alvo.value, ast.Constant) \
+                and alvo.attr in ("join", "format", "decode"):
+            return f"{alvo.attr}() sobre literal"
+    return None
+
+
+def comparacoes_nao_resolvidas(arvore) -> list:
+    """(linha, motivo) das COMPARACOES contra construtor nao resolvido.
+
+    O residuo que manteve o MAJOR #6/N5/P1A4-2 NAO-FECHADO na P1-A.10:
+    construcao SEM fragmento do vocabulario (chr(), base64, dado
+    externo) era invisivel por desenho. Ela continua invisivel na
+    ATRIBUICAO — mas o contorno precisa DECIDIR em algum lugar, e no
+    ponto de decisao a negacao nao precisa de vocabulario: comparar
+    qualquer coisa com um construtor textual que a sentinela nao dobra
+    e, por si, construcao nao resolvida. Medido no acervo inteiro:
+    UMA ocorrencia legitima, refatorada em vez de reconhecida — a lista
+    de reconhecimento continua so com instrumentos congelados.
+
+    LIMITE declarado: decisao sem comparacao (despacho por dict de
+    funcoes indexado pela string construida, por exemplo) nao passa por
+    `ast.Compare` e continua fora do alcance.
+    """
+    achadas = []
+    for no in ast.walk(arvore):
+        if not isinstance(no, ast.Compare):
+            continue
+        for lado in [no.left] + list(no.comparators):
+            motivo = _construtor_direto_nao_resolvido(lado)
+            if motivo is not None:
+                achadas.append(
+                    (no.lineno, f"comparacao contra {motivo}"))
+    return sorted(set(achadas))
+
+
 def tem_literal_do_veredito(no) -> bool:
     """Subarvore contem um literal — DOBRADO — igual a um termo do enum."""
     for f in ast.walk(no):
@@ -519,6 +577,12 @@ def varrer(raiz_repo, classificador, consumidores=None,
         # (MAJOR #6 / N5 / P1A4-2): ate aqui a recusa do dobrador virava
         # silencio, e silencio saia como limpo.
         for linha, motivo in construcoes_nao_resolvidas(arvore):
+            negar(f"{rel}:{linha} {motivo}")
+        # E NEGA a comparacao contra construtor nao resolvido, SEM o
+        # portao de vocabulario: no ponto de decisao, o contorno sem
+        # fragmento (chr, base64) deixa de ser invisivel (residuo do
+        # MAJOR #6/N5/P1A4-2 apontado pela P1-A.10).
+        for linha, motivo in comparacoes_nao_resolvidas(arvore):
             negar(f"{rel}:{linha} {motivo}")
         # Consumidor DECLARADO pelo ato soberano: o que ele produz muda de
         # campo, nao de existencia. Um arquivo autorizado que ilegivel
