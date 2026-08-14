@@ -87,6 +87,7 @@ RUNNERS_COM_PORTAO = {
     "revisao_p1a4": "p1a4-ops",
     "revisao_p1a6": "p1a6-ops",
     "revisao_p1a10": "p1a10-ops",
+    "revisao_p1a11": "p1a11-ops",
 }
 
 

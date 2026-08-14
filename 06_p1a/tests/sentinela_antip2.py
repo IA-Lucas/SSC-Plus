@@ -235,10 +235,22 @@ def construcoes_nao_resolvidas(arvore) -> list:
 
 
 def _construtor_direto_nao_resolvido(no):
-    """Motivo se o NO e um construtor textual que o dobrador recusa.
+    """Motivo se o NO, isoladamente, e um construtor textual nao dobravel.
 
-    DIRETO: o proprio no, nunca algo aninhado dentro dele — construto
-    dentro de argumento de chamada nao e o comparando.
+    DIRETO: julga so o proprio NO — a fronteira que a P1-A.10 ja tinha.
+
+    P1-A.11 (achado do kimi): so `decode()` deixa de exigir receptor
+    LITERAL. `payload.decode()` e `base64.b64decode(dado).decode()`
+    atravessavam porque o receptor (`payload`, `base64.b64decode(dado)`)
+    nao e `ast.Constant` — mas o METODO em si ja e construcao textual
+    que o dobrador nao resolve, seja o receptor literal, nome ou
+    chamada. `join()`/`format()` continuam restritos a receptor
+    LITERAL — TENTATIVA DE AMPLIAR REVERTIDA POR MEDICAO: sem essa
+    restricao, `.join()` casa `os.path.join(...)` pelo NOME do metodo
+    (o mesmo nome, objeto diferente) e acusou `06_p1a/evidencias/
+    contencao.py:232`, uma juncao de caminho sem nenhuma relacao com o
+    vocabulario do veredito. `decode()` nao tem esse colisor comum o
+    bastante para justificar o mesmo risco.
     """
     if isinstance(no, ast.BinOp) and isinstance(no.op, (ast.Add, ast.Mod)):
         # Textual se um dos lados dobra para texto OU e ele mesmo um
@@ -256,11 +268,134 @@ def _construtor_direto_nao_resolvido(no):
         alvo = no.func
         if isinstance(alvo, ast.Name) and alvo.id == "chr":
             return "chr()"
-        if isinstance(alvo, ast.Attribute) \
-                and isinstance(alvo.value, ast.Constant) \
-                and alvo.attr in ("join", "format", "decode"):
+        if isinstance(alvo, ast.Attribute):
+            if alvo.attr == "decode":
+                forma = ("sobre literal"
+                         if isinstance(alvo.value, ast.Constant)
+                         else "sobre construtor nao literal")
+                return f"decode() {forma}"
+            if alvo.attr in ("join", "format") \
+                    and isinstance(alvo.value, ast.Constant):
+                return f"{alvo.attr}() sobre literal"
+    return None
+
+
+def _semente_de_alias_nao_resolvido(no):
+    """Predicado ESTREITO usado SO para semear rastreamento de variavel.
+
+    Deliberadamente MAIS RESTRITO que `_construtor_direto_nao_resolvido`:
+    aqui NAO entram concatenacao (BinOp), f-string interpolada
+    (JoinedStr) NEM `decode()` — so `chr()` encadeado e `join()`/
+    `format()` chamados sobre receptor LITERAL.
+
+    DUAS TENTATIVAS MAIS AMPLAS, DUAS REVERTIDAS POR MEDICAO:
+
+    1. semear com QUALQUER forma que `_construtor_direto_nao_resolvido`
+       reconhece (incluindo BinOp/JoinedStr) e propagar por todo o
+       arquivo gerou **360 achados** contra o acervo real — toda
+       f-string com uma variavel dentro (`f"{os.sep}ssc_p0{os.sep}"`,
+       `f"{n} testes"`) e toda concatenacao de mensagem de erro viraram
+       semente;
+    2. com BinOp/JoinedStr fora, ainda incluir `decode()` como semente
+       (igual a `_construtor_direto_nao_resolvido`) gerou **7 achados**:
+       `saida.decode("utf-8", "replace")` seguido de checar substring no
+       texto decodificado — o padrao MAIS comum de processar saida de
+       subprocesso/arquivo em teste, sem nenhuma relacao com o
+       vocabulario do veredito — mais DUAS colisoes de escopo (`alvos`,
+       `valor`, `texto` sao nomes genericos reusados por FUNCOES
+       diferentes no MESMO arquivo; o rastreamento e por ARQUIVO, nao
+       por funcao, e um `decode()` numa funcao marcava o nome para
+       QUALQUER comparacao contra o mesmo nome em outra funcao).
+
+    Sem `decode()` como semente, a mesma varredura mede ZERO achado
+    novo por alias. `decode()` widened continua valendo no
+    `_construtor_direto_nao_resolvido` — so nao semeia RASTREAMENTO de
+    variavel, porque e comum demais para propagar por arquivo inteiro
+    sem escopo de funcao.
+    """
+    if isinstance(no, ast.Call):
+        alvo = no.func
+        if isinstance(alvo, ast.Name) and alvo.id == "chr":
+            return "chr()"
+        if isinstance(alvo, ast.Attribute) and alvo.attr in (
+                "join", "format") and isinstance(alvo.value, ast.Constant):
             return f"{alvo.attr}() sobre literal"
     return None
+
+
+def _mapa_de_pais(arvore) -> dict:
+    """`no` -> pai imediato, para subir a arvore ate o escopo sem
+    reconstruir o caminho a cada consulta."""
+    pais = {}
+    for pai in ast.walk(arvore):
+        for filho in ast.iter_child_nodes(pai):
+            pais[filho] = pai
+    return pais
+
+
+def _escopo_de(no, pais):
+    """FunctionDef/AsyncFunctionDef mais interno que contem `no`, ou
+    `None` para nivel de modulo — a CHAVE do rastreamento por escopo."""
+    atual = pais.get(no)
+    while atual is not None:
+        if isinstance(atual, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            return atual
+        atual = pais.get(atual)
+    return None
+
+
+def variaveis_de_construtor_nao_resolvido(arvore) -> dict:
+    """`{escopo: {nomes}}` — nomes atribuidos, DENTRO DO MESMO ESCOPO DE
+    FUNCAO, a partir de um construtor textual nao resolvido
+    (`_semente_de_alias_nao_resolvido`) ou de outro nome ja marcado no
+    MESMO escopo (`y = x` depois de `x` marcado). `escopo` e o no
+    `FunctionDef`/`AsyncFunctionDef`, ou `None` para nivel de modulo.
+
+    POR ESCOPO, NAO POR ARQUIVO — divergencia da P1-A.11 em relacao ao
+    desenho file-wide de `apelidos_do_veredito`, e por medicao, nao por
+    simetria: rastrear por arquivo inteiro (como a primeira versao desta
+    correcao fez) confundiu PARAMETROS HOMONIMOS de funcoes diferentes —
+    `manifesto_de_alvos(alvos=None)` e `Vigilancia.__init__(self, ...,
+    alvos=None)` em `contencao.py` tem cada um o seu proprio `alvos`,
+    mas uma terceira funcao do MESMO arquivo faz
+    `alvos = ", ".join(ALVOS_VIGIADOS_FORA_DO_REPOSITORIO)` (semente
+    legitima) e a versao file-wide marcava as DUAS checagens `alvos is
+    None`, de funcoes que nunca viram aquele `join()`. Ponto fixo
+    calculado UMA VEZ POR ESCOPO evita a colisao: nomes genericos
+    (`valor`, `texto`, `alvos`) sao comuns em qualquer acervo, e um
+    guarda que os confunde entre funcoes acusa codigo limpo.
+
+    LIMITE declarado: nao atravessa fronteira de funcao — um valor
+    passado como PARAMETRO para outra funcao, que la dentro e comparado
+    pelo nome do parametro, continua invisivel; funcao ANINHADA (closure)
+    tem o proprio escopo, isolado do que a envolve, e nao ve as
+    variaveis marcadas por quem a declara. Mesmo limite que
+    `apelidos_do_veredito` ja tem para o vocabulario.
+    """
+    pais = _mapa_de_pais(arvore)
+    por_escopo = {}
+    for no in ast.walk(arvore):
+        if not (isinstance(no, (ast.Assign, ast.AnnAssign))
+                and no.value is not None):
+            continue
+        por_escopo.setdefault(_escopo_de(no, pais), []).append(no)
+
+    resultado = {}
+    for escopo, atribuicoes in por_escopo.items():
+        nomes = set()
+        while True:
+            antes = len(nomes)
+            for no in atribuicoes:
+                valor = no.value
+                semente = (
+                    _semente_de_alias_nao_resolvido(valor) is not None
+                    or (isinstance(valor, ast.Name) and valor.id in nomes))
+                if semente:
+                    nomes |= _nomes_atribuidos(no)
+            if len(nomes) == antes:
+                break
+        resultado[escopo] = nomes
+    return resultado
 
 
 def comparacoes_nao_resolvidas(arvore) -> list:
@@ -276,16 +411,51 @@ def comparacoes_nao_resolvidas(arvore) -> list:
     UMA ocorrencia legitima, refatorada em vez de reconhecida — a lista
     de reconhecimento continua so com instrumentos congelados.
 
-    LIMITE declarado: decisao sem comparacao (despacho por dict de
-    funcoes indexado pela string construida, por exemplo) nao passa por
-    `ast.Compare` e continua fora do alcance.
+    P1-A.11: a arbitragem do Fundador (`99_decisao-p1a11.md`) autorizou
+    esta SEGUNDA correcao depois que os dois revisores independentes
+    (codex e kimi) convergiram no MESMO residuo por dois angulos —
+    construtor atribuido a variavel antes da comparacao (`x = "".join(
+    partes); if resposta == x:`, achado do codex), e `decode()` sobre
+    receptor NAO literal (`payload.decode()`, `base64.b64decode(dado)
+    .decode()`, achado do kimi). Os dois fecham aqui: o primeiro por
+    `variaveis_de_construtor_nao_resolvido`, o segundo pela reescrita de
+    `_construtor_direto_nao_resolvido`.
+
+    LIMITE declarado, o que SOBREVIVE a esta correcao — e o que uma
+    tentativa mais ampla mediu e reverteu (ver as duas funcoes acima):
+    (1) decisao sem `ast.Compare` — despacho por dict de funcoes
+    indexado pela string construida — continua fora do alcance, o mesmo
+    limite da P1-A.10; (2) `join()`/`format()` continuam so sobre
+    receptor LITERAL — ampliar colide com `os.path.join` e nomes de
+    metodo homonimos comuns; (3) construtor aninhado como ARGUMENTO de
+    uma chamada NAO relacionada ao comparando (por exemplo, dentro de
+    `subprocess.run([...], f"{BASE}:{rel}")` cujo `.returncode` e
+    comparado) continua fora do alcance — tentativa de caminhar a
+    subarvore inteira do comparando pegou ZERO caso novo genuino e
+    arrastou 3 falsos positivos do proprio acervo (`pacote_p1a36.py`
+    duas vezes, `preflight/adaptadores.py` uma vez) para dentro do
+    achado, porque a construcao estava a servico de OUTRA coisa (um
+    `git cat-file`, uma regex), nao do comparando; (4) a passagem de
+    PARAMETRO entre funcoes nao propaga a marca de variavel nao
+    resolvida, e closure aninhada nao herda a marca de quem a declara
+    (`variaveis_de_construtor_nao_resolvido` e por ESCOPO de funcao, nao
+    por arquivo — colisao de parametro homonimo entre funcoes, medida e
+    revertida); (5) atribuicao por `:=` (walrus) dentro da propria
+    comparacao nao entra no rastreamento de variaveis.
     """
+    pais = _mapa_de_pais(arvore)
+    variaveis_por_escopo = variaveis_de_construtor_nao_resolvido(arvore)
     achadas = []
     for no in ast.walk(arvore):
         if not isinstance(no, ast.Compare):
             continue
+        variaveis = variaveis_por_escopo.get(_escopo_de(no, pais), set())
         for lado in [no.left] + list(no.comparators):
-            motivo = _construtor_direto_nao_resolvido(lado)
+            if isinstance(lado, ast.Name) and lado.id in variaveis:
+                motivo = (f"variavel '{lado.id}' atribuida de "
+                         "construtor nao resolvido")
+            else:
+                motivo = _construtor_direto_nao_resolvido(lado)
             if motivo is not None:
                 achadas.append(
                     (no.lineno, f"comparacao contra {motivo}"))

@@ -130,6 +130,113 @@ class ComparacaoContraConstrutorEhNegada(_ArvoreSintetica):
         self.assertEqual(achados["nao_resolvidos"], [])
 
 
+class ComparacaoContraAliasOuDecodeNaoLiteralEhNegada(_ArvoreSintetica):
+    """O residuo da P1-A.11: os DOIS angulos que os dois revisores
+    independentes convergiram contra o mesmo pacote (`99_decisao-
+    p1a11.md`) — construtor atribuido a VARIAVEL antes da comparacao
+    (achado do codex), e `decode()` sobre receptor NAO LITERAL, nome ou
+    chamada (achado do kimi). Autorizado pela arbitragem do Fundador
+    (mesmo registro, secao "ARBITRAGEM DO FUNDADOR").
+    """
+
+    def test_construtor_atribuido_a_variavel_e_negado(self):
+        # A citacao exata do codex: `x = "".join(partes); if resposta
+        # == x:` — o EXEMPLO que a P1-A.11 devolveu como NAO-FECHADO.
+        caminho = self.escrever(
+            "07_p1b/alias_join.py",
+            "def usar(resposta, partes):\n"
+            '    x = "".join(partes)\n'
+            "    if resposta == x:\n"
+            "        return 1\n"
+            "    return 0\n")
+        achados = self.varrer()
+        negados = [a.replace("\\", "/") for a in achados["nao_resolvidos"]]
+        self.assertTrue(any("alias_join.py" in n for n in negados),
+                        f"construtor atribuido a variavel atravessou: "
+                        f"{negados}")
+        os.remove(caminho)
+
+    def test_decode_sobre_nome_nao_literal_e_negado(self):
+        # A citacao exata do kimi: `if r == payload.decode():`.
+        caminho = self.escrever(
+            "07_p1b/decode_sobre_nome.py",
+            "def usar(r, payload):\n"
+            "    if r == payload.decode():\n"
+            "        return 1\n"
+            "    return 0\n")
+        achados = self.varrer()
+        negados = [a.replace("\\", "/") for a in achados["nao_resolvidos"]]
+        self.assertTrue(any("decode_sobre_nome.py" in n for n in negados),
+                        f"decode() sobre nome atravessou: {negados}")
+        os.remove(caminho)
+
+    def test_base64_encadeado_com_decode_e_negado(self):
+        # A citacao exata do kimi: `if r ==
+        # base64.b64decode("...").decode():` — o vetor "base64" que o
+        # residuo original ja nomeava e que sobreviveu a P1-A.10.
+        caminho = self.escrever(
+            "07_p1b/base64_decode.py",
+            "import base64\n"
+            "def usar(r, dado):\n"
+            "    if r == base64.b64decode(dado).decode():\n"
+            "        return 1\n"
+            "    return 0\n")
+        achados = self.varrer()
+        negados = [a.replace("\\", "/") for a in achados["nao_resolvidos"]]
+        self.assertTrue(any("base64_decode.py" in n for n in negados),
+                        f"base64...decode() encadeado atravessou: "
+                        f"{negados}")
+        os.remove(caminho)
+
+    def test_parametro_homonimo_em_funcao_diferente_fica_limpo(self):
+        # O falso positivo que a PRIMEIRA tentativa desta correcao
+        # produziu, medido e revertido: rastrear por ARQUIVO em vez de
+        # por ESCOPO fazia um `join()` legitimo numa funcao marcar o
+        # parametro `alvos` de OUTRA funcao, sem relacao nenhuma entre
+        # os dois. Duas funcoes no MESMO arquivo, nome de variavel
+        # IGUAL, escopos DIFERENTES — a segunda tem de ficar limpa.
+        caminho = self.escrever(
+            "07_p1b/escopos_nao_vazam.py",
+            "def monta_rotulo(coisas):\n"
+            '    alvos = "-".join(coisas)\n'
+            "    return alvos\n"
+            "\n"
+            "def esta_vazio(alvos=None):\n"
+            "    if alvos is None:\n"
+            "        return True\n"
+            "    return False\n")
+        achados = self.varrer()
+        negados = [a.replace("\\", "/") for a in achados["nao_resolvidos"]]
+        self.assertFalse(
+            any("escopos_nao_vazam.py" in n for n in negados),
+            f"parametro homonimo de outra funcao foi negado por engano: "
+            f"{negados}")
+        os.remove(caminho)
+
+    def test_decode_isolado_nao_semeia_alias(self):
+        # Decisao declarada no proprio `_semente_de_alias_nao_resolvido`:
+        # `decode()` amplia o construtor DIRETO, mas NAO semeia
+        # rastreamento de variavel — `saida.decode(...)` seguido de
+        # checar substring no texto e o padrao mais comum de processar
+        # saida de subprocesso, e semear com ele inundou o acervo real
+        # (medido: 7 achados, revertido). A comparacao aqui e DIRETA
+        # (a variavel NAO e comparada, o resultado do decode e usado so
+        # para montar `texto`) — deve ficar limpa.
+        caminho = self.escrever(
+            "07_p1b/decode_nao_semeia.py",
+            "def usar(saida, esperado):\n"
+            '    texto = saida.decode("utf-8", "replace")\n'
+            '    if esperado in texto:\n'
+            "        return 1\n"
+            "    return 0\n")
+        achados = self.varrer()
+        negados = [a.replace("\\", "/") for a in achados["nao_resolvidos"]]
+        self.assertFalse(
+            any("decode_nao_semeia.py" in n for n in negados),
+            f"decode() isolado semeou alias por engano: {negados}")
+        os.remove(caminho)
+
+
 class ReconhecimentoNominal(_ArvoreSintetica):
     """O achado reconhecido MIGRA de campo; nunca some, nunca fecha o
     portao para o vizinho nao reconhecido."""

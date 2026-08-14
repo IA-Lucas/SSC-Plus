@@ -262,6 +262,8 @@ _RUNNERS = {
                      "saida": "revisao-p1a6", "fontes": ()},
     "revisao_p1a10": {"sessao": "p1a10-ops", "argv": 2,
                       "saida": "revisao-p1a10", "fontes": ()},
+    "revisao_p1a11": {"sessao": "p1a11-ops", "argv": 2,
+                      "saida": "revisao-p1a11", "fontes": ()},
 }
 
 _PREFLIGHTS = {
