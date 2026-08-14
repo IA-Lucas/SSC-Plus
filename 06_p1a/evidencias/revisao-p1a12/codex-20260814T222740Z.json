@@ -1,0 +1,81 @@
+{
+  "provider": "codex",
+  "ts_utc": "20260814T222740Z",
+  "tipo": "revisao-p1a12",
+  "chamadas_de_modelo": 1,
+  "custo_variavel": 0,
+  "rotulo": "assinatura-oauth; UMA chamada; enforcement read-only",
+  "enforcement_read_only": "--sandbox read-only --ephemeral (CLI)",
+  "tier_declarado_no_instante": {
+    "provider_id": "codex",
+    "tier": "ChatGPT Pro 5x",
+    "declarado_por": "proprietario",
+    "declarado_em_utc": "2026-08-14T22:19:55Z",
+    "expira_em_utc": "2026-08-15T22:19:55Z",
+    "valido_no_instante": true
+  },
+  "lock_escritor_unico": {
+    "sessao": "p1a12-ops",
+    "pid_titular": 32356,
+    "fence": 49
+  },
+  "argv_publico": [
+    "codex",
+    "exec",
+    "--sandbox",
+    "read-only",
+    "--cd",
+    "C:\\Users\\<USUARIO>\\AppData\\Local\\Temp\\p1a12-revisao-codex-1u6awqbh",
+    "--skip-git-repo-check",
+    "--ephemeral"
+  ],
+  "prompt_sha256": "4b91c4234934be688dcd730165f7a3b9a0188a713ab1d43d4cfe62d737f880fe",
+  "transporte_documentos": "stdin-inline",
+  "stdin_sha256": "a9b4ea2296b2c13251a6d39b78cb4cdb40ada4e0598fb7505f6821e59a4f10a0",
+  "pacote_sha256": "35aeac104e1cb02584c7ddfca9d9884d60a9843b6deb914ee1f321cfaefaf93d",
+  "pacote_bytes_entregues": 61535,
+  "declaracoes_sha256": "7ecdc34cbceeb60442b6e517ce5efcf605a1d72c7ac2a3e7849de31d2f4e3837",
+  "declaracoes_bytes_entregues": 5678,
+  "registros_sha256": "fab9f44b05e768976cef8eebaca5de74aea6e1c5eef60a6ca22bb001713fb657",
+  "registros_bytes_entregues": 21705,
+  "registros_alvo_commit": "74b9448",
+  "dir_descartavel": "C:\\Users\\<USUARIO>\\AppData\\Local\\Temp\\p1a12-revisao-codex-1u6awqbh",
+  "dir_descartavel_arquivos_restantes": [
+    "declaracoes-obrigatorias.txt",
+    "pacote-revisao.txt",
+    "registros-de-correcao.txt"
+  ],
+  "contencao": {
+    "titular_do_escritor_no_fechamento": "p1a12-ops",
+    "medida": "manifesto SHA-256 antes/depois das raizes vigiadas, com atribuicao separada da deteccao",
+    "raizes_vigiadas": [
+      "repositorio (toda a arvore sob RAIZ, inclusive locks/ e .git)",
+      "fora: ~/.codex/auth.json",
+      "fora: ~/.codex/config.toml",
+      "fora: ~/.claude/settings.json",
+      "fora: ~/.kimi-code/config.toml",
+      "fora: ~/.gemini/settings.json",
+      "fora: ~/.grok"
+    ],
+    "nao_vigiado": "todo caminho fora do repositorio e fora das fontes de config declaradas",
+    "arquivos_no_manifesto": 2382,
+    "mutacoes_detectadas": [
+      "alterado: repositorio/locks/repositorio.lease"
+    ],
+    "mutacoes_atribuidas_ao_renovador": [
+      "alterado: repositorio/locks/repositorio.lease"
+    ],
+    "mutacoes_fora_do_descartavel": [],
+    "violada": false
+  },
+  "lock_verificado_antes_da_persistencia": true,
+  "env_vars_removidas_nomes": [
+    "NVIDIA_API_KEY"
+  ],
+  "returncode": 0,
+  "duracao_s": 129.306,
+  "modelo_efetivo_no_banner": "gpt-5.6-sol",
+  "resposta": "PROVIDER: OpenAI  \nMODELO-OBSERVADO: GPT-5 (Codex)  \nCANAL: Codex, entrada inline, somente leitura e sem ferramentas  \nPACOTE-SHA256: 35aeac104e1cb02584c7ddfca9d9884d60a9843b6deb914ee1f321cfaefaf93d — ecoado do cabeçalho declarado, não computado  \nDECLARACOES-SHA256: 7ecdc34cbceeb60442b6e517ce5efcf605a1d72c7ac2a3e7849de31d2f4e3837 — ecoado do cabeçalho declarado, não computado  \nREGISTROS-SHA256: fab9f44b05e768976cef8eebaca5de74aea6e1c5eef60a6ca22bb001713fb657 — ecoado do cabeçalho declarado, não computado  \nESCOPO: 6 fundido com P1A4-2 e a correção `99_correcao-p1a11.md`; N5 e P1A4-4 não julgados.\n\nMAJOR-6: NAO-FECHADO — P1A4-2 é o MESMO defeito: `_semente_de_alias_nao_resolvido` exclui deliberadamente `decode()`, portanto `x = payload.decode(); if r == x:` compõe exatamente os dois resíduos anteriores e atravessa; `if r == template.format(v):` também atravessa por o receptor não ser literal.\n\nCORRECAO: SUSTENTADA — como correção parcial, fecha os três exemplos exatos anteriores e os testes os exercem diretamente; os limites declarados correspondem ao código, inclusive `decode()` sem propagação por alias e `join()`/`format()` limitados a receptor literal, mas esses limites impedem o fechamento do id.\n\nPROXIMO-PASSO: LIMITE-PERMANENTE — após a terceira tentativa, permanece um desvio trivial na mesma família pela composição `decode()`+alias, além dos contornos já declarados; continuar enumerando formas sintáticas não oferece critério estável de fechamento e o alcance deveria ser assumido como limite permanente, à maneira de N5.\n\nDECLARADO-a: CONFIRMO — a decisão registra expressamente o terceiro ciclo e o não fechamento das tentativas anteriores; é fato histórico/processual, não guarda nem classe de alcance. FAMILIA: fora-de-ambas  \nDECLARADO-b: NAO-CONFIRMO — as versões revertidas e as saídas de 360/7 achados aparecem apenas narradas pelo próprio autor; o pacote não contém os mutantes, saídas ou reprodução que permitam conferir essas medições. FAMILIA: (F)  \nDECLARADO-c: CONFIRMO — o diff acrescenta `revisao_p1a11` aos registros de portão e redação, demonstrando que o despachante estava ausente dessas listas; duração exata e ausência de vazamento não são independentemente demonstradas. FAMILIA: (F)\n\nDEFEITO-NOVO: SIM — `sentinela_antip2.py:variaveis_de_construtor_nao_resolvido` introduz marcação insensível à ordem e à sobrescrita: `x = \"\".join(partes); x = \"fixo\"; if resposta == x:` continua classificando `x` como construtor não resolvido.\n\nMAJOR | `sentinela_antip2.py:_semente_de_alias_nao_resolvido` — AREA JA REVISADA: `decode()` atribuído a variável continua invisível, compondo diretamente os exemplos dos dois pareceres anteriores; mesma lacuna de alcance de 6/P1A4-2. FAMILIA: (N)  \nMAJOR | `sentinela_antip2.py:variaveis_de_construtor_nao_resolvido` — achado NOVO em ESTREIA; o pacote P1-A.11 não continha essa função: o ponto fixo conserva nomes mesmo após sobrescrita e pode negar comparação resolvida; é imprecisão de fluxo do mecanismo executado, não afirmação nem classe omitida por alcance de linha. FAMILIA: fora-de-ambas  \nMINOR | `99_correcao-p1a11.md:medicoes-revertidas` — achado NOVO em ESTREIA; o pacote P1-A.11 não continha este registro: as contagens 360 e 7 e a reversão vermelha são afirmadas sem artefato ou saída ancorada que permita reproduzi-las nesta revisão. FAMILIA: (F)\n\nVEREDITO: REPROVADO",
+  "stderr_resumo": "Reading prompt from stdin...\n2026-08-14T22:27:57.458325Z ERROR codex_models_manager::cache: failed to load models cache: missing field `base_instructions` at line 94 column 5\nOpenAI Codex v0.145.0\n--------\nworkdir: C:\\Users\\<USUARIO>\\AppData\\Local\\Temp\\p1a12-revisao-codex-1u6awqbh\nmodel: gpt-5.6-sol\nprovider: openai\napproval: never\nsandbox: read-only\nreasoning effort: high\nreasoning summaries: none\nsession id: 01a00263-9cc9-7b31-bcce-dda3fe2c465a\n--------\nuser\nRevise em modo SOMENTE LEITURA o estado atual do laboratorio SSC+. Os TRES documentos seguem INLINE nesta mesma entrada, apos estas instrucoes, cada um com o seu SHA-256 DECLARADO no cabecalho (voce nao tem ferramentas; ecoe os declarados nas linhas exigidas em vez de computa-los):\n  1. pacote-revisao.txt           — o estado sob julgamento\n  2. declaracoes-obrigatorias.txt — fatos que o autor e OBRIGADO a transmitir, varios contra o interesse dele\n  3. registros-de-correcao.txt    — o registro da P1-A.11 (dois pareceres + arbitragem) e o registro desta correcao, ancorados no commit ALVO\n\nComece pelas declaracoes. Quem corrigiu, montou e despachou e a MESMA sessao: nada fecha sem o seu parecer.\n\nContexto: o veredito vigente do acervo e REPROVADO (P1-A.4). Esta e a TERCEIRA tentativa de fechar o id 6 (fundido com P1A4-2): P1-A.10 dividiu, P1-A.11 foi NAO-FECHADO por CONSENSO dos dois revisores. A arbitragem que autorizou esta correcao ja declarou por escrito que, se ela tambem residuar na mesma familia, a pergunta do proximo ciclo e se o padrao vira limite PERMANENTE em vez de uma quarta tentativa.\n\nVoce NAO pode escrever nada: responda apenas com a revisao em texto.\n\nIMPORTANTE: leia e julgue VOCE MESMO, num unico turno, sem despachar subagentes e sem aguardar processos paralelos — o seu ambiente encerra em 10 minutos e parecer inacabado nao e parecer. Se o tempo nao der para tudo, priorize as linhas exigidas abaixo, nesta ordem, e diga o que ficou sem conferir.\n\nSua resposta precisa conter, NESTA ORDEM:\n1. as linhas PROVIDER, MODELO-OBSERVADO, CANAL, PACOTE-SHA256, DECLARACOES-SHA256 e REGISTROS-SHA256 (compute-os dos arquivos se tiver ferramentas; ecoe os DECLARADOS nos cabecalhos se nao tiver, dizendo qual dos dois fez) e ESCOPO;\n2. a linha 'MAJOR-6: FECHADO | NAO-FECHADO — <justificativa apontavel>'. Se voce julgar que P1A4-2 e o MESMO defeito, diga-o na mesma linha; a fusao ja e convergencia estabelecida nas duas rodadas anteriores, nao uma pergunta nova. NAO julgue N5 (aberto por decisao permanente) nem P1A4-4 (trilha separada, fora de escopo aqui);\n3. a linha 'CORRECAO: SUSTENTADA | NAO-SUSTENTADA — <motivo>' sobre `99_correcao-p1a11.md` como um todo — a correcao fecha o que diz fechar, o teste exerce os casos QUE OCORRERAM (os exemplos exatos dos dois revisores anteriores) e os limites declarados sao os reais?;\n4. SE MAJOR-6 continuar NAO-FECHADO: a linha 'PROXIMO-PASSO: NOVA-TENTATIVA | LIMITE-PERMANENTE — <motivo>' — na sua leitura, vale a pena tentar de novo, ou o padrao deveria virar limite declarado como N5? A arbitragem anterior fez esta pergunta por escrito e pediu a opiniao do proximo revisor;\n5. UMA linha por achado novo declarado — a, b, c da secao 3 das declaracoes — na forma 'DECLARADO-<letra>: CONFIRMO | NAO-CONFIRMO — <motivo>', com a FAMILIA ao final;\n6. a linha 'DEFEITO-NOVO: SIM | NAO — <o que, onde>' sobre a correcao desta rodada;\n7. os seus achados, um por linha, prefixados por CRITICAL | MAJOR | MINOR | OBS, com arquivo:tema e descricao curta, e CADA um terminando com a FAMILIA obrigatoria:\n   'FAMILIA: (F)' — guarda que AFIRMA em vez de EXERCER;\n   'FAMILIA: (N)' — classe que a varredura por alcance de linha nao media;\n   'FAMILIA: fora-de-ambas' — com o motivo.\n   Sem familia o criterio de parada nao se afere. Para cada achado NOVO diga se esta em AREA JA REVISADA ou em ESTREIA — e, se estreia, QUAL pacote anterior nao a continha;\n8. a linha final 'VEREDITO: APROVADO | APROVADO-COM-RESSALVAS | REPROVADO'.\n\n====================================",
+  "quota_observavel": "nao-exposta-pelo-cli"
+}
