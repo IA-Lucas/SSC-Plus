@@ -3,8 +3,8 @@
 > Registro da missao que despachou a revisao. Quem corrige nao
 > certifica; os fechamentos abaixo sao **do revisor**, nao do autor. Os
 > DOIS pareceres chegaram na mesma sessao de despacho — nao ha parecer
-> pendente nesta rodada. **A palavra final sobre os divididos e do
-> Fundador**, com os dois pareceres na mao — esta missao NAO arbitra.
+> pendente nesta rodada. A medicao foi devolvida ao Fundador, que
+> arbitrou no mesmo dia — ver "ARBITRAGEM DO FUNDADOR" abaixo.
 
 ## O que mudou desde a P1-A.10
 
@@ -189,21 +189,37 @@ correcao. Retornar ao Fundador com a medicao e a classificacao por
 familia"* — esta missao PARA aqui: nao abre uma P1-A.12 de correcao por
 iniciativa propria. A medicao acima e a entrega.
 
-## O que NAO se decide aqui
+## ARBITRAGEM DO FUNDADOR (2026-08-13) — 6/P1A4-2 e P1A4-4
 
-- se 6/P1A4-2 recebem nova tentativa de correcao ou se o residuo vira
-  limite PERMANENTE declarado (como N5 ja e);
-- se P1A4-4 fecha pela leitura do kimi ou espera a corrida real que o
-  codex cobra;
-- se o commit `3ff94e6` fica como esta, ganha registro `99_*.md`
-  proprio, ou tem o bypass revisado;
-- a fusao exata dos achados novos, e se ela e suficiente para desarmar
-  (b) — a medicao acima mostra que NAO chega a desarmar com as fusoes
-  que esta missao conseguiu justificar, mas a palavra final sobre
-  fusao e do Fundador, nao deste registro;
-- se o P1A4-4 fecha pela regra de um revisor (como o P1A4-6 fechou na
-  P1-A.10) — essa decisao, se tomada, muda (c) de disparado para
-  nao-disparado; sem ela, (c) fica disparado.
+Decisao do Fundador, com os dois pareceres na mao. Note a diferenca
+entre esta arbitragem e a que abriu a P1-A.11: **o criterio de parada
+barra a INICIATIVA PROPRIA da sessao que corrige/despacha, nao a
+decisao do Fundador** — autorizar aqui uma nova correcao NAO e a sessao
+abrindo missao por conta propria, e o Fundador decidindo apesar do
+criterio disparado.
+
+| id | Decisao | Fundamento |
+|---|---|---|
+| **6** e **P1A4-2** | **NOVA TENTATIVA DE CORRECAO AUTORIZADA** | os dois revisores convergem no MESMO limite tecnico (construtor atribuido a variavel, `.decode()`/`base64` sobre nome), e e um alvo concreto e apontavel — nao um residuo indecidivel por analise estatica como o do N5. Justifica tentar de novo antes de declarar limite permanente. **Declarado contra a decisao**: este e o TERCEIRO ciclo sobre a mesma familia de defeito (negacao no ponto de decisao — P1-A.10 tentou, o residuo pos-P1-A.10 tentou, esta e a terceira). Se a proxima correcao tambem devolver residuo na MESMA familia, o proximo ciclo confronta se "mais uma tentativa" ainda e a resposta certa ou se o padrao vira N5 |
+| **P1A4-4** | **AGUARDA A CORRIDA REAL PONTA A PONTA** | o proprio registro da correcao (`99_correcao-residuos-p1a10.md`) ja declarava a corrida real como pendencia; o codex contradiz no MERITO (concordancia sintetica, nao independencia), diferente do P1A4-6 (onde o kimi so declarou o proprio escopo sem contradizer o merito) — a regra de um revisor NAO se estende aqui por ser precedente mais fraco. Fecha quando a corrida real seguinte confirmar o mecanismo, nao antes |
+
+Com isto, **(c) o saldo de origem desta rodada permanece 0** — nenhum
+dos tres ids fecha agora; a arbitragem autoriza mais trabalho em
+6/P1A4-2 e declara P1A4-4 pendente de evidencia futura, mas nao produz
+fechamento consensual nem pela regra de um revisor. O criterio (b) e
+(c), portanto, **continuam medidos como disparados** para efeito de
+registro historico desta rodada — a arbitragem responde "o que fazer
+com o disparo", nao o desfaz retroativamente.
+
+## O que ainda NAO se decide
+
+- se o commit `3ff94e6` (guardas de infraestrutura de CI) fica como
+  esta, ganha registro `99_*.md` proprio, ou tem o bypass revisado —
+  nao foi objeto desta arbitragem;
+- a fusao exata dos achados novos catalogados acima — a medicao usou a
+  leitura mais generosa que esta missao conseguiu justificar, e mesmo
+  ela nao desarma (b); fusao mais precisa fica para quem julgar o
+  proximo pacote.
 
 ## Plataforma — os quatro campos
 
